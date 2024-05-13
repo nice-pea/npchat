@@ -1,4 +1,4 @@
-# 1\. Дизайн системы
+1\. Дизайн системы
 
 ---
 
@@ -48,43 +48,50 @@
 * Управление чатом и его сообщениями опирается на **permissions**
 * У пользователя должна быть возможность закреплять свои чаты вверху списка чатов в которых он состоит
 
-# 1.1.3 Права участников
+# 1.1.3 Разрешения
 
 *a.k.a разрешения*
 
 
 
-Набор прав (permission set) -
+Разрешения (permissions) -
 
-* Набор прав можно выдавать участнику чата, но одновременно не может быть больше 1 набора прав
-* Выдать права можно только имея на это права
-* Permissions set - составляется в system configuration, т.е пользователи его меня не могут, только использовать заготовленные варианты
+* Разрешения дают доступ на какое-либо действие
+* Некоторые требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка - у target (участник) не должно быть ни одного права выше чем у того кто применяет действие
+* Набор прав "по умолчанию" настраивается в system configuration, это те права которыми будут обладать пользователи пришедшие в чат
 
-Права (permissions) -
+~~Пример прав:~~
 
-* Права дают доступ на какое-либо действие
-* Некоторые требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка - target (участник) должен обладать уровнем прав ниже, чтобы выполняемое действие прошло успешно
-* В качестве параметра target разрешено передавать только участников, чей уровень прав ниже своего
-* Права объединенные в группу - набор прав (permission set)
-* Permissions set - создается в system configuration
+* ~~MsgSend~~
+* ~~MsgOwnEdit~~
+* ~~MsgOwnDelete~~
+* ~~MsgDelete(target)~~
+* ~~ChatProfileEdit~~
+* ~~MemberDelete(target)~~
+* ~~MemberAdd~~
+* ~~GivePermissionSet(target)~~
+
+~~Пример permission set:~~
+
+* *~~Member(0)~~*~~: MsgSend, MsgOwnEdit, MsgOwnDelete~~
+* *~~Moder(100)~~*~~: *Member* + MsgOtherDelete, MemberAdd~~
+* *~~Moder2(200)~~*~~: *Moder* + MemberDelete, ChatProfileEdit~~
+* ~~Admin(300): *Moder2* + GivePermissionSet~~
+
+v2
 
 Пример прав:
 
-* MsgSend
-* MsgOwnEdit
-* MsgOwnDelete
-* MsgDelete(target)
-* ChatProfileEdit
-* MemberDelete(target)
-* MemberAdd
-* GivePermissionSet(target)
-
-Пример permission set:
-
-* *Member(0)*: MsgSend, MsgOwnEdit, MsgOwnDelete
-* *Moder(100)*: *Member* + MsgOtherDelete, MemberAdd
-* *Moder2(200)*: *Moder* + MemberDelete, ChatProfileEdit
-* Admin(300): *Moder2* + GivePermissionSet
+ 1. ManageMemberPermissions
+ 2. AddMembers
+ 3. DeleteMembers
+ 4. DeleteMemberMessages
+ 5. EditChatInfo
+ 6. DeleteOwnMessage
+ 7. EditOwnMessage
+ 8. SendMessages
+ 9. MsgOwnEdit
+10. MsgOwnDelete
 
 # 1.1.4 Системные настройки
 
@@ -354,45 +361,288 @@ a.k.a System configuration
 
 # 1.3.1 API для приложения
 
-Запросить информацию о сервере и сверить  версию клиента
+### Запросить информацию о сервере и сверить  версию клиента
 
-Запросить данные профиля и токены для дальнейшей работы
-
-Запросить новый токен
-
-Запросить профиль по токену
-
-Запросить профиль по ID
-
-Изменить профиль
-
-
-
-Запросить полный список чатов в которых профиль является участником
-
-Изменить профиль чата
-
-Закрепить/открепить чат
+```
+// GET {host}/healthcheck
+// response data:
+{
+  api_support {
+    min_code int
+    min string
+    max_code int
+    max string
+  }
+}
+```
 
 
 
-Запросить полный список участников чата
+### Запросить токен для дальнейшей работы
 
-Удалить участника из чата
+```csharp
+// POST {host}/auth
+// request body:
+{
+  login string
+}
+// response data:
+{
+  access string
+}
+```
 
-Создать участника
 
-Назначить permission set  участнику
+
+### Запросить пользователя по токену
+
+```
+// GET {host}/users
+// headers:
+{
+  x-token-header string
+}
+// response data:
+{
+  user {
+    id int
+    username string
+  }
+  credentials {
+    login string
+  }
+}
+```
+
+
+
+### Запросить пользователя по ID
+
+```
+// GET {host}/users/{id}
+// path param:
+{
+  id int
+}
+// response data:
+{
+  user {
+    id int
+    username string
+  }
+}
+```
+
+Изменить данные пользователя
+
+```csharp
+// PATH {host}/users
+// request body:
+{
+  username string?
+}
+```
+
+
+
+### Запросить полный список чатов в которых профиль является участником
+
+```
+// GET {host}/chats
+// response data:
+{
+  chats []{
+    id int
+    name string
+    last_msg Message
+  }
+}
+```
+
+
+
+### Изменить данные чата
+
+```
+// PATH {host}/chats/{id}
+// path param:
+{
+  id int
+}
+// request body:
+{
+  name string?
+}
+```
+
+
+
+### Список закрепленных чатов
+
+```
+
+// GET {host}/chats/pins
+// response data:
+{
+  chat_ids []int32
+}
+```
+
+
+
+### Изменить список закрепленных чатов
+
+```
+// POST {host}/chats/pins
+// request body:
+{
+  chat_ids []int32
+}
+```
+
+
+
+### Запросить полный список участников чата
+
+```
+
+// GET {host}/chats/{id}/members
+// path param:
+{
+  id int
+}
+// response data:
+{
+  members []{
+    id int
+    user User
+    permissions []Permission
+  }
+}
+```
+
+
+
+### Удалить участника из чата
+
+```
+// DELETE {host}/members/{id}
+// path param:
+{
+  id int
+}
+```
+
+
+
+### Создать участника
+
+```
+// POST {host}/members
+// request body:
+{
+  chat_id int
+  user_id int
+}
+```
+
+
+
+### Назначить permissions  участнику
+
+```
+// PATH {host}/members/{id}
+// path param:
+{
+  id int
+}
+// request body:
+{
+  permissions []Permission
+}
+```
 
 
 
 Запросить часть истории сообщений в чате
 
-Удалить сообщение
+```
+// GET {host}/messages
+// query param:
+{
+  chat_id int32
+  limit int
+  oneOf( 
+    around_id int32
+    before_id int32
+    after_id int32
+  )
+}
+// response data:
+{
+  messages []{
+    id int32
+    chat_id int32
+    date int64
+    user User?
+    text string?
+    reply ?{
+      id int32
+      date int64
+      text string?
+      user User?
+      edit_date int64?
+      delete_date int64?
+    }
+    edit_date int64?
+    delete_date int64?
+  }
+}
+```
 
-Изменить сообщение
 
-Создать сообщение
+
+### Удалить сообщение
+
+```
+// DELETE {host}/messages/{id}
+// path param:
+{
+  id int
+}
+```
+
+
+
+### Изменить сообщение
+
+```
+// PATH {host}/messages/{id}
+// path param:
+{
+  id int
+}
+// request body:
+{
+  text string?
+}
+```
+
+
+
+Cоздать сообщение
+
+```
+// POST {host}/messages
+// request body:
+{  
+  chat_id int32
+  text string
+  reply_id int32?
+}
+```
+
+
 
 Пометить сообщения как прочитанные
 
@@ -414,13 +664,13 @@ a.k.a System configuration
 Message:
   id: i32
   chat: i32
-  user: i32?
+  user: User?
   reply: i32?
   text: str
   date: i64
   edit_date: i64?
   delete_date: i64?
-  readers: []i32
+//  readers: []i32
   
 CreateMessage:
   chat: i32
@@ -475,7 +725,7 @@ DeleteMember:
 ```
 User:
   id: i32
-  username: str
+  username: str // secure
   login: str
   
 EditUser:
