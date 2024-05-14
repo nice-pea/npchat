@@ -1,4 +1,4 @@
-1\. Дизайн системы
+# 1\. Дизайн системы
 
 ---
 
@@ -57,7 +57,7 @@
 Разрешения (permissions) -
 
 * Разрешения дают доступ на какое-либо действие
-* Некоторые требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка - у target (участник) не должно быть ни одного права выше чем у того кто применяет действие
+* Некоторые (не все) требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка - у target (участник) не должно быть ни одного права выше чем у того кто применяет действие
 * Набор прав "по умолчанию" настраивается в system configuration, это те права которыми будут обладать пользователи пришедшие в чат
 
 ~~Пример прав:~~
@@ -80,18 +80,19 @@
 
 v2
 
-Пример прав:
+Пример разрешений:
 
- 1. ManageMemberPermissions
- 2. AddMembers
- 3. DeleteMembers
- 4. DeleteMemberMessages
- 5. EditChatInfo
- 6. DeleteOwnMessage
- 7. EditOwnMessage
- 8. SendMessages
- 9. MsgOwnEdit
-10. MsgOwnDelete
+ 1. Administrator // разрешают все, а снять это  разрешение нельзя - некая защита от дурака
+ 2. ManageMemberPermissions
+ 3. AddMembers
+ 4. DeleteMembers
+ 5. DeleteMemberMessages
+ 6. EditChatInfo
+ 7. DeleteOwnMessage
+ 8. EditOwnMessage
+ 9. SendMessages
+10. MsgOwnEdit
+11. MsgOwnDelete
 
 # 1.1.4 Системные настройки
 
@@ -167,7 +168,7 @@ a.k.a System configuration
 
 * Если его только пригласили в чат (является новым участником), и он ни одного сообщения не прочел
 * Если пользователь уже находится в этом чате, т.е он открыт на клиенте
-* Если этот чат находится в муте у пользователяоткрывает
+* Если этот чат находится в муте у пользователя открывает
 
 Уведомления -
 
@@ -361,292 +362,206 @@ a.k.a System configuration
 
 # 1.3.1 API для приложения
 
-### Запросить информацию о сервере и сверить  версию клиента
+
+
+Эндпоинты
 
 ```
-// GET {host}/healthcheck
-// response data:
-{
+// Запросить информацию о сервере и сверить  версию клиента
+GET {host}/healthcheck
+response data:
   api_support {
     min_code int
     min string
     max_code int
     max string
   }
-}
-```
 
 
-
-### Запросить токен для дальнейшей работы
-
-```csharp
-// POST {host}/auth
-// request body:
-{
+// Запросить токен для дальнейшей работы
+POST {host}/auth
+request body:
   login string
-}
-// response data:
-{
+response data:
   access string
-}
-```
 
 
 
-### Запросить пользователя по токену
-
-```
-// GET {host}/users
-// headers:
-{
+// Запросить пользователя по токену
+GET {host}/users
+headers:
   x-token-header string
-}
-// response data:
-{
-  user {
-    id int
-    username string
-  }
+response data:
+  user User
   credentials {
     login string
   }
-}
-```
 
 
-
-### Запросить пользователя по ID
-
-```
-// GET {host}/users/{id}
-// path param:
-{
+// Запросить пользователя по ID
+GET {host}/users/{id}
+path param:
   id int
-}
-// response data:
-{
-  user {
-    id int
-    username string
-  }
-}
-```
+response data:
+  user User
 
-Изменить данные пользователя
-
-```csharp
-// PATH {host}/users
-// request body:
-{
+// Изменить данные пользователя
+PATH {host}/users
+request body:
   username string?
-}
-```
 
 
-
-### Запросить полный список чатов в которых профиль является участником
-
-```
-// GET {host}/chats
-// response data:
-{
-  chats []{
-    id int
-    name string
-    last_msg Message
-  }
-}
-```
+// Запросить полный список чатов в которых пользователь является участником
+GET {host}/chats
+response data:
+  chats []Chat
 
 
-
-### Изменить данные чата
-
-```
-// PATH {host}/chats/{id}
-// path param:
-{
+// Изменить данные чата
+PATH {host}/chats/{id}
+path param:
   id int
-}
-// request body:
-{
+request body:
   name string?
-}
-```
 
 
-
-### Список закрепленных чатов
-
-```
-
-// GET {host}/chats/pins
-// response data:
-{
+// Список закрепленных чатов
+GET {host}/chats/pins
+response data:
   chat_ids []int32
-}
-```
 
 
-
-### Изменить список закрепленных чатов
-
-```
-// POST {host}/chats/pins
-// request body:
-{
+// Изменить список закрепленных чатов
+POST {host}/chats/pins
+request body:
   chat_ids []int32
-}
-```
 
 
-
-### Запросить полный список участников чата
-
-```
-
-// GET {host}/chats/{id}/members
-// path param:
-{
+// Запросить полный список участников чата
+GET {host}/chats/{id}/members
+path param:
   id int
-}
-// response data:
-{
-  members []{
-    id int
-    user User
-    permissions []Permission
-  }
-}
-```
+response data:
+  members []User
 
 
-
-### Удалить участника из чата
-
-```
-// DELETE {host}/members/{id}
-// path param:
-{
-  id int
-}
-```
-
-
-
-### Создать участника
-
-```
-// POST {host}/members
-// request body:
-{
-  chat_id int
-  user_id int
-}
-```
-
-
-
-### Назначить permissions  участнику
-
-```
-// PATH {host}/members/{id}
-// path param:
-{
-  id int
-}
-// request body:
-{
-  permissions []Permission
-}
-```
-
-
-
-Запросить часть истории сообщений в чате
-
-```
-// GET {host}/messages
-// query param:
-{
+// Удалить пользователя из чата
+DELETE {host}/chats/{chat_id}/members/{id}
+path param:
   chat_id int32
+  id int32
+
+
+// Добавить пользователя в чат
+POST {host}/chats/{id}/members
+path param:
+  id int
+request body:
+  user_id int
+
+
+// Назначить permissions  участнику
+PATH {host}/chats/{chat_id}/members/{id}
+path param:
+  chat_id int32
+  id int
+request body:
+  permissions []Permission
+
+
+// Запросить часть истории сообщений в чате
+GET {host}/chats/{chat_id}/messages
+path param:
+  chat_id int32
+query param:
   limit int
   oneOf( 
     around_id int32
     before_id int32
     after_id int32
   )
-}
-// response data:
-{
-  messages []{
-    id int32
-    chat_id int32
-    date int64
-    user User?
-    text string?
-    reply ?{
-      id int32
-      date int64
-      text string?
-      user User?
-      edit_date int64?
-      delete_date int64?
-    }
-    edit_date int64?
-    delete_date int64?
-  }
-}
-```
+response data:
+  messages []Message
 
 
-
-### Удалить сообщение
-
-```
-// DELETE {host}/messages/{id}
-// path param:
-{
+// Удалить сообщение
+DELETE {host}/messages/{id}
+path param:
   id int
-}
-```
 
 
-
-### Изменить сообщение
-
-```
-// PATH {host}/messages/{id}
-// path param:
-{
-  id int
-}
-// request body:
-{
-  text string?
-}
-```
-
-
-
-Cоздать сообщение
-
-```
-// POST {host}/messages
-// request body:
-{  
+// Изменить сообщение
+PATH {host}/chats/{chat_id}/messages/{id}
+path param:
   chat_id int32
+  id int
+request body:
+  text string?
+
+
+// Cоздать сообщение
+POST {host}/chats/{chat_id}/messages
+path param:
+  chat_id int32
+request body:
   text string
   reply_id int32?
-}
+  
+  
+// Пометить сообщение как прочитанное
+POST {host}/chats/{chat_id}/messages/{id}/read
+path param:
+  chat_id int32
+  id int32
 ```
 
 
 
-Пометить сообщения как прочитанные
+Модели
 
+```
+User:
+  id int
+  username string
+  
+Permission:
+  | Administrator
+  | ManageMemberPermissions
+  | AddMembers
+  | DeleteMembers
+  | DeleteMemberMessages
+  | EditChatInfo
+  | DeleteOwnMessage
+  | EditOwnMessage
+  | SendMessages
+  | MsgOwnEdit
+  | MsgOwnDelete
 
+ReplyedMessage:
+  id int32
+  date int64
+  text string?
+  user User?
+  edit_date int64?
+  delete_date int64?
+ 
+Message:
+  id int32
+  chat_id int32
+  date int64
+  text string?
+  user User?
+  reply ReplyedMessage?
+  edit_date int64?
+  delete_date int64?
+
+Chat:
+  id int32
+  name string
+  last_msg Message?
+  permissions []Permission
+  
+```
 
 
 
