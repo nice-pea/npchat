@@ -57,42 +57,20 @@
 Разрешения (permissions) -
 
 * Разрешения дают доступ на какое-либо действие
-* Некоторые (не все) требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка - у target (участник) не должно быть ни одного права выше чем у того кто применяет действие
-* Набор прав "по умолчанию" настраивается в system configuration, это те права которыми будут обладать пользователи пришедшие в чат
-
-~~Пример прав:~~
-
-* ~~MsgSend~~
-* ~~MsgOwnEdit~~
-* ~~MsgOwnDelete~~
-* ~~MsgDelete(target)~~
-* ~~ChatProfileEdit~~
-* ~~MemberDelete(target)~~
-* ~~MemberAdd~~
-* ~~GivePermissionSet(target)~~
-
-~~Пример permission set:~~
-
-* *~~Member(0)~~*~~: MsgSend, MsgOwnEdit, MsgOwnDelete~~
-* *~~Moder(100)~~*~~: *Member* + MsgOtherDelete, MemberAdd~~
-* *~~Moder2(200)~~*~~: *Moder* + MemberDelete, ChatProfileEdit~~
-* ~~Admin(300): *Moder2* + GivePermissionSet~~
-
-v2
+* Некоторые (не все) требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка определенная проверка, которая где-то описана
+* Набор разешений "по умолчанию" настраивается в system configuration, это те права которыми будут обладать пользователи пришедшие в чат
 
 Пример разрешений:
 
- 1. Administrator // разрешают все, а снять это  разрешение нельзя - некая защита от дурака
- 2. ManageMemberPermissions
- 3. AddMembers
- 4. DeleteMembers
- 5. DeleteMemberMessages
- 6. EditChatInfo
- 7. DeleteOwnMessage
- 8. EditOwnMessage
- 9. SendMessages
-10. MsgOwnEdit
-11. MsgOwnDelete
+1. Administrator // разрешают все, а снять это  разрешение нельзя - некая защита от дурака
+2. ManageMemberPermissions
+3. AddMembers
+4. DeleteMembers
+5. DeleteMemberMessages
+6. EditChatInfo
+7. ~~DeleteOwnMessage~~
+8. ~~EditOwnMessage~~
+9. SendMessages
 
 # 1.1.4 Системные настройки
 
@@ -523,19 +501,20 @@ path param:
 User:
   id int
   username string
-  
+
 Permission:
+  name string
+  desc string
+
+PermissionId:
   | Administrator
   | ManageMemberPermissions
   | AddMembers
   | DeleteMembers
   | DeleteMemberMessages
   | EditChatInfo
-  | DeleteOwnMessage
-  | EditOwnMessage
   | SendMessages
-  | MsgOwnEdit
-  | MsgOwnDelete
+  
 
 ReplyedMessage:
   id int32
@@ -559,134 +538,76 @@ Chat:
   id int32
   name string
   last_msg Message?
-  permissions []Permission
+  last_read_msg int32?
+  unread_count int
+  permissions []PermissionId
   
+```
+
+
+
+
+
+Ответ с данными
+
+```
+// код 2**
+response:
+{
+  "data": <Данные>,
+}
+```
+
+
+
+Ответ с ошибкой
+
+```
+// код 4** или 5**
+response:
+{
+  "error": "<Текст ошибки>",
+}
 ```
 
 
 
 # 1.3 Авторизация
 
+1. Administrator
+   * Можно выполнять любые действия
+   * Запрещено выдавать/забирать разрешение **Administrator**
+2. ManageMemberPermissions
+   * Устанавливать разрешения участникам
+   * Список разрешений ограничен сверху максимальным разрешением  пользователя (не включая его в список)
+   * Применять в отношение пользователей чьи разрешения ниже уровня **ManageMemberPermissions**
+3. DeleteMembers
+   * Удалять (кикать\\исключать) участников
+   * Применять в отношение пользователей чьи разрешения ниже уровня **DeleteMembers**
+4. DeleteMemberMessages
+   * Удалять сообщения участников
+   * Применять в отношение пользователей чьи разрешения ниже уровня **DeleteMemberMessages**
+5. EditChatInfo
+   * Редактировать данные чата
+6. ~~DeleteOwnMessage~~
+   * ~~Удалять свои сообщения~~
+7. ~~EditOwnMessage~~
+   * ~~Редактировать свои сообщения~~
+8. SendMessages
+   * Писать сообщения
+
 # 1.3 Аутентификация
 
-# 1.3 Ответ с ошибкой
+* хранимые данных в jwt
+  * ид пользователя
+* время жизни токена
+  * 15 минут
+* способ получения токена
+  * в обмен на креды (логин)
+* способ обновления токена
+  * отсутствует
 
-# 1.3 Сообщение
-
-Модель
-
-```
-Message:
-  id: i32
-  chat: i32
-  user: User?
-  reply: i32?
-  text: str
-  date: i64
-  edit_date: i64?
-  delete_date: i64?
-//  readers: []i32
-  
-CreateMessage:
-  chat: i32
-  reply: i32?
-  text: str
-  
-DeleteMessage:
-  id: i32
-  
-EditMessage:
-  id: i32
-  text: str
-```
-
-
-
-Пагинация сообщений в чате
-
-Для выборки сообщений в определенном чате требуется передать *startId* и *endId*
-
-
-
-# 1.3 Участник
-
-Модель
-
-```
-Member:
-  id: i32
-  chat: i32
-  user: i32
-  permission_set: PermissionSet
-  
-CreateMember:
-  chat: i32
-  user: i32 // what it..
-
-EditMember:
-  id: i32
-  permission_set: PermissionSet
-  
-DeleteMember:
-  id: i32
-```
-
-
-
-# 1.3 Пользователь
-
-Модель
-
-```
-User:
-  id: i32
-  username: str // secure
-  login: str
-  
-EditUser:
-  username: str
-```
-
-
-
-# 1.3 Разрешения
-
-Модель
-
-```
-PermissionSet:
-  id: i32
-  lvl: u16
-  name: str
-  permissions: []Permission
- 
-Permission:
-  name: str
-  type: PermissionType
- 
-PermissionType:
-  MsgSend
-  MsgOwnEdit
-  MsgOwnDelete
-  MsgDelete
-  ChatProfileEdit
-  MemberDelete
-  MemberAdd
-  GivePermissionSet
-```
-
-
-
-# 1.3 Чат
-
-Модель
-
-```
-Chat:
-  id: i32
-  owner: i32
-  name: str
-```
+# 1.3 Пользовательская БД. Субд. Схема Бд
 
 
 
