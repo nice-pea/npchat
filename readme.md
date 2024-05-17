@@ -584,16 +584,18 @@ response:
 3. DeleteMembers
    * Удалять (кикать\\исключать) участников
    * Применять в отношение пользователей чьи разрешения ниже уровня **DeleteMembers**
-4. DeleteMemberMessages
+4. AddMembers
+   * Добавлять пользователей в чат
+5. DeleteMemberMessages
    * Удалять сообщения участников
    * Применять в отношение пользователей чьи разрешения ниже уровня **DeleteMemberMessages**
-5. EditChatInfo
+6. EditChatInfo
    * Редактировать данные чата
-6. ~~DeleteOwnMessage~~
+7. ~~DeleteOwnMessage~~
    * ~~Удалять свои сообщения~~
-7. ~~EditOwnMessage~~
+8. ~~EditOwnMessage~~
    * ~~Редактировать свои сообщения~~
-8. SendMessages
+9. SendMessages
    * Писать сообщения
 
 # 1.3 Аутентификация
