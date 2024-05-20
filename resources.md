@@ -10,3 +10,6 @@ https://github.com/qingwave/weave
 
 Что же такое «Модель предметной области»?
 https://habr.com/ru/articles/453906/
+
+DAO vs Repository Patterns
+https://www.baeldung.com/java-dao-vs-repository
