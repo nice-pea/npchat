@@ -7,10 +7,9 @@ import (
 
 type ID string
 
-//
-//func (i ID) IsZero() bool {
-//	return i == ("")
-//}
+func (i ID) IsZero() bool {
+	return i == ""
+}
 
 type User struct {
 	ID       ID
@@ -18,7 +17,6 @@ type User struct {
 }
 
 type Credentials struct {
-	UserID
 	Login string
 }
 
@@ -27,8 +25,8 @@ type Message struct {
 	ChatID   ID
 	Date     time.Time
 	Text     string
-	User     *User
-	Reply    *ReplyMessage
+	UserID   ID
+	ReplyID  ID
 	EditDate time.Time
 	DelDate  time.Time
 }
@@ -38,7 +36,7 @@ type ReplyMessage struct {
 	ChatID   ID
 	Date     time.Time
 	Text     string
-	User     *User
+	UserID   ID
 	EditDate time.Time
 	DelDate  time.Time
 }
