@@ -8,7 +8,12 @@ import (
 )
 
 type Config struct {
-	listen string
+	listen       string
+	dbConnString string
+}
+
+func (c *Config) DbConnString() string {
+	return c.dbConnString
 }
 
 func (c *Config) Listen() string {
