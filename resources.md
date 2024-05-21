@@ -22,3 +22,6 @@ https://habr.com/ru/companies/jugru/articles/503868/
 
 Как работать с Postgres в Go: практики, особенности, нюансы
 https://habr.com/ru/companies/oleg-bunin/articles/461935/
+
+Clean Architecture template for Golang services
+https://github.com/evrone/go-clean-template
