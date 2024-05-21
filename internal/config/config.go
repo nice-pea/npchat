@@ -2,8 +2,8 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"github.com/peterbourgon/ff/v3"
-	"log"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func (c *Config) Listen() string {
 	return c.listen
 }
 
-func Load() *Config {
+func Load() (*Config, error) {
 	fs := flag.NewFlagSet("cute-chat-backend", flag.ExitOnError)
 	cfg := new(Config)
 	fs.StringVar(&cfg.listen, "listen", "localhost:46473", "listen listen")
@@ -34,7 +34,7 @@ func Load() *Config {
 		ff.WithConfigFileParser(ff.PlainParser),
 	)
 	if err != nil {
-		log.Fatalf("new config: parse os.Args: %v", err)
+		return nil, fmt.Errorf("new config: parse os.Args: %w", err)
 	}
-	return cfg
+	return cfg, nil
 }
