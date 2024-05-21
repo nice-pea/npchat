@@ -25,3 +25,6 @@ https://habr.com/ru/companies/oleg-bunin/articles/461935/
 
 Clean Architecture template for Golang services
 https://github.com/evrone/go-clean-template
+
+Uber Go Style Guide
+https://github.com/uber-go/guide/blob/master/style.md
