@@ -1,9 +1,16 @@
-package data
+package model
 
 import (
 	"github.com/saime-0/cute-chat-backend/internal/perm"
 	"time"
 )
+
+/*
+	todo
+	- Модели данных
+	- функции валидации
+	- интерфейсы policy
+*/
 
 type ID string
 
