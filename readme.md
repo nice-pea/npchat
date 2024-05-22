@@ -186,6 +186,11 @@ a.k.a System configuration
 
 
 
+### Макет
+
+<https://www.figma.com/design/dQBEQWBNuffsOYNU54XZsX/CuteChatMobileApp?node-id=0%3A1&t=E96rjGdjCDQxyFKX-1>
+
+
 ### Экран выбора сервера и ввода логина  -
 
 * Открывается при первом входе в приложение
