@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 
 	"github.com/saime-0/cute-chat-backend/internal/usecases"
 	"github.com/sirupsen/logrus"
@@ -40,15 +39,29 @@ func (h *Auth) Fn() http.HandlerFunc {
 		out, err := h.authUc.Auth(usecases.AuthIn{
 			Login: requestBody.Login,
 		})
-		w.Write([]byte("ok"))
-		w.WriteHeader(http.StatusOK)
+		if err != nil {
+			logrus.Debug("[Auth] Failed handle healthcheck: %v", err)
+			http.Error(w, "Failed handle healthcheck", http.StatusBadRequest)
+			return
+		}
+		resp := _AuthResponse{
+			AccessToken: out.AccessToken,
+		}
+
+		b, err = json.Marshal(resp)
+		if err != nil {
+			logrus.Debug("[Auth] Failed marshal request body: %v", err)
+			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
+			return
+		}
+		w.Write(b)
 	}
 }
 
 type _AuthRequestBody struct {
-	Login string `json: "login"`
+	Login string `json:"login"`
 }
 
 type _AuthResponse struct {
-	AccessToken string `json: "access_token"`
+	AccessToken string `json:"access_token"`
 }

@@ -1,0 +1,79 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+
+	"github.com/saime-0/cute-chat-backend/internal/usecases"
+	"github.com/sirupsen/logrus"
+)
+
+type UserByToken struct {
+	UserByTokenUc usecases.UserByTokenUsecase
+}
+
+func (h *UserByToken ) Endpoint() string {
+	return "/users"
+}
+
+func (h *UserByToken ) Method() string {
+	return http.MethodGet
+}
+
+const _AUTH_HEADER = "Authorization"
+
+func (h *UserByToken ) Fn() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		header := r.Header.Get(_AUTH_HEADER)
+		token := strings.TrimSuffix(header, "Bearer ")
+		if len(token) == 0 {
+			logrus.Debug("[Users] AuthHeader is empty")
+			http.Error(w, "AuthHeader is empty", http.StatusBadRequest)
+			return
+		}
+		out, err := h.UserByTokenUc.UserByToken(usecases.UserByTokenIn{
+			Token: token,
+		})
+		if err != nil {
+			logrus.Debug("[UserByToken] Failed handle UserByToken: %v", err)
+			http.Error(w, "Failed handle UserByToken", http.StatusBadRequest)
+			return
+		}
+		if !out.Found {
+			logrus.Debug("[UserByToken] User not found by token")
+			http.Error(w, "User not found by token", http.StatusBadRequest)
+			return
+		}
+		resp := _UserByTokenResponse{
+			User: _UserApiModel{
+				ID:       string(out.User.ID),
+				Username: out.User.Username,
+			},
+			Creds: _CredsApiModel{
+				Login: out.Creds.Login,
+			}
+		}
+		b, err = json.Marshal(resp)
+		if err != nil {
+			logrus.Debug("[UserByToken] Failed marshal request body: %v", err)
+			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
+			return
+		}
+		w.Write(b)
+	}
+}
+
+type _UserByTokenResponse struct {
+	User  _UserByTokenResponse `json:"user"`
+	Creds _CredsApiModel       `json:"credentials"`
+}
+
+type _UserApiModel struct {
+	ID       string `json"id"`
+	Username string `json"username"`
+}
+
+type _CredsApiModel struct {
+	Login string `json:"login"`
+}
