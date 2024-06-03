@@ -8,12 +8,16 @@ import (
 )
 
 type Config struct {
-	listen       string
-	dbConnString string
+	listen string
+	db     string
+}
+
+func (c *Config) String() string {
+	return fmt.Sprintf("Config(listen=%v dbConnString=%v)", c.listen, "*hide*")
 }
 
 func (c *Config) DbConnString() string {
-	return c.dbConnString
+	return c.db
 }
 
 func (c *Config) Listen() string {
@@ -23,15 +27,14 @@ func (c *Config) Listen() string {
 func Load() (*Config, error) {
 	fs := flag.NewFlagSet("cute-chat-backend", flag.ExitOnError)
 	cfg := new(Config)
-	fs.StringVar(&cfg.listen, "listen", "localhost:46473", "listen listen")
-	//refresh    = fs.Duration("refresh", 15*time.Second, "refresh interval")
-	//debug      = fs.Bool("debug", false, "log debug information")
+	fs.StringVar(&cfg.listen, "listen", "localhost:46473", "listened http address")
+	fs.StringVar(&cfg.db, "db", "", "database connection string")
 	fs.String("config", "", "config file (optional)")
 
 	err := ff.Parse(fs, os.Args[1:],
 		ff.WithEnvVarPrefix("CCB_"),
 		ff.WithConfigFileFlag("config"),
-		ff.WithConfigFileParser(ff.PlainParser),
+		ff.WithConfigFileParser(ff.JSONParser),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("new config: parse os.Args: %w", err)

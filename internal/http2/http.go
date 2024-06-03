@@ -3,17 +3,18 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
+	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/usecase"
 	"net/http"
+	"strconv"
 	"time"
-
-	"github.com/saime-0/cute-chat-backend/internal/model"
 )
 
 type Server struct {
 	server *http.Server
 	notify chan error
 	done   chan struct{}
+	uc     Usecases
 }
 
 func (s *Server) start(ctx context.Context) {
@@ -23,40 +24,42 @@ func (s *Server) start(ctx context.Context) {
 		// handle ctx.Done earlier
 		err := s.server.Shutdown(context.Background())
 		if err != nil {
-			logrus.Info("[HttpServer] closed with error: %v", err)
+			logrus.Printf("httpserver - Server - closed with error: %v", err)
 		}
+		s.done <- struct{}{}
+		close(s.done)
 	}()
 	err := s.server.ListenAndServe()
 	// ignore ErrServerClose handling, because in
 	// this case - app.Start handle ctx.Done earlier
-	s.notify <- fmt.Errorf("ListenAndServe: %w", err)
+	s.notify <- fmt.Errorf("httpserver - Server - server.ListenAndServe: %w", err)
 	close(s.notify)
 }
 
-type Handler interface {
-	Fn() http.HandlerFunc
-	// Pattern() string
-	Endpoint() string
-	Method() string
+type Usecases struct {
+	CalculatingExchange *usecase.CalculatingExchange
 }
-type Handlers []Handler
 
-func New(ctx context.Context, addr string, handlers Handlers) *Server {
+func New(ctx context.Context, usecases Usecases, host string, port int) *Server {
 	mux := http.NewServeMux()
-	for _, h := range handlers {
-		p := h.Method() + " " + h.Endpoint()
-		mux.HandleFunc(p, h.Fn())
-	}
+
 	s := &Server{
 		server: &http.Server{
-			Addr:        addr,
+			Addr:        host + ":" + strconv.Itoa(port),
 			Handler:     mux,
 			ReadTimeout: 30 * time.Second,
 		},
+		uc:     usecases,
 		notify: make(chan error),
 		done:   make(chan struct{}),
 	}
-	s.start(ctx)
+	mws := middlewares{
+		s.consumeError,
+	}
+
+	mux.HandleFunc("POST /calculating-exchange", mws.Wrap(s.calculatingExchange()))
+
+	go s.start(ctx)
 	return s
 }
 
