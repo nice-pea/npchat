@@ -38,3 +38,36 @@ type UserByTokenOut struct {
 	User  model.User
 	Creds model.Credentials
 }
+
+type UserByIDUsecase interface {
+	UserByID(UserByIDIn) (UserByIDOut, error)
+}
+
+type UserByIDIn struct {
+	ID model.ID
+}
+
+type UserByIDOut struct {
+	Found bool
+	User  model.User
+}
+
+type UserUpdateUsecase interface {
+	UserUpdate(UserUpdateIn) (UserUpdateOut, error)
+}
+
+type UserUpdateIn struct {
+	Username string
+}
+
+type UserUpdateOut struct{}
+
+
+type UserChatsUsecase struct {
+	UserChats(UserChatsIn) (UserChatsOut, error)
+}
+
+type UserChatsIn struct {}
+type UserChatsOut struct {
+	
+}

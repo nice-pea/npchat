@@ -25,14 +25,14 @@ func (h *Auth) Fn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			logrus.Debug("[Auth] read body: %v", err)
+			logrus.Debugf("[Auth] read body: %v", err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 		requestBody := _AuthRequestBody{}
 		err = json.Unmarshal(b, &requestBody)
 		if err != nil {
-			logrus.Debug("[Auth] Failed unmarshal request body: %v", err)
+			logrus.Debugf("[Auth] Failed unmarshal request body: %v", err)
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
@@ -40,7 +40,7 @@ func (h *Auth) Fn() http.HandlerFunc {
 			Login: requestBody.Login,
 		})
 		if err != nil {
-			logrus.Debug("[Auth] Failed handle healthcheck: %v", err)
+			logrus.Debugf("[Auth] Failed handle healthcheck: %v", err)
 			http.Error(w, "Failed handle healthcheck", http.StatusBadRequest)
 			return
 		}
@@ -50,7 +50,7 @@ func (h *Auth) Fn() http.HandlerFunc {
 
 		b, err = json.Marshal(resp)
 		if err != nil {
-			logrus.Debug("[Auth] Failed marshal request body: %v", err)
+			logrus.Debugf("[Auth] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}

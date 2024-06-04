@@ -29,7 +29,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 		header := r.Header.Get(_AUTH_HEADER)
 		token := strings.TrimSuffix(header, "Bearer ")
 		if len(token) == 0 {
-			logrus.Debug("[Users] AuthHeader is empty")
+			logrus.Debug("[UserByToken] AuthHeader is empty")
 			http.Error(w, "AuthHeader is empty", http.StatusBadRequest)
 			return
 		}
@@ -37,7 +37,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 			Token: token,
 		})
 		if err != nil {
-			logrus.Debug("[UserByToken] Failed handle UserByToken: %v", err)
+			logrus.Debugf("[UserByToken] Failed handle UserByToken: %v", err)
 			http.Error(w, "Failed handle UserByToken", http.StatusBadRequest)
 			return
 		}
@@ -52,7 +52,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			logrus.Debug("[UserByToken] Failed marshal request body: %v", err)
+			logrus.Debugf("[UserByToken] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}

@@ -35,6 +35,9 @@ func Start(ctx context.Context, cfg *config.Config) error {
 			&handlers.Healthcheck{},
 			&handlers.Auth{},
 			&handlers.UserByToken{},
+			&handlers.UserByID{},
+			&handlers.UserUpdate{},
+			&handlers.UserChats{},
 		},
 	)
 	wg.Add(1)

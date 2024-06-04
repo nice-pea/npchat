@@ -59,3 +59,14 @@ type Member struct {
 	UserID      ID
 	Permissions []perm.Kind
 }
+
+// todo: rm and use fet calls usecases from controller, and build one api model
+// Deprecated: delete
+type ChatOfMember struct {
+	  ID ID
+	  Name string
+	  LastMsg Message?
+	  LastReadMsg ID // optional
+	  UnreadCount int
+	  Permissions []perm.Kind
+}
