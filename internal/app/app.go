@@ -33,6 +33,8 @@ func Start(ctx context.Context, cfg *config.Config) error {
 		ctx, cfg.Listen(),
 		httpserver.Handlers{
 			&handlers.Healthcheck{},
+			&handlers.Auth{},
+			&handlers.UserByToken{},
 		},
 	)
 	wg.Add(1)
