@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/saime-0/cute-chat-backend/internal/model"
 	"github.com/saime-0/cute-chat-backend/internal/usecases"
 	"github.com/sirupsen/logrus"
 )
@@ -13,17 +14,17 @@ type UserByToken struct {
 	UserByTokenUc usecases.UserByTokenUsecase
 }
 
-func (h *UserByToken ) Endpoint() string {
+func (h *UserByToken) Endpoint() string {
 	return "/users"
 }
 
-func (h *UserByToken ) Method() string {
+func (h *UserByToken) Method() string {
 	return http.MethodGet
 }
 
 const _AUTH_HEADER = "Authorization"
 
-func (h *UserByToken ) Fn() http.HandlerFunc {
+func (h *UserByToken) Fn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get(_AUTH_HEADER)
 		token := strings.TrimSuffix(header, "Bearer ")
@@ -46,15 +47,10 @@ func (h *UserByToken ) Fn() http.HandlerFunc {
 			return
 		}
 		resp := _UserByTokenResponse{
-			User: _UserApiModel{
-				ID:       string(out.User.ID),
-				Username: out.User.Username,
-			},
-			Creds: _CredsApiModel{
-				Login: out.Creds.Login,
-			}
+			User:  userToApiModel(out.User),
+			Creds: credsToApiModel(out.Creds),
 		}
-		b, err = json.Marshal(resp)
+		b, err := json.Marshal(resp)
 		if err != nil {
 			logrus.Debug("[UserByToken] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
@@ -64,9 +60,22 @@ func (h *UserByToken ) Fn() http.HandlerFunc {
 	}
 }
 
+func userToApiModel(u model.User) _UserApiModel {
+	return _UserApiModel{
+		ID:       string(u.ID),
+		Username: u.Username,
+	}
+}
+
+func credsToApiModel(c model.Credentials) _CredsApiModel {
+	return _CredsApiModel{
+		Login: c.Login,
+	}
+}
+
 type _UserByTokenResponse struct {
-	User  _UserByTokenResponse `json:"user"`
-	Creds _CredsApiModel       `json:"credentials"`
+	User  _UserApiModel  `json:"user"`
+	Creds _CredsApiModel `json:"credentials"`
 }
 
 type _UserApiModel struct {
