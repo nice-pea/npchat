@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/saime-0/cute-chat-backend/internal/usecases"
-	"github.com/sirupsen/logrus"
+	"github.com/saime-0/nice-pea-chat/internal/usecases"
 )
 
 type Healthcheck struct {
@@ -24,14 +24,14 @@ func (h *Healthcheck) Fn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		out, err := h.HealthcheckUc.Healthcheck()
 		if err != nil {
-			logrus.Debug("[Healthcheck] Failed handle healthcheck: %v", err)
+			log.Printf("[Healthcheck] Failed handle healthcheck: %v", err)
 			http.Error(w, "Failed handle healthcheck", http.StatusBadRequest)
 			return
 		}
 		resp := _HealthcheckResponse(out)
 		b, err := json.Marshal(resp)
 		if err != nil {
-			logrus.Debug("[Healthcheck] Failed marshal request body: %v", err)
+			log.Printf("[Healthcheck] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}

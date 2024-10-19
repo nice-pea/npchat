@@ -1,6 +1,6 @@
 package usecases
 
-import "github.com/saime-0/cute-chat-backend/internal/model"
+import "github.com/saime-0/nice-pea-chat/internal/model"
 
 type AuthUsecase interface {
 	Auth(AuthIn) (AuthOut, error)

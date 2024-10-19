@@ -1,43 +1,36 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
-	"fmt"
-	"github.com/peterbourgon/ff/v3"
 	"os"
+
+	"github.com/peterbourgon/ff/v3"
 )
 
 type Config struct {
-	listen string
-	db     string
+	Listen     string
+	DB         string
+	ConfigFile string
 }
 
-func (c *Config) String() string {
-	return fmt.Sprintf("Config(listen=%v dbConnString=%v)", c.listen, "*hide*")
+func parseFile(file string) (cfg Config, err error) {
+	var b []byte
+	if b, err = os.ReadFile(file); err != nil {
+		return Config{}, err
+	}
+
+	return cfg, json.Unmarshal(b, &cfg)
 }
 
-func (c *Config) DbConnString() string {
-	return c.db
-}
+func Load() (cfg Config, err error) {
+	fs := flag.NewFlagSet("nice-pea-chat", flag.ExitOnError)
+	fs.StringVar(&cfg.Listen, "Listen", "localhost:46473", "listened http address")
+	fs.StringVar(&cfg.DB, "DB", "", "database connection string")
+	fs.StringVar(&cfg.ConfigFile, "config", "config.json", "config file (optional)")
 
-func (c *Config) Listen() string {
-	return c.listen
-}
-
-func Load() (*Config, error) {
-	fs := flag.NewFlagSet("cute-chat-backend", flag.ExitOnError)
-	cfg := new(Config)
-	fs.StringVar(&cfg.listen, "listen", "localhost:46473", "listened http address")
-	fs.StringVar(&cfg.db, "db", "", "database connection string")
-	fs.String("config", "", "config file (optional)")
-
-	err := ff.Parse(fs, os.Args[1:],
-		ff.WithEnvVarPrefix("CCB_"),
+	return cfg, ff.Parse(fs, os.Args[1:],
 		ff.WithConfigFileFlag("config"),
 		ff.WithConfigFileParser(ff.JSONParser),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("new config: parse os.Args: %w", err)
-	}
-	return cfg, nil
 }

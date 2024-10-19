@@ -3,10 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
-	"github.com/saime-0/cute-chat-backend/internal/usecases"
-	"github.com/sirupsen/logrus"
+	"github.com/saime-0/nice-pea-chat/internal/usecases"
 )
 
 type Auth struct {
@@ -25,14 +25,14 @@ func (h *Auth) Fn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			logrus.Debugf("[Auth] read body: %v", err)
+			log.Printf("[Auth] read body: %v", err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 		requestBody := _AuthRequestBody{}
 		err = json.Unmarshal(b, &requestBody)
 		if err != nil {
-			logrus.Debugf("[Auth] Failed unmarshal request body: %v", err)
+			log.Printf("[Auth] Failed unmarshal request body: %v", err)
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
@@ -40,7 +40,7 @@ func (h *Auth) Fn() http.HandlerFunc {
 			Login: requestBody.Login,
 		})
 		if err != nil {
-			logrus.Debugf("[Auth] Failed handle healthcheck: %v", err)
+			log.Printf("[Auth] Failed handle healthcheck: %v", err)
 			http.Error(w, "Failed handle healthcheck", http.StatusBadRequest)
 			return
 		}
@@ -50,7 +50,7 @@ func (h *Auth) Fn() http.HandlerFunc {
 
 		b, err = json.Marshal(resp)
 		if err != nil {
-			logrus.Debugf("[Auth] Failed marshal request body: %v", err)
+			log.Printf("[Auth] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}

@@ -7,16 +7,16 @@ import (
 	"sync"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/saime-0/cute-chat-backend/internal/config"
-	"github.com/saime-0/cute-chat-backend/internal/http/handlers"
-	"github.com/saime-0/cute-chat-backend/internal/httpserver"
-	"github.com/saime-0/cute-chat-backend/internal/repository/postgres"
-	"github.com/sirupsen/logrus"
+
+	"github.com/saime-0/nice-pea-chat/internal/config"
+	"github.com/saime-0/nice-pea-chat/internal/http/handlers"
+	"github.com/saime-0/nice-pea-chat/internal/httpserver"
+	"github.com/saime-0/nice-pea-chat/internal/repository/postgres"
 )
 
 func Start(ctx context.Context, cfg *config.Config) error {
 	var wg sync.WaitGroup
-	db, err := pgx.Connect(ctx, cfg.DbConnString())
+	db, err := pgx.Connect(ctx, cfg.DB)
 	if err != nil {
 		return fmt.Errorf("pgx.Connect: %w", err)
 	}
@@ -30,7 +30,7 @@ func Start(ctx context.Context, cfg *config.Config) error {
 	commonRepository := postgres.NewCommonRepository(db)
 
 	httpServer := httpserver.New(
-		ctx, cfg.Listen(),
+		ctx, cfg.Listen,
 		httpserver.Handlers{
 			&handlers.Healthcheck{},
 			&handlers.Auth{},
@@ -48,9 +48,9 @@ func Start(ctx context.Context, cfg *config.Config) error {
 
 	select {
 	case <-ctx.Done():
-		logrus.Info("[App] Receive ctx.Done, wait when components stop the work")
+		log.Println("[App] Receive ctx.Done, wait when components stop the work")
 		wg.Wait()
-		logrus.Info("[App] Components done the work")
+		log.Println("[App] Components done the work")
 		return nil
 	case err = <-httpServer.Notify():
 		return fmt.Errorf("received notify from httpServer: %w", err)

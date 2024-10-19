@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/saime-0/cute-chat-backend/internal/model"
 )
 
 type Server struct {
@@ -23,7 +21,7 @@ func (s *Server) start(ctx context.Context) {
 		// handle ctx.Done earlier
 		err := s.server.Shutdown(context.Background())
 		if err != nil {
-			logrus.Info("[HttpServer] closed with error: %v", err)
+			log.Println("[HttpServer] closed with error: %v", err)
 		}
 	}()
 	err := s.server.ListenAndServe()

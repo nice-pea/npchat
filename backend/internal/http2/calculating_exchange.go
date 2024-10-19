@@ -3,10 +3,10 @@ package httpserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/usecase"
 	"io"
 	"net/http"
+
+	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/usecase"
 )
 
 func (s *Server) calculatingExchange() HandlerFunc {
@@ -22,7 +22,7 @@ func (s *Server) calculatingExchange() HandlerFunc {
 			err := fmt.Errorf("httpserver - Server - calculatingExchange - requestBody - json.Unmarshal: %w", err)
 			return _StatusError{error: err, HTTPStatus: http.StatusBadRequest}
 		}
-		logrus.Debugf("httpserver - Server - calculatingExchange: requestBody=%v", requestBody)
+		log.Printf("httpserver - Server - calculatingExchange: requestBody=%v", requestBody)
 		output, err := s.uc.CalculatingExchange.Handle(usecase.CalculatingExchangeInput{
 			Amount:    requestBody.Amount,
 			Banknotes: requestBody.Banknotes,

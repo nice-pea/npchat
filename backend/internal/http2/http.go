@@ -3,11 +3,12 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/usecase"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/usecase"
 )
 
 type Server struct {
@@ -24,7 +25,7 @@ func (s *Server) start(ctx context.Context) {
 		// handle ctx.Done earlier
 		err := s.server.Shutdown(context.Background())
 		if err != nil {
-			logrus.Printf("httpserver - Server - closed with error: %v", err)
+			log.Printf("httpserver - Server - closed with error: %v", err)
 		}
 		s.done <- struct{}{}
 		close(s.done)

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/saime-0/cute-chat-backend/internal/perm"
+	"github.com/saime-0/nice-pea-chat/internal/perm"
 	"time"
 )
 

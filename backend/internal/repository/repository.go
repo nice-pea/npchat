@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/saime-0/cute-chat-backend/internal/model"
+
+	"github.com/saime-0/nice-pea-chat/internal/model"
 )
 
 type Common interface {

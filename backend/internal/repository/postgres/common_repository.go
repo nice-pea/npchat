@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5"
-	"github.com/saime-0/cute-chat-backend/internal/model"
-	"github.com/saime-0/cute-chat-backend/internal/repository"
+	"github.com/saime-0/nice-pea-chat/internal/model"
+	"github.com/saime-0/nice-pea-chat/internal/repository"
 )
 
 var _ repository.Common = (*CommonRepository)(nil)

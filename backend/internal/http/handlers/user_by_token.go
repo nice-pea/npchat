@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/saime-0/cute-chat-backend/internal/model"
-	"github.com/saime-0/cute-chat-backend/internal/usecases"
-	"github.com/sirupsen/logrus"
+	"github.com/saime-0/nice-pea-chat/internal/model"
+	"github.com/saime-0/nice-pea-chat/internal/usecases"
 )
 
 type UserByToken struct {
@@ -29,7 +28,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 		header := r.Header.Get(_AUTH_HEADER)
 		token := strings.TrimSuffix(header, "Bearer ")
 		if len(token) == 0 {
-			logrus.Debug("[UserByToken] AuthHeader is empty")
+			log.Println("[UserByToken] AuthHeader is empty")
 			http.Error(w, "AuthHeader is empty", http.StatusBadRequest)
 			return
 		}
@@ -37,12 +36,12 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 			Token: token,
 		})
 		if err != nil {
-			logrus.Debugf("[UserByToken] Failed handle UserByToken: %v", err)
+			log.Printf("[UserByToken] Failed handle UserByToken: %v", err)
 			http.Error(w, "Failed handle UserByToken", http.StatusBadRequest)
 			return
 		}
 		if !out.Found {
-			logrus.Debug("[UserByToken] User not found by token")
+			log.Println("[UserByToken] User not found by token")
 			http.Error(w, "User not found by token", http.StatusBadRequest)
 			return
 		}
@@ -52,7 +51,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			logrus.Debugf("[UserByToken] Failed marshal request body: %v", err)
+			log.Printf("[UserByToken] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}

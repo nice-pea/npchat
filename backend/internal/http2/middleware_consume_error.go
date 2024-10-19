@@ -3,9 +3,10 @@ package httpserver
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/resolverr"
+	"log"
 	"net/http"
+
+	"gitlab.com/llcmediatel/recruiting/golang-junior-dev/internal/resolverr"
 )
 
 // thx for idea https://habr.com/ru/articles/811361/
@@ -24,9 +25,9 @@ func (s *Server) consumeError(next HandlerFunc) HandlerFunc {
 		}
 		// print error
 		if status >= 500 && status <= 599 {
-			logrus.Errorf("consumeError: %v", err)
+			log.Printf("consumeError: %v", err)
 		} else {
-			logrus.Infof("consumeError: %v", err)
+			log.Printf("consumeError: %v", err)
 		}
 		// pull error text from specific error
 		text := resolverr.Text(err)

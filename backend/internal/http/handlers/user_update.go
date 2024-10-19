@@ -5,8 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/saime-0/cute-chat-backend/internal/usecases"
-	"github.com/sirupsen/logrus"
+	"github.com/saime-0/nice-pea-chat/internal/usecases"
 )
 
 type UserUpdate struct {
@@ -26,14 +25,14 @@ func (h *UserUpdate) Fn() http.HandlerFunc {
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			logrus.Debug("[UserUpdate] read body: %v", err)
+			log.Println("[UserUpdate] read body: %v", err)
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 		requestBody := _UserUpdateRequest{}
 		err = json.Unmarshal(b, &requestBody)
 		if err != nil {
-			logrus.Debugf("[UserUpdate] Failed unmarshal request body: %v", err)
+			log.Printf("[UserUpdate] Failed unmarshal request body: %v", err)
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
@@ -41,7 +40,7 @@ func (h *UserUpdate) Fn() http.HandlerFunc {
 			Username: requestBody.Username,
 		})
 		if err != nil {
-			logrus.Debugf("[UserUpdate] Failed handle UserByToken: %v", err)
+			log.Printf("[UserUpdate] Failed handle UserByToken: %v", err)
 			http.Error(w, "Failed handle UserByToken", http.StatusBadRequest)
 			return
 		}

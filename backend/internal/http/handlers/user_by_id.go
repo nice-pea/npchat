@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/saime-0/cute-chat-backend/internal/model"
-	"github.com/saime-0/cute-chat-backend/internal/usecases"
-	"github.com/sirupsen/logrus"
+	"github.com/saime-0/nice-pea-chat/internal/model"
+	"github.com/saime-0/nice-pea-chat/internal/usecases"
 )
 
 type UserByID struct {
@@ -25,7 +24,7 @@ func (h *UserByID) Fn() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		if id == "" {
-			logrus.Debug("[UserByID] Path value `id` not received")
+			log.Println("[UserByID] Path value `id` not received")
 			http.Error(w, "Path value `id` not received", http.StatusBadRequest)
 			return
 		}
@@ -33,12 +32,12 @@ func (h *UserByID) Fn() http.HandlerFunc {
 			ID: model.ID(id),
 		})
 		if err != nil {
-			logrus.Debugf("[UserByID] Failed handle UserByID: %v", err)
+			log.Printf("[UserByID] Failed handle UserByID: %v", err)
 			http.Error(w, "Failed handle UserByID", http.StatusBadRequest)
 			return
 		}
 		if !out.Found {
-			logrus.Debug("[UserByID] User not found by id")
+			log.Println("[UserByID] User not found by id")
 			http.Error(w, "User not found by id", http.StatusBadRequest)
 			return
 		}
@@ -47,7 +46,7 @@ func (h *UserByID) Fn() http.HandlerFunc {
 		}
 		b, err := json.Marshal(resp)
 		if err != nil {
-			logrus.Debugf("[UserByID] Failed marshal request body: %v", err)
+			log.Printf("[UserByID] Failed marshal request body: %v", err)
 			http.Error(w, "Failed marshal request body", http.StatusBadRequest)
 			return
 		}
