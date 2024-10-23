@@ -9,6 +9,6 @@ func declareRoutes(muxHttp *http.ServeMux) {
 	m.handle("/healthz", Healthz)
 }
 
-func Healthz(r *http.Request) (any, error) {
-	return "ok", nil
+func Healthz(req Request) (any, error) {
+	return req.L10n.Localize("none:ok", req.Locale, nil)
 }

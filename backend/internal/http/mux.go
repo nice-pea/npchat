@@ -4,19 +4,32 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/saime-0/nice-pea-chat/internal/service/l10n"
 )
 
 type mux struct {
 	*http.ServeMux
 }
 
-func (m *mux) handle(pattern string, f func(r *http.Request) (any, error)) {
+type Request struct {
+	*http.Request
+	L10n   l10n.Service
+	Locale string
+}
+
+func (m *mux) handle(pattern string, f func(Request) (any, error)) {
 	m.Handle(pattern, wrap(f))
 }
 
-func wrap(f func(r *http.Request) (any, error)) http.HandlerFunc {
+func wrap(f func(Request) (any, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := f(r)
+		req := Request{
+			Request: r,
+			L10n:    nil,
+		}
+
+		data, err := f(req)
 		if err != nil {
 			data = ResponseError{Error: err.Error()}
 		}
