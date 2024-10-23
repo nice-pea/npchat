@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/saime-0/nice-pea-chat/internal/model"
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type UserByID struct {
-	UserByIDUc usecases.UserByIDUsecase
+	UserByIDUc usecase.UserByIDUsecase
 }
 
 func (h *UserByID) Endpoint() string {
@@ -28,7 +28,7 @@ func (h *UserByID) Fn() http.HandlerFunc {
 			http.Error(w, "Path value `id` not received", http.StatusBadRequest)
 			return
 		}
-		out, err := h.UserByIDUc.UserByID(usecases.UserByIDIn{
+		out, err := h.UserByIDUc.UserByID(usecase.UserByIDIn{
 			ID: model.ID(id),
 		})
 		if err != nil {

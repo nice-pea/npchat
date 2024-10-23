@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type Auth struct {
-	authUc usecases.AuthUsecase
+	authUc usecase.AuthUsecase
 }
 
 func (h *Auth) Endpoint() string {
@@ -36,7 +36,7 @@ func (h *Auth) Fn() http.HandlerFunc {
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
-		out, err := h.authUc.Auth(usecases.AuthIn{
+		out, err := h.authUc.Auth(usecase.AuthIn{
 			Login: requestBody.Login,
 		})
 		if err != nil {

@@ -6,7 +6,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/jackc/pgx/v5"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	"github.com/saime-0/nice-pea-chat/internal/config"
 	"github.com/saime-0/nice-pea-chat/internal/http/handlers"
@@ -14,17 +15,22 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/repository/postgres"
 )
 
-func Start(ctx context.Context, cfg *config.Config) error {
+func Start(ctx context.Context, cfg config.Config) error {
 	var wg sync.WaitGroup
-	db, err := pgx.Connect(ctx, cfg.DB)
+	db, err := gorm.Open(sqlite.Open(cfg.Database.Url))
 	if err != nil {
-		return fmt.Errorf("pgx.Connect: %w", err)
+		return fmt.Errorf("[Start] gorm.Open: %w", err)
 	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		db.Close(context.Background())
+		if s, err := db.DB(); err != nil {
+			return
+		} else {
+			_ = s.Close()
+		}
 	}()
 
 	commonRepository := postgres.NewCommonRepository(db)

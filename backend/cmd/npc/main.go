@@ -13,10 +13,10 @@ import (
 )
 
 func main() {
-	log.Println("[Main] Start cute-chat-backend")
+	log.Println("[main] Start nice-pea-chat")
 	cfg, err := config.Load()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -30,8 +30,8 @@ func main() {
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	log.Printf("[Main] Received signal %s", <-interrupt)
+	log.Printf("[main] Received signal %s", <-interrupt)
 	cancel()
-	log.Println("[Main] Cancel context")
+	log.Println("[main] Cancel context")
 	time.Sleep(3 * time.Second)
 }

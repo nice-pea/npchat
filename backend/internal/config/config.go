@@ -4,14 +4,28 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
-
-	"github.com/peterbourgon/ff/v3"
 )
 
 type Config struct {
-	Listen     string
-	DB         string
-	ConfigFile string
+	App struct {
+		Host string `json:"host"`
+		Port string `json:"port"`
+	} `json:"app"`
+	Database struct {
+		Url string `json:"url"`
+	} `json:"database"`
+}
+
+func Load() (Config, error) {
+	var file string
+	fs := flag.NewFlagSet("nice-pea-chat", flag.ExitOnError)
+	fs.StringVar(&file, "config", "config.json", "config file in json format")
+
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return Config{}, err
+	}
+
+	return parseFile(file)
 }
 
 func parseFile(file string) (cfg Config, err error) {
@@ -21,16 +35,4 @@ func parseFile(file string) (cfg Config, err error) {
 	}
 
 	return cfg, json.Unmarshal(b, &cfg)
-}
-
-func Load() (cfg Config, err error) {
-	fs := flag.NewFlagSet("nice-pea-chat", flag.ExitOnError)
-	fs.StringVar(&cfg.Listen, "Listen", "localhost:46473", "listened http address")
-	fs.StringVar(&cfg.DB, "DB", "", "database connection string")
-	fs.StringVar(&cfg.ConfigFile, "config", "config.json", "config file (optional)")
-
-	return cfg, ff.Parse(fs, os.Args[1:],
-		ff.WithConfigFileFlag("config"),
-		ff.WithConfigFileParser(ff.JSONParser),
-	)
 }

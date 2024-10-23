@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type UserChats struct {
-	UserChatsUc usecases.UserChatsUsecase
+	UserChatsUc usecase.UserChatsUsecase
 }
 
 func (h *UserChats) Endpoint() string {
@@ -36,7 +36,7 @@ func (h *UserChats) Fn() http.HandlerFunc {
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
-		out, err := h.UserChatsUc.UserChats(usecases.UserChatsIn{
+		out, err := h.UserChatsUc.UserChats(usecase.UserChatsIn{
 			Login: requestBody.Login,
 		})
 		if err != nil {

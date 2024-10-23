@@ -5,11 +5,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type UserUpdate struct {
-	UserUpdateUc usecases.UserUpdateUsecase
+	UserUpdateUc usecase.UserUpdateUsecase
 }
 
 func (h *UserUpdate) Endpoint() string {
@@ -36,7 +36,7 @@ func (h *UserUpdate) Fn() http.HandlerFunc {
 			http.Error(w, "Failed unmarshal request body", http.StatusBadRequest)
 			return
 		}
-		_, err = h.UserUpdateUc.UserUpdate(usecases.UserUpdateIn{
+		_, err = h.UserUpdateUc.UserUpdate(usecase.UserUpdateIn{
 			Username: requestBody.Username,
 		})
 		if err != nil {

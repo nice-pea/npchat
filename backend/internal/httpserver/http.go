@@ -31,19 +31,19 @@ func (s *Server) start(ctx context.Context) {
 	close(s.notify)
 }
 
-type Handler interface {
-	Fn() http.HandlerFunc
+type Handler struct {
+	Func http.HandlerFunc
 	// Pattern() string
-	Endpoint() string
-	Method() string
+	Endpoint string
+	Method   string
 }
 type Handlers []Handler
 
 func New(ctx context.Context, addr string, handlers Handlers) *Server {
 	mux := http.NewServeMux()
 	for _, h := range handlers {
-		p := h.Method() + " " + h.Endpoint()
-		mux.HandleFunc(p, h.Fn())
+		p := h.Method + " " + h.Endpoint
+		mux.HandleFunc(p, h.Func)
 	}
 	s := &Server{
 		server: &http.Server{

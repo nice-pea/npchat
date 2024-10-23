@@ -1,4 +1,4 @@
-package usecases
+package usecase
 
 import "github.com/saime-0/nice-pea-chat/internal/model"
 

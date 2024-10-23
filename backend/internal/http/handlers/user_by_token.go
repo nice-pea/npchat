@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/saime-0/nice-pea-chat/internal/model"
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type UserByToken struct {
-	UserByTokenUc usecases.UserByTokenUsecase
+	UserByTokenUc usecase.UserByTokenUsecase
 }
 
 func (h *UserByToken) Endpoint() string {
@@ -32,7 +32,7 @@ func (h *UserByToken) Fn() http.HandlerFunc {
 			http.Error(w, "AuthHeader is empty", http.StatusBadRequest)
 			return
 		}
-		out, err := h.UserByTokenUc.UserByToken(usecases.UserByTokenIn{
+		out, err := h.UserByTokenUc.UserByToken(usecase.UserByTokenIn{
 			Token: token,
 		})
 		if err != nil {

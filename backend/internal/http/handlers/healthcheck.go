@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/usecases"
+	"github.com/saime-0/nice-pea-chat/internal/usecase"
 )
 
 type Healthcheck struct {
-	HealthcheckUc usecases.HealthcheckUsecase
+	HealthcheckUc usecase.HealthcheckUsecase
 }
 
 func (h *Healthcheck) Endpoint() string {
