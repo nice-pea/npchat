@@ -1,8 +1,8 @@
 package model
 
 type Localization struct {
-	Category string `gorm:"" json:"category"`
-	Code     string `gorm:"" json:"code"`
-	Locale   string `gorm:"" json:"locale"`
-	Text     string `gorm:"" json:"text"`
+	Category string `json:"category"`
+	Code     string `json:"code"`
+	Locale   string `json:"locale"`
+	Text     string `json:"text"`
 }

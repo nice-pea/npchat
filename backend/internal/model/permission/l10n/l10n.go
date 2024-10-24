@@ -1,9 +1,15 @@
 package l10n
 
-import "strconv"
+import (
+	"fmt"
+)
 
 const Category = "permissions"
 
-func Code(permission int) string {
-	return Category + ":" + strconv.Itoa(permission)
+func Name(permission int) string {
+	return fmt.Sprintf("%s:name%d", Category, permission)
+}
+
+func Desc(permission int) string {
+	return fmt.Sprintf("%s:desc%d", Category, permission)
 }

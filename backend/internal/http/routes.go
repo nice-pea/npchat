@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/model"
+	ucAuth "github.com/saime-0/nice-pea-chat/internal/usecase/auth"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 )
@@ -13,20 +13,25 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	m.handle("/health", Health)
 	m.handle("/roles", Roles)
 	m.handle("/permissions", Permissions)
+	m.handle("/auth", Auth)
 }
 
-func Permissions(req Request) (_ any, err error) {
+func Auth(req Request) (any, error) {
+	ucParams := ucAuth.Params{
+		Key: req.Form.Get("key"),
+		DB:  req.DB,
+	}
+
+	return ucParams.Run()
+}
+
+func Permissions(req Request) (any, error) {
 	ucParams := ucPermissions.Params{
 		Locale: req.Locale,
 		L10n:   req.L10n,
 	}
 
-	var perms []model.Permission
-	if perms, err = ucParams.Run(); err != nil {
-		return nil, err
-	}
-
-	return perms, nil
+	return ucParams.Run()
 }
 
 func Roles(req Request) (_ any, err error) {
@@ -40,12 +45,7 @@ func Roles(req Request) (_ any, err error) {
 		return nil, err
 	}
 
-	var roles []model.Role
-	if roles, err = ucParams.Run(); err != nil {
-		return nil, err
-	}
-
-	return roles, nil
+	return ucParams.Run()
 }
 
 func Health(req Request) (any, error) {
