@@ -8,8 +8,7 @@ import (
 
 type Config struct {
 	App struct {
-		Host string `json:"host"`
-		Port string `json:"port"`
+		Address string `json:"address"`
 	} `json:"app"`
 	Database struct {
 		Url string `json:"url"`

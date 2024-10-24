@@ -10,6 +10,7 @@ import (
 
 type mux struct {
 	*http.ServeMux
+	s ServerParams
 }
 
 type Request struct {
@@ -19,25 +20,33 @@ type Request struct {
 }
 
 func (m *mux) handle(pattern string, f func(Request) (any, error)) {
-	m.Handle(pattern, wrap(f))
+	m.Handle(pattern, wrap(m.s, f))
 }
 
-func wrap(f func(Request) (any, error)) http.HandlerFunc {
+func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := Request{
 			Request: r,
-			L10n:    nil,
+			L10n:    s.L10n,
+			Locale:  "",
 		}
-
-		data, err := f(req)
-		if err != nil {
-			data = ResponseError{Error: err.Error()}
-		}
-		if s, ok := data.(string); ok {
-			data = ResponseMsg{Message: s}
+		var (
+			data any
+			b    []byte
+			err  error
+		)
+		if err = r.ParseForm(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			if data, err = f(req); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				data = ResponseError{Error: err.Error()}
+			}
+			if s, ok := data.(string); ok {
+				data = ResponseMsg{Message: s}
+			}
 		}
 		// Marshal data
-		var b []byte
 		if b, err = json.Marshal(data); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			b = []byte(err.Error())

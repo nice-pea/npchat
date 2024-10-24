@@ -10,9 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/saime-0/nice-pea-chat/internal/config"
-	"github.com/saime-0/nice-pea-chat/internal/http/handlers"
-	"github.com/saime-0/nice-pea-chat/internal/httpserver"
-	"github.com/saime-0/nice-pea-chat/internal/repository/postgres"
+	"github.com/saime-0/nice-pea-chat/internal/http"
 )
 
 func Start(ctx context.Context, cfg config.Config) error {
@@ -26,39 +24,36 @@ func Start(ctx context.Context, cfg config.Config) error {
 	go func() {
 		defer wg.Done()
 		<-ctx.Done()
-		if s, err := db.DB(); err != nil {
-			return
-		} else {
+		if s, err := db.DB(); err == nil {
 			_ = s.Close()
 		}
 	}()
 
-	commonRepository := postgres.NewCommonRepository(db)
-
-	httpServer := httpserver.New(
-		ctx, cfg.Listen,
-		httpserver.Handlers{
-			&handlers.Healthcheck{},
-			&handlers.Auth{},
-			&handlers.UserByToken{},
-			&handlers.UserByID{},
-			&handlers.UserUpdate{},
-			&handlers.UserChats{},
-		},
-	)
 	wg.Add(1)
 	go func() {
-		<-httpServer.Done()
-		wg.Done()
+		defer wg.Done()
+		if err := (http.ServerParams{
+			Ctx:  ctx,
+			Addr: cfg.App.Address,
+			L10n: l10n{},
+		}.StartServer()); err != nil {
+			log.Printf("[Start] http.StartServer: %s", err.Error())
+		}
 	}()
 
-	select {
-	case <-ctx.Done():
-		log.Println("[App] Receive ctx.Done, wait when components stop the work")
-		wg.Wait()
-		log.Println("[App] Components done the work")
-		return nil
-	case err = <-httpServer.Notify():
-		return fmt.Errorf("received notify from httpServer: %w", err)
+	log.Println("[Start] Receive ctx.Done, wait when components stop the work")
+	wg.Wait()
+	log.Println("[Start] Components done the work")
+	return nil
+}
+
+type l10n struct{}
+
+func (l l10n) Localize(code, locale string, vars map[string]string) (string, error) {
+	switch code {
+	case "none:ok":
+		return "ok", nil
+	default:
+		return "", fmt.Errorf("unknown code: %s", code)
 	}
 }
