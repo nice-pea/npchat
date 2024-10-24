@@ -2,7 +2,7 @@ package model
 
 type Localization struct {
 	Category string `json:"category"`
-	Code     string `json:"code"`
+	Item     string `json:"item"`
 	Locale   string `json:"locale"`
 	Text     string `json:"text"`
 }

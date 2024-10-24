@@ -1,0 +1,30 @@
+@host = http://localhost:7511
+@saitoken = f1d727b2-212e-47cf-a7a2-40ff581bc816
+
+### Create new session
+GET {{host}}/login?key=kk
+
+### User and session information
+GET {{host}}/authn?token={{saitoken}}
+
+### Permissions list
+GET {{host}}/permissions
+
+### Users list
+GET {{host}}/users
+
+### User update
+POST {{host}}/users/update
+Content-Type: application/json
+
+{
+  "id": 1,
+  "username": "qwerty"
+}
+
+### Healthcheck
+GET {{host}}/health
+#Accept-Language: ru
+Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7
+#Accept-Language: en-us,en;q=0.5
+

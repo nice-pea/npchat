@@ -1,11 +1,41 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/language"
 )
+
+// Функция для парсинга JSON из тела запроса
+func parseJSONRequest(body io.ReadCloser, v any) error {
+	// Декодируйте JSON из тела запроса
+	decoder := json.NewDecoder(body)
+	defer body.Close() // Закрываем тело запроса после декодирования
+	return decoder.Decode(v)
+}
+
+func locale(acceptLanguage, defaults string) string {
+	matcher := language.NewMatcher([]language.Tag{
+		language.AmericanEnglish,
+		language.English,
+		language.Russian,
+	})
+	if tags, _, err := language.ParseAcceptLanguage(acceptLanguage); err != nil {
+		log.Printf("locale: language.ParseAcceptLanguage: %v", err)
+		return defaults
+	} else {
+		tag, _, _ := matcher.Match(tags...)
+		base, _ := tag.Base()
+		reg, _ := tag.Region()
+		return base.String() + "_" + reg.String()
+	}
+}
 
 func uintsParam(values url.Values, param string) ([]uint, error) {
 	valStr := values.Get(param)
@@ -26,6 +56,7 @@ func uintsParam(values url.Values, param string) ([]uint, error) {
 	return res, nil
 }
 
+//nolint:unused
 func uintOptionalParam(values url.Values, param string) (uint, bool, error) {
 	valStr := values.Get(param)
 	if valStr == "" {

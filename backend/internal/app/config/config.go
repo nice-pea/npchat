@@ -11,8 +11,11 @@ type Config struct {
 		Address string `json:"address"`
 	} `json:"app"`
 	Database struct {
-		Url string `json:"url"`
+		DSN string `json:"dsn"`
 	} `json:"database"`
+	L10n struct {
+		DSN string `json:"dsn"`
+	} `json:"l10n"`
 }
 
 func Load() (Config, error) {

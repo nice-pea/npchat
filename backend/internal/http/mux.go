@@ -31,7 +31,7 @@ func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
 		req := Request{
 			Request: r,
 			L10n:    s.L10n,
-			Locale:  "",
+			Locale:  locale(r.Header.Get("Accept-Language"), l10n.LocaleDefault),
 			DB:      s.DB,
 		}
 		var (

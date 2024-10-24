@@ -7,9 +7,16 @@ import (
 )
 
 type Params struct {
+	IDs []uint
+
 	DB *gorm.DB
 }
 
 func (p Params) Run() (users []model.User, _ error) {
-	return users, p.DB.Find(&users).Error
+	cond := p.DB
+	if len(p.IDs) > 0 {
+		cond = cond.Where("id IN (?)", p.IDs)
+	}
+
+	return users, cond.Find(&users).Error
 }

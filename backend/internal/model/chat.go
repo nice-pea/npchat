@@ -2,8 +2,9 @@ package model
 
 import "time"
 
-type User struct {
+type Chat struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	Username  string    `json:"username"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
+	CreatorID uint      `json:"creator_id"`
 }
