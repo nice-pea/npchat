@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/saime-0/nice-pea-chat/internal/app"
-	"github.com/saime-0/nice-pea-chat/internal/config"
+	"github.com/saime-0/nice-pea-chat/internal/app/config"
 )
 
 func main() {

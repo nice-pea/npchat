@@ -1,7 +1,7 @@
 package role
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/database/typ"
+	"github.com/saime-0/nice-pea-chat/internal/app/database/typ"
 )
 
 type Role struct {
