@@ -1,4 +1,4 @@
-package role
+package model
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/app/database/typ"

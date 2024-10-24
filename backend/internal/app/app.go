@@ -50,14 +50,3 @@ func Start(ctx context.Context, cfg config.Config) error {
 	log.Println("[Start] Components done the work")
 	return nil
 }
-
-type l10n struct{}
-
-func (l l10n) Localize(code, locale string, vars map[string]string) (string, error) {
-	switch code {
-	case "none:ok":
-		return "ok", nil
-	default:
-		return "", fmt.Errorf("unknown code: %s", code)
-	}
-}

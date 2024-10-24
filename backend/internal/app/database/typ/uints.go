@@ -28,7 +28,7 @@ func (s *Uints) Scan(src interface{}) error {
 }
 
 func (s Uints) Value() (driver.Value, error) {
-	if s == nil || len(s) == 0 {
+	if len(s) == 0 {
 		return nil, nil
 	}
 	strVals := make([]string, len(s))
