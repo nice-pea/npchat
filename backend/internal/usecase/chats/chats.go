@@ -21,8 +21,8 @@ func (p Params) Run() ([]model.Chat, error) {
 	}
 	if p.UserIDs != nil {
 		cond = cond.
-			InnerJoins("members ON members.chat_id = chats.id").
+			Joins("INNER JOIN members ON members.chat_id = chats.id").
 			Where("members.user_id IN (?)", p.UserIDs)
 	}
-	return chats, cond.Find(&chats, cond).Error
+	return chats, cond.Find(&chats).Error
 }

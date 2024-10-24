@@ -6,6 +6,7 @@ import (
 	ucAuthn "github.com/saime-0/nice-pea-chat/internal/usecase/authn"
 	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
 	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
+	ucChatCreate "github.com/saime-0/nice-pea-chat/internal/usecase/chats/create"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 	"github.com/saime-0/nice-pea-chat/internal/usecase/users"
@@ -21,11 +22,23 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	m.handle("/users/update", UserUpdate)
 	// Chats
 	m.handle("/chats", Chats)
+	m.handle("POST /chats/create", ChatCreate)
 	m.handle("/permissions", Permissions)
 	m.handle("/roles", Roles)
 	// Authentication
 	m.handle("/authn", Authn)
 	m.handle("/authn/login", Login)
+}
+
+func ChatCreate(req Request) (any, error) {
+	ucParams := ucChatCreate.Params{
+		DB: req.DB,
+	}
+	if err := parseJSONRequest(req.Body, &ucParams.Chat); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
 }
 
 func Chats(req Request) (_ any, err error) {

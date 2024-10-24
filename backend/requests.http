@@ -18,6 +18,15 @@ GET {{host}}/permissions
 ### Create new session
 GET {{host}}/login?key=kk
 
+### User update
+POST {{host}}/chats/create
+Content-Type: application/json
+
+{
+  "name": "some2",
+  "creator_id": 1
+}
+
 ### User and session information
 GET {{host}}/authn?token={{saitoken}}
 

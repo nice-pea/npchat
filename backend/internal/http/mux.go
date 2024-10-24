@@ -38,7 +38,7 @@ func modulation(next HandlerFunc) http.HandlerFunc {
 		if err = r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			if data, err = next(Request{}); err != nil {
+			if data, err = next(Request{Request: r}); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				data = ResponseError{Error: err.Error()}
 			}
