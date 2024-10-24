@@ -4,22 +4,45 @@ import (
 	"net/http"
 
 	ucAuthn "github.com/saime-0/nice-pea-chat/internal/usecase/authn"
-	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/login"
+	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
+	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 	"github.com/saime-0/nice-pea-chat/internal/usecase/users"
-	"github.com/saime-0/nice-pea-chat/internal/usecase/users/ucUserUpdate"
+	ucUserUpdate "github.com/saime-0/nice-pea-chat/internal/usecase/users/update"
 )
 
 func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	m := mux{ServeMux: muxHttp, s: s}
+	// Service
 	m.handle("/health", Health)
-	m.handle("/roles", Roles)
+	// Users
 	m.handle("/users", Users)
 	m.handle("/users/update", UserUpdate)
+	// Chats
+	m.handle("/chats", Chats)
 	m.handle("/permissions", Permissions)
+	m.handle("/roles", Roles)
+	// Authentication
 	m.handle("/authn", Authn)
-	m.handle("/login", Login)
+	m.handle("/authn/login", Login)
+}
+
+func Chats(req Request) (_ any, err error) {
+	ucParams := ucChats.Params{
+		IDs:     nil,
+		UserIDs: nil,
+		DB:      req.DB,
+	}
+
+	if ucParams.IDs, err = uintsParam(req.Form, "ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.UserIDs, err = uintsParam(req.Form, "user_ids"); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
 }
 
 func UserUpdate(req Request) (any, error) {

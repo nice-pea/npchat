@@ -6,7 +6,7 @@
 
 nice pea chat - нпс / проект / npc
 permission set - набор прав / пермишны / ps
-conversation - чат / беседа  
+chat - чат / беседа  
 
 ## Авторизация:
 

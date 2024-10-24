@@ -20,7 +20,7 @@
 
 # 1.1.2 Чат
 
-*a.k.a conversation/беседа*
+*a.k.a ~~conversation~~chat/беседа*
 
 Структура чата:
 

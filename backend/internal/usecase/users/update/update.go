@@ -1,4 +1,4 @@
-package ucUserUpdate
+package update
 
 import (
 	"gorm.io/gorm"

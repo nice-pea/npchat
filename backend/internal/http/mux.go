@@ -22,18 +22,14 @@ type Request struct {
 	Locale string
 }
 
-func (m *mux) handle(pattern string, f func(Request) (any, error)) {
-	m.Handle(pattern, wrap(m.s, f))
+type HandlerFunc func(Request) (any, error)
+
+func (m *mux) handle(pattern string, f HandlerFunc) {
+	m.Handle(pattern, modulation(initRequest(m.s, f)))
 }
 
-func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
+func modulation(next HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := Request{
-			Request: r,
-			L10n:    s.L10n,
-			Locale:  locale(r.Header.Get("Accept-Language"), l10n.LocaleDefault),
-			DB:      s.DB,
-		}
 		var (
 			data any
 			b    []byte
@@ -42,7 +38,7 @@ func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
 		if err = r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			if data, err = f(req); err != nil {
+			if data, err = next(Request{}); err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				data = ResponseError{Error: err.Error()}
 			}
@@ -57,7 +53,7 @@ func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
 		}
 		// Try to send data
 		if _, err = w.Write(b); err != nil {
-			log.Println("[wrap] error response write:", err.Error())
+			log.Println("[modulation] error response write:", err.Error())
 			return
 		}
 	}
@@ -69,4 +65,16 @@ type ResponseError struct {
 
 type ResponseMsg struct {
 	Message string `json:"message"`
+}
+
+func initRequest(s ServerParams, next HandlerFunc) HandlerFunc {
+	return func(r Request) (any, error) {
+		r = Request{
+			Request: r.Request,
+			L10n:    s.L10n,
+			Locale:  locale(r.Header.Get("Accept-Language"), l10n.LocaleDefault),
+			DB:      s.DB,
+		}
+		return next(r)
+	}
 }
