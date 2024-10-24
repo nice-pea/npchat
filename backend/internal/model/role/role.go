@@ -1,7 +1,11 @@
 package role
 
+import (
+	"github.com/saime-0/nice-pea-chat/internal/database/typ"
+)
+
 type Role struct {
-	ID          uint   `gorm:"column:id;primaryKey" json:"id"`
-	Name        string `gorm:"-" json:"name"`
-	Permissions []uint `gorm:"column:permissions" json:"permissions"`
+	ID          uint      `gorm:"primaryKey" json:"id"`
+	Name        string    `gorm:"-" json:"name"`
+	Permissions typ.Uints `gorm:"type:text" json:"permissions,omitempty"`
 }

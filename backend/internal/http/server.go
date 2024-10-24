@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"gorm.io/gorm"
+
 	serviceL10n "github.com/saime-0/nice-pea-chat/internal/service/l10n"
 )
 
@@ -15,6 +17,7 @@ type ServerParams struct {
 	Addr string
 
 	L10n serviceL10n.Service
+	DB   *gorm.DB
 }
 
 func (s ServerParams) StartServer() error {

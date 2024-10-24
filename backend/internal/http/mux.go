@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"gorm.io/gorm"
+
 	"github.com/saime-0/nice-pea-chat/internal/service/l10n"
 )
 
@@ -16,6 +18,7 @@ type mux struct {
 type Request struct {
 	*http.Request
 	L10n   l10n.Service
+	DB     *gorm.DB
 	Locale string
 }
 
@@ -29,6 +32,7 @@ func wrap(s ServerParams, f func(Request) (any, error)) http.HandlerFunc {
 			Request: r,
 			L10n:    s.L10n,
 			Locale:  "",
+			DB:      s.DB,
 		}
 		var (
 			data any

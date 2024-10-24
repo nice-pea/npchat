@@ -36,6 +36,7 @@ func Start(ctx context.Context, cfg config.Config) error {
 			Ctx:  ctx,
 			Addr: cfg.App.Address,
 			L10n: l10n{},
+			DB:   db,
 		}.StartServer()); err != nil {
 			log.Printf("[Start] http.StartServer: %s", err.Error())
 		}

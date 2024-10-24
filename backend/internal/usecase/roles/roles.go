@@ -1,19 +1,18 @@
 package roles
 
-import . "github.com/saime-0/nice-pea-chat/internal/model/role"
+import (
+	"gorm.io/gorm"
+
+	. "github.com/saime-0/nice-pea-chat/internal/model/role"
+)
 
 type Params struct {
 	IDs  []uint `json:"ids"`
 	Name string `json:"name"`
+
+	DB *gorm.DB
 }
 
-func (p Params) Run() ([]Role, error) {
-
-	return []Role{
-		{
-			ID:          1,
-			Name:        "asd",
-			Permissions: nil,
-		},
-	}, nil
+func (p Params) Run() (roles []Role, _ error) {
+	return roles, p.DB.Find(&roles).Error
 }

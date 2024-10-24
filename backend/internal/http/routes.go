@@ -14,14 +14,16 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 }
 
 func Roles(req Request) (_ any, err error) {
-	var ucParams ucRoles.Params
+	ucParams := ucRoles.Params{
+		IDs:  nil,
+		Name: req.Form.Get("name"),
+		DB:   req.DB,
+	}
 
 	ucParams.IDs, err = uintsParam(req.Form, "ids")
 	if err != nil {
 		return nil, err
 	}
-
-	ucParams.Name = req.Form.Get("name")
 
 	var roles []Role
 	if roles, err = ucParams.Run(); err != nil {
