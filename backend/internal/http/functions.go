@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"golang.org/x/text/language"
+
+	"github.com/saime-0/nice-pea-chat/internal/app/optional"
 )
 
 // Функция для парсинга JSON из тела запроса
@@ -65,8 +67,22 @@ func uintOptionalParam(values url.Values, param string) (uint, bool, error) {
 
 	v, err := strconv.ParseUint(valStr, 10, 64)
 	if err != nil {
-		return 0, false, fmt.Errorf("некорректный параметр %s (uint): %w", param, err)
+		return 0, false, fmt.Errorf("некорректный uint параметр %s: %w", param, err)
 	}
 
 	return uint(v), true, nil
+}
+
+func boolOptionalParam(values url.Values, param string) (optional.Bool, error) {
+	valStr := values.Get(param)
+	if valStr == "" {
+		return optional.NoneBool, nil
+	}
+
+	valBool, err := strconv.ParseBool(valStr)
+	if err != nil {
+		return optional.NoneBool, fmt.Errorf("некорректный необязательный bool параметр %s: %w", param, err)
+	}
+
+	return optional.Boole(valBool, true), nil
 }

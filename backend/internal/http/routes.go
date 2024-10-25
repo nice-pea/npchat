@@ -7,6 +7,8 @@ import (
 	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
 	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
 	ucChatCreate "github.com/saime-0/nice-pea-chat/internal/usecase/chats/create"
+	ucMembers "github.com/saime-0/nice-pea-chat/internal/usecase/members"
+	ucMemberCreate "github.com/saime-0/nice-pea-chat/internal/usecase/members/create"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 	"github.com/saime-0/nice-pea-chat/internal/usecase/users"
@@ -23,11 +25,49 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	// Chats
 	m.handle("/chats", Chats)
 	m.handle("POST /chats/create", ChatCreate)
+	// Members
+	m.handle("/members", Members)
+	m.handle("/members/create", MemberCreate)
 	m.handle("/permissions", Permissions)
 	m.handle("/roles", Roles)
 	// Authentication
 	m.handle("/authn", Authn)
 	m.handle("/authn/login", Login)
+}
+
+func Members(req Request) (_ any, err error) {
+	ucParams := ucMembers.Params{
+		IDs:      nil,
+		UserIDs:  nil,
+		ChatIDs:  nil,
+		IsPinned: 0,
+		DB:       req.DB,
+	}
+	if ucParams.IDs, err = uintsParam(req.Form, "ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.UserIDs, err = uintsParam(req.Form, "user_ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.ChatIDs, err = uintsParam(req.Form, "chat_ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.IsPinned, err = boolOptionalParam(req.Form, "is_pinned"); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
+}
+
+func MemberCreate(req Request) (any, error) {
+	ucParams := ucMemberCreate.Params{
+		DB: req.DB,
+	}
+	if err := parseJSONRequest(req.Body, &ucParams.Member); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
 }
 
 func ChatCreate(req Request) (any, error) {

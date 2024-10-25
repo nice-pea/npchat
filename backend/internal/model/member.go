@@ -4,7 +4,8 @@ import "time"
 
 type Member struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
-	UserID    uint      `gorm:"primaryKey" json:"user_id"`
-	ChatID    uint      `gorm:"primaryKey" json:"chat_id"`
+	UserID    uint      `json:"user_id"`
+	ChatID    uint      `json:"chat_id"`
+	IsPinned  bool      `gorm:"type:integer" json:"pinned"`
 	CreatedAt time.Time `json:"created_at"`
 }

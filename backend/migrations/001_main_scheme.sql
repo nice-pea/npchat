@@ -8,7 +8,7 @@ CREATE TABLE roles
 
 CREATE TABLE role_relations
 (
-    role_id INTEGER REFERENCES roles ON DELETE CASCADE,
+    role_id   INTEGER REFERENCES roles ON DELETE CASCADE,
     member_id INTEGER REFERENCES members ON DELETE CASCADE,
     PRIMARY KEY (role_id, member_id)
 );
@@ -44,14 +44,15 @@ CREATE TABLE chats
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     creator_id INTEGER NULL,
     FOREIGN KEY (creator_id) REFERENCES users ON DELETE SET NULL
-)
+);
 
 CREATE TABLE members
 (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER,
-    chat_id    INTEGER,
+    user_id    INTEGER NOT NULL,
+    chat_id    INTEGER NOT NULL,
+    is_pinned  INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users ON DELETE CASCADE,
     FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE
-)
+);
