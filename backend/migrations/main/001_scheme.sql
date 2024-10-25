@@ -56,3 +56,18 @@ CREATE TABLE members
     FOREIGN KEY (user_id) REFERENCES users ON DELETE CASCADE,
     FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE
 );
+
+CREATE TABLE messages
+(
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    chat_id     INTEGER  NOT NULL,
+    text        TEXT     NOT NULL,
+    author_id   INTEGER  NULL,
+    reply_to_id INTEGER  NULL,
+    edited_at   DATETIME NULL,
+    removed_at  DATETIME NULL,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users ON DELETE SET NULL,
+    FOREIGN KEY (reply_to_id) REFERENCES messages ON DELETE SET NULL
+);

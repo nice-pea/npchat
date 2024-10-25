@@ -58,19 +58,18 @@ func uintsParam(values url.Values, param string) ([]uint, error) {
 	return res, nil
 }
 
-//nolint:unused
-func uintOptionalParam(values url.Values, param string) (uint, bool, error) {
+func uintOptionalParam(values url.Values, param string) (optional.Uint, error) {
 	valStr := values.Get(param)
 	if valStr == "" {
-		return 0, false, nil
+		return optional.Uint{}, nil
 	}
 
 	v, err := strconv.ParseUint(valStr, 10, 64)
 	if err != nil {
-		return 0, false, fmt.Errorf("некорректный uint параметр %s: %w", param, err)
+		return optional.Uint{}, fmt.Errorf("некорректный uint параметр %s: %w", param, err)
 	}
 
-	return uint(v), true, nil
+	return optional.NewUint(uint(v)), nil
 }
 
 func boolOptionalParam(values url.Values, param string) (optional.Bool, error) {

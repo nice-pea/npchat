@@ -3,12 +3,15 @@ package http
 import (
 	"net/http"
 
+	"github.com/saime-0/nice-pea-chat/internal/app/optional"
 	ucAuthn "github.com/saime-0/nice-pea-chat/internal/usecase/authn"
 	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
 	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
 	ucChatCreate "github.com/saime-0/nice-pea-chat/internal/usecase/chats/create"
 	ucMembers "github.com/saime-0/nice-pea-chat/internal/usecase/members"
 	ucMemberCreate "github.com/saime-0/nice-pea-chat/internal/usecase/members/create"
+	ucMessages "github.com/saime-0/nice-pea-chat/internal/usecase/messages"
+	ucMessageCreate "github.com/saime-0/nice-pea-chat/internal/usecase/messages/create"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 	"github.com/saime-0/nice-pea-chat/internal/usecase/users"
@@ -25,6 +28,9 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	// Chats
 	m.handle("/chats", Chats)
 	m.handle("POST /chats/create", ChatCreate)
+	// Messages
+	m.handle("/messages", Messages)
+	m.handle("/messages/create", MessageCreate)
 	// Members
 	m.handle("/members", Members)
 	m.handle("/members/create", MemberCreate)
@@ -33,6 +39,55 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	// Authentication
 	m.handle("/authn", Authn)
 	m.handle("/authn/login", Login)
+}
+
+func MessageCreate(req Request) (any, error) {
+	ucParams := ucMessageCreate.Params{
+		DB: req.DB,
+	}
+	if err := parseJSONRequest(req.Body, &ucParams.Message); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
+}
+
+func Messages(req Request) (_ any, err error) {
+	ucParams := ucMessages.Params{
+		IDs:        nil,
+		ChatIDs:    nil,
+		AuthorIDs:  nil,
+		ReplyToIDs: nil,
+		Boundary:   ucMessages.Boundary{},
+		Limit:      optional.Uint{},
+		DB:         req.DB,
+	}
+	if ucParams.IDs, err = uintsParam(req.Form, "ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.AuthorIDs, err = uintsParam(req.Form, "author_ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.ChatIDs, err = uintsParam(req.Form, "chat_ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.ReplyToIDs, err = uintsParam(req.Form, "reply_to_ids"); err != nil {
+		return nil, err
+	}
+
+	if ucParams.Boundary.AroundID, err = uintOptionalParam(req.Form, "around_id"); err != nil {
+		return nil, err
+	} else if ucParams.Boundary.BeforeID, err = uintOptionalParam(req.Form, "before_id"); err != nil {
+		return nil, err
+	} else if ucParams.Boundary.AfterID, err = uintOptionalParam(req.Form, "after_id"); err != nil {
+		return nil, err
+	}
+
+	if ucParams.Limit, err = uintOptionalParam(req.Form, "limit"); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
 }
 
 func Members(req Request) (_ any, err error) {

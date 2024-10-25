@@ -12,6 +12,20 @@ Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7
 ### Chats list
 GET {{host}}/chats?ids=1&user_ids=1
 
+### Messages list
+GET {{host}}/messages?around_id=5&limit=5
+
+### Message create
+POST {{host}}/messages/create
+Content-Type: application/json
+
+{
+  "chat_id": 1,
+  "text": "text!",
+  "author_id": 1,
+  "reply_to_id": 0
+}
+
 ### Members list
 GET {{host}}/members?is_pinned=&
 
