@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
+import ru.saime.nice_pea_chat.data.store.NpcClientStore
 
 
 sealed interface CheckAuthnResult {
@@ -24,6 +25,7 @@ sealed interface AuthenticationAction {
 
 class AuthenticationViewModel(
     private val store: AuthenticationStore,
+    private val npcStore: NpcClientStore,
     private val repo: AuthenticationRepository,
 ) : ViewModel() {
 
@@ -38,11 +40,11 @@ class AuthenticationViewModel(
     }
 
     private suspend fun checkAuthn() {
-        if (listOf(store.server, store.key).any(String::isBlank)) {
+        if (listOf(npcStore.host, store.key).any(String::isBlank)) {
             _checkAuthnResult.value = CheckAuthnResult.ErrNoSavedCreds
             return
         }
-        val res = repo.authn(server = store.server, token = store.token)
+        val res = repo.authn(server = npcStore.host, token = store.token)
         when {
             res.isSuccess -> {
                 store.token = res.getOrThrow().session.token

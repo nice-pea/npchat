@@ -5,7 +5,6 @@ import androidx.core.content.edit
 
 
 class AuthenticationStore(context: Context) {
-
     private val name = "common"
     private val sp = context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
@@ -21,12 +20,5 @@ class AuthenticationStore(context: Context) {
         get() = sp.getString(keyKey, "").orEmpty()
         set(value) {
             sp.edit { putString(keyKey, value) }
-        }
-
-    private val serverKey = "key"
-    var server: String
-        get() = sp.getString(serverKey, "").orEmpty()
-        set(value) {
-            sp.edit { putString(serverKey, value) }
         }
 }

@@ -21,9 +21,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import ru.saime.nice_pea_chat.data.repositories.ApiClient
 import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
+import ru.saime.nice_pea_chat.data.repositories.NpcClient
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
+import ru.saime.nice_pea_chat.data.store.NpcClientStore
 import ru.saime.nice_pea_chat.ui.components.Button
 import ru.saime.nice_pea_chat.ui.components.Input
 import ru.saime.nice_pea_chat.ui.functions.ToastDuration
@@ -134,7 +135,8 @@ sealed interface LoginAction {
 class LoginViewModel(
     private val authnRepo: AuthenticationRepository,
     private val authnStore: AuthenticationStore,
-    private val apiClient: ApiClient
+    private val npcStore: NpcClientStore,
+    private val apiClient: NpcClient
 ) : ViewModel() {
     val serverFieldState = TextFieldState("")
     val keyFieldState = TextFieldState("")
@@ -174,7 +176,7 @@ class LoginViewModel(
         when {
             res.isSuccess -> {
                 authnStore.token = res.getOrThrow().session.token
-                authnStore.server = server
+                npcStore.host = server
                 authnStore.key = key
                 _enterResult.update { EnterResult.Successful }
             }
