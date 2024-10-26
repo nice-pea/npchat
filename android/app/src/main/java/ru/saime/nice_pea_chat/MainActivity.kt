@@ -6,15 +6,17 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -36,11 +38,16 @@ import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 import ru.saime.nice_pea_chat.di.appModule
-import ru.saime.nice_pea_chat.ui.Gap
+import ru.saime.nice_pea_chat.screens.login.LoginScreen
+import ru.saime.nice_pea_chat.ui.components.Gap
+import ru.saime.nice_pea_chat.ui.modifiers.fadeIn
 import ru.saime.nice_pea_chat.ui.theme.Black
+import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.NicePeaChatTheme
 import ru.saime.nice_pea_chat.ui.theme.White
 import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : ComponentActivity() {
@@ -66,49 +73,40 @@ class MainActivity : ComponentActivity() {
 
 enum class Route {
     Splash,
-    List
+    Login
 }
 
 @Composable
 fun ComposeApp(koin: Koin) {
     val navController = rememberNavController()
     NavHost(
+        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
         navController = navController,
         startDestination = Route.Splash.name
     ) {
         composable(Route.Splash.name) {
             SplashScreen(
+                textFadeInDuration = 1.5.seconds,
                 job = {
                     val authnRepo = koin.get<AuthenticationRepository>()
                     val authStore = koin.get<AuthnStore>()
                     authStore.SaveToken("f1d727b2-212e-47cf-a7a2-40ff581bc816")
+                    delay(2.seconds)
                     when (val result = authnRepo.Authn(authStore.Token())) {
                         is AuthenticationRepository.CheckResult.Failed ->
                             Log.d("", result.error)
 
                         is AuthenticationRepository.CheckResult.Ok -> {
                             Log.d("", result.toString())
-                            navController.navigate(Route.List.name)
+                            navController.navigate(Route.Login.name)
                         }
                     }
 
                 },
             )
         }
-        composable(Route.List.name) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Black),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column {
-                    repeat(10) {
-                        Text(text = "$it", color = White)
-                        Gap(10.dp)
-                    }
-                }
-            }
+        composable(Route.Login.name) {
+            LoginScreen()
         }
     }
 }
@@ -205,23 +203,31 @@ class AuthnStore(context: Context) {
 
 @Composable
 fun SplashScreen(
+    textFadeInDuration: Duration = 300.milliseconds,
+    loaderFadeInDuration: Duration = 300.milliseconds,
     job: suspend () -> Unit,
-//    onJobFinal: () -> Unit,
 ) {
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Black),
-        contentAlignment = Alignment.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        Text(
+            modifier = Modifier.fadeIn(textFadeInDuration),
+            text = "nice-pea-chat\n(NPC)",
+            style = Font.White16W400,
+            textAlign = TextAlign.Center
+        )
+        Gap(10.dp)
         CircularProgressIndicator(
-            color = White
+            modifier = Modifier.fadeIn(loaderFadeInDuration),
+            color = White,
         )
     }
     LaunchedEffect(1) {
         job()
-//        onJobFinal()
     }
 }
 
