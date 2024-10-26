@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+
+kotlin {
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+    }
+}
+
 android {
     namespace = "ru.saime.nice_pea_chat"
     compileSdk = 34

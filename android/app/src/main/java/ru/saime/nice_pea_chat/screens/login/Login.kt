@@ -21,6 +21,7 @@ import ru.saime.nice_pea_chat.ui.components.Input
 private fun PreviewLoginScreen() {
     LoginScreen()
 }
+const val RouteLogin = "Login"
 
 @Composable
 fun LoginScreen() {
