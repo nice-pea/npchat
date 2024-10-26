@@ -69,8 +69,19 @@ fun SplashScreen(
     }
 
     val authnVM = koinViewModel<AuthenticationViewModel>()
-    val checkAuthnResult = authnVM.checkAuthnResult.collectAsState().value
+    CheckAuthnResultEffect(navController, authnVM)
+    LaunchedEffect(1) {
+        authnVM.action(AuthenticationAction.CheckAuthn)
+    }
+}
+
+@Composable
+private fun CheckAuthnResultEffect(
+    navController: NavController,
+    authnVM: AuthenticationViewModel,
+) {
     val ctx = LocalContext.current
+    val checkAuthnResult = authnVM.checkAuthnResult.collectAsState().value
     LaunchedEffect(checkAuthnResult) {
         when (checkAuthnResult) {
             is CheckAuthnResult.Err -> toast(checkAuthnResult.msg, ctx)
@@ -89,8 +100,5 @@ fun SplashScreen(
             CheckAuthnResult.None -> {}
         }
         authnVM.action(AuthenticationAction.CheckAuthnConsume)
-    }
-    LaunchedEffect(1) {
-        authnVM.action(AuthenticationAction.CheckAuthn)
     }
 }

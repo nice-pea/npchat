@@ -70,5 +70,5 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-
+    implementation(libs.okhttp3.logging.interceptor)
 }

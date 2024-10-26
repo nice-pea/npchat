@@ -1,4 +1,4 @@
-package ru.saime.nice_pea_chat.data.network.api
+package ru.saime.nice_pea_chat.data.api
 
 import retrofit2.Call
 import retrofit2.http.GET
@@ -32,14 +32,14 @@ data class LoginResult(
 
 interface AuthenticationApi {
     @GET("{server}/authn")
-    fun Authn(
-        @Path("server") server: String,
+    fun authn(
+        @Path("server", encoded = true) server: String,
         @Query("token") token: String,
     ): Call<AuthnResult>
 
     @GET("{server}/authn/login")
-    fun Login(
-        @Path("server") server: String,
+    fun login(
+        @Path("server", encoded = true) server: String,
         @Query("key") key: String,
     ): Call<LoginResult>
 }

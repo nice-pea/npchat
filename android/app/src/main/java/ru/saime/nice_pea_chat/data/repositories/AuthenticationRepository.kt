@@ -1,17 +1,17 @@
-package ru.saime.nice_pea_chat.data
+package ru.saime.nice_pea_chat.data.repositories
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.saime.nice_pea_chat.data.network.api.AuthenticationApi
-import ru.saime.nice_pea_chat.data.network.api.AuthnResult
-import ru.saime.nice_pea_chat.data.network.api.LoginResult
+import ru.saime.nice_pea_chat.data.api.AuthenticationApi
+import ru.saime.nice_pea_chat.data.api.AuthnResult
+import ru.saime.nice_pea_chat.data.api.LoginResult
 
 class AuthenticationRepository(
     private val authnApi: AuthenticationApi,
 ) {
     suspend fun authn(server: String, token: String): Result<AuthnResult> {
         return withContext(Dispatchers.IO) {
-            val response = authnApi.Authn(
+            val response = authnApi.authn(
                 server = server,
                 token = token,
             ).execute()
@@ -25,7 +25,7 @@ class AuthenticationRepository(
 
     suspend fun login(server: String, key: String): Result<LoginResult> {
         return withContext(Dispatchers.IO) {
-            val response = authnApi.Login(
+            val response = authnApi.login(
                 server = server,
                 key = key,
             ).execute()

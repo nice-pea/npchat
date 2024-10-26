@@ -26,7 +26,7 @@ fun ComposeApp(koin: Koin) {
             SplashScreen(navController)
         }
         composable(RouteLogin) {
-            LoginScreen()
+            LoginScreen(navController)
         }
     }
 }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.saime.nice_pea_chat.data.AuthenticationRepository
+import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 
 
@@ -33,7 +33,7 @@ class AuthenticationViewModel(
     fun action(action: AuthenticationAction) {
         when (action) {
             AuthenticationAction.CheckAuthn -> viewModelScope.launch { checkAuthn() }
-            AuthenticationAction.CheckAuthnConsume -> checkAuthnConsume()
+            AuthenticationAction.CheckAuthnConsume -> _checkAuthnResult.update { CheckAuthnResult.None }
         }
     }
 
@@ -57,7 +57,4 @@ class AuthenticationViewModel(
         }
     }
 
-    fun checkAuthnConsume() {
-        _checkAuthnResult.update { CheckAuthnResult.None }
-    }
 }
