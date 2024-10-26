@@ -4,20 +4,14 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.edit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
@@ -39,15 +33,10 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import ru.saime.nice_pea_chat.di.appModule
 import ru.saime.nice_pea_chat.screens.login.LoginScreen
-import ru.saime.nice_pea_chat.ui.components.Gap
-import ru.saime.nice_pea_chat.ui.modifiers.fadeIn
+import ru.saime.nice_pea_chat.screens.splash.SplashScreen
 import ru.saime.nice_pea_chat.ui.theme.Black
-import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.NicePeaChatTheme
-import ru.saime.nice_pea_chat.ui.theme.White
 import java.time.LocalDateTime
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +49,9 @@ class MainActivity : ComponentActivity() {
             androidContext(this@MainActivity)
             modules(appModule)
         }
-//        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.Transparent.toArgb())
+        )
         setContent {
             NicePeaChatTheme {
                 ComposeApp(koinApp.koin)
@@ -80,7 +71,7 @@ enum class Route {
 fun ComposeApp(koin: Koin) {
     val navController = rememberNavController()
     NavHost(
-        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+        modifier = Modifier.background(Black),
         navController = navController,
         startDestination = Route.Splash.name
     ) {
@@ -198,39 +189,6 @@ class AuthnStore(context: Context) {
         }
     }
 }
-
-// Splash.kt
-
-@Composable
-fun SplashScreen(
-    textFadeInDuration: Duration = 300.milliseconds,
-    loaderFadeInDuration: Duration = 300.milliseconds,
-    job: suspend () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Black),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            modifier = Modifier.fadeIn(textFadeInDuration),
-            text = "nice-pea-chat\n(NPC)",
-            style = Font.White16W400,
-            textAlign = TextAlign.Center
-        )
-        Gap(10.dp)
-        CircularProgressIndicator(
-            modifier = Modifier.fadeIn(loaderFadeInDuration),
-            color = White,
-        )
-    }
-    LaunchedEffect(1) {
-        job()
-    }
-}
-
 
 class MainViewModel : ViewModel() {
     private val _loaded = MutableStateFlow(false)
