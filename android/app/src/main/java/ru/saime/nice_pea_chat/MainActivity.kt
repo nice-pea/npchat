@@ -77,12 +77,14 @@ fun ComposeApp(koin: Koin) {
     ) {
         composable(Route.Splash.name) {
             SplashScreen(
-                textFadeInDuration = 1.5.seconds,
                 job = {
-                    val authnRepo = koin.get<AuthenticationRepository>()
                     val authStore = koin.get<AuthnStore>()
-                    authStore.SaveToken("f1d727b2-212e-47cf-a7a2-40ff581bc816")
-                    delay(2.seconds)
+                    if (authStore.Token().isBlank()) {
+                        navController.navigate(Route.Login.name)
+                        return@SplashScreen
+                    }
+                    val authnRepo = koin.get<AuthenticationRepository>()
+                    delay(.7.seconds)
                     when (val result = authnRepo.Authn(authStore.Token())) {
                         is AuthenticationRepository.CheckResult.Failed ->
                             Log.d("", result.error)
