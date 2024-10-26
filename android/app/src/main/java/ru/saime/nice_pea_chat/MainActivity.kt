@@ -1,6 +1,8 @@
 package ru.saime.nice_pea_chat
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -14,49 +16,51 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.Koin
 import org.koin.core.context.startKoin
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
 import ru.saime.nice_pea_chat.di.appModule
 import ru.saime.nice_pea_chat.ui.Gap
 import ru.saime.nice_pea_chat.ui.theme.Black
 import ru.saime.nice_pea_chat.ui.theme.NicePeaChatTheme
 import ru.saime.nice_pea_chat.ui.theme.White
+import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        startKoin {
+        installSplashScreen()
+
+        val koinApp = startKoin {
             androidContext(this@MainActivity)
             modules(appModule)
-        }
-
-        val mainViewModel: MainViewModel by viewModel()
-
-        installSplashScreen().setKeepOnScreenCondition {
-            !mainViewModel.loaded.value
         }
 //        enableEdgeToEdge()
         setContent {
             NicePeaChatTheme {
-                ComposeApp()
+                ComposeApp(koinApp.koin)
             }
         }
     }
 }
-
 
 // ComposeApp.kt
 
@@ -66,7 +70,7 @@ enum class Route {
 }
 
 @Composable
-fun ComposeApp() {
+fun ComposeApp(koin: Koin) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -75,11 +79,20 @@ fun ComposeApp() {
         composable(Route.Splash.name) {
             SplashScreen(
                 job = {
-                    delay(2.seconds)
+                    val authnRepo = koin.get<AuthenticationRepository>()
+                    val authStore = koin.get<AuthnStore>()
+                    authStore.SaveToken("f1d727b2-212e-47cf-a7a2-40ff581bc816")
+                    when (val result = authnRepo.Authn(authStore.Token())) {
+                        is AuthenticationRepository.CheckResult.Failed ->
+                            Log.d("", result.error)
+
+                        is AuthenticationRepository.CheckResult.Ok -> {
+                            Log.d("", result.toString())
+                            navController.navigate(Route.List.name)
+                        }
+                    }
+
                 },
-                action = {
-                    navController.navigate(Route.List.name)
-                }
             )
         }
         composable(Route.List.name) {
@@ -100,17 +113,102 @@ fun ComposeApp() {
     }
 }
 
-// Splash.kt
+// Authentication.kt
 
-sealed interface SplashAction {
-    data object OnJobFinal : SplashAction
+data class User(
+    val id: Int,
+    val username: String,
+    val createdAt: LocalDateTime // Используем LocalDateTime для представления времени
+)
+
+data class Session(
+    val id: Int,
+    val userId: Int,
+    val token: String,
+    val createdAt: LocalDateTime,
+    val expiresAt: LocalDateTime
+)
+
+data class AuthnResult(
+    val user: User,
+    val session: Session
+)
+
+interface AuthenticationApi {
+    @GET("/authn")
+    fun Authn(@Query("token") token: String): Call<AuthnResult>
+
+    @GET("/authn/login")
+    fun Login(@Query("key") key: String): Call<AuthnResult>
 }
+
+class AuthenticationRepository(
+    private val authnApi: AuthenticationApi,
+) {
+    sealed interface CheckResult {
+        data class Ok(val data: AuthnResult) : CheckResult
+        data class Failed(val error: String) : CheckResult
+    }
+
+    suspend fun Authn(token: String): CheckResult {
+        return withContext(Dispatchers.IO) {
+            val response = authnApi.Authn(token).execute()
+            when {
+//            response == null -> CheckResult.Failed("bull")
+                response.isSuccessful -> CheckResult.Ok(response.body()!!)
+                else -> CheckResult.Failed(response.message())
+//            response.isFailure -> CheckResult.Failed(response.exceptionOrNull()!!.message.orEmpty())
+//            response.getOrThrow().isSuccessful -> CheckResult.Ok
+//            else -> CheckResult.Failed(response.getOrThrow().message())
+            }
+        }
+    }
+}
+
+
+//sealed interface AuthenticationEvent {
+//    //
+//    data object OnAuthnFailed : AuthenticationEvent
+//}
+//
+//class AuthenticationViewModel(
+//    val AuthnRepo: AuthnRepository,
+//) : ViewModel() {
+//
+//}
+
+
+// AuthnStore.kt
+
+//interface AuthnStore {
+//    fun Token(): String
+//    fun SaveToken(toke: String)
+//}
+
+//class AuthnStoreSharedPrefs {
+class AuthnStore(context: Context) {
+
+    private val sp = context.getSharedPreferences("common", Context.MODE_PRIVATE)
+
+    fun Token(): String {
+        return sp.getString("token", "").orEmpty()
+    }
+
+    fun SaveToken(token: String) {
+        sp.edit {
+            this.putString("token", token)
+        }
+    }
+}
+
+// Splash.kt
 
 @Composable
 fun SplashScreen(
     job: suspend () -> Unit,
-    action: (SplashAction) -> Unit,
+//    onJobFinal: () -> Unit,
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,15 +221,15 @@ fun SplashScreen(
     }
     LaunchedEffect(1) {
         job()
-        action(SplashAction.OnJobFinal)
+//        onJobFinal()
     }
 }
 
 
-
-class MainViewModel() : ViewModel() {
+class MainViewModel : ViewModel() {
     private val _loaded = MutableStateFlow(false)
     val loaded = _loaded.asStateFlow()
+
     init {
         viewModelScope.launch {
             delay(5.seconds)
