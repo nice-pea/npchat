@@ -19,9 +19,6 @@ import java.net.URL
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-
-private const val host = "http://192.168.31.94:7511"
-
 fun retrofit(
     npcClientStore: NpcClientStore,
 ): Retrofit {

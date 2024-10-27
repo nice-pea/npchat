@@ -1,4 +1,4 @@
-package ru.saime.nice_pea_chat.ui.functions
+package ru.saime.nice_pea_chat.common.functions
 
 import android.content.Context
 import android.widget.Toast

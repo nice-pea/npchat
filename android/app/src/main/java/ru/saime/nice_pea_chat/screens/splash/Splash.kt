@@ -24,7 +24,7 @@ import ru.saime.nice_pea_chat.screens.app.authentication.CheckAuthnResult
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.screens.login.RouteLogin
 import ru.saime.nice_pea_chat.ui.components.Gap
-import ru.saime.nice_pea_chat.ui.functions.toast
+import ru.saime.nice_pea_chat.common.functions.toast
 import ru.saime.nice_pea_chat.ui.modifiers.fadeIn
 import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.White

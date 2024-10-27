@@ -28,8 +28,8 @@ import ru.saime.nice_pea_chat.data.store.NpcClientStore
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.ui.components.Button
 import ru.saime.nice_pea_chat.ui.components.Input
-import ru.saime.nice_pea_chat.ui.functions.ToastDuration
-import ru.saime.nice_pea_chat.ui.functions.toast
+import ru.saime.nice_pea_chat.common.functions.ToastDuration
+import ru.saime.nice_pea_chat.common.functions.toast
 
 
 @Preview(

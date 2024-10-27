@@ -16,10 +16,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import ru.saime.nice_pea_chat.common.Status
 import ru.saime.nice_pea_chat.data.repositories.Chat
 import ru.saime.nice_pea_chat.data.repositories.ChatsRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
@@ -44,14 +44,14 @@ fun ChatsScreen(
     navController: NavController,
 ) {
     val chatsVM = koinViewModel<ChatsViewModel>()
-    val uiState = chatsVM.uiState.collectAsState().value
-    when (uiState) {
-        is ChatsUiState.Content -> Column(
+    val chats = chatsVM.uiState.chats.collectAsState().value
+    when (chats) {
+        is Status.Data -> Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Black),
         ) {
-            uiState.chats.forEach { chat ->
+            chats.data.forEach { chat ->
                 Gap(4.dp)
                 HorizontalDivider()
                 Text(chat.id.toString(), style = Font.White12W500)
@@ -62,25 +62,23 @@ fun ChatsScreen(
             }
         }
 
-        is ChatsUiState.Err -> Text(uiState.msg, style = Font.White12W500)
-        ChatsUiState.Loading -> CircularProgressIndicator()
+        is Status.Err -> Text(chats.err.toString(), style = Font.White12W500)
+        Status.Loading -> CircularProgressIndicator()
+        Status.None -> {}
     }
 }
 
-sealed interface ChatsUiState {
-    object Loading : ChatsUiState
-    data class Err(val msg: String) : ChatsUiState
-    data class Content(
-        val chats: List<Chat>,
-    ) : ChatsUiState
-}
+
+class ChatsUiState(
+    val chats: StateFlow<Status<List<Chat>>>,
+)
 
 class ChatsViewModel(
     private val repo: ChatsRepository,
     private val store: AuthenticationStore,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<ChatsUiState>(ChatsUiState.Loading)
-    val uiState = _uiState.asStateFlow()
+    private val chats = MutableStateFlow<Status<List<Chat>>>(Status.None)
+    val uiState = ChatsUiState(chats = chats)
 
     init {
         viewModelScope.launch {
@@ -91,14 +89,10 @@ class ChatsViewModel(
     private suspend fun loadChats() {
         repo.chats()
             .onSuccess { res ->
-                _uiState.update {
-                    ChatsUiState.Content(
-                        chats = res
-                    )
-                }
+                chats.value = Status.Data(res)
             }
-            .onFailure { res ->
-                _uiState.update { ChatsUiState.Err(res.message.orEmpty()) }
+            .onFailure { err ->
+                chats.value = Status.Err(err)
             }
     }
 }
