@@ -43,7 +43,7 @@ fun Input(
     Column(
         modifier = Modifier.then(modifier)
     ) {
-        if (title.isNotBlank()) {
+        if (title != "") {
             Text(title, style = Font.White12W500)
             Gap(6.dp)
         }
@@ -56,13 +56,13 @@ fun Input(
             state = textFieldState,
             textStyle = Font.White16W400,
             decorator = { innerTextField ->
-                if (textFieldState.text.isEmpty()) {
+                if (textFieldState.text == "") {
                     Text(placeholder, style = Font.GrayCharcoal16W400)
                 }
                 innerTextField()
             }
         )
-        if (helperText.isNotBlank()) {
+        if (helperText != "") {
             Gap(2.dp)
             Text(helperText, style = Font.GrayCharcoal12W400)
         }

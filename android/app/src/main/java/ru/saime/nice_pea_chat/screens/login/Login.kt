@@ -162,7 +162,7 @@ class LoginViewModel(
         when {
             res.isSuccess -> _checkConnResult.update { CheckConnResult.Successful }
             res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifBlank { "blankErr" }
+                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
                     .run(CheckConnResult::Err)
                     .let { _checkConnResult.value = it }
             }
@@ -172,17 +172,17 @@ class LoginViewModel(
     private suspend fun enter() {
         val server = serverFieldState.text.toString()
         val key = keyFieldState.text.toString()
-        val res = authnRepo.login(server, key)
+        val res = authnRepo.login(key = key, server = server)
         when {
             res.isSuccess -> {
                 authnStore.token = res.getOrThrow().session.token
-                npcStore.host = server
+                npcStore.baseUrl = server
                 authnStore.key = key
                 _enterResult.update { EnterResult.Successful }
             }
 
             res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifBlank { "blankErr" }
+                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
                     .run(EnterResult::Err)
                     .let { _enterResult.value = it }
             }

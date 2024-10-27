@@ -94,7 +94,7 @@ private fun CheckAuthnResultEffect(
             CheckAuthnResult.Successful -> {
                 delay(.7.seconds)
                 navController.navigate(RouteLogin)
-                toast("ErrNoSavedCreds", ctx)
+                toast("Auth successful", ctx)
             }
 
             CheckAuthnResult.None -> {}

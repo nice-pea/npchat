@@ -48,9 +48,9 @@ fun Button(
         Row {
             Text("->", style = Font.White16W400)
             Gap(10.dp)
-            Text(text.ifBlank { "<action>" }, style = Font.White16W400)
+            Text(text.ifEmpty { "<action>" }, style = Font.White16W400)
         }
-        if (helperText.isNotBlank()) {
+        if (helperText != "") {
             Gap(2.dp)
             Text(helperText, style = Font.GrayCharcoal12W400)
         }

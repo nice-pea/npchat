@@ -9,14 +9,14 @@ class AuthenticationRepository(
     private val api: AuthenticationApi,
     private val npcStore: NpcClientStore,
 ) {
-    suspend fun authn(token: String, server: String = npcStore.host): Result<AuthnResult> {
+    suspend fun authn(token: String, server: String = npcStore.baseUrl): Result<AuthnResult> {
         return api.authn(
             server = server,
             token = token,
         )
     }
 
-    suspend fun login(key: String, server: String = npcStore.host): Result<LoginResult> {
+    suspend fun login(key: String, server: String = npcStore.baseUrl): Result<LoginResult> {
         return api.login(
             server = server,
             key = key,

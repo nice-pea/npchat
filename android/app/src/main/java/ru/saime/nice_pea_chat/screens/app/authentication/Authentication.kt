@@ -40,11 +40,11 @@ class AuthenticationViewModel(
     }
 
     private suspend fun checkAuthn() {
-        if (listOf(npcStore.host, store.key).any(String::isBlank)) {
+        if (npcStore.baseUrl == "") {
             _checkAuthnResult.value = CheckAuthnResult.ErrNoSavedCreds
             return
         }
-        val res = repo.authn(server = npcStore.host, token = store.token)
+        val res = repo.authn(server = npcStore.baseUrl, token = store.token)
         when {
             res.isSuccess -> {
                 store.token = res.getOrThrow().session.token
@@ -52,7 +52,7 @@ class AuthenticationViewModel(
             }
 
             res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifBlank { "blankErr" }
+                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
                     .run(CheckAuthnResult::Err)
                     .let { _checkAuthnResult.value = it }
             }
