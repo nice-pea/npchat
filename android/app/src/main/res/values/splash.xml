@@ -2,7 +2,7 @@
 <resources>
     <style name="Theme.Nicepeachat.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/black</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <!--        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>-->
         <item name="postSplashScreenTheme">@style/Theme.Nicepeachat</item>
     </style>
 </resources>
