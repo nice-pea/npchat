@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.data.store.NpcClientStore
+import ru.saime.nice_pea_chat.data.store.Profile
 
 
 sealed interface CheckAuthnResult {
@@ -44,19 +45,16 @@ class AuthenticationViewModel(
             _checkAuthnResult.value = CheckAuthnResult.ErrNoSavedCreds
             return
         }
-        val res = repo.authn(server = npcStore.baseUrl, token = store.token)
-        when {
-            res.isSuccess -> {
-                store.token = res.getOrThrow().session.token
+        repo.authn(server = npcStore.baseUrl, token = store.token)
+            .onSuccess { res ->
+                store.token = res.session.token
+                store.profile = Profile(id = res.user.id, username = res.user.username)
                 _checkAuthnResult.value = CheckAuthnResult.Successful
             }
-
-            res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
+            .onFailure { res ->
+                res.message.orEmpty().ifEmpty { "emptyErr" }
                     .run(CheckAuthnResult::Err)
                     .let { _checkAuthnResult.value = it }
             }
-        }
     }
-
 }

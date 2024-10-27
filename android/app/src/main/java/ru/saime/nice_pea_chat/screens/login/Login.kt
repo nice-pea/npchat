@@ -159,35 +159,32 @@ class LoginViewModel(
 
     private suspend fun checkConn() {
         val server = serverFieldState.text.toString()
-        val res = apiClient.healthCheck(server)
-        when {
-            res.isSuccess -> _checkConnResult.update { CheckConnResult.Successful }
-            res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
+        apiClient.healthCheck(server)
+            .onSuccess {
+                _checkConnResult.update { CheckConnResult.Successful }
+            }
+            .onFailure { res ->
+                res.message.orEmpty().ifEmpty { "emptyErr" }
                     .run(CheckConnResult::Err)
                     .let { _checkConnResult.value = it }
             }
-        }
     }
 
     private suspend fun enter() {
         val server = serverFieldState.text.toString()
         val key = keyFieldState.text.toString()
-        val res = authnRepo.login(key = key, server = server)
-        when {
-            res.isSuccess -> {
-                authnStore.token = res.getOrThrow().session.token
+        authnRepo.login(key = key, server = server)
+            .onSuccess { res ->
+                authnStore.token = res.session.token
                 npcStore.baseUrl = server
                 authnStore.key = key
                 _enterResult.update { EnterResult.Successful }
             }
-
-            res.isFailure -> {
-                res.exceptionOrNull()?.toString().orEmpty().ifEmpty { "emptyErr" }
+            .onFailure { res ->
+                res.message.orEmpty().ifEmpty { "emptyErr" }
                     .run(EnterResult::Err)
                     .let { _enterResult.value = it }
             }
-        }
     }
 
 }

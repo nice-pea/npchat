@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.koin.core.Koin
+import ru.saime.nice_pea_chat.screens.chats.ChatsScreen
+import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.screens.login.LoginScreen
 import ru.saime.nice_pea_chat.screens.login.RouteLogin
 import ru.saime.nice_pea_chat.screens.splash.RouteSplash
@@ -22,11 +24,8 @@ fun ComposeApp(koin: Koin) {
         navController = navController,
         startDestination = RouteSplash
     ) {
-        composable(RouteSplash) {
-            SplashScreen(navController)
-        }
-        composable(RouteLogin) {
-            LoginScreen(navController)
-        }
+        composable(RouteChats) { ChatsScreen(navController) }
+        composable(RouteLogin) { LoginScreen(navController) }
+        composable(RouteSplash) { SplashScreen(navController) }
     }
 }

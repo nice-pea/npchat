@@ -21,4 +21,29 @@ class AuthenticationStore(context: Context) {
         set(value) {
             sp.edit { putString(keyKey, value) }
         }
+
+    private val profileIdKey = "profileId"
+    private val profileUsernameKey = "profileUsername"
+    var profile: Profile?
+        get() {
+            val id = sp.getInt(profileIdKey, 0)
+            val username = sp.getString(profileUsernameKey, null).orEmpty()
+            if (id == 0 || username == "") {
+                return null
+            }
+            return Profile(id = id, username = username)
+        }
+        set(value) {
+            sp.edit {
+                putInt(profileIdKey, value?.id ?: 0)
+                putString(keyKey, value?.username)
+            }
+        }
+
+    fun clear() = sp.edit { clear() }
 }
+
+data class Profile(
+    val id: Int,
+    val username: String,
+)
