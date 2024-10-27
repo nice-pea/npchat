@@ -21,6 +21,7 @@ import org.koin.androidx.compose.koinViewModel
 import ru.saime.nice_pea_chat.screens.app.authentication.AuthenticationAction
 import ru.saime.nice_pea_chat.screens.app.authentication.AuthenticationViewModel
 import ru.saime.nice_pea_chat.screens.app.authentication.CheckAuthnResult
+import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.screens.login.RouteLogin
 import ru.saime.nice_pea_chat.ui.components.Gap
 import ru.saime.nice_pea_chat.ui.functions.toast
@@ -83,20 +84,11 @@ private fun CheckAuthnResultEffect(
     val ctx = LocalContext.current
     val checkAuthnResult = authnVM.checkAuthnResult.collectAsState().value
     LaunchedEffect(checkAuthnResult) {
+        delay(.7.seconds)
         when (checkAuthnResult) {
             is CheckAuthnResult.Err -> toast(checkAuthnResult.msg, ctx)
-            CheckAuthnResult.ErrNoSavedCreds -> {
-                delay(.7.seconds)
-                navController.navigate(RouteLogin)
-                toast("ErrNoSavedCreds", ctx)
-            }
-
-            CheckAuthnResult.Successful -> {
-                delay(.7.seconds)
-                navController.navigate(RouteLogin)
-                toast("Auth successful", ctx)
-            }
-
+            CheckAuthnResult.ErrNoSavedCreds -> navController.navigate(RouteLogin)
+            CheckAuthnResult.Successful -> navController.navigate(RouteChats)
             CheckAuthnResult.None -> {}
         }
         authnVM.action(AuthenticationAction.CheckAuthnConsume)

@@ -3,7 +3,7 @@ package ru.saime.nice_pea_chat.data.api
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 interface AuthenticationApi {
     @GET("{server}/authn")
@@ -19,20 +19,18 @@ interface AuthenticationApi {
     ): Result<LoginResult>
 }
 
-
-
 data class User(
     val id: Int,
     val username: String,
-    val createdAt: LocalDateTime // Используем LocalDateTime для представления времени
+    val createdAt: OffsetDateTime
 )
 
 data class Session(
     val id: Int,
     val userId: Int,
     val token: String,
-    val createdAt: LocalDateTime,
-    val expiresAt: LocalDateTime
+    val createdAt: OffsetDateTime,
+    val expiresAt: OffsetDateTime
 )
 
 data class AuthnResult(

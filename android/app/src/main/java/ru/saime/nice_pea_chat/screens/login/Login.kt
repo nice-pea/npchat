@@ -25,6 +25,7 @@ import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
 import ru.saime.nice_pea_chat.data.repositories.NpcClient
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.data.store.NpcClientStore
+import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.ui.components.Button
 import ru.saime.nice_pea_chat.ui.components.Input
 import ru.saime.nice_pea_chat.ui.functions.ToastDuration
@@ -104,10 +105,10 @@ private fun EnterResultEffect(
     LaunchedEffect(result) {
         when (result) {
             is EnterResult.Err -> toast(result.msg, ctx, ToastDuration.LONG)
-            EnterResult.Successful -> navController.navigate("todo")
+            EnterResult.Successful -> navController.navigate(RouteChats)
             EnterResult.None -> {}
         }
-        loginVM.action(LoginAction.CheckConnConsume)
+        loginVM.action(LoginAction.EnterConsume)
     }
 }
 
