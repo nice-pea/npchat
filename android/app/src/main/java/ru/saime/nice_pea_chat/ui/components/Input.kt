@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import ru.saime.nice_pea_chat.ui.theme.Black
 import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.White
+import ru.saime.nice_pea_chat.ui.theme.cursorBrush
 
 
 @Preview
@@ -54,6 +55,7 @@ fun Input(
                 .border(1.dp, White)
                 .padding(10.dp),
             state = textFieldState,
+            cursorBrush = cursorBrush,
             textStyle = Font.White16W400,
             decorator = { innerTextField ->
                 if (textFieldState.text == "") {

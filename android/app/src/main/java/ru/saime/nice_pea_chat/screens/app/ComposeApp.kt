@@ -24,8 +24,8 @@ fun ComposeApp(koin: Koin) {
         navController = navController,
         startDestination = RouteSplash
     ) {
-        composable(RouteChats) { ChatsScreen(navController) }
-        composable(RouteLogin) { LoginScreen(navController) }
         composable(RouteSplash) { SplashScreen(navController) }
+        composable(RouteLogin) { LoginScreen(navController) }
+        composable(RouteChats) { ChatsScreen(navController) }
     }
 }
