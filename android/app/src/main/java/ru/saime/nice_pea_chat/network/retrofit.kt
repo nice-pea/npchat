@@ -70,11 +70,7 @@ private class RetryInterceptor(private val retryAttempts: Int) : Interceptor {
     }
 }
 
-
-const val NpcProtocolPlaceholder = "http"
-const val NpcHostPlaceholder = "<npc_host>"
-const val NpcPortPlaceholder = 7511
-const val NpcUrlPlaceholder = "$NpcProtocolPlaceholder://$NpcHostPlaceholder:$NpcPortPlaceholder"
+const val NpcUrlPlaceholder = "http://<npc_host>:7511"
 
 fun npcBaseUrl(store: NpcClientStore, default: String = ""): String {
     return if (store.baseUrl != "") {
