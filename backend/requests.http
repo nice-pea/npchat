@@ -10,7 +10,7 @@ Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7
 #Accept-Language: en-us,en;q=0.5
 
 ### Chats list
-GET {{host}}/chats?ids=1&user_ids=1
+GET {{host}}/chats
 
 ### Messages list
 GET {{host}}/messages?around_id=5&limit=5
