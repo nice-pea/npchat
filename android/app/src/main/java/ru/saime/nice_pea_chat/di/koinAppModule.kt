@@ -25,7 +25,7 @@ val appModule = module {
     singleOf(::NpcClientStore)
 
     // Api
-    single { retrofit(get()) }
+    single { retrofit(get(), get()) }
     fun <T> Scope.retroApi(service: Class<T>) = get<Retrofit>().create(service)
     single { retroApi(AuthenticationApi::class.java) }
     single { retroApi(NpcClientApi::class.java) }

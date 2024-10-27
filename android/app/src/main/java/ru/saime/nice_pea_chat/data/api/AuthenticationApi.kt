@@ -1,15 +1,17 @@
 package ru.saime.nice_pea_chat.data.api
 
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
+import ru.saime.nice_pea_chat.network.AuthorizationHeader
 import java.time.OffsetDateTime
 
 interface AuthenticationApi {
     @GET("{server}/authn")
     suspend fun authn(
         @Path("server", encoded = true) server: String,
-        @Query("token") token: String,
+        @Header(AuthorizationHeader) token: String,
     ): Result<AuthnResult>
 
     @GET("{server}/authn/login")

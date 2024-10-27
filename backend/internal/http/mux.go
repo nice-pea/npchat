@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -20,6 +21,7 @@ type Request struct {
 	L10n   l10n.Service
 	DB     *gorm.DB
 	Locale string
+	Token  string
 }
 
 type HandlerFunc func(Request) (any, error)
@@ -73,8 +75,18 @@ func initRequest(s ServerParams, next HandlerFunc) HandlerFunc {
 			Request: r.Request,
 			L10n:    s.L10n,
 			Locale:  locale(r.Header.Get("Accept-Language"), l10n.LocaleDefault),
+			Token:   getToken(r.Request),
 			DB:      s.DB,
 		}
 		return next(r)
 	}
+}
+
+const authzHeader = "Authorization"
+const authzTypeUser = "NpcUserToken"
+
+func getToken(r *http.Request) string {
+	header := r.Header.Get(authzHeader)
+	token, _ := strings.CutPrefix(header, authzTypeUser+" ")
+	return token
 }

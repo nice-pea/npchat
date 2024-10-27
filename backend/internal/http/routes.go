@@ -1,9 +1,11 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/saime-0/nice-pea-chat/internal/app/optional"
+	"github.com/saime-0/nice-pea-chat/internal/model"
 	ucAuthn "github.com/saime-0/nice-pea-chat/internal/usecase/authn"
 	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
 	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
@@ -14,7 +16,7 @@ import (
 	ucMessageCreate "github.com/saime-0/nice-pea-chat/internal/usecase/messages/create"
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
-	"github.com/saime-0/nice-pea-chat/internal/usecase/users"
+	ucUsers "github.com/saime-0/nice-pea-chat/internal/usecase/users"
 	ucUserUpdate "github.com/saime-0/nice-pea-chat/internal/usecase/users/update"
 )
 
@@ -165,7 +167,7 @@ func UserUpdate(req Request) (any, error) {
 }
 
 func Users(req Request) (any, error) {
-	ucParams := users.Params{
+	ucParams := ucUsers.Params{
 		DB: req.DB,
 	}
 
@@ -183,7 +185,7 @@ func Login(req Request) (any, error) {
 
 func Authn(req Request) (any, error) {
 	ucParams := ucAuthn.Params{
-		Token: req.Form.Get("token"),
+		Token: req.Token,
 		DB:    req.DB,
 	}
 
@@ -215,4 +217,15 @@ func Roles(req Request) (_ any, err error) {
 
 func Health(req Request) (any, error) {
 	return req.L10n.Localize("none:ok", req.Locale, nil)
+}
+
+func userAuthn(req Request) (model.User, error) {
+	users, err := ucUsers.Params{DB: req.DB}.Run()
+	if err != nil {
+		return model.User{}, err
+	} else if len(users) != 1 {
+		return model.User{}, fmt.Errorf("expected 1 user, got %d", len(users))
+	}
+
+	return users[0], nil
 }

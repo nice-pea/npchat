@@ -4,6 +4,7 @@ import ru.saime.nice_pea_chat.data.api.AuthenticationApi
 import ru.saime.nice_pea_chat.data.api.AuthnResult
 import ru.saime.nice_pea_chat.data.api.LoginResult
 import ru.saime.nice_pea_chat.data.store.NpcClientStore
+import ru.saime.nice_pea_chat.network.authzHeaderValue
 
 class AuthenticationRepository(
     private val api: AuthenticationApi,
@@ -12,7 +13,7 @@ class AuthenticationRepository(
     suspend fun authn(token: String, server: String = npcStore.baseUrl): Result<AuthnResult> {
         return api.authn(
             server = server,
-            token = token,
+            token = authzHeaderValue(token),
         )
     }
 

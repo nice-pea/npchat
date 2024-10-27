@@ -12,23 +12,29 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.data.store.NpcClientStore
 import java.lang.reflect.Type
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 fun retrofit(
     npcClientStore: NpcClientStore,
+    authnStore: AuthenticationStore,
 ): Retrofit {
     val logging = HttpLoggingInterceptor()
         .setLevel(HttpLoggingInterceptor.Level.BODY)
 
     val client = OkHttpClient.Builder()
+        .addInterceptor(AuthorizationInterceptor(authnStore))
         .addInterceptor(ReplaceNpcUrlPlaceholderInterceptor(npcClientStore))
         .addInterceptor(logging)
         .addInterceptor(RetryInterceptor(3))
+        .callTimeout(10.seconds.toJavaDuration())
         .build()
 
     val gson = GsonBuilder()
@@ -90,6 +96,28 @@ private class ReplaceNpcUrlPlaceholderInterceptor(
                 .url(newUrl)
                 .build()
             return chain.proceed(request)
+        }
+
+        return chain.proceed(chain.request())
+    }
+}
+
+const val AuthorizationHeader = "Authorization"
+const val AuthorizationType = "NpcUserToken"
+
+fun authzHeaderValue(token: String): String {
+    return "$AuthorizationType $token"
+}
+
+private class AuthorizationInterceptor(
+    private val store: AuthenticationStore,
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        if (store.token != "" && chain.request().header(AuthorizationHeader) == null) {
+            return chain.request().newBuilder()
+                .addHeader(AuthorizationHeader, authzHeaderValue(store.token))
+                .build()
+                .run(chain::proceed)
         }
 
         return chain.proceed(chain.request())
