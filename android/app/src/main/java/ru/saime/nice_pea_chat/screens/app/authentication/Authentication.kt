@@ -41,7 +41,7 @@ class AuthenticationViewModel(
     }
 
     private suspend fun checkAuthn() {
-        if (npcStore.baseUrl == "") {
+        if (npcStore.baseUrl == "" || store.token == "") {
             _checkAuthnResult.value = CheckAuthnResult.ErrNoSavedCreds
             return
         }
