@@ -39,11 +39,8 @@ func (p Params[T]) sort() ([]Field[T], error) {
 	}
 
 	created := make([]Field[T], 0, len(p.Fields))
-	i := -1
-	strike := 0
-	appended := false
-	for len(exchange) != 0 {
-		i++
+	for i := 0; i < len(exchange) && len(exchange) != 0; i++ {
+		appended := false
 		for _, field := range exchange {
 			if !depsAlreadyCreated(field, created) {
 				continue
@@ -52,19 +49,8 @@ func (p Params[T]) sort() ([]Field[T], error) {
 			created = append(created, field)
 			delete(exchange, field.Key)
 		}
-		// По всем полям прошел цикл, а значит хоть одну зависимость добавил.
-		// Есть недоработка, в зависимости от порядка могут быть ложные срабатывания.
-		// TODO: fix
-		// TODO: а возможно и нет
-		if i+1 >= len(p.Fields) {
-			if appended {
-				strike = 0
-			} else if strike >= 2 {
-				return nil, ErrCantCreateDep
-			} else {
-				strike += 1
-			}
-			i = -1
+		if !appended {
+			return nil, ErrCantCreateDep
 		}
 	}
 

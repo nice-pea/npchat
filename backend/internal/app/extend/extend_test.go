@@ -13,10 +13,34 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 			name: "ok",
 			e: Params[int]{
 				Fields: []Field[int]{
-					{Key: "a", Deps: []string{"b", "c"}, Fn: nil},
-					{Key: "c", Deps: []string{"b"}, Fn: nil},
-					{Key: "b", Deps: []string{"f"}, Fn: nil},
-					{Key: "f", Deps: nil, Fn: nil},
+					{Key: "a", Deps: []string{"b", "c"}},
+					{Key: "c", Deps: []string{"b"}},
+					{Key: "b", Deps: []string{"f"}},
+					{Key: "f", Deps: nil},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ok",
+			e: Params[int]{
+				Fields: []Field[int]{
+					{Key: "a", Deps: []string{"b", "c"}},
+					{Key: "f", Deps: nil},
+					{Key: "b", Deps: []string{"f"}},
+					{Key: "c", Deps: []string{"b"}},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "ok",
+			e: Params[int]{
+				Fields: []Field[int]{
+					{Key: "f", Deps: nil},
+					{Key: "c", Deps: []string{"b"}},
+					{Key: "b", Deps: []string{"f"}},
+					{Key: "a", Deps: []string{"b", "c"}},
 				},
 			},
 			wantErr: false,
@@ -25,10 +49,10 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 			name: "ErrCantCreateDep",
 			e: Params[int]{
 				Fields: []Field[int]{
-					{Key: "a", Deps: []string{"b", "c"}, Fn: nil},
-					{Key: "c", Deps: []string{"b"}, Fn: nil},
-					{Key: "b", Deps: []string{"f"}, Fn: nil},
-					{Key: "f", Deps: []string{"x"}, Fn: nil},
+					{Key: "a", Deps: []string{"b", "c"}},
+					{Key: "c", Deps: []string{"b"}},
+					{Key: "b", Deps: []string{"f"}},
+					{Key: "f", Deps: []string{"x"}},
 				},
 			},
 			wantErr: true,
@@ -37,8 +61,22 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 			name: "Collision",
 			e: Params[int]{
 				Fields: []Field[int]{
-					{Key: "a", Deps: []string{"x"}, Fn: nil},
-					{Key: "x", Deps: []string{"a"}, Fn: nil},
+					{Key: "a", Deps: []string{"x"}},
+					{Key: "x", Deps: []string{"a"}},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "Collision",
+			e:       Params[int]{},
+			wantErr: false,
+		},
+		{
+			name: "Collision",
+			e: Params[int]{
+				Fields: []Field[int]{
+					{Key: "a", Deps: []string{"x"}},
 				},
 			},
 			wantErr: true,
