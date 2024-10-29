@@ -14,7 +14,7 @@ POST {{host}}/chats/create
 Content-Type: application/json
 
 {
-  "name": "cjatName",
+  "name": "newChat",
   "creator_id": 2
 }
 
@@ -29,10 +29,10 @@ POST {{host}}/messages/create
 Content-Type: application/json
 
 {
-  "chat_id": 1,
-  "text": "text!",
-  "author_id": 1,
-  "reply_to_id": 0
+  "chat_id": 2,
+  "text": "thrid!",
+  "author_id": 2,
+  "reply_to_id": 2
 }
 
 ### Members list

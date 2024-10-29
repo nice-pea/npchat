@@ -15,7 +15,7 @@ CREATE TABLE credentials
 CREATE TABLE sessions
 (
     id         SERIAL PRIMARY KEY,
-    user_id    INTEGER,
+    user_id    INTEGER NOT NULL,
     token      TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE roles
 (
     id          SERIAL PRIMARY KEY,
     name        TEXT NOT NULL,
-    chat_id     INTEGER REFERENCES chats ON DELETE CASCADE,
+    chat_id     INTEGER NOT NULL REFERENCES chats ON DELETE CASCADE,
     permissions SMALLINT[] NOT NULL DEFAULT '{}'
 );
 

@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Chat struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`

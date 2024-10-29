@@ -39,27 +39,15 @@ func (p Params) Run() (Out, error) {
 		LEFT JOIN users AS creator
 			ON creator.id = chats.creator_id`)
 
-	//// Add last_message
-	//cond = cond.
-	//	Joins(`
-	//	LEFT JOIN (
-	//		SELECT *, MAX(messages.id) AS last_message_id
-	//		FROM messages
-	//		LEFT JOIN users AS author
-	//			ON author.id = messages.author_id
-	//		GROUP BY messages.chat_id
-	//	) AS last_message
-	//		ON last_message.chat_id = chats.id`)
-
 	var out Out
 	if err := cond.Select("*").Find(&out.Chats).Error; err != nil {
 		return Out{}, err
 	}
 
-	return out, p.extend(out)
+	return out, p.extend(&out)
 }
 
-func (p Params) extend(out Out) error {
+func (p Params) extend(out *Out) error {
 	// State
 	type State struct {
 		DB      *gorm.DB
@@ -93,11 +81,16 @@ func (p Params) extend(out Out) error {
 				Fn: func(state State) error {
 					lastMsgs := make([]rich.Message, 0, len(state.Chats))
 					if err := state.DB.Raw(`
-						SELECT *, MAX(messages.id) AS last_message_id FROM messages
-						LEFT JOIN users AS author
-							ON author.id = messages.author_id
+						SELECT DISTINCT ON (messages.chat_id) *
+						FROM messages
+							LEFT JOIN users AS author
+								ON author.id = messages.author_id
+							LEFT JOIN messages AS reply
+								ON reply.id = messages.reply_to_id
+							LEFT JOIN users AS reply_author
+								ON reply_author.id = reply.author_id
 						WHERE messages.chat_id IN (?) 
-						GROUP BY messages.chat_id`,
+						ORDER BY messages.chat_id, messages.id DESC`,
 						state.ChatIDs,
 					).Scan(&lastMsgs).Error; err != nil {
 						return err
@@ -116,42 +109,16 @@ func (p Params) extend(out Out) error {
 					return nil
 				},
 			},
-			{
-				Key:  "last_message_replies",
-				Deps: []string{"last_message"},
-				Fn: func(state State) error {
-					replies := make([]rich.MessageReplyTo, 0, len(state.Chats))
-					state.LastMessagesRepliesIDs = make([]uint, 0, len(state.LastMessages))
-					for _, msg := range state.LastMessages {
-						if msg.ReplyToID != 0 {
-							state.LastMessagesRepliesIDs = append(state.LastMessagesRepliesIDs, msg.ReplyToID)
-						}
-					}
-					if err := state.DB.Raw(`
-						SELECT * FROM messages
-						LEFT JOIN users AS author
-							ON author.id = messages.author_id
-						WHERE messages.id IN (?)`,
-						state.LastMessagesRepliesIDs,
-					).Scan(&replies).Error; err != nil {
-						return err
-					}
-
-					// Collect by IDs
-					state.LastMessagesReplies = make(map[uint]*rich.MessageReplyTo, len(replies))
-					for _, reply := range replies {
-						state.LastMessagesReplies[reply.ID] = &reply
-					}
-					// Save to lastMessage
-					for _, message := range state.LastMessages {
-						reply := state.LastMessagesReplies[message.ReplyToID]
-						message.ReplyTo = reply
-					}
-
-					return nil
-				},
-			},
 		},
 	}
-	return e.Run()
+	if err := e.Run(); err != nil {
+		return err
+	}
+
+	out.Chats = make([]rich.Chat, 0, len(state.Chats))
+	for _, chat := range state.Chats {
+		out.Chats = append(out.Chats, *chat)
+	}
+
+	return nil
 }
