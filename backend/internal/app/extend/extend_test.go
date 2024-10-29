@@ -3,16 +3,16 @@ package extend
 import "testing"
 
 func TestExtend_ResolveConflicts(t *testing.T) {
-	type testCase[T any] struct {
+	type testCase struct {
 		name    string
-		e       Params[T]
+		e       Params
 		wantErr bool
 	}
-	tests := []testCase[int]{
+	tests := []testCase{
 		{
 			name: "ok",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "a", Deps: []string{"b", "c"}},
 					{Key: "c", Deps: []string{"b"}},
 					{Key: "b", Deps: []string{"f"}},
@@ -23,8 +23,8 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 		},
 		{
 			name: "ok",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "a", Deps: []string{"b", "c"}},
 					{Key: "f", Deps: nil},
 					{Key: "b", Deps: []string{"f"}},
@@ -35,8 +35,8 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 		},
 		{
 			name: "ok",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "f", Deps: nil},
 					{Key: "c", Deps: []string{"b"}},
 					{Key: "b", Deps: []string{"f"}},
@@ -47,8 +47,8 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 		},
 		{
 			name: "ErrCantCreateDep",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "a", Deps: []string{"b", "c"}},
 					{Key: "c", Deps: []string{"b"}},
 					{Key: "b", Deps: []string{"f"}},
@@ -59,8 +59,8 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 		},
 		{
 			name: "Collision",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "a", Deps: []string{"x"}},
 					{Key: "x", Deps: []string{"a"}},
 				},
@@ -69,13 +69,13 @@ func TestExtend_ResolveConflicts(t *testing.T) {
 		},
 		{
 			name:    "Collision",
-			e:       Params[int]{},
+			e:       Params{},
 			wantErr: false,
 		},
 		{
 			name: "Collision",
-			e: Params[int]{
-				Fields: []Field[int]{
+			e: Params{
+				Fields: []Field{
 					{Key: "a", Deps: []string{"x"}},
 				},
 			},

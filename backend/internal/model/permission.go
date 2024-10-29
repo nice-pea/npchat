@@ -10,7 +10,7 @@ const (
 	ReadHistory         = 7
 )
 
-var Permissions = []int{
+var Permissions = []uint8{
 	ControlConversation,
 	ControlRoles,
 	Invite,
@@ -21,7 +21,7 @@ var Permissions = []int{
 }
 
 type Permission struct {
-	ID   int    `json:"id"`
+	ID   uint8  `json:"id"`
 	Name string `json:"name"`
 	Desc string `json:"desc"`
 }

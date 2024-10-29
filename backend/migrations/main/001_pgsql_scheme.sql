@@ -66,7 +66,7 @@ CREATE TABLE messages
     reply_to_id INTEGER,
     edited_at   TIMESTAMP,
     removed_at  TIMESTAMP,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES users ON DELETE SET NULL,
     FOREIGN KEY (reply_to_id) REFERENCES messages ON DELETE SET NULL

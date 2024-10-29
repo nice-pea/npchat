@@ -18,7 +18,6 @@ func (t Time) IsZero() bool {
 func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return json.Marshal(nil) // Если значение недействительно, возвращаем null
-		//return json.Marshal(nil) // Если значение недействительно, возвращаем null
 	}
 	return json.Marshal(t.Time) // Иначе маршалим время
 }

@@ -5,23 +5,22 @@ import (
 	"slices"
 )
 
-type Field[T any] struct {
+type Field struct {
 	Key  string
 	Deps []string
-	Fn   func(state T) error
+	Fn   func() error
 }
 
-type Params[T any] struct {
-	State  T
-	Fields []Field[T]
+type Params struct {
+	Fields []Field
 }
 
-func (p Params[T]) Run() error {
+func (p Params) Run() error {
 	if sorted, err := p.sort(); err != nil {
 		return err
 	} else {
 		for _, field := range sorted {
-			if err = field.Fn(p.State); err != nil {
+			if err = field.Fn(); err != nil {
 				return err
 			}
 		}
@@ -32,13 +31,13 @@ func (p Params[T]) Run() error {
 
 var ErrCantCreateDep = errors.New("can't create dep")
 
-func (p Params[T]) sort() ([]Field[T], error) {
-	exchange := make(map[string]Field[T], len(p.Fields))
+func (p Params) sort() ([]Field, error) {
+	exchange := make(map[string]Field, len(p.Fields))
 	for _, field := range p.Fields {
 		exchange[field.Key] = field
 	}
 
-	created := make([]Field[T], 0, len(p.Fields))
+	created := make([]Field, 0, len(p.Fields))
 	for i := 0; i < len(exchange) && len(exchange) != 0; i++ {
 		appended := false
 		for _, field := range exchange {
@@ -57,7 +56,7 @@ func (p Params[T]) sort() ([]Field[T], error) {
 	return created, nil
 }
 
-func depsAlreadyCreated[T any](field Field[T], created []Field[T]) bool {
+func depsAlreadyCreated(field Field, created []Field) bool {
 	createdKeys := make([]string, len(created))
 	for i, createdField := range created {
 		createdKeys[i] = createdField.Key
@@ -71,7 +70,7 @@ func depsAlreadyCreated[T any](field Field[T], created []Field[T]) bool {
 	return true
 }
 
-//func (p Params[T]) requiredBys() map[string]map[string]struct{} {
+//func (p Params) requiredBys() map[string]map[string]struct{} {
 //	requiredBys := make(map[string]map[string]struct{}, len(p.Fields))
 //	for _, field := range p.Fields {
 //		rb := make(map[string]struct{}, len(field.Deps))
