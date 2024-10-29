@@ -17,6 +17,7 @@ import (
 	ucPermissions "github.com/saime-0/nice-pea-chat/internal/usecase/permissions"
 	ucRoles "github.com/saime-0/nice-pea-chat/internal/usecase/roles"
 	ucUsers "github.com/saime-0/nice-pea-chat/internal/usecase/users"
+	ucUserCreate "github.com/saime-0/nice-pea-chat/internal/usecase/users/create"
 	ucUserUpdate "github.com/saime-0/nice-pea-chat/internal/usecase/users/update"
 )
 
@@ -27,6 +28,7 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	// Users
 	m.handle("/users", Users)
 	m.handle("/users/update", UserUpdate)
+	m.handle("/users/create", UserCreate)
 	// Chats
 	m.handle("/chats", Chats)
 	m.handle("POST /chats/create", ChatCreate)
@@ -41,6 +43,7 @@ func (s ServerParams) declareRoutes(muxHttp *http.ServeMux) {
 	// Authentication
 	m.handle("/authn", Authn)
 	m.handle("/authn/login", Login)
+	m.handle("/credentials/", Login)
 }
 
 func MessageCreate(req Request) (any, error) {
@@ -157,6 +160,17 @@ func Chats(req Request) (_ any, err error) {
 
 func UserUpdate(req Request) (any, error) {
 	ucParams := ucUserUpdate.Params{
+		DB: req.DB,
+	}
+	if err := parseJSONRequest(req.Body, &ucParams.User); err != nil {
+		return nil, err
+	}
+
+	return ucParams.Run()
+}
+
+func UserCreate(req Request) (any, error) {
+	ucParams := ucUserCreate.Params{
 		DB: req.DB,
 	}
 	if err := parseJSONRequest(req.Body, &ucParams.User); err != nil {

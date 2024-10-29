@@ -9,6 +9,15 @@ GET {{host}}/health
 Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7
 #Accept-Language: en-us,en;q=0.5
 
+### Chat create
+POST {{host}}/chats/create
+Content-Type: application/json
+
+{
+  "name": "cjatName",
+  "creator_id": 2
+}
+
 ### Chats list
 GET {{host}}/chats
 
@@ -42,16 +51,7 @@ Content-Type: application/json
 GET {{host}}/permissions
 
 ### Create new session
-GET {{host}}/login?key=kk
-
-### User update
-POST {{host}}/chats/create
-Content-Type: application/json
-
-{
-  "name": "some2",
-  "creator_id": 1
-}
+GET {{host}}/authn/login?key=kk
 
 ### User and session information
 GET {{host}}/authn?token={{saitoken}}
@@ -66,4 +66,13 @@ Content-Type: application/json
 {
   "id": 1,
   "username": "qwerty"
+}
+
+### Create update
+POST {{host}}/users/create
+Content-Type: application/json
+
+{
+  "username": "sai",
+  "key": "kk"
 }
