@@ -6,15 +6,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import ru.saime.nice_pea_chat.ui.theme.Black
+import ru.saime.nice_pea_chat.ui.theme.Dp10
+import ru.saime.nice_pea_chat.ui.theme.Dp2
+import ru.saime.nice_pea_chat.ui.theme.Dp20
+import ru.saime.nice_pea_chat.ui.theme.Dp8
 import ru.saime.nice_pea_chat.ui.theme.Font
+import ru.saime.nice_pea_chat.ui.theme.RoundMin
 
 
 @Preview
@@ -23,7 +26,7 @@ private fun PreviewButton() {
     Button(
         modifier = Modifier
             .background(Black)
-            .padding(20.dp),
+            .padding(Dp20),
         text = "Confirm",
         helperText = "The number of chats that can be created is limited. Created chats cannot be deleted",
         onClick = {}
@@ -40,18 +43,18 @@ fun Button(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(3.dp))
+            .clip(RoundMin)
             .clickable(onClick = onClick)
-            .padding(8.dp)
+            .padding(Dp8)
             .then(modifier)
     ) {
         Row {
             Text("->", style = Font.White16W400)
-            Gap(10.dp)
+            Gap(Dp10)
             Text(text.ifEmpty { "<action>" }, style = Font.White16W400)
         }
         if (helperText != "") {
-            Gap(2.dp)
+            Gap(Dp2)
             Text(helperText, style = Font.GrayCharcoal12W400)
         }
     }

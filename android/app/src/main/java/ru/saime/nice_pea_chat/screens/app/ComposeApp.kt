@@ -1,6 +1,7 @@
 package ru.saime.nice_pea_chat.screens.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -20,7 +21,9 @@ import ru.saime.nice_pea_chat.ui.theme.Black
 fun ComposeApp(koin: Koin) {
     val navController = rememberNavController()
     NavHost(
-        modifier = Modifier.background(Black),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Black),
         navController = navController,
         startDestination = RouteSplash
     ) {

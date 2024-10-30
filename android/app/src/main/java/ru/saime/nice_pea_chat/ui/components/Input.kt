@@ -12,8 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import ru.saime.nice_pea_chat.ui.theme.Black
+import ru.saime.nice_pea_chat.ui.theme.Dp1
+import ru.saime.nice_pea_chat.ui.theme.Dp10
+import ru.saime.nice_pea_chat.ui.theme.Dp2
+import ru.saime.nice_pea_chat.ui.theme.Dp20
+import ru.saime.nice_pea_chat.ui.theme.Dp6
+import ru.saime.nice_pea_chat.ui.theme.Dp8
 import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.White
 import ru.saime.nice_pea_chat.ui.theme.cursorBrush
@@ -25,7 +30,7 @@ private fun PreviewInput() {
     Input(
         modifier = Modifier
             .background(Black)
-            .padding(20.dp),
+            .padding(Dp20),
         title = "Title",
         placeholder = "Empty",
         helperText = "Login using for login in your profile without  other credential, it sensitive information, don’t share it",
@@ -46,14 +51,14 @@ fun Input(
     ) {
         if (title != "") {
             Text(title, style = Font.White12W500)
-            Gap(6.dp)
+            Gap(Dp6)
         }
         BasicTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Black)
-                .border(1.dp, White)
-                .padding(10.dp),
+                .border(Dp1, White)
+                .padding(Dp10),
             state = textFieldState,
             cursorBrush = cursorBrush,
             textStyle = Font.White16W400,
@@ -65,9 +70,9 @@ fun Input(
             }
         )
         if (helperText != "") {
-            Gap(2.dp)
+            Gap(Dp2)
             Text(helperText, style = Font.GrayCharcoal12W400)
         }
-        Gap(8.dp)
+        Gap(Dp8)
     }
 }

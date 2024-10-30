@@ -3,7 +3,6 @@ package ru.saime.nice_pea_chat.screens.splash
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,21 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+import ru.saime.nice_pea_chat.common.functions.toast
 import ru.saime.nice_pea_chat.screens.app.authentication.AuthenticationAction
 import ru.saime.nice_pea_chat.screens.app.authentication.AuthenticationViewModel
 import ru.saime.nice_pea_chat.screens.app.authentication.CheckAuthnResult
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.screens.login.RouteLogin
 import ru.saime.nice_pea_chat.ui.components.Gap
-import ru.saime.nice_pea_chat.common.functions.toast
+import ru.saime.nice_pea_chat.ui.components.Progress
 import ru.saime.nice_pea_chat.ui.modifiers.fadeIn
+import ru.saime.nice_pea_chat.ui.theme.Dp10
 import ru.saime.nice_pea_chat.ui.theme.Font
-import ru.saime.nice_pea_chat.ui.theme.White
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -44,6 +43,7 @@ private fun PreviewSplashScreen() {
 }
 
 const val RouteSplash = "Splash"
+private const val Title = "nice-pea-chat\n(NPC)"
 
 @Composable
 fun SplashScreen(
@@ -58,15 +58,12 @@ fun SplashScreen(
     ) {
         Text(
             modifier = Modifier.fadeIn(textFadeInDuration),
-            text = "nice-pea-chat\n(NPC)",
+            text = Title,
             style = Font.White16W400,
             textAlign = TextAlign.Center
         )
-        Gap(10.dp)
-        CircularProgressIndicator(
-            modifier = Modifier.fadeIn(loaderFadeInDuration),
-            color = White,
-        )
+        Gap(Dp10)
+        Progress(modifier = Modifier.fadeIn(loaderFadeInDuration))
     }
 
     val authnVM = koinViewModel<AuthenticationViewModel>()

@@ -11,7 +11,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -31,6 +30,7 @@ import ru.saime.nice_pea_chat.data.store.Profile
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.ui.components.Button
 import ru.saime.nice_pea_chat.ui.components.Input
+import ru.saime.nice_pea_chat.ui.theme.Dp20
 
 
 @Preview(
@@ -53,7 +53,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(Dp20),
         verticalArrangement = Arrangement.Center,
     ) {
         Input(
