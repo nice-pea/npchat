@@ -5,7 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -15,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,7 +30,6 @@ import ru.saime.nice_pea_chat.common.AsyncData
 import ru.saime.nice_pea_chat.data.repositories.ChatsRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.model.Model
-import ru.saime.nice_pea_chat.screens.login.LoginScreen
 import ru.saime.nice_pea_chat.ui.components.Gap
 import ru.saime.nice_pea_chat.ui.components.Progress
 import ru.saime.nice_pea_chat.ui.theme.Dp2
@@ -33,18 +38,11 @@ import ru.saime.nice_pea_chat.ui.theme.Dp4
 import ru.saime.nice_pea_chat.ui.theme.Dp8
 import ru.saime.nice_pea_chat.ui.theme.Font
 import ru.saime.nice_pea_chat.ui.theme.RoundMin
+import ru.saime.nice_pea_chat.ui.theme.White
 import java.time.OffsetDateTime
 
-@Preview(
-    backgroundColor = 0xFF000000,
-    showBackground = true,
-)
-@Composable
-private fun PreviewChatsScreen() {
-    LoginScreen(rememberNavController())
-}
-
 const val RouteChats = "Chats"
+private const val AppBarTitle = "Chats"
 
 @Composable
 fun ChatsScreen(
@@ -53,14 +51,24 @@ fun ChatsScreen(
     val chatsVM = koinViewModel<ChatsViewModel>()
     val chats = chatsVM.uiState.chats.collectAsState().value
     val selfID = chatsVM.uiState.selfID.collectAsState().value
-    when (chats) {
-        is AsyncData.Ok -> ChatList(chats = chats.data, selfID = selfID)
+    Column {
+        AppBar(
+            clickPlus = { },
+            clickProfile = { },
+        )
+        when (chats) {
+            is AsyncData.Ok -> ChatList(
+                chats = chats.data,
+                selfID = selfID,
+            )
 
-        is AsyncData.Err -> Text(chats.err.toString(), style = Font.White12W500)
-        AsyncData.Loading -> Progress()
-        AsyncData.None -> {}
+            is AsyncData.Err -> Text(chats.err.toString(), style = Font.White12W500)
+            AsyncData.Loading -> Progress()
+            AsyncData.None -> {}
+        }
     }
 }
+
 
 @Composable
 private fun ChatList(
@@ -78,6 +86,35 @@ private fun ChatList(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppBar(
+    clickPlus: () -> Unit,
+    clickProfile: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TopAppBar(
+        modifier = modifier,
+        title = { Text(AppBarTitle, style = Font.White20W400) },
+        actions = {
+            IconButton(onClick = clickPlus) {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    tint = White,
+                    contentDescription = "add chat"
+                )
+            }
+            IconButton(onClick = clickProfile) {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    tint = White,
+                    contentDescription = "profile"
+                )
+            }
+        }
+    )
 }
 
 
@@ -112,13 +149,6 @@ class ChatsViewModel(
     }
 }
 
-//object UiModel {
-//    data class ChatListElement(
-//        val model: Model.Chat,
-//
-//    )
-//}
-
 
 @Preview(
     backgroundColor = 0xFF000000,
@@ -135,7 +165,6 @@ private fun PreviewChatCard() {
             createdAt = OffsetDateTime.now(),
             creatorId = 41,
             creator = null,
-//            lastMessage = null,
             lastMessage = Model.Message(
                 id = 23,
                 chatId = 123,
@@ -145,7 +174,6 @@ private fun PreviewChatCard() {
                 editedAt = null,
                 removedAt = null,
                 createdAt = OffsetDateTime.now(),
-//                author = null,
                 author = Model.User(
                     id = authorID, username = "UserName", createdAt = OffsetDateTime.now()
                 ),
@@ -159,7 +187,6 @@ private fun PreviewChatCard() {
 
 @Composable
 private fun ChatCard(
-//    chat: UiModel.ChatListElement,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     chat: Model.Chat,

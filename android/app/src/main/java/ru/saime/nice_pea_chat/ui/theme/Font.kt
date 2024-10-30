@@ -30,6 +30,10 @@ object Font {
         fontSize = 18.sp,
         fontWeight = FontWeight.W400,
     )
+    private val S20W400 = TextStyle(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.W400,
+    )
 
     // White
     val White12W500 = S12W500.copy(White)
@@ -38,6 +42,7 @@ object Font {
     val White16W400 = S16W400.copy(White)
     val White16W400Italic = S16W400.copy(White, fontStyle = FontStyle.Italic)
     val White18W400 = S18W400.copy(White)
+    val White20W400 = S20W400.copy(White)
 
     // GrayCharcoal
     val GrayCharcoal12W400 = S12W400.copy(GrayCharcoal)
