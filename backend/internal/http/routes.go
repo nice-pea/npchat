@@ -143,15 +143,19 @@ func ChatCreate(req Request) (any, error) {
 
 func Chats(req Request) (_ any, err error) {
 	ucParams := ucChats.Params{
-		IDs:     nil,
-		UserIDs: nil,
-		DB:      req.DB,
+		IDs:                  nil,
+		UserIDs:              nil,
+		UnreadCounterForUser: optional.Uint{},
+		DB:                   req.DB,
 	}
 
 	if ucParams.IDs, err = uintsParam(req.Form, "ids"); err != nil {
 		return nil, err
 	}
 	if ucParams.UserIDs, err = uintsParam(req.Form, "user_ids"); err != nil {
+		return nil, err
+	}
+	if ucParams.UnreadCounterForUser, err = uintOptionalParam(req.Form, "unread_counter"); err != nil {
 		return nil, err
 	}
 

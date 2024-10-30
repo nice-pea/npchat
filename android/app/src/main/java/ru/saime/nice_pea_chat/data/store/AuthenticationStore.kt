@@ -36,7 +36,7 @@ class AuthenticationStore(context: Context) {
         set(value) {
             sp.edit {
                 putInt(profileIdKey, value?.id ?: 0)
-                putString(keyKey, value?.username)
+                putString(profileUsernameKey, value?.username)
             }
         }
 

@@ -15,7 +15,12 @@ type Params struct {
 	Fields []Field
 }
 
-func (p Params) Run() error {
+func (p *Params) AddField(f Field) Params {
+	p.Fields = append(p.Fields, f)
+	return *p
+}
+
+func (p *Params) Run() error {
 	if sorted, err := p.sort(); err != nil {
 		return err
 	} else {
@@ -31,7 +36,7 @@ func (p Params) Run() error {
 
 var ErrCantCreateDep = errors.New("can't create dep")
 
-func (p Params) sort() ([]Field, error) {
+func (p *Params) sort() ([]Field, error) {
 	exchange := make(map[string]Field, len(p.Fields))
 	for _, field := range p.Fields {
 		exchange[field.Key] = field

@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### Chats list
-GET {{host}}/chats
+GET {{host}}/chats?unread_counter=2
 
 ### Messages list
 GET {{host}}/messages?around_id=5&limit=5

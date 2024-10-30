@@ -5,9 +5,10 @@ import (
 )
 
 type Chat struct {
-	model.Chat  `gorm:"embedded"`
-	Creator     *model.User `gorm:"embedded" json:"creator,omitempty"`
-	LastMessage *Message    `json:"last_message,omitempty"`
+	model.Chat          `gorm:"embedded"`
+	Creator             *model.User `gorm:"embedded" json:"creator,omitempty"`
+	LastMessage         *Message    `json:"last_message,omitempty"`
+	UnreadMessagesCount int         `json:"unread_messages_count,omitempty"`
 }
 
 type Message struct {
@@ -29,5 +30,5 @@ func MsgsMap(msgs []Message) MessagesMap {
 
 type MessageReplyTo struct {
 	model.Message `gorm:"embedded"`
-	Author        model.User `gorm:"embedded" json:"author"`
+	Author        *model.User `gorm:"embedded" json:"author"`
 }

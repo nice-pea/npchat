@@ -37,9 +37,11 @@ CREATE TABLE members
     user_id    INTEGER NOT NULL,
     chat_id    INTEGER NOT NULL,
     is_pinned  BOOLEAN NOT NULL,
+    last_read_msg_id INTEGER,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users ON DELETE CASCADE,
-    FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE
+    FOREIGN KEY (chat_id) REFERENCES chats ON DELETE CASCADE,
+    FOREIGN KEY (last_read_msg_id) REFERENCES messages ON DELETE SET NULL
 );
 
 CREATE TABLE roles

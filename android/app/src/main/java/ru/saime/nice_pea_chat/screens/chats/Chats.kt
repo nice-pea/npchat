@@ -20,9 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import ru.saime.nice_pea_chat.common.Status
-import ru.saime.nice_pea_chat.data.api.ChatsResponse
 import ru.saime.nice_pea_chat.data.repositories.ChatsRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
+import ru.saime.nice_pea_chat.model.Model
 import ru.saime.nice_pea_chat.screens.login.LoginScreen
 import ru.saime.nice_pea_chat.ui.components.Gap
 import ru.saime.nice_pea_chat.ui.theme.Black
@@ -70,14 +70,14 @@ fun ChatsScreen(
 
 
 class ChatsUiState(
-    val chats: StateFlow<Status<List<ChatsResponse.Chat>>>,
+    val chats: StateFlow<Status<List<Model.Chat>>>,
 )
 
 class ChatsViewModel(
     private val repo: ChatsRepository,
     private val store: AuthenticationStore,
 ) : ViewModel() {
-    private val chats = MutableStateFlow<Status<List<Chat>>>(Status.None)
+    private val chats = MutableStateFlow<Status<List<Model.Chat>>>(Status.None)
     val uiState = ChatsUiState(chats = chats)
 
     init {

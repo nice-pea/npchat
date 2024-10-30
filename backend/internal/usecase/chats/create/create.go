@@ -19,7 +19,7 @@ type Params struct {
 func (p Params) Run() (model.Chat, error) {
 	chat := model.Chat{
 		Name:      p.Chat.Name,
-		CreatorID: null.Uint{V: p.Chat.CreatorID},
+		CreatorID: null.Uint{Val: p.Chat.CreatorID},
 	}
 	return chat, p.DB.Create(&chat).Error
 }

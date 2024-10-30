@@ -3,12 +3,14 @@ package chats
 import (
 	"gorm.io/gorm"
 
+	"github.com/saime-0/nice-pea-chat/internal/app/optional"
 	"github.com/saime-0/nice-pea-chat/internal/model/rich"
 )
 
 type Params struct {
-	IDs     []uint
-	UserIDs []uint
+	IDs                  []uint
+	UserIDs              []uint
+	UnreadCounterForUser optional.Uint
 
 	DB *gorm.DB
 }
@@ -43,5 +45,5 @@ func (p Params) Run() (Out, error) {
 		return Out{}, err
 	}
 
-	return out, extend(&out, p.DB)
+	return out, extend(&out, p)
 }

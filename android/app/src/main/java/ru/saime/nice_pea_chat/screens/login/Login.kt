@@ -21,15 +21,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import ru.saime.nice_pea_chat.common.functions.ToastDuration
+import ru.saime.nice_pea_chat.common.functions.toast
 import ru.saime.nice_pea_chat.data.repositories.AuthenticationRepository
 import ru.saime.nice_pea_chat.data.repositories.NpcClient
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.data.store.NpcClientStore
+import ru.saime.nice_pea_chat.data.store.Profile
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.ui.components.Button
 import ru.saime.nice_pea_chat.ui.components.Input
-import ru.saime.nice_pea_chat.common.functions.ToastDuration
-import ru.saime.nice_pea_chat.common.functions.toast
 
 
 @Preview(
@@ -178,6 +179,7 @@ class LoginViewModel(
                 authnStore.token = res.session.token
                 npcStore.baseUrl = server
                 authnStore.key = key
+                authnStore.profile = Profile(id = res.user.id, username = res.user.username)
                 _enterResult.update { EnterResult.Successful }
             }
             .onFailure { res ->

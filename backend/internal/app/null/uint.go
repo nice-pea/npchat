@@ -8,7 +8,7 @@ import (
 
 // Uint is an alias for sql.NullInt64 data type
 type Uint struct {
-	V   uint
+	Val uint
 	sql sql.NullInt64
 }
 
@@ -23,7 +23,7 @@ func (u *Uint) Scan(value interface{}) error {
 		return err
 	}
 	*u = Uint{
-		V:   uint(sqlV.Int64),
+		Val: uint(sqlV.Int64),
 		sql: sqlV,
 	}
 	return nil
@@ -34,7 +34,7 @@ func (u *Uint) MarshalJSON() ([]byte, error) {
 	if !u.sql.Valid {
 		return json.Marshal(nil)
 	}
-	return json.Marshal(u.V)
+	return json.Marshal(u.Val)
 }
 
 // Value implements the [driver.Valuer] interface.
@@ -55,7 +55,7 @@ func (u *Uint) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	u.V = *aux
+	u.Val = *aux
 	u.sql.Valid = true // Устанавливаем Valid в true, если значение не null
 	return nil
 }
