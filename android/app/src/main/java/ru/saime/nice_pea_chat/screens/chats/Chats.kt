@@ -30,6 +30,7 @@ import ru.saime.nice_pea_chat.common.AsyncData
 import ru.saime.nice_pea_chat.data.repositories.ChatsRepository
 import ru.saime.nice_pea_chat.data.store.AuthenticationStore
 import ru.saime.nice_pea_chat.model.Model
+import ru.saime.nice_pea_chat.screens.chat.messages.RouteMessages
 import ru.saime.nice_pea_chat.ui.components.Gap
 import ru.saime.nice_pea_chat.ui.components.Progress
 import ru.saime.nice_pea_chat.ui.theme.Dp2
@@ -60,6 +61,9 @@ fun ChatsScreen(
             is AsyncData.Ok -> ChatList(
                 chats = chats.data,
                 selfID = selfID,
+                clickChat = {
+                    navController.navigate(RouteMessages(chatID = it.id))
+                }
             )
 
             is AsyncData.Err -> Text(chats.err.toString(), style = Font.White12W500)
@@ -72,6 +76,7 @@ fun ChatsScreen(
 
 @Composable
 private fun ChatList(
+    clickChat: (Model.Chat) -> Unit,
     chats: List<Model.Chat>,
     selfID: Int,
 ) {
@@ -82,7 +87,7 @@ private fun ChatList(
             ChatCard(
                 chat = chat,
                 selfID = selfID,
-                onClick = {}
+                onClick = { clickChat(chat) }
             )
         }
     }
@@ -122,6 +127,11 @@ class ChatsUiState(
     val chats: StateFlow<AsyncData<List<Model.Chat>>>,
     val selfID: StateFlow<Int>,
 )
+
+sealed interface ChatsAction {
+    object GoToChat : ChatsViewModel
+}
+
 
 class ChatsViewModel(
     private val repo: ChatsRepository,

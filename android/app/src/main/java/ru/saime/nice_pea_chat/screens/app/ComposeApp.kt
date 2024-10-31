@@ -7,7 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import org.koin.core.Koin
+import ru.saime.nice_pea_chat.screens.chat.messages.MessagesScreen
+import ru.saime.nice_pea_chat.screens.chat.messages.RouteMessages
 import ru.saime.nice_pea_chat.screens.chats.ChatsScreen
 import ru.saime.nice_pea_chat.screens.chats.RouteChats
 import ru.saime.nice_pea_chat.screens.login.LoginScreen
@@ -30,5 +33,9 @@ fun ComposeApp(koin: Koin) {
         composable(RouteSplash) { SplashScreen(navController) }
         composable(RouteLogin) { LoginScreen(navController) }
         composable(RouteChats) { ChatsScreen(navController) }
+        composable<RouteMessages> {
+            val messages = it.toRoute<RouteMessages>()
+            MessagesScreen(navController, messages.chatID)
+        }
     }
 }
