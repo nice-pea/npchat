@@ -8,5 +8,6 @@ interface ChatsApi {
     @GET("/chats")
     suspend fun chats(
         @Query("unread_counter") unreadForUserID: Int? = null,
+        @Query("ids") ids: List<Int> = emptyList(),
     ): Result<ApiModel.Chats>
 }

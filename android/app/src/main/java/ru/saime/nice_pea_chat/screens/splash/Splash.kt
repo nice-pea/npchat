@@ -66,10 +66,10 @@ fun SplashScreen(
         Progress(modifier = Modifier.fadeIn(loaderFadeInDuration))
     }
 
-    val authnVM = koinViewModel<AuthenticationViewModel>()
-    CheckAuthnResultEffect(navController, authnVM)
+    val vm = koinViewModel<AuthenticationViewModel>()
+    CheckAuthnResultEffect(navController, vm)
     LaunchedEffect(1) {
-        authnVM.action(AuthenticationAction.CheckAuthn)
+        vm.action(AuthenticationAction.CheckAuthn)
     }
 }
 

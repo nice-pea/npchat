@@ -48,7 +48,7 @@ const val RouteLogin = "Login"
 fun LoginScreen(
     navController: NavController,
 ) {
-    val loginVM = koinViewModel<LoginViewModel>()
+    val vm = koinViewModel<LoginViewModel>()
 
     Column(
         modifier = Modifier
@@ -59,25 +59,25 @@ fun LoginScreen(
         Input(
             title = "Server",
             placeholder = "http://example.com",
-            textFieldState = loginVM.serverFieldState
+            textFieldState = vm.serverFieldState
         )
         Button(
-            onClick = { loginVM.action(LoginAction.CheckConn) },
+            onClick = { vm.action(LoginAction.CheckConn) },
             text = "Check connection",
         )
         Input(
             title = "Key",
             placeholder = "Enter key for access to server",
-            textFieldState = loginVM.keyFieldState
+            textFieldState = vm.keyFieldState
         )
         Button(
-            onClick = { loginVM.action(LoginAction.Enter) },
+            onClick = { vm.action(LoginAction.Enter) },
             text = "Enter",
         )
     }
 
-    CheckConnResultEffect(loginVM)
-    EnterResultEffect(loginVM, navController)
+    CheckConnResultEffect(vm)
+    EnterResultEffect(vm, navController)
 }
 
 @Composable

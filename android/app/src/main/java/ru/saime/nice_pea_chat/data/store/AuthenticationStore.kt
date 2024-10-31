@@ -24,6 +24,12 @@ class AuthenticationStore(context: Context) {
 
     private val profileIdKey = "profileId"
     private val profileUsernameKey = "profileUsername"
+    fun profile(): Result<Profile> {
+        return runCatching {
+            profile ?: error("no saved profile")
+        }
+    }
+
     var profile: Profile?
         get() {
             val id = sp.getInt(profileIdKey, 0)

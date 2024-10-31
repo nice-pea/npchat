@@ -14,4 +14,14 @@ class ChatsRepository(
             unreadForUserID = authnStore.profile?.id
         ).mapSuspend { it.chats }
     }
+
+    suspend fun chat(id: Int): Result<Model.Chat> {
+        return api.chats(
+            unreadForUserID = authnStore.profile?.id,
+            ids = listOf(id),
+        ).mapSuspend {
+            it.chats.firstOrNull()
+                ?: error("not found")
+        }
+    }
 }

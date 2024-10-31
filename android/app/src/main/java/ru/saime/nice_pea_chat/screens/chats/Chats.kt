@@ -49,9 +49,9 @@ private const val AppBarTitle = "Chats"
 fun ChatsScreen(
     navController: NavController,
 ) {
-    val chatsVM = koinViewModel<ChatsViewModel>()
-    val chats = chatsVM.uiState.chats.collectAsState().value
-    val selfID = chatsVM.uiState.selfID.collectAsState().value
+    val vm = koinViewModel<ChatsViewModel>()
+    val chats = vm.uiState.chats.collectAsState().value
+    val selfID = vm.uiState.selfID.collectAsState().value
     Column {
         AppBar(
             clickPlus = { },
@@ -127,10 +127,6 @@ class ChatsUiState(
     val chats: StateFlow<AsyncData<List<Model.Chat>>>,
     val selfID: StateFlow<Int>,
 )
-
-sealed interface ChatsAction {
-    object GoToChat : ChatsViewModel
-}
 
 
 class ChatsViewModel(
