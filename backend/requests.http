@@ -1,3 +1,7 @@
+GET http://localhost:80/api/item?id=99
+Accept: application/json
+
+###
 
 ###
 @host = http://localhost:7511
@@ -14,12 +18,13 @@ POST {{host}}/chats/create
 Content-Type: application/json
 
 {
-  "name": "newChat",
+  "name": "mychar4",
   "creator_id": 2
 }
 
 ### Chats list
-GET {{host}}/chats?unread_counter=2
+GET {{host}}/chats?ids=2
+Content-Type: application/x-www-form-urlencoded
 
 ### Messages list
 GET {{host}}/messages?around_id=5&limit=5

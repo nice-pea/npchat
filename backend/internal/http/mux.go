@@ -37,6 +37,7 @@ func modulation(next HandlerFunc) http.HandlerFunc {
 			b    []byte
 			err  error
 		)
+		w.Header().Add("Content-Type", "application/json")
 		if err = r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
@@ -51,6 +52,8 @@ func modulation(next HandlerFunc) http.HandlerFunc {
 		// Marshal data
 		if b, err = json.Marshal(data); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			w.Header().Del("Content-Type")
+			w.Header().Add("Content-Type", "text/plain")
 			b = []byte(err.Error())
 		}
 		// Try to send data
