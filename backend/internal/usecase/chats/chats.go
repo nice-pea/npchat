@@ -21,33 +21,63 @@ type Out struct {
 }
 
 func (p Params) Run() (Out, error) {
-	cond := p.DB.Raw(`
-		WITH c1 AS (
-			SELECT
-				c.id,
-				COALESCE(MAX(m.id), 0) AS last_msg_id
-			FROM chats c
-				LEFT JOIN messages m
-					ON c.id = m.chat_id
-			GROUP BY c.id
-			ORDER BY last_msg_id DESC
-		)
-		SELECT chats.*, creator.*, last_msg.*, msg_author.*, reply_msg.*, reply_author.*
-		FROM c1
-			INNER JOIN chats 
+	c1SubQuery := p.DB.Table("chats").
+		Select("chats.id, COALESCE(MAX(messages.id), 0) AS last_msg_id").
+		Joins("LEFT JOIN messages ON chats.id = messages.chat_id").
+		Group("chats.id").
+		Order("last_msg_id DESC")
+
+	cond := p.DB.Table("(?) as c1", c1SubQuery).
+		Select(`
+			chats.id AS chats_id,
+			chats.name AS chats_name,
+			chats.created_at AS chats_created_at,
+			chats.creator_id AS chats_creator_id,
+
+			creator.id AS creator_id, 
+			creator.username AS creator_username, 
+			creator.created_at AS creator_created_at, 
+
+			last_msg.id AS last_msg_id,
+			last_msg.chat_id AS last_msg_chat_id,
+			last_msg.text AS last_msg_text,
+			last_msg.author_id AS last_msg_author_id,
+			last_msg.reply_to_id AS last_msg_reply_to_id,
+			last_msg.edited_at AS last_msg_edited_at,
+			last_msg.removed_at AS last_msg_removed_at,
+			last_msg.created_at AS last_msg_created_at,
+
+			last_msg_author.id AS last_msg_author_id, 
+			last_msg_author.username AS last_msg_author_username, 
+			last_msg_author.created_at AS last_msg_author_created_at,
+
+			last_msg_reply.id AS last_msg_reply_id,
+			last_msg_reply.chat_id AS last_msg_reply_chat_id,
+			last_msg_reply.text AS last_msg_reply_text,
+			last_msg_reply.author_id AS last_msg_reply_author_id,
+			last_msg_reply.reply_to_id AS last_msg_reply_reply_to_id,
+			last_msg_reply.edited_at AS last_msg_reply_edited_at,
+			last_msg_reply.removed_at AS last_msg_reply_removed_at,
+			last_msg_reply.created_at AS last_msg_reply_created_at,
+
+			last_msg_reply_author.id AS last_msg_reply_author_id, 
+			last_msg_reply_author.username AS last_msg_reply_author_username, 
+			last_msg_reply_author.created_at AS last_msg_reply_author_created_at
+		`).
+		Joins(`
+			INNER JOIN chats
 					ON c1.id = chats.id
-			LEFT JOIN users AS creator 
+			LEFT JOIN users AS creator
 					ON chats.creator_id = creator.id
 			LEFT JOIN messages last_msg
 				   ON c1.last_msg_id = last_msg.id
-			LEFT JOIN users AS msg_author
-					ON last_msg.author_id = msg_author.id
-			LEFT JOIN messages AS reply_msg
-					ON last_msg.reply_to_id = reply_msg.id
-			LEFT JOIN users AS reply_author
-					ON reply_msg.author_id = reply_author.id
-		`,
-	)
+			LEFT JOIN users AS last_msg_author
+					ON last_msg.author_id = last_msg_author.id
+			LEFT JOIN messages AS last_msg_reply
+					ON last_msg.reply_to_id = last_msg_reply.id
+			LEFT JOIN users AS last_msg_reply_author
+					ON last_msg_reply.author_id = last_msg_reply_author.id
+		`)
 
 	// Select only with received ids
 	if p.IDs != nil {
