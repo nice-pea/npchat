@@ -1,7 +1,9 @@
 package chats
 
 import (
-	"gorm.io/gorm"
+	"context"
+
+	"github.com/jackc/pgx/v5"
 
 	extend1 "github.com/saime-0/nice-pea-chat/internal/app/extend"
 	"github.com/saime-0/nice-pea-chat/internal/model/rich"
@@ -10,7 +12,7 @@ import (
 type chatsExt struct {
 	chatIDs []uint
 	chats   map[uint]*rich.Chat
-	db      *gorm.DB
+	db      *pgx.Conn
 	p       Params
 }
 
@@ -23,7 +25,7 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 			ChatID uint
 			Count  int
 		}
-		if err := e.db.Raw(`
+		if err := e.db.QueryRow(context.Background(), `
 			SELECT DISTINCT ON (messages.chat_id) 
 				messages.chat_id AS chat_id,
 				count(messages.*)
@@ -35,7 +37,7 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 				AND mem.user_id = ?
 			GROUP BY messages.chat_id`,
 			userID,
-		).Scan(&unreads).Error; err != nil {
+		).Scan(&unreads); err != nil {
 			return err
 		}
 
@@ -52,7 +54,7 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 
 func extend(out *Out, p Params) error {
 	ext := &chatsExt{
-		db:      p.DB,
+		db:      p.Conn,
 		chats:   make(map[uint]*rich.Chat, len(out.Chats)),
 		chatIDs: make([]uint, len(out.Chats)),
 		p:       p,

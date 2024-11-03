@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Chats list
-GET {{host}}/chats?ids=2
+GET {{host}}/chats?ids=2,1
 Content-Type: application/x-www-form-urlencoded
 
 ### Messages list

@@ -1,18 +1,18 @@
 package create
 
 import (
+	"github.com/jackc/pgx/v5/pgtype"
 	"gorm.io/gorm"
 
-	"github.com/saime-0/nice-pea-chat/internal/app/null"
 	"github.com/saime-0/nice-pea-chat/internal/model"
 )
 
 type Params struct {
 	Message struct {
-		ChatID    uint      `json:"chat_id"`
-		Text      string    `json:"text"`
-		AuthorID  null.Uint `json:"author_id"`
-		ReplyToID null.Uint `json:"reply_to_id"`
+		ChatID    uint          `json:"chat_id"`
+		Text      string        `json:"text"`
+		AuthorID  pgtype.Uint32 `json:"author_id"`
+		ReplyToID pgtype.Uint32 `json:"reply_to_id"`
 	}
 
 	DB *gorm.DB

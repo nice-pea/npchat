@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 
 	serviceL10n "github.com/saime-0/nice-pea-chat/internal/service/l10n"
@@ -16,8 +17,9 @@ type ServerParams struct {
 	Ctx  context.Context
 	Addr string
 
-	L10n serviceL10n.Service
-	DB   *gorm.DB
+	L10n    serviceL10n.Service
+	DB      *gorm.DB
+	PGXconn *pgx.Conn
 }
 
 func (s ServerParams) StartServer() error {

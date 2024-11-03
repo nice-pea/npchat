@@ -146,7 +146,7 @@ func Chats(req Request) (_ any, err error) {
 		IDs:                  nil,
 		UserIDs:              nil,
 		UnreadCounterForUser: optional.Uint{},
-		DB:                   req.DB,
+		Conn:                 req.PGXconn,
 	}
 
 	if ucParams.IDs, err = uintsParam(req.Form, "ids"); err != nil {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 
 	"github.com/saime-0/nice-pea-chat/internal/service/l10n"
@@ -18,10 +19,11 @@ type mux struct {
 
 type Request struct {
 	*http.Request
-	L10n   l10n.Service
-	DB     *gorm.DB
-	Locale string
-	Token  string
+	L10n    l10n.Service
+	DB      *gorm.DB
+	PGXconn *pgx.Conn
+	Locale  string
+	Token   string
 }
 
 type HandlerFunc func(Request) (any, error)
@@ -80,6 +82,7 @@ func initRequest(s ServerParams, next HandlerFunc) HandlerFunc {
 			Locale:  locale(r.Header.Get("Accept-Language"), l10n.LocaleDefault),
 			Token:   getToken(r.Request),
 			DB:      s.DB,
+			PGXconn: s.PGXconn,
 		}
 		return next(r)
 	}
