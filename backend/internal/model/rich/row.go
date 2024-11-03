@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/saime-0/nice-pea-chat/internal/app/null"
 	"github.com/saime-0/nice-pea-chat/internal/model"
 )
 
@@ -13,40 +14,40 @@ type ChatRow struct {
 	ChatID        uint
 	ChatName      string
 	ChatCreatedAt time.Time
-	ChatCreatorID pgtype.Uint32
+	ChatCreatorID null.Uint
 
 	// Chat.Creator [Optional]
-	CreatorID        pgtype.Uint32
+	CreatorID        null.Uint
 	CreatorUsername  pgtype.Text
 	CreatorCreatedAt pgtype.Timestamp
 
 	// Chat.LastMessage [Optional]
-	LastMsgID        pgtype.Uint32
-	LastMsgChatID    pgtype.Uint32
+	LastMsgID        null.Uint
+	LastMsgChatID    null.Uint
 	LastMsgText      pgtype.Text
-	LastMsgAuthorID  pgtype.Uint32
-	LastMsgReplyToID pgtype.Uint32
+	LastMsgAuthorID  null.Uint
+	LastMsgReplyToID null.Uint
 	LastMsgEditedAt  pgtype.Timestamp
 	LastMsgRemovedAt pgtype.Timestamp
 	LastMsgCreatedAt pgtype.Timestamp
 
 	// Chat.LastMessage.Author [Optional]
-	LastMsgAuthorID1       pgtype.Uint32
+	LastMsgAuthorID1       null.Uint
 	LastMsgAuthorUsername  pgtype.Text
 	LastMsgAuthorCreatedAt pgtype.Timestamp
 
 	// Chat.LastMessage.Reply [Optional]
-	LastMsgReplyID        pgtype.Uint32
-	LastMsgReplyChatID    pgtype.Uint32
+	LastMsgReplyID        null.Uint
+	LastMsgReplyChatID    null.Uint
 	LastMsgReplyText      pgtype.Text
-	LastMsgReplyAuthorID  pgtype.Uint32
-	LastMsgReplyReplyToID pgtype.Uint32
+	LastMsgReplyAuthorID  null.Uint
+	LastMsgReplyReplyToID null.Uint
 	LastMsgReplyEditedAt  pgtype.Timestamp
 	LastMsgReplyRemovedAt pgtype.Timestamp
 	LastMsgReplyCreatedAt pgtype.Timestamp
 
 	// Chat.LastMessage.Reply.Author [Optional]
-	LastMsgReplyAuthorID1       pgtype.Uint32
+	LastMsgReplyAuthorID1       null.Uint
 	LastMsgReplyAuthorUsername  pgtype.Text
 	LastMsgReplyAuthorCreatedAt pgtype.Timestamp
 }
@@ -75,18 +76,18 @@ func (row ChatRow) Rich() Chat {
 		UnreadMessagesCount: 0,
 	}
 
-	if row.ChatCreatorID.Valid {
+	if row.ChatCreatorID.Valid() {
 		chat.Creator = &model.User{
-			ID:        uint(row.CreatorID.Uint32),
+			ID:        row.CreatorID.Val(),
 			Username:  row.CreatorUsername.String,
 			CreatedAt: row.CreatorCreatedAt.Time,
 		}
 	}
 
-	if row.LastMsgID.Valid {
+	if row.LastMsgID.Valid() {
 		chat.LastMessage = &Message{
 			Message: model.Message{
-				ID:        uint(row.LastMsgID.Uint32),
+				ID:        row.LastMsgID.Val(),
 				ChatID:    row.ChatID,
 				Text:      row.LastMsgText.String,
 				AuthorID:  row.LastMsgAuthorID,
@@ -98,17 +99,17 @@ func (row ChatRow) Rich() Chat {
 			Author:  nil,
 			ReplyTo: nil,
 		}
-		if row.LastMsgAuthorID.Valid {
+		if row.LastMsgAuthorID.Valid() {
 			chat.LastMessage.Author = &model.User{
-				ID:        uint(row.LastMsgAuthorID.Uint32),
+				ID:        row.LastMsgAuthorID.Val(),
 				Username:  row.LastMsgAuthorUsername.String,
 				CreatedAt: row.LastMsgAuthorCreatedAt.Time,
 			}
 		}
-		if row.LastMsgReplyID.Valid {
+		if row.LastMsgReplyID.Valid() {
 			chat.LastMessage.ReplyTo = &Reply{
 				Message: model.Message{
-					ID:        uint(row.LastMsgReplyID.Uint32),
+					ID:        row.LastMsgReplyID.Val(),
 					ChatID:    row.ChatID,
 					Text:      row.LastMsgReplyText.String,
 					AuthorID:  row.LastMsgReplyAuthorID,
@@ -119,9 +120,9 @@ func (row ChatRow) Rich() Chat {
 				},
 				Author: nil,
 			}
-			if row.LastMsgReplyAuthorID.Valid {
+			if row.LastMsgReplyAuthorID.Valid() {
 				chat.LastMessage.ReplyTo.Author = &model.User{
-					ID:        uint(row.LastMsgReplyAuthorID.Uint32),
+					ID:        row.LastMsgReplyAuthorID.Val(),
 					Username:  row.LastMsgReplyAuthorUsername.String,
 					CreatedAt: row.LastMsgReplyAuthorCreatedAt.Time,
 				}

@@ -1,61 +1,86 @@
 package null
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // Uint is an alias for sql.NullInt64 data type
 type Uint struct {
-	Val uint
-	sql sql.NullInt64
+	pg pgtype.Uint32
 }
 
-func (u Uint) IsZero() bool {
-	return !u.sql.Valid
+// Constructor
+
+func NewUint(val uint, valid bool) Uint {
+	return Uint{pg: pgtype.Uint32{
+		Uint32: uint32(val),
+		Valid:  valid,
+	}}
 }
 
-// Scan implements the Scanner interface for Uint
-func (u *Uint) Scan(value interface{}) error {
-	var sqlV sql.NullInt64
-	if err := sqlV.Scan(value); err != nil {
-		return err
-	}
-	*u = Uint{
-		Val: uint(sqlV.Int64),
-		sql: sqlV,
-	}
-	return nil
+// Getters/Setters
+
+func (u *Uint) Val() uint {
+	return uint(u.pg.Uint32)
 }
+
+func (u *Uint) SetVal(val uint) {
+	u.pg.Uint32 = uint32(val)
+}
+
+func (u *Uint) Valid() bool {
+	return u.pg.Valid
+}
+
+func (u *Uint) SetValid(valid bool) {
+	u.pg.Valid = valid
+}
+
+// Implement pgtype.Uint32 methods
+
+func (u Uint) ScanUint32(v pgtype.Uint32) error {
+	return u.pg.ScanUint32(v)
+}
+
+func (u *Uint) Uint32Value() (pgtype.Uint32, error) {
+	return u.pg.Uint32Value()
+}
+
+func (u Uint) Scan(src any) error {
+	return u.pg.Scan(src)
+}
+
+func (u *Uint) Value() (driver.Value, error) {
+	return u.pg.Value()
+}
+
+// Implement json
 
 // MarshalJSON for Uint
 func (u *Uint) MarshalJSON() ([]byte, error) {
-	if !u.sql.Valid {
+	if !u.pg.Valid {
 		return json.Marshal(nil)
 	}
-	return json.Marshal(u.Val)
-}
-
-// Value implements the [driver.Valuer] interface.
-func (u Uint) Value() (driver.Value, error) {
-	return u.sql.Value()
+	return json.Marshal(u.pg.Uint32)
 }
 
 // UnmarshalJSON - пользовательская реализация анмаршалинга
 func (u *Uint) UnmarshalJSON(data []byte) error {
-	var aux *uint // Временная переменная для хранения значения
+	var aux *uint32 // Временная переменная для хранения значения
 
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
 	if aux == nil {
-		u.sql.Valid = false // Если значение null, устанавливаем Valid в false
+		u.pg.Valid = false // Если значение null, устанавливаем Valid в false
 		return nil
 	}
 
-	u.Val = *aux
-	u.sql.Valid = true // Устанавливаем Valid в true, если значение не null
+	u.pg.Uint32 = *aux
+	u.pg.Valid = true // Устанавливаем Valid в true, если значение не null
 	return nil
 }
