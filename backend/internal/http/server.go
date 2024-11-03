@@ -28,7 +28,7 @@ func (s ServerParams) StartServer() error {
 	serverHttp := &http.Server{
 		Addr:        s.Addr,
 		Handler:     muxHttp,
-		ReadTimeout: 30 * time.Second,
+		ReadTimeout: 5 * time.Minute,
 	}
 
 	go func() {

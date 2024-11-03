@@ -12,7 +12,7 @@ import (
 type chatsExt struct {
 	chatIDs []uint
 	chats   map[uint]*rich.Chat
-	db      *pgx.Conn
+	conn    *pgx.Conn
 	p       Params
 }
 
@@ -20,12 +20,12 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 	field.Key = "unread_counter"
 	field.Deps = nil
 	field.Fn = func() error {
-		//var unreadByChatID map[uint]int
-		var unreads []struct {
-			ChatID uint
-			Count  int
+		type unread struct {
+			ChatID uint `db:"chat_id"`
+			Count  int  `db:"count"`
 		}
-		if err := e.db.QueryRow(context.Background(), `
+		var unreads []unread
+		rows, err := e.conn.Query(context.Background(), `
 			SELECT DISTINCT ON (messages.chat_id) 
 				messages.chat_id AS chat_id,
 				count(messages.*)
@@ -34,10 +34,15 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 					ON mem.chat_id = messages.chat_id
 			WHERE messages.id > coalesce(mem.last_read_msg_id, 0)
 				AND messages.removed_at IS NULL
-				AND mem.user_id = ?
+				AND mem.user_id = $1
 			GROUP BY messages.chat_id`,
 			userID,
-		).Scan(&unreads); err != nil {
+		)
+		if err != nil {
+			return err
+		}
+
+		if unreads, err = pgx.CollectRows[unread](rows, pgx.RowToStructByName); err != nil {
 			return err
 		}
 
@@ -54,7 +59,7 @@ func (e *chatsExt) unreadCounter(userID uint) (field extend1.Field) {
 
 func extend(out *Out, p Params) error {
 	ext := &chatsExt{
-		db:      p.Conn,
+		conn:    p.Conn,
 		chats:   make(map[uint]*rich.Chat, len(out.Chats)),
 		chatIDs: make([]uint, len(out.Chats)),
 		p:       p,

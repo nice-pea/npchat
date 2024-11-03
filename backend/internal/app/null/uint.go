@@ -41,19 +41,19 @@ func (u *Uint) SetValid(valid bool) {
 
 // Implement pgtype.Uint32 methods
 
-func (u Uint) ScanUint32(v pgtype.Uint32) error {
+func (u *Uint) ScanUint32(v pgtype.Uint32) error {
 	return u.pg.ScanUint32(v)
 }
 
-func (u *Uint) Uint32Value() (pgtype.Uint32, error) {
+func (u Uint) Uint32Value() (pgtype.Uint32, error) {
 	return u.pg.Uint32Value()
 }
 
-func (u Uint) Scan(src any) error {
+func (u *Uint) Scan(src any) error {
 	return u.pg.Scan(src)
 }
 
-func (u *Uint) Value() (driver.Value, error) {
+func (u Uint) Value() (driver.Value, error) {
 	return u.pg.Value()
 }
 
