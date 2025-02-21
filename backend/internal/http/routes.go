@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/saime-0/nice-pea-chat/internal/app/optional"
-	"github.com/saime-0/nice-pea-chat/internal/model"
 	ucAuthn "github.com/saime-0/nice-pea-chat/internal/usecase/authn"
 	ucLogin "github.com/saime-0/nice-pea-chat/internal/usecase/authn/login"
 	ucChats "github.com/saime-0/nice-pea-chat/internal/usecase/chats"
@@ -237,12 +236,12 @@ func Health(req Request) (any, error) {
 	return req.L10n.Localize("none:ok", req.Locale, nil)
 }
 
-func userAuthn(req Request) (model.User, error) {
+func userAuthn(req Request) (any, error) {
 	users, err := ucUsers.Params{DB: req.DB}.Run()
 	if err != nil {
-		return model.User{}, err
+		return nil, err
 	} else if len(users) != 1 {
-		return model.User{}, fmt.Errorf("expected 1 user, got %d", len(users))
+		return nil, fmt.Errorf("expected 1 user, got %d", len(users))
 	}
 
 	return users[0], nil
