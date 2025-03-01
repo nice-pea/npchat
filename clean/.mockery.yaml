@@ -1,0 +1,13 @@
+all: True
+with-expecter: true
+dir: "{{.InterfaceDir}}/mocks"
+filename: "{{.InterfaceNameSnake}}_mock.go"
+mockname: "{{.InterfaceName}}Mock"
+recursive: True
+outpkg: "{{.PackageName}}_mock"
+resolve-type-alias: False
+
+packages:
+  github.com/saime-0/nice-pea-chat/internal/controller: {}
+  github.com/saime-0/nice-pea-chat/internal/usecases: {}
+  github.com/saime-0/nice-pea-chat/internal/domain: {}
