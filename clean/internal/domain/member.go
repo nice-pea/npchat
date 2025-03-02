@@ -1,19 +1,21 @@
 package domain
 
 type Member struct {
-	ID     uint
-	UserID uint
-	ChatID uint
+	ID      string
+	UserID  string
+	ChatID  string
+	IsOwner bool
 }
 
 type MembersRepository interface {
 	List(filter MembersFilter) ([]Member, error)
 	Save(member Member) error
-	Delete(id uint) error
+	Delete(id string) error
 }
 
 type MembersFilter struct {
-	ID     uint
-	UserID uint
-	ChatID uint
+	ID      string
+	UserID  string
+	ChatID  string
+	IsOwner *bool
 }

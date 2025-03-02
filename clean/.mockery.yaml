@@ -6,6 +6,8 @@ mockname: "{{.InterfaceName}}Mock"
 recursive: True
 outpkg: "{{.PackageName}}_mock"
 resolve-type-alias: False
+issue-845-fix: True
+disable-version-string: True
 
 packages:
   github.com/saime-0/nice-pea-chat/internal/controller: {}

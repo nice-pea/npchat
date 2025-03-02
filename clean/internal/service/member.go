@@ -8,7 +8,7 @@ import (
 
 type Members struct {
 	MembersRepo domain.MembersRepository
-	Hi          History
+	History     History
 }
 
 type MemberWasDeleted struct {
@@ -23,28 +23,44 @@ var (
 	ErrMemberNotFound = errors.New("member not found")
 )
 
-func (m *Members) Delete(id uint) error {
+func (m *Members) Delete(id string) error {
 	// Найти участника по ID
 	members, err := m.MembersRepo.List(domain.MembersFilter{ID: id})
 	if err != nil {
-		m.Hi.Write(MemberDeleteErr{Error: err})
+		m.History.Write(MemberDeleteErr{Error: err})
 		return err
 	}
 
 	// Проверить удалось ли найти одного участника
 	if len(members) != 1 {
-		m.Hi.Write(MemberDeleteErr{Error: ErrMemberNotFound})
+		m.History.Write(MemberDeleteErr{Error: ErrMemberNotFound})
 		return ErrMemberNotFound
 	}
 	member := members[0]
 
 	// Удалить участника
 	if err = m.MembersRepo.Delete(id); err != nil {
-		m.Hi.Write(MemberDeleteErr{Error: err})
+		m.History.Write(MemberDeleteErr{Error: err})
 		return err
 	}
 
-	m.Hi.Write(MemberWasDeleted{Member: member})
+	m.History.Write(MemberWasDeleted{Member: member})
 
 	return nil
+}
+
+type MembersListFilter struct {
+	ID      string
+	UserID  string
+	ChatID  string
+	IsOwner *bool
+}
+
+func (m *Members) List(filter MembersListFilter) ([]domain.Member, error) {
+	return m.MembersRepo.List(domain.MembersFilter{
+		ID:      filter.ID,
+		UserID:  filter.UserID,
+		ChatID:  filter.ChatID,
+		IsOwner: filter.IsOwner,
+	})
 }
