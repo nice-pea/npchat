@@ -1,4 +1,4 @@
-package controller
+package adapter
 
 // Localization используется для локализации сообщений в контроллере.
 //
