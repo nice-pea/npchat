@@ -8,7 +8,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-func RunHistoryTest(t *testing.T, newHistory func() service.History) {
+func HistoryTests(t *testing.T, newHistory func() service.History) {
 	t.Helper()
 	type args struct {
 		typ   string

@@ -8,7 +8,7 @@ import (
 )
 
 func TestChatsRepository(t *testing.T) {
-	repository_tests.RunChatsRepositoryTest(t, func() domain.ChatsRepository {
+	repository_tests.ChatsRepositoryTests(t, func() domain.ChatsRepository {
 		// todo: написать инициализацию базового репозитория, но в тестовом окружении
 		return &ChatsRepository{}
 	})
