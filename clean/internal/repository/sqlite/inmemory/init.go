@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	//DSN string
+	MigrationsDir string
 }
 type SQLiteInMemory struct {
 	db *sqlx.DB
@@ -23,26 +23,27 @@ func Init(config Config) (*SQLiteInMemory, error) {
 	sqlin := &SQLiteInMemory{
 		db: db,
 	}
-	if err = sqlin.migrate(); err != nil {
+	if err = migrate(sqlin.db, config); err != nil {
 		return nil, err
 	}
 
 	return sqlin, nil
 }
 
-func (m *SQLiteInMemory) migrate() error {
-	scriptsFolder := "../../../../migrations/repository/sqlite/inmemory"
-	entries, err := os.ReadDir(scriptsFolder)
+func migrate(db *sqlx.DB, cfg Config) error {
+	entries, err := os.ReadDir(cfg.MigrationsDir)
 	if err != nil {
 		return fmt.Errorf("error reading migrations directory: %w", err)
 	}
-	//scripts := make([]string, len(entries))
 	for _, entry := range entries {
-		file, err := os.ReadFile(scriptsFolder + string(os.PathSeparator) + entry.Name())
-		if err != nil {
+		filename := cfg.MigrationsDir + string(os.PathSeparator) + entry.Name()
+		var file []byte
+		if file, err = os.ReadFile(filename); err != nil {
 			return err
 		}
-		m.db.MustExec(string(file))
+		if _, err = db.Exec(string(file)); err != nil {
+			return err
+		}
 	}
 
 	return nil
