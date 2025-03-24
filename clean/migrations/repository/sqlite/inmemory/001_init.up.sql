@@ -1,8 +1,12 @@
 CREATE TABLE chats
 (
-    id         TEXT PRIMARY KEY,
-    name       TEXT NOT NULL
---     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     creator_id INTEGER,
---     FOREIGN KEY (creator_id) REFERENCES users ON DELETE SET NULL
+    id   TEXT PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE members
+(
+    id      TEXT PRIMARY KEY,
+    chat_id TEXT NOT NULL,
+    FOREIGN KEY (chat_id) REFERENCES chats ON DELETE RESTRICT
 );

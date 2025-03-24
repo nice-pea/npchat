@@ -41,6 +41,6 @@ type ChatsRepository interface {
 }
 
 type ChatsFilter struct {
-	ID      string
-	UserIDs []string
+	ID string
+	//UserIDs []string
 }

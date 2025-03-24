@@ -23,3 +23,12 @@ mockery
 ```sh
 go vet ./... && golangci-lint run -v -j $(( $(nproc) - 1))
 ```
+
+## Тесты
+
+Запустить тесты:
+
+```sh
+go test ./...
+```
+
