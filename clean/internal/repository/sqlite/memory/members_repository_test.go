@@ -1,4 +1,4 @@
-package inmemory
+package memory
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 func TestNewMembersRepository(t *testing.T) {
 	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
 		sqlim, err := Init(Config{
-			MigrationsDir: "../../../../migrations/repository/sqlite/inmemory",
+			MigrationsDir: "../../../../migrations/repository/sqlite/memory",
 		})
 		assert.Nil(t, err)
 		assert.NotNil(t, sqlim)
@@ -27,7 +27,7 @@ func TestNewMembersRepository(t *testing.T) {
 func TestMembersRepository(t *testing.T) {
 	repository_tests.MembersRepositoryTests(t, func() domain.MembersRepository {
 		sqlim, err := Init(Config{
-			MigrationsDir: "../../../../migrations/repository/sqlite/inmemory",
+			MigrationsDir: "../../../../migrations/repository/sqlite/memory",
 		})
 		assert.Nil(t, err)
 		assert.NotNil(t, sqlim)
