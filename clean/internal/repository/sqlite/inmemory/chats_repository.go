@@ -40,6 +40,13 @@ func (c *ChatsRepository) Save(chat domain.Chat) error {
 }
 
 func (c *ChatsRepository) Delete(id string) error {
-	//TODO implement me
-	panic("implement me")
+	if id == "" {
+		return fmt.Errorf("invalid chat id")
+	}
+	_, err := c.DB.Exec("DELETE FROM chats WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("error deleting chat: %w", err)
+	}
+
+	return nil
 }
