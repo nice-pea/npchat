@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
@@ -142,66 +141,6 @@ func TestChat_ValidateName(t *testing.T) {
 			fields:  fields{Name: " "},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := Chat{
-				ID:   tt.fields.ID,
-				Name: tt.fields.Name,
-			}
-			if err := c.ValidateName(); (err != nil) != tt.wantErr {
-				t.Errorf("ValidateName() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestChatsRepository_List(t *testing.T, newRepository func() ChatsRepository) {
-	t.Helper()
-
-	tests := []struct {
-		name    string
-		init    func(ChatsRepository) ChatsRepository
-		filter  ChatsFilter
-		wantRes []Chat
-		wantErr bool
-	}{
-		{
-			name: "без фильтра в пустом репозитории",
-			init: func(repository ChatsRepository) ChatsRepository {
-				return repository
-			},
-			filter:  ChatsFilter{},
-			wantRes: []Chat{},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repository := newRepository()
-			tt.init(repository)
-			chats, err := repository.List(tt.filter)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("List() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if !reflect.DeepEqual(chats, tt.wantRes) {
-				t.Errorf("List() chats = %v, want %v", chats, tt.filter)
-			}
-		})
-	}
-}
-
-func TestChat_ValidateName1(t *testing.T) {
-	type fields struct {
-		ID   string
-		Name string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
