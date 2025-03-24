@@ -13,8 +13,8 @@ type Chat struct {
 }
 
 var (
-	ErrChatIDValidate   = errors.New("некорректный UUID. Пожалуйста, введите действительный UUID")
-	ErrChatNameValidate = errors.New("название чата должно содержать от 1 до 50 символов, включать только буквы, цифры и пробелы")
+	ErrChatIDValidate   = errors.New("некорректный UUID")
+	ErrChatNameValidate = errors.New("некорректный Name")
 )
 
 func (c Chat) ValidateID() error {
