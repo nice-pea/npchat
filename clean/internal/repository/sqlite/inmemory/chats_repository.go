@@ -20,7 +20,11 @@ type ChatsRepository struct {
 
 func (c *ChatsRepository) List(filter domain.ChatsFilter) ([]domain.Chat, error) {
 	chats := make([]domain.Chat, 0)
-	if err := c.DB.Select(&chats, "SELECT * FROM chats"); err != nil {
+	if err := c.DB.Select(&chats, `
+			SELECT * 
+			FROM chats 
+			WHERE ($1 = "" OR $1 = id)
+		`, filter.ID); err != nil {
 		return nil, fmt.Errorf("error selecting chats: %w", err)
 	}
 

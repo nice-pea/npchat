@@ -1,6 +1,7 @@
 package repository_tests
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -18,7 +19,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			assert.NoError(t, err)
 			assert.Len(t, chats, 0)
 		})
-		t.Run("без фильтра, только один чат", func(t *testing.T) {
+		t.Run("без фильтра только один чат", func(t *testing.T) {
 			r := newRepository()
 			chat := domain.Chat{
 				ID:   uuid.NewString(),
@@ -30,7 +31,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			assert.NoError(t, err)
 			assert.Len(t, chats, 1)
 		})
-		t.Run("отсутствует после удаления", func(t *testing.T) {
+		t.Run("без фильтра отсутствует после удаления", func(t *testing.T) {
 			r := newRepository()
 			chat := domain.Chat{
 				ID:   uuid.NewString(),
@@ -46,6 +47,18 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			chats, err = r.List(domain.ChatsFilter{})
 			assert.NoError(t, err)
 			assert.Len(t, chats, 0)
+		})
+		t.Run("с фильтром по id", func(t *testing.T) {
+			r := newRepository()
+			id := uuid.NewString()
+			assert.NoError(t, errors.Join(
+				r.Save(domain.Chat{ID: id, Name: "name"}),
+				r.Save(domain.Chat{ID: uuid.NewString(), Name: "name1"}),
+				r.Save(domain.Chat{ID: uuid.NewString(), Name: "name2"}),
+			))
+			chats, err := r.List(domain.ChatsFilter{ID: id})
+			assert.NoError(t, err)
+			assert.Len(t, chats, 1)
 		})
 	})
 	t.Run("Save", func(t *testing.T) {
