@@ -116,46 +116,37 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 		})
 	})
 	t.Run("Delete", func(t *testing.T) {
-		type testCase struct {
-			name    string
-			chatID  string
-			wantErr bool
-		}
-		testCaseConstructors := []func(*testing.T, domain.ChatsRepository) testCase{
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				return testCase{
-					name:    "с пустым id",
-					chatID:  "",
-					wantErr: true,
-				}
-			},
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				return testCase{
-					name:    "несуществующий id",
-					chatID:  "c2e93bd8-dc78-4e9c-876e-07130c0b0224",
-					wantErr: false,
-				}
-			},
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				id := "c2e93bd8-dc78-4e9c-876e-07130c0b0224"
-				assert.NoError(t, repository.Delete(id))
-				return testCase{
-					name:    "дважды удаленный",
-					chatID:  "c2e93bd8-dc78-4e9c-876e-07130c0b0224",
-					wantErr: false,
-				}
-			},
-		}
-
-		for _, newTestCase := range testCaseConstructors {
-			repo := newRepository()
-			tc := newTestCase(t, repo)
-			t.Run(tc.name, func(t *testing.T) {
-				err := repo.Delete(tc.chatID)
-				if (err != nil) != tc.wantErr {
-					t.Errorf("Delete() error = %v, wantErr %v", err, tc.wantErr)
-				}
+		t.Run("с пустым id", func(t *testing.T) {
+			r := newRepository()
+			err := r.Delete("")
+			assert.Error(t, err)
+		})
+		t.Run("несуществующий id", func(t *testing.T) {
+			r := newRepository()
+			err := r.Delete(uuid.NewString())
+			assert.NoError(t, err)
+		})
+		t.Run("без ошибок", func(t *testing.T) {
+			r := newRepository()
+			id := uuid.NewString()
+			err := r.Save(domain.Chat{
+				ID:   id,
+				Name: "name",
 			})
-		}
+			err = r.Delete(id)
+			assert.NoError(t, err)
+		})
+		t.Run("дважды удаленный", func(t *testing.T) {
+			r := newRepository()
+			id := uuid.NewString()
+			err := r.Save(domain.Chat{
+				ID:   id,
+				Name: "name",
+			})
+			err = r.Delete(id)
+			assert.NoError(t, err)
+			err = r.Delete(id)
+			assert.NoError(t, err)
+		})
 	})
 }
