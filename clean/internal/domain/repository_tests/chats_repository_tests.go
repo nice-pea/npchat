@@ -62,78 +62,58 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 		})
 	})
 	t.Run("Save", func(t *testing.T) {
-		type testCase struct {
-			name    string
-			newChat domain.Chat
-			wantErr bool
-		}
-		testCaseConstructors := []func(*testing.T, domain.ChatsRepository) testCase{
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				return testCase{
-					name:    "чат без id",
-					newChat: domain.Chat{ID: "", Name: "name"},
-					wantErr: true,
-				}
-			},
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				return testCase{
-					name:    "чат без name",
-					newChat: domain.Chat{ID: uuid.NewString(), Name: ""},
-					wantErr: false,
-				}
-			},
-			func(t *testing.T, repo domain.ChatsRepository) testCase {
-				return testCase{
-					name: "чат без ошибок",
-					newChat: domain.Chat{
-						ID:   uuid.NewString(),
-						Name: "name",
-					},
-					wantErr: false,
-				}
-			},
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				id := uuid.NewString()
-				assert.NoError(t, repository.Save(domain.Chat{
-					ID:   id,
-					Name: "name",
-				}))
-				return testCase{
-					name: "дубль ID",
-					newChat: domain.Chat{
-						ID:   id,
-						Name: "name2",
-					},
-					wantErr: true,
-				}
-			},
-			func(t *testing.T, repository domain.ChatsRepository) testCase {
-				name := "name"
-				assert.NoError(t, repository.Save(domain.Chat{
-					ID:   uuid.NewString(),
-					Name: name,
-				}))
-				return testCase{
-					name: "дубль name",
-					newChat: domain.Chat{
-						ID:   uuid.NewString(),
-						Name: "name",
-					},
-					wantErr: false,
-				}
-			},
-		}
-
-		for _, newTestCase := range testCaseConstructors {
-			repo := newRepository()
-			tc := newTestCase(t, repo)
-			t.Run(tc.name, func(t *testing.T) {
-				err := repo.Save(tc.newChat)
-				if (err != nil) != tc.wantErr {
-					t.Errorf("Save() error = %v, wantErr %v", err, tc.wantErr)
-				}
+		t.Run("чат без id", func(t *testing.T) {
+			r := newRepository()
+			err := r.Save(domain.Chat{
+				ID:   "",
+				Name: "name",
 			})
-		}
+			assert.Error(t, err)
+		})
+		t.Run("чат без name", func(t *testing.T) {
+			r := newRepository()
+			err := r.Save(domain.Chat{
+				ID:   uuid.NewString(),
+				Name: "",
+			})
+			assert.NoError(t, err)
+		})
+		t.Run("без ошибок", func(t *testing.T) {
+			r := newRepository()
+			err := r.Save(domain.Chat{
+				ID:   uuid.NewString(),
+				Name: "name",
+			})
+			assert.NoError(t, err)
+		})
+		t.Run("дубль ID", func(t *testing.T) {
+			r := newRepository()
+			id := uuid.NewString()
+			err := r.Save(domain.Chat{
+				ID:   id,
+				Name: "name",
+			})
+			assert.NoError(t, err)
+			err = r.Save(domain.Chat{
+				ID:   id,
+				Name: "name1",
+			})
+			assert.Error(t, err)
+		})
+		t.Run("дубль name", func(t *testing.T) {
+			r := newRepository()
+			name := "name"
+			err := r.Save(domain.Chat{
+				ID:   uuid.NewString(),
+				Name: name,
+			})
+			assert.NoError(t, err)
+			err = r.Save(domain.Chat{
+				ID:   uuid.NewString(),
+				Name: name,
+			})
+			assert.NoError(t, err)
+		})
 	})
 	t.Run("Delete", func(t *testing.T) {
 		type testCase struct {
