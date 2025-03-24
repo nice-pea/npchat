@@ -1,7 +1,6 @@
 package repository_tests
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,66 +12,41 @@ import (
 func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsRepository) {
 	t.Helper()
 	t.Run("List", func(t *testing.T) {
-		type testCase struct {
-			name    string
-			filter  domain.ChatsFilter
-			wantRes []domain.Chat
-			wantErr bool
-		}
-		testCaseConstructors := []func(*testing.T, domain.ChatsRepository) testCase{
-			func(*testing.T, domain.ChatsRepository) testCase {
-				return testCase{
-					name:    "без фильтра в пустом репозитории",
-					filter:  domain.ChatsFilter{},
-					wantRes: []domain.Chat{},
-					wantErr: false,
-				}
-			},
-			func(t *testing.T, repo domain.ChatsRepository) testCase {
-				chat := domain.Chat{
-					ID:   uuid.NewString(),
-					Name: "name",
-				}
-				assert.NoError(t, repo.Save(chat))
-				return testCase{
-					name:    "без фильтра, только один чат",
-					filter:  domain.ChatsFilter{},
-					wantRes: []domain.Chat{chat},
-					wantErr: false,
-				}
-			},
-			func(t *testing.T, repo domain.ChatsRepository) testCase {
-				chat := domain.Chat{
-					ID:   uuid.NewString(),
-					Name: "name",
-				}
-				assert.NoError(t, repo.Save(chat))
-				chats, err := repo.List(domain.ChatsFilter{})
-				assert.NoError(t, err)
-				assert.Len(t, chats, 1)
-				assert.NoError(t, repo.Delete(chat.ID))
-				return testCase{
-					name:    "отсутствует после удаления",
-					filter:  domain.ChatsFilter{},
-					wantRes: []domain.Chat{},
-					wantErr: false,
-				}
-			},
-		}
-
-		for _, newTestCase := range testCaseConstructors {
-			repo := newRepository()
-			tc := newTestCase(t, repo)
-			t.Run(tc.name, func(t *testing.T) {
-				chats, err := repo.List(tc.filter)
-				if (err != nil) != tc.wantErr {
-					t.Errorf("List() error = %v, wantErr %v", err, tc.wantErr)
-				}
-				if !reflect.DeepEqual(chats, tc.wantRes) {
-					t.Errorf("List() chats = %v, want %v", chats, tc.wantRes)
-				}
-			})
-		}
+		t.Run("без фильтра в пустом репозитории", func(t *testing.T) {
+			r := newRepository()
+			chats, err := r.List(domain.ChatsFilter{})
+			assert.NoError(t, err)
+			assert.Len(t, chats, 0)
+		})
+		t.Run("без фильтра, только один чат", func(t *testing.T) {
+			r := newRepository()
+			chat := domain.Chat{
+				ID:   uuid.NewString(),
+				Name: "name",
+			}
+			err := r.Save(chat)
+			assert.NoError(t, err)
+			chats, err := r.List(domain.ChatsFilter{})
+			assert.NoError(t, err)
+			assert.Len(t, chats, 1)
+		})
+		t.Run("отсутствует после удаления", func(t *testing.T) {
+			r := newRepository()
+			chat := domain.Chat{
+				ID:   uuid.NewString(),
+				Name: "name",
+			}
+			err := r.Save(chat)
+			assert.NoError(t, err)
+			chats, err := r.List(domain.ChatsFilter{})
+			assert.NoError(t, err)
+			assert.Len(t, chats, 1)
+			err = r.Delete(chat.ID)
+			assert.NoError(t, err)
+			chats, err = r.List(domain.ChatsFilter{})
+			assert.NoError(t, err)
+			assert.Len(t, chats, 0)
+		})
 	})
 	t.Run("Save", func(t *testing.T) {
 		type testCase struct {
