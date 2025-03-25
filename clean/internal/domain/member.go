@@ -3,7 +3,7 @@ package domain
 type Member struct {
 	ID string
 	//UserID string
-	ChatID string
+	ChatID string 
 }
 
 type MembersRepository interface {
