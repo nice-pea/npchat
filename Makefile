@@ -1,4 +1,4 @@
-.PHONY: test vet lint check run
+.PHONY: test vet lint check run mdbook
 
 # Get number of CPU cores minus 1 for parallel execution
 CORES := $(shell echo $$(( $$(nproc) - 1 )))
@@ -22,3 +22,6 @@ check: vet lint
 run:
 	echo "Running npc main package..."
 	go run ./cmd/npc/main.go
+
+mdbook:
+	mdbook watch docs --open
