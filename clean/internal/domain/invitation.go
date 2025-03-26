@@ -25,6 +25,10 @@ func (i Invitation) ValidateID() error {
 	return nil
 }
 
+func (i Invitation) ValidateChatID() error {
+	panic("unimplemented")
+}
+
 type InvitationsRepository interface {
 	List(filter InvitationsFilter) ([]Invitation, error)
 	Save(invitation Invitation) error
