@@ -26,7 +26,11 @@ func (i Invitation) ValidateID() error {
 }
 
 func (i Invitation) ValidateChatID() error {
-	panic("unimplemented")
+	if err := uuid.Validate(i.ChatID); err != nil {
+		return errors.Join(err, ErrInvitationChatIDValidate)
+	}
+
+	return nil
 }
 
 type InvitationsRepository interface {
