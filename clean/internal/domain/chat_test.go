@@ -154,3 +154,62 @@ func TestChat_ValidateName(t *testing.T) {
 		})
 	}
 }
+
+func TestChat_ValidateChiefUserID(t *testing.T) {
+	tests := []struct {
+		name        string
+		chiefUserID string
+		wantErr     bool
+	}{
+		{
+			name:        "пустая строка как id",
+			chiefUserID: "",
+			wantErr:     true,
+		},
+		{
+			name:        "коротка строка точно не uuid",
+			chiefUserID: "fndsef",
+			wantErr:     true,
+		},
+		{
+			name:        "короткая строка из символов точно не uuid",
+			chiefUserID: "----",
+			wantErr:     true,
+		},
+		{
+			name:        "строка из символов точно не uuid",
+			chiefUserID: ",,,,,,,,",
+			wantErr:     true,
+		},
+		{
+			name:        "нужное количество символов",
+			chiefUserID: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			wantErr:     true,
+		},
+		{
+			name:        "это uuid",
+			chiefUserID: "1cee9c74-a359-425c-b1bb-91c8a35e7b21",
+			wantErr:     false,
+		},
+		{
+			name:        "это uuid",
+			chiefUserID: "0195ba16-f44c-7a3b-b326-94697ec6b00e",
+			wantErr:     false,
+		},
+		{
+			name:        "uuid генерируемый библиотекой",
+			chiefUserID: uuid.NewString(),
+			wantErr:     false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Chat{
+				ChiefUserID: tt.chiefUserID,
+			}
+			if err := c.ValidateChiefUserID(); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateChiefUserID() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

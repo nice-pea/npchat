@@ -8,13 +8,15 @@ import (
 )
 
 type Chat struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	ChiefUserID string
 }
 
 var (
-	ErrChatIDValidate   = errors.New("некорректный UUID")
-	ErrChatNameValidate = errors.New("некорректный Name")
+	ErrChatIDValidate          = errors.New("некорректный UUID")
+	ErrChatChiefUserIDValidate = errors.New("некорректный ChiefUserID")
+	ErrChatNameValidate        = errors.New("некорректный Name")
 )
 
 func (c Chat) ValidateID() error {
@@ -29,6 +31,14 @@ func (c Chat) ValidateName() error {
 	var chatNameRegexp = regexp.MustCompile(`^[^\s\n\t][^\n\t]{0,48}[^\s\n\t]$`)
 	if !chatNameRegexp.MatchString(c.Name) {
 		return ErrChatNameValidate
+	}
+
+	return nil
+}
+
+func (c Chat) ValidateChiefUserID() error {
+	if err := uuid.Validate(c.ChiefUserID); err != nil {
+		return errors.Join(err, ErrChatChiefUserIDValidate)
 	}
 
 	return nil
