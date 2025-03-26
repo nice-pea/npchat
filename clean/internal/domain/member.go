@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 type Member struct {
 	ID string
@@ -8,9 +12,13 @@ type Member struct {
 	ChatID string
 }
 
+var (
+	ErrMemberIDValidate = errors.New("некорректный UUID")
+)
+
 func (m Member) ValidateID() error {
 	if err := uuid.Validate(m.ID); err != nil {
-		return err
+		return errors.Join(err, ErrMemberIDValidate)
 	}
 	return nil
 }
