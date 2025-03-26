@@ -1,9 +1,36 @@
 package domain
 
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
+
 type Member struct {
 	ID string
 	//UserID string
-	ChatID string 
+	ChatID string
+}
+
+var (
+	ErrMemberIDValidate     = errors.New("некорректный UUID")
+	ErrMemberChatIDValidate = errors.New("некорректный ChatID")
+)
+
+func (m Member) ValidateID() error {
+	if err := uuid.Validate(m.ID); err != nil {
+		return errors.Join(err, ErrMemberIDValidate)
+	}
+
+	return nil
+}
+
+func (m Member) ValidateChatID() error {
+	if err := uuid.Validate(m.ChatID); err != nil {
+		return errors.Join(err, ErrMemberChatIDValidate)
+	}
+
+	return nil
 }
 
 type MembersRepository interface {
