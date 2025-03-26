@@ -20,11 +20,16 @@ func (m Member) ValidateID() error {
 	if err := uuid.Validate(m.ID); err != nil {
 		return errors.Join(err, ErrMemberIDValidate)
 	}
+
 	return nil
 }
 
 func (m Member) ValidateChatID() error {
-	panic("unimplemented")
+	if err := uuid.Validate(m.ChatID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type MembersRepository interface {
