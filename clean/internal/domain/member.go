@@ -23,6 +23,10 @@ func (m Member) ValidateID() error {
 	return nil
 }
 
+func (m Member) ValidateChatID() error {
+	panic("unimplemented")
+}
+
 type MembersRepository interface {
 	List(filter MembersFilter) ([]Member, error)
 	Save(member Member) error
