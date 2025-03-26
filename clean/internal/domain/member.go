@@ -13,7 +13,8 @@ type Member struct {
 }
 
 var (
-	ErrMemberIDValidate = errors.New("некорректный UUID")
+	ErrMemberIDValidate     = errors.New("некорректный UUID")
+	ErrMemberChatIDValidate = errors.New("некорректный ChatID")
 )
 
 func (m Member) ValidateID() error {
@@ -26,7 +27,7 @@ func (m Member) ValidateID() error {
 
 func (m Member) ValidateChatID() error {
 	if err := uuid.Validate(m.ChatID); err != nil {
-		return err
+		return errors.Join(err, ErrMemberChatIDValidate)
 	}
 
 	return nil
