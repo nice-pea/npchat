@@ -1,20 +1,21 @@
 package domain
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 )
 
-type fields struct {
-	ID string
-}
-type TestDescription struct {
-	name    string
-	fields  fields
-	wantErr bool
-}
+func Helper_Test_ValidateID(t *testing.T, validate func(string) error) {
+	type fields struct {
+		ID string
+	}
 
-func Helper_Test_ValidateID(f func([]TestDescription)) {
-	tests := []TestDescription{
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
 
 		{
 			name:    "пустая строка как id",
@@ -57,5 +58,12 @@ func Helper_Test_ValidateID(f func([]TestDescription)) {
 			wantErr: false,
 		},
 	}
-	f(tests)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validate(tt.fields.ID); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateID() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
