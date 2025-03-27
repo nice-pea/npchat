@@ -58,8 +58,10 @@ func RunValidateRequiredIDTest(t *testing.T, validate func(string) error) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validate(tt.ID); (err != nil) != tt.wantErr {
+			if err := validate(tt.ID); tt.wantErr {
 				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
