@@ -4,61 +4,62 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
-func RunValidateAnyIDTest(t *testing.T, validate func(string) error, validateFuncName string) {
+func RunValidateRequiredIDTest(t *testing.T, validate func(string) error) {
 	tests := []struct {
 		name    string
-		anyID   string
+		ID      string
 		wantErr bool
 	}{
 
 		{
 			name:    "пустая строка как id",
-			anyID:   "",
+			ID:      "",
 			wantErr: true,
 		},
 		{
 			name:    "коротка строка точно не uuid",
-			anyID:   "fndsef",
+			ID:      "fndsef",
 			wantErr: true,
 		},
 		{
 			name:    "короткая строка из символов точно не uuid",
-			anyID:   "----",
+			ID:      "----",
 			wantErr: true,
 		},
 		{
 			name:    "строка из символов точно не uuid",
-			anyID:   ",,,,,,,,",
+			ID:      ",,,,,,,,",
 			wantErr: true,
 		},
 		{
 			name:    "нужное количество символов",
-			anyID:   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			ID:      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 			wantErr: true,
 		},
 		{
 			name:    "это uuid",
-			anyID:   "1cee9c74-a359-425c-b1bb-91c8a35e7b21",
+			ID:      "1cee9c74-a359-425c-b1bb-91c8a35e7b21",
 			wantErr: false,
 		},
 		{
 			name:    "это uuid",
-			anyID:   "0195ba16-f44c-7a3b-b326-94697ec6b00e",
+			ID:      "0195ba16-f44c-7a3b-b326-94697ec6b00e",
 			wantErr: false,
 		},
 		{
 			name:    "uuid генерируемый библиотекой",
-			anyID:   uuid.NewString(),
+			ID:      uuid.NewString(),
 			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validate(tt.anyID); (err != nil) != tt.wantErr {
-				t.Errorf("%s() error = %v, wantErr %v", validateFuncName, err, tt.wantErr)
+			if err := validate(tt.ID); (err != nil) != tt.wantErr {
+				assert.Error(t, err)
 			}
 		})
 	}

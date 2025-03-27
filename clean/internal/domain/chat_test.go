@@ -6,10 +6,10 @@ import (
 )
 
 func TestChat_ValidateID(t *testing.T) {
-	RunValidateAnyIDTest(t, func(ID string) error {
+	RunValidateRequiredIDTest(t, func(ID string) error {
 		c := Chat{ID: ID}
 		return c.ValidateID()
-	}, "ValidateID")
+	})
 }
 
 func TestChat_ValidateName(t *testing.T) {
@@ -97,10 +97,10 @@ func TestChat_ValidateName(t *testing.T) {
 }
 
 func TestChat_ValidateChiefUserID(t *testing.T) {
-	RunValidateAnyIDTest(t, func(ChiefUserID string) error {
+	RunValidateRequiredIDTest(t, func(ChiefUserID string) error {
 		c := Chat{
 			ChiefUserID: ChiefUserID,
 		}
 		return c.ValidateChiefUserID()
-	}, "ValidateChiefUserID")
+	})
 }
