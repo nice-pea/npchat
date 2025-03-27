@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func Helper_Test_ValidateID(t *testing.T, validate func(string) error) {
+func RunValidateIDTest(t *testing.T, validate func(string) error) {
 	type fields struct {
 		ID string
 	}

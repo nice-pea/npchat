@@ -7,7 +7,7 @@ import (
 )
 
 func TestInvitation_ValidateID(t *testing.T) {
-	Helper_Test_ValidateID(t, func(ID string) error {
+	RunValidateIDTest(t, func(ID string) error {
 		i := Invitation{ID: ID}
 		return i.ValidateID()
 	})

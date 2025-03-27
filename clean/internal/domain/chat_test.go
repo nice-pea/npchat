@@ -8,7 +8,7 @@ import (
 )
 
 func TestChat_ValidateID(t *testing.T) {
-	Helper_Test_ValidateID(t, func(ID string) error {
+	RunValidateIDTest(t, func(ID string) error {
 		c := Chat{ID: ID}
 		return c.ValidateID()
 	})
