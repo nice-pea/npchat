@@ -1,15 +1,3 @@
-### Моки
-
-Для генерации используется [mockery](https://vektra.github.io/mockery/latest/).
-
-Запуск генерации:
-
-```shellscript
-mockery
-```
-
-Для включения генерации нового интерфейса, дополнить конфиг `.mockery.yaml`
-
 ### Линтер
 
 Используется [golangci-lint](https://golangci-lint.run/)
