@@ -8,67 +8,10 @@ import (
 )
 
 func TestChat_ValidateID(t *testing.T) {
-	type fields struct {
-		ID   string
-		Name string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		{
-			name:    "пустая строка как id",
-			fields:  fields{ID: "", Name: ""},
-			wantErr: true,
-		},
-		{
-			name:    "коротка строка точно не uuid",
-			fields:  fields{ID: "fndsef", Name: ""},
-			wantErr: true,
-		},
-		{
-			name:    "короткая строка из символов точно не uuid",
-			fields:  fields{ID: "----", Name: ""},
-			wantErr: true,
-		},
-		{
-			name:    "строка из символов точно не uuid",
-			fields:  fields{ID: ",,,,,,,,", Name: ""},
-			wantErr: true,
-		},
-		{
-			name:    "нужное количество символов",
-			fields:  fields{ID: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", Name: ""},
-			wantErr: true,
-		},
-		{
-			name:    "это uuid",
-			fields:  fields{ID: "1cee9c74-a359-425c-b1bb-91c8a35e7b21", Name: ""},
-			wantErr: false,
-		},
-		{
-			name:    "это uuid",
-			fields:  fields{ID: "0195ba16-f44c-7a3b-b326-94697ec6b00e", Name: ""},
-			wantErr: false,
-		},
-		{
-			name:    "uuid генерируемый библиотекой",
-			fields:  fields{ID: uuid.NewString(), Name: ""},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := Chat{
-				ID:   tt.fields.ID,
-				Name: tt.fields.Name,
-			}
-			if err := c.ValidateID(); (err != nil) != tt.wantErr {
-				t.Errorf("ValidateID() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	RunValidateIDTest(t, func(ID string) error {
+		c := Chat{ID: ID}
+		return c.ValidateID()
+	})
 }
 
 func TestChat_ValidateName(t *testing.T) {
