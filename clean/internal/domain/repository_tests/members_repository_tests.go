@@ -62,14 +62,27 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 		})
 		t.Run("с фильтром по chat id", func(t *testing.T) {
 			r := newRepository()
-			id := uuid.NewString()
+			chatID := uuid.NewString()
 			assert.NoError(t, errors.Join(
-				r.Save(domain.Member{ID: uuid.NewString(), ChatID: id}),
-				r.Save(domain.Member{ID: uuid.NewString(), ChatID: id}),
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: chatID}),
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: chatID}),
 				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString()}),
 				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString()}),
 			))
-			members, err := r.List(domain.MembersFilter{ChatID: id})
+			members, err := r.List(domain.MembersFilter{ChatID: chatID})
+			assert.NoError(t, err)
+			assert.Len(t, members, 2)
+		})
+		t.Run("с фильтром по user id", func(t *testing.T) {
+			r := newRepository()
+			userID := uuid.NewString()
+			assert.NoError(t, errors.Join(
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}),
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}),
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}),
+				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}),
+			))
+			members, err := r.List(domain.MembersFilter{UserID: userID})
 			assert.NoError(t, err)
 			assert.Len(t, members, 2)
 		})

@@ -17,3 +17,10 @@ func TestMember_ValidateChatID(t *testing.T) {
 		return m.ValidateChatID()
 	})
 }
+
+func TestMember_ValidateUserID(t *testing.T) {
+	RunValidateRequiredIDTest(t, func(UserID string) error {
+		m := Member{UserID: UserID}
+		return m.ValidateUserID()
+	})
+}
