@@ -71,6 +71,7 @@ type CreateInput struct {
 	ChiefUserID string
 }
 
+// Create создает новый чат и участника для главного администратора - пользователя который создал этот чат
 func (c *Chats) Create(in CreateInput) (domain.Chat, error) {
 	newChat := domain.Chat{
 		ID:          uuid.NewString(),
