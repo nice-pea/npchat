@@ -1,7 +1,8 @@
 CREATE TABLE chats
 (
     id   TEXT PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    chief_user_id TEXT NOT NULL
 );
 
 CREATE TABLE members
