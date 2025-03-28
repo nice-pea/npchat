@@ -19,15 +19,21 @@ type ChatsWhereUserIsMemberInput struct {
 	UserID        string
 }
 
+var (
+	ErrChatsWhereUserIsMemberInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrChatsWhereUserIsMemberInputUserIDValidate        = errors.New("некорректный UserID")
+	ErrChatsWhereUserIsMemberInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID должны быть одинаковыми")
+)
+
 func (in ChatsWhereUserIsMemberInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.New("subject user id is not valid")
+		return ErrChatsWhereUserIsMemberInputSubjectUserIDValidate
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.New("user id is not valid")
+		return ErrChatsWhereUserIsMemberInputUserIDValidate
 	}
 	if in.UserID != in.SubjectUserID {
-		return errors.New("должны быть одинаковыми")
+		return ErrChatsWhereUserIsMemberInputEqualUserIDsValidate
 	}
 
 	return nil
