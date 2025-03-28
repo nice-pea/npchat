@@ -19,12 +19,12 @@ type ChatsWhereUserIsMemberInput struct {
 	UserID        string
 }
 
-func (in ChatsWhereUserIsMemberInput) validate() error {
-	if in.SubjectUserID == "" {
-		return errors.New("subjectUserID is empty")
+func (in ChatsWhereUserIsMemberInput) Validate() error {
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return errors.New("subject user id is not valid")
 	}
-	if in.UserID == "" {
-		return errors.New("UserID is empty")
+	if err := uuid.Validate(in.UserID); err != nil {
+		return errors.New("user id is not valid")
 	}
 	if in.UserID != in.SubjectUserID {
 		return errors.New("должны быть одинаковыми")
@@ -37,7 +37,7 @@ func (in ChatsWhereUserIsMemberInput) validate() error {
 func (c *Chats) ChatsWhereUserIsMember(in ChatsWhereUserIsMemberInput) ([]domain.Chat, error) {
 	// Валидировать параметры
 	var err error
-	if err = in.validate(); err != nil {
+	if err = in.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -70,6 +70,22 @@ type CreateInput struct {
 	Name        string
 	ChiefUserID string
 }
+
+func (in CreateInput) Validate() error {
+	chat := domain.Chat{
+		Name:        in.Name,
+		ChiefUserID: in.ChiefUserID,
+	}
+	if err := chat.ValidateName(); err != nil {
+		return err
+	}
+	if err := chat.ValidateChiefUserID(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type CreateOutput struct {
 	Chat        domain.Chat
 	ChiefMember domain.Member
@@ -77,21 +93,17 @@ type CreateOutput struct {
 
 // Create создает новый чат и участника для главного администратора - пользователя который создал этот чат
 func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
+	// Валидировать параметры
+	if err := in.Validate(); err != nil {
+		return CreateOutput{}, err
+	}
+
+	// Сохранить чат в репозиторий
 	newChat := domain.Chat{
 		ID:          uuid.NewString(),
 		Name:        in.Name,
 		ChiefUserID: in.ChiefUserID,
 	}
-
-	// Валидация создаваемого чата
-	if err := newChat.ValidateName(); err != nil {
-		return CreateOutput{}, err
-	}
-	if err := newChat.ValidateChiefUserID(); err != nil {
-		return CreateOutput{}, err
-	}
-
-	// Сохранить чат в репозиторий
 	if err := c.ChatsRepo.Save(newChat); err != nil {
 		return CreateOutput{}, err
 	}

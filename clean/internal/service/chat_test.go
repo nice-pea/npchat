@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 )
 
@@ -23,6 +24,23 @@ func newChatsService(t *testing.T) *Chats {
 		MembersRepo: membersRepository,
 		History:     HistoryDummy{},
 	}
+}
+
+func TestChatsWhereUserIsMemberInput_Validate(t *testing.T) {
+	t.Run("UserID и SubjectUserID разные", func(t *testing.T) {
+		input := ChatsWhereUserIsMemberInput{
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
+		}
+		assert.Error(t, input.Validate())
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := ChatsWhereUserIsMemberInput{
+			SubjectUserID: id,
+			UserID:        id,
+		}
+		return in.Validate()
+	})
 }
 
 func TestChats_ChatsWhereUserIsMember(t *testing.T) {
@@ -130,6 +148,30 @@ func TestChats_ChatsWhereUserIsMember(t *testing.T) {
 	})
 }
 
+func Test_CreateChatInput_Validate(t *testing.T) {
+	t.Run("ошибка при пустом name", func(t *testing.T) {
+		input := CreateInput{
+			ChiefUserID: uuid.NewString(),
+			Name:        "",
+		}
+		assert.Error(t, input.Validate())
+	})
+	t.Run("ошибка при пустом ChiefUserID", func(t *testing.T) {
+		input := CreateInput{
+			ChiefUserID: "",
+			Name:        "qf",
+		}
+		assert.Error(t, input.Validate())
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := CreateInput{
+			ChiefUserID: id,
+			Name:        "qf",
+		}
+		return in.Validate()
+	})
+}
+
 func Test_CreateChat(t *testing.T) {
 	assertChatEqualIn := func(in CreateInput, out domain.Chat) {
 		assert.Equal(t, out.ChiefUserID, in.ChiefUserID)
@@ -211,32 +253,6 @@ func Test_CreateChat(t *testing.T) {
 		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
 		assert.Len(t, list, count)
-	})
-	t.Run("ошибка при пустом name", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "",
-		}
-		out, err := chatsService.Create(input)
-		assert.Error(t, err)
-		assert.Zero(t, out)
-		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
-		assert.NoError(t, err)
-		assert.Len(t, list, 0)
-	})
-	t.Run("ошибка при пустом ChiefUserID", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: "",
-			Name:        "qf",
-		}
-		out, err := chatsService.Create(input)
-		assert.Error(t, err)
-		assert.Zero(t, out)
-		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
-		assert.NoError(t, err)
-		assert.Len(t, list, 0)
 	})
 	t.Run("можно создать с одинаковыми параметрами", func(t *testing.T) {
 		chatsService := newChatsService(t)
