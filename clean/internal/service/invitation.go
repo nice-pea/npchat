@@ -15,8 +15,10 @@ type Invitations struct {
 }
 
 var (
-	ErrChatInvitationsInputUserIDValidate = errors.New("некорректный UserID")
-	ErrChatInvitationsInputChatIDValidate = errors.New("некорректный ChatID")
+	ErrChatInvitationsInputUserIDValidate       = errors.New("некорректный UserID")
+	ErrChatInvitationsInputChatIDValidate       = errors.New("некорректный ChatID")
+	ErrChatInvitationsNoChat                    = errors.New("Не существует чата с данным ChatID")
+	ErrChatInvitationsUserIDNotEqualCheifUserID = errors.New("UserID не является CheifUserID")
 )
 
 type ChatInvitationsInput struct {
@@ -36,5 +38,29 @@ func (in ChatInvitationsInput) validate() error {
 
 // ChatInvitations - возвращает список приглашений данного чата
 func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
-	return nil, nil
+
+	if err := in.validate(); err != nil {
+		return nil, err
+	}
+
+	chats, err := i.ChatsRepo.List(domain.ChatsFilter{
+		IDs: []string{in.ChatID},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(chats) == 0 {
+		return nil, ErrChatInvitationsNoChat
+	}
+	// только 1 чат существует по такому ChatID
+	chat := chats[0]
+	if chat.ChiefUserID != in.UserID {
+		return nil, ErrChatInvitationsUserIDNotEqualCheifUserID
+	}
+
+	invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+		ChatID: chat.ID,
+	})
+
+	return invitations, err
 }
