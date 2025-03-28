@@ -11,14 +11,23 @@ import (
 type member struct {
 	ID     string `db:"id"`
 	ChatID string `db:"chat_id"`
+	UserID string `db:"user_id"`
 }
 
 func memberToDomain(repoMember member) domain.Member {
-	return domain.Member{ID: repoMember.ID, ChatID: repoMember.ChatID}
+	return domain.Member{
+		ID:     repoMember.ID,
+		UserID: repoMember.UserID,
+		ChatID: repoMember.ChatID,
+	}
 }
 
 func memberFromDomain(domainMember domain.Member) member {
-	return member{ID: domainMember.ID, ChatID: domainMember.ChatID}
+	return member{
+		ID:     domainMember.ID,
+		ChatID: domainMember.ChatID,
+		UserID: domainMember.UserID,
+	}
 }
 
 func membersToDomain(repoMembers []member) []domain.Member {
@@ -57,7 +66,8 @@ func (c *MembersRepository) List(filter domain.MembersFilter) ([]domain.Member, 
 			FROM members 
 			WHERE ($1 = "" OR $1 = id)
 				AND ($2 = "" OR $2 = chat_id)
-		`, filter.ID, filter.ChatID); err != nil {
+				AND ($3 = "" OR $3 = user_id)
+		`, filter.ID, filter.ChatID, filter.UserID); err != nil {
 		return nil, fmt.Errorf("error selecting members: %w", err)
 	}
 
@@ -68,7 +78,10 @@ func (c *MembersRepository) Save(member domain.Member) error {
 	if member.ID == "" {
 		return fmt.Errorf("invalid member id")
 	}
-	_, err := c.DB.Exec("INSERT INTO members(id, chat_id) VALUES (?, ?)", member.ID, member.ChatID)
+	_, err := c.DB.Exec(`
+		INSERT INTO members(id, chat_id, user_id)
+		VALUES (?, ?, ?)`,
+		member.ID, member.ChatID, member.UserID)
 	if err != nil {
 		return fmt.Errorf("error inserting member: %w", err)
 	}
