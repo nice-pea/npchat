@@ -26,7 +26,7 @@ type ChatInvitationsInput struct {
 	ChatID string
 }
 
-func (in ChatInvitationsInput) validate() error {
+func (in ChatInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.ChatID); err != nil {
 		return errors.Join(err, ErrChatInvitationsInputChatIDValidate)
 	}
@@ -39,7 +39,7 @@ func (in ChatInvitationsInput) validate() error {
 // ChatInvitations - Получить список приглашений в конкретный чат
 func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
 
-	if err := in.validate(); err != nil {
+	if err := in.Validate(); err != nil {
 		return nil, err
 	}
 

@@ -10,6 +10,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestChatInvitationsInput_Validate(t *testing.T) {
+	t.Run("UserID обязательное поле", func(t *testing.T) {
+		input := ChatInvitationsInput{
+			UserID: "",
+			ChatID: uuid.NewString(),
+		}
+		assert.Error(t, input.Validate())
+	})
+	t.Run("ChatID обязательное поле", func(t *testing.T) {
+		input := ChatInvitationsInput{
+			ChatID: "",
+			UserID: uuid.NewString(),
+		}
+		assert.Error(t, input.Validate())
+	})
+	// helpers_tests.RunValidateRequiredIDTest(t)
+}
+
 func TestInvations_ChatInvitations(t *testing.T) {
 	newInvitationsService := func() *Invitations {
 		sqLiteInMemory, err := memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
@@ -100,19 +118,14 @@ func TestInvations_ChatInvitations(t *testing.T) {
 			ChatID: chatID,
 		}
 
-		err = errors.Join(newService.InvitationsRepo.Save(domain.Invitation{
-			ID:     uuid.NewString(),
-			ChatID: chatID,
-		}), newService.InvitationsRepo.Save(domain.Invitation{
-			ID:     uuid.NewString(),
-			ChatID: chatID,
-		}), newService.InvitationsRepo.Save(domain.Invitation{
-			ID:     uuid.NewString(),
-			ChatID: chatID,
-		}), newService.InvitationsRepo.Save(domain.Invitation{
-			ID:     uuid.NewString(),
-			ChatID: chatID,
-		}))
+		err = nil
+		for range 4 {
+			err = errors.Join(newService.InvitationsRepo.Save(domain.Invitation{
+				ID:     uuid.NewString(),
+				ChatID: chatID,
+			}))
+		}
+
 		assert.NoError(t, err)
 		invsChat, err := newService.ChatInvitations(input)
 		assert.NoError(t, err)
