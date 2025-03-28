@@ -56,7 +56,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 				r.Save(domain.Chat{ID: uuid.NewString(), Name: "name1"}),
 				r.Save(domain.Chat{ID: uuid.NewString(), Name: "name2"}),
 			))
-			chats, err := r.List(domain.ChatsFilter{ID: id})
+			chats, err := r.List(domain.ChatsFilter{IDs: []string{id}})
 			assert.NoError(t, err)
 			assert.Len(t, chats, 1)
 		})

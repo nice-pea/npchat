@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/nullism/bqb"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
@@ -19,12 +20,18 @@ type ChatsRepository struct {
 }
 
 func (c *ChatsRepository) List(filter domain.ChatsFilter) ([]domain.Chat, error) {
+	// Построить запрос используя bqb
+	where := bqb.Optional("WHERE")
+	if len(filter.IDs) > 0 {
+		where.And("id IN (?)", filter.IDs)
+	}
+	sql, args, err := bqb.New("SELECT * FROM chats ?", where).ToSql()
+	if err != nil {
+		return nil, err
+	}
+	// Выполнить запрос используя sqlx
 	chats := make([]domain.Chat, 0)
-	if err := c.DB.Select(&chats, `
-			SELECT * 
-			FROM chats 
-			WHERE ($1 = "" OR $1 = id)
-		`, filter.ID); err != nil {
+	if err = c.DB.Select(&chats, sql, args...); err != nil {
 		return nil, fmt.Errorf("error selecting chats: %w", err)
 	}
 
