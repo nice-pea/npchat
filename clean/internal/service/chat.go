@@ -27,10 +27,10 @@ var (
 
 func (in ChatsWhereUserIsMemberInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return ErrChatsWhereUserIsMemberInputSubjectUserIDValidate
+		return errors.Join(err, ErrChatsWhereUserIsMemberInputSubjectUserIDValidate)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return ErrChatsWhereUserIsMemberInputUserIDValidate
+		return errors.Join(err, ErrChatsWhereUserIsMemberInputUserIDValidate)
 	}
 	if in.UserID != in.SubjectUserID {
 		return ErrChatsWhereUserIsMemberInputEqualUserIDsValidate
@@ -77,16 +77,21 @@ type CreateInput struct {
 	ChiefUserID string
 }
 
+var (
+	ErrCreateInputNameValidate        = errors.New("некорректный Name")
+	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
+)
+
 func (in CreateInput) Validate() error {
 	chat := domain.Chat{
 		Name:        in.Name,
 		ChiefUserID: in.ChiefUserID,
 	}
 	if err := chat.ValidateName(); err != nil {
-		return err
+		return errors.Join(err, ErrCreateInputNameValidate)
 	}
 	if err := chat.ValidateChiefUserID(); err != nil {
-		return err
+		return errors.Join(err, ErrCreateInputChiefUserIDValidate)
 	}
 
 	return nil
