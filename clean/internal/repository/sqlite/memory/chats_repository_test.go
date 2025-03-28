@@ -9,7 +9,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
 )
 
-// todo:
 func TestNewChatsRepository(t *testing.T) {
 	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
 		sqlim, err := Init(Config{
