@@ -140,27 +140,29 @@ func Test_CreateChat(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		chat, err := newChatsService(t).Create(input)
+		out, err := newChatsService(t).Create(input)
 		assert.NoError(t, err)
-		assert.NotZero(t, chat)
+		assert.NotZero(t, out)
 	})
 	t.Run("выходящие совпадают с заданными", func(t *testing.T) {
 		input := CreateInput{
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		chat, err := newChatsService(t).Create(input)
+		out, err := newChatsService(t).Create(input)
 		assert.NoError(t, err)
-		assertChatEqualIn(input, chat)
+		assert.NotZero(t, out)
+		assertChatEqualIn(input, out.Chat)
 	})
 	t.Run("возвращается чат с новым id", func(t *testing.T) {
 		input := CreateInput{
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		chat, err := newChatsService(t).Create(input)
+		out, err := newChatsService(t).Create(input)
 		assert.NoError(t, err)
-		assert.NotEmpty(t, chat.ID)
+		assert.NotZero(t, out)
+		assert.NotZero(t, out.Chat.ID)
 	})
 	t.Run("можно затем прочитать из репозитория", func(t *testing.T) {
 		chatsService := newChatsService(t)
@@ -168,13 +170,29 @@ func Test_CreateChat(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		chat, err := chatsService.Create(input)
+		out, err := chatsService.Create(input)
 		assert.NoError(t, err)
-		assert.NotEmpty(t, chat.ID)
+		assert.NotEmpty(t, out.Chat.ID)
 		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
-		if assert.Len(t, chats, 1) {
-			assertChatEqualIn(input, chats[0])
+		assert.Len(t, chats, 1)
+		assertChatEqualIn(input, chats[0])
+	})
+	t.Run("создается участник для главного администратора", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		input := CreateInput{
+			ChiefUserID: uuid.NewString(),
+			Name:        "Name",
+		}
+		out, err := chatsService.Create(input)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, out.Chat.ID)
+		assertChatEqualIn(input, out.Chat)
+		members, err := chatsService.MembersRepo.List(domain.MembersFilter{})
+		assert.NoError(t, err)
+		if assert.Len(t, members, 1) {
+			assert.Equal(t, input.ChiefUserID, members[0].UserID)
+			assert.Equal(t, out.Chat.ID, members[0].ChatID)
 		}
 	})
 	t.Run("пользователь создал много чатов", func(t *testing.T) {
@@ -186,9 +204,9 @@ func Test_CreateChat(t *testing.T) {
 				ChiefUserID: userID,
 				Name:        fmt.Sprintf("Name%d", i),
 			}
-			chat, err := chatsService.Create(input)
+			out, err := chatsService.Create(input)
 			assert.NoError(t, err)
-			assert.NotEmpty(t, chat.ID)
+			assert.NotZero(t, out)
 		}
 		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
@@ -200,9 +218,9 @@ func Test_CreateChat(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "",
 		}
-		chat, err := chatsService.Create(input)
+		out, err := chatsService.Create(input)
 		assert.Error(t, err)
-		assert.Zero(t, chat)
+		assert.Zero(t, out)
 		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
 		assert.Len(t, list, 0)
@@ -213,9 +231,9 @@ func Test_CreateChat(t *testing.T) {
 			ChiefUserID: "",
 			Name:        "qf",
 		}
-		chat, err := chatsService.Create(input)
+		out, err := chatsService.Create(input)
 		assert.Error(t, err)
-		assert.Zero(t, chat)
+		assert.Zero(t, out)
 		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
 		assert.Len(t, list, 0)
@@ -228,9 +246,10 @@ func Test_CreateChat(t *testing.T) {
 			Name:        "name",
 		}
 		for range [count]int{} {
-			chat, err := chatsService.Create(input)
+			out, err := chatsService.Create(input)
 			assert.NoError(t, err)
-			assertChatEqualIn(input, chat)
+			assert.NotZero(t, out)
+			assertChatEqualIn(input, out.Chat)
 		}
 		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)

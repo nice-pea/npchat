@@ -70,9 +70,13 @@ type CreateInput struct {
 	Name        string
 	ChiefUserID string
 }
+type CreateOutput struct {
+	Chat        domain.Chat
+	ChiefMember domain.Member
+}
 
 // Create создает новый чат и участника для главного администратора - пользователя который создал этот чат
-func (c *Chats) Create(in CreateInput) (domain.Chat, error) {
+func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
 	newChat := domain.Chat{
 		ID:          uuid.NewString(),
 		Name:        in.Name,
@@ -81,16 +85,29 @@ func (c *Chats) Create(in CreateInput) (domain.Chat, error) {
 
 	// Валидация создаваемого чата
 	if err := newChat.ValidateName(); err != nil {
-		return domain.Chat{}, err
+		return CreateOutput{}, err
 	}
 	if err := newChat.ValidateChiefUserID(); err != nil {
-		return domain.Chat{}, err
+		return CreateOutput{}, err
 	}
 
 	// Сохранить чат в репозиторий
 	if err := c.ChatsRepo.Save(newChat); err != nil {
-		return domain.Chat{}, err
+		return CreateOutput{}, err
 	}
 
-	return newChat, nil
+	// Создать участника
+	member := domain.Member{
+		ID:     uuid.NewString(),
+		UserID: newChat.ChiefUserID,
+		ChatID: newChat.ID,
+	}
+	if err := c.MembersRepo.Save(member); err != nil {
+		return CreateOutput{}, err
+	}
+
+	return CreateOutput{
+		Chat:        newChat,
+		ChiefMember: member,
+	}, nil
 }
