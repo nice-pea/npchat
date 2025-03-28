@@ -36,7 +36,7 @@ func (in ChatInvitationsInput) validate() error {
 	return nil
 }
 
-// ChatInvitations - возвращает список приглашений данного чата
+// ChatInvitations - Получить список приглашений в конкретный чат
 func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
 
 	if err := in.validate(); err != nil {
