@@ -159,6 +159,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				ID:     id,
 				ChatID: "name",
 			})
+			assert.NoError(t, err)
 			err = r.Delete(id)
 			assert.NoError(t, err)
 		})
@@ -169,6 +170,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				ID:     id,
 				ChatID: "name",
 			})
+			assert.NoError(t, err)
 			err = r.Delete(id)
 			assert.NoError(t, err)
 			err = r.Delete(id)
