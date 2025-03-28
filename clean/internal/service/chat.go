@@ -14,15 +14,6 @@ type Chats struct {
 	History     History
 }
 
-const LimitCreatedChats = 1000
-
-type CreateChatInput struct {
-	Name        string
-	ChiefUserID string
-}
-
-var ErrCreateChatLimitExceeded = errors.New("create chat limit exceeded")
-
 type ChatsWhereUserIsMemberInput struct {
 	SubjectUserID string
 	UserID        string
@@ -75,16 +66,28 @@ func (c *Chats) ChatsWhereUserIsMember(in ChatsWhereUserIsMemberInput) ([]domain
 	})
 }
 
-func (c *Chats) Create(in CreateChatInput) (domain.Chat, error) {
+type CreateInput struct {
+	Name        string
+	ChiefUserID string
+}
+
+func (c *Chats) Create(in CreateInput) (domain.Chat, error) {
 	newChat := domain.Chat{
 		ID:          uuid.NewString(),
 		Name:        in.Name,
 		ChiefUserID: in.ChiefUserID,
 	}
+
+	// Валидация создаваемого чата
 	if err := newChat.ValidateName(); err != nil {
 		return domain.Chat{}, err
 	}
 	if err := newChat.ValidateChiefUserID(); err != nil {
+		return domain.Chat{}, err
+	}
+
+	// Сохранить чат в репозиторий
+	if err := c.ChatsRepo.Save(newChat); err != nil {
 		return domain.Chat{}, err
 	}
 
