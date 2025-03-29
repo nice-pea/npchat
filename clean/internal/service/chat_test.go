@@ -13,6 +13,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 )
 
+// newChatsService создает объект сервиса Chats с sqlite/memory репозиториями
 func newChatsService(t *testing.T) *Chats {
 	sqLiteInMemory, err := memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
 	assert.NoError(t, err)
@@ -27,16 +28,17 @@ func newChatsService(t *testing.T) *Chats {
 	}
 }
 
-func TestChatsWhereUserIsMemberInput_Validate(t *testing.T) {
-	t.Run("UserID и SubjectUserID разные", func(t *testing.T) {
-		input := ChatsWhereUserIsMemberInput{
+// Test_UserChatsInput_Validate тестирует валидацию входящих параметров запроса списка чатов в которых участвует пользователь
+func Test_UserChatsInput_Validate(t *testing.T) {
+	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
+		input := UserChatsInput{
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
 		assert.Error(t, input.Validate())
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := ChatsWhereUserIsMemberInput{
+		in := UserChatsInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
@@ -44,45 +46,19 @@ func TestChatsWhereUserIsMemberInput_Validate(t *testing.T) {
 	})
 }
 
-func TestChats_ChatsWhereUserIsMember(t *testing.T) {
-	t.Run("SubjectUserID обязательное поле", func(t *testing.T) {
-		input := ChatsWhereUserIsMemberInput{
-			SubjectUserID: "",
-			UserID:        uuid.NewString(),
-		}
-		userChats, err := newChatsService(t).ChatsWhereUserIsMember(input)
-		assert.Error(t, err)
-		assert.Len(t, userChats, 0)
-	})
-	t.Run("UserID обязательное поле", func(t *testing.T) {
-		input := ChatsWhereUserIsMemberInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        "",
-		}
-		userChats, err := newChatsService(t).ChatsWhereUserIsMember(input)
-		assert.Error(t, err)
-		assert.Len(t, userChats, 0)
-	})
-	t.Run("UserID и SubjectUserID разные", func(t *testing.T) {
-		input := ChatsWhereUserIsMemberInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-		}
-		userChats, err := newChatsService(t).ChatsWhereUserIsMember(input)
-		assert.Error(t, err)
-		assert.Len(t, userChats, 0)
-	})
+// Test_UserChatsInput_Validate тестирует запрос список чатов в которых участвует пользователь
+func Test_Chats_UserChats(t *testing.T) {
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
 		id := uuid.NewString()
-		input := ChatsWhereUserIsMemberInput{
+		input := UserChatsInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
-		userChats, err := newChatsService(t).ChatsWhereUserIsMember(input)
+		userChats, err := newChatsService(t).UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 0)
 	})
-	t.Run("пустой список из заполненного репозитория", func(t *testing.T) {
+	t.Run("пустой список если у пользователя нет чатов", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		for i := 0; i < 7; i++ {
 			// Создать чат
@@ -102,18 +78,19 @@ func TestChats_ChatsWhereUserIsMember(t *testing.T) {
 			assert.NoError(t, err)
 		}
 		userID := uuid.NewString()
-		input := ChatsWhereUserIsMemberInput{
+		input := UserChatsInput{
 			SubjectUserID: userID,
 			UserID:        userID,
 		}
-		userChats, err := chatsService.ChatsWhereUserIsMember(input)
+		userChats, err := chatsService.UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 0)
 	})
-	t.Run("3 чата из заполненного репозитория", func(t *testing.T) {
+	t.Run("у пользователя может быть несколько чатов", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		var existsChats []domain.Chat
-		for i := 0; i < 10; i++ {
+		const countAll = 10
+		for i := range [countAll]int{} {
 			// Создать чат
 			existsChats = append(existsChats, domain.Chat{
 				ID:          uuid.NewString(),
@@ -122,16 +99,10 @@ func TestChats_ChatsWhereUserIsMember(t *testing.T) {
 			})
 			err := chatsService.ChatsRepo.Save(existsChats[i])
 			assert.NoError(t, err)
-			// Создать участника в чате
-			err = chatsService.MembersRepo.Save(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: existsChats[i].ID,
-			})
-			assert.NoError(t, err)
 		}
 		userID := uuid.NewString()
-		for i := 0; i < 3; i++ {
+		const count = countAll / 3
+		for i := range [count]int{} {
 			err := chatsService.MembersRepo.Save(domain.Member{
 				ID:     uuid.NewString(),
 				UserID: userID,
@@ -139,16 +110,17 @@ func TestChats_ChatsWhereUserIsMember(t *testing.T) {
 			})
 			assert.NoError(t, err)
 		}
-		input := ChatsWhereUserIsMemberInput{
+		input := UserChatsInput{
 			SubjectUserID: userID,
 			UserID:        userID,
 		}
-		userChats, err := chatsService.ChatsWhereUserIsMember(input)
+		userChats, err := chatsService.UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 3)
 	})
 }
 
+// Test_UserChatsInput_Validate тестирует валидацию входящих параметров для создания чата
 func Test_CreateChatInput_Validate(t *testing.T) {
 	t.Run("ошибка при пустом name", func(t *testing.T) {
 		input := CreateInput{
@@ -173,6 +145,7 @@ func Test_CreateChatInput_Validate(t *testing.T) {
 	})
 }
 
+// Test_UserChatsInput_Validate тестирует создание чата
 func Test_CreateChat(t *testing.T) {
 	assertChatEqualIn := func(in CreateInput, out domain.Chat) {
 		assert.Equal(t, out.ChiefUserID, in.ChiefUserID)
@@ -274,10 +247,9 @@ func Test_CreateChat(t *testing.T) {
 	})
 }
 
+// Test_UpdateNameInput_Validate тестирует входящие параметры обновления названия чата
 func Test_UpdateNameInput_Validate(t *testing.T) {
 	t.Run("NewName", func(t *testing.T) {
-		type fields struct {
-		}
 		tests := []struct {
 			name    string
 			newName string
@@ -377,6 +349,7 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 	})
 }
 
+// Test_UpdateNameInput_Validate тестирует обновления названия чата
 func Test_Chats_UpdateName(t *testing.T) {
 	t.Run("без ошибок", func(t *testing.T) {
 		chatsService := newChatsService(t)

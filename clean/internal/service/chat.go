@@ -8,39 +8,42 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
+// Chats сервис объединяющий случаи использования(юзкейсы) в контексте сущности
 type Chats struct {
 	ChatsRepo   domain.ChatsRepository
 	MembersRepo domain.MembersRepository
 	History     History
 }
 
-type ChatsWhereUserIsMemberInput struct {
+// UserChatsInput параметры для запроса чатов в которых участвует пользователь
+type UserChatsInput struct {
 	SubjectUserID string
 	UserID        string
 }
 
 var (
-	ErrChatsWhereUserIsMemberInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrChatsWhereUserIsMemberInputUserIDValidate        = errors.New("некорректный UserID")
-	ErrChatsWhereUserIsMemberInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID должны быть одинаковыми")
+	ErrUserChatsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrUserChatsInputUserIDValidate        = errors.New("некорректный UserID")
+	ErrUserChatsInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID не совпадают")
 )
 
-func (in ChatsWhereUserIsMemberInput) Validate() error {
+// Validate валидирует параметры для запроса чатов в которых участвует пользователь
+func (in UserChatsInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrChatsWhereUserIsMemberInputSubjectUserIDValidate)
+		return errors.Join(err, ErrUserChatsInputSubjectUserIDValidate)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrChatsWhereUserIsMemberInputUserIDValidate)
+		return errors.Join(err, ErrUserChatsInputUserIDValidate)
 	}
 	if in.UserID != in.SubjectUserID {
-		return ErrChatsWhereUserIsMemberInputEqualUserIDsValidate
+		return ErrUserChatsInputEqualUserIDsValidate
 	}
 
 	return nil
 }
 
-// ChatsWhereUserIsMember возвращает список чатов в которых участвует пользователь
-func (c *Chats) ChatsWhereUserIsMember(in ChatsWhereUserIsMemberInput) ([]domain.Chat, error) {
+// UserChats возвращает список чатов в которых участвует пользователь
+func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 	// Валидировать параметры
 	var err error
 	if err = in.Validate(); err != nil {
@@ -72,6 +75,7 @@ func (c *Chats) ChatsWhereUserIsMember(in ChatsWhereUserIsMemberInput) ([]domain
 	})
 }
 
+// CreateInput входящие параметры для создания чата
 type CreateInput struct {
 	Name        string
 	ChiefUserID string
@@ -82,6 +86,7 @@ var (
 	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
+// Validate валидирует параметры для создания чата
 func (in CreateInput) Validate() error {
 	chat := domain.Chat{
 		Name:        in.Name,
@@ -97,6 +102,7 @@ func (in CreateInput) Validate() error {
 	return nil
 }
 
+// CreateOutput результат создания чата
 type CreateOutput struct {
 	Chat        domain.Chat
 	ChiefMember domain.Member
@@ -135,6 +141,7 @@ func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
 	}, nil
 }
 
+// UpdateNameInput входящие параметры для обновления названия чата
 type UpdateNameInput struct {
 	SubjectUserID string
 	ChatID        string
@@ -147,6 +154,7 @@ var (
 	ErrUpdateNameChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
+// Validate валидирует параметры для обновления названия чата
 func (in UpdateNameInput) Validate() error {
 	chat := domain.Chat{
 		ID:          in.ChatID,
