@@ -19,3 +19,10 @@ func TestInvitation_ValidateChatID(t *testing.T) {
 		return i.ValidateChatID()
 	})
 }
+
+func TestInvitation_ValidateUserID(t *testing.T) {
+	helpers_tests.RunValidateRequiredIDTest(t, func(UserID string) error {
+		i := Invitation{UserID: UserID}
+		return i.ValidateUserID()
+	})
+}
