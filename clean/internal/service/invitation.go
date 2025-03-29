@@ -7,6 +7,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
+// Invitations сервис объединяющий случаи использования(юзкейсы) в контексте сущности
 type Invitations struct {
 	ChatsRepo       domain.ChatsRepository
 	MembersRepo     domain.MembersRepository
@@ -14,18 +15,20 @@ type Invitations struct {
 	History         History
 }
 
-var (
-	ErrChatInvitationsInputUserIDValidate = errors.New("некорректный UserID")
-	ErrChatInvitationsInputChatIDValidate = errors.New("некорректный ChatID")
-	ErrChatInvitationsNoChat              = errors.New("Не существует чата с данным ChatID")
-	ErrChatInvitationsUserIsNotChief      = errors.New("доступно только для chief этого чата")
-)
-
+// ChatInvitationsInput параметры для запроса приглашений конкретного чата
 type ChatInvitationsInput struct {
 	UserID string
 	ChatID string
 }
 
+var (
+	ErrChatInvitationsInputUserIDValidate = errors.New("некорректный UserID")
+	ErrChatInvitationsInputChatIDValidate = errors.New("некорректный ChatID")
+	ErrChatInvitationsNoChat              = errors.New("не существует чата с данным ChatID")
+	ErrChatInvitationsUserIsNotChief      = errors.New("доступно только для chief этого чата")
+)
+
+// Validate валидирует параметры для запроса приглашений конкретного чата
 func (in ChatInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.ChatID); err != nil {
 		return errors.Join(err, ErrChatInvitationsInputChatIDValidate)

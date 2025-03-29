@@ -127,6 +127,5 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 		for i := range countInvs {
 			assert.Equal(t, invsChat[i], exitsInvs[i])
 		}
-
 	})
 }
