@@ -107,17 +107,26 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 			ChatID: chatID,
 		}
 
+		const countInvs = 4
+		exitsInvs := make([]domain.Invitation, 0, countInvs)
 		err = nil
-		for range 4 {
-			err = errors.Join(newService.InvitationsRepo.Save(domain.Invitation{
+		for range countInvs {
+			inv := domain.Invitation{
 				ID:     uuid.NewString(),
 				ChatID: chatID,
-			}))
+			}
+			err = errors.Join(newService.InvitationsRepo.Save(inv))
+			exitsInvs = append(exitsInvs, inv)
 		}
 
 		assert.NoError(t, err)
 		invsChat, err := newService.ChatInvitations(input)
 		assert.NoError(t, err)
-		assert.Len(t, invsChat, 4)
+		assert.Len(t, invsChat, countInvs)
+		assert.Len(t, exitsInvs, countInvs)
+		for i := range countInvs {
+			assert.Equal(t, invsChat[i], exitsInvs[i])
+		}
+
 	})
 }
