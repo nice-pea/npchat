@@ -78,7 +78,7 @@ type CreateInput struct {
 }
 
 var (
-	ErrCreateInputNameValidate        = errors.New("некорректный Name")
+	ErrCreateInputNameValidate        = errors.New("некорректный NewName")
 	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
@@ -133,4 +133,52 @@ func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
 		Chat:        newChat,
 		ChiefMember: member,
 	}, nil
+}
+
+type UpdateNameInput struct {
+	SubjectUserID string
+	ChatID        string
+	NewName       string
+}
+
+var (
+	ErrUpdateNameIDValidate          = errors.New("некорректный ID")
+	ErrUpdateNameNameValidate        = errors.New("некорректный NewName")
+	ErrUpdateNameChiefUserIDValidate = errors.New("некорректный ChiefUserID")
+)
+
+func (in UpdateNameInput) Validate() error {
+	chat := domain.Chat{
+		ID:          in.ChatID,
+		Name:        in.NewName,
+		ChiefUserID: in.SubjectUserID,
+	}
+	if err := chat.ValidateID(); err != nil {
+		return errors.Join(err, ErrUpdateNameIDValidate)
+	}
+	if err := chat.ValidateName(); err != nil {
+		return errors.Join(err, ErrUpdateNameNameValidate)
+	}
+	if err := chat.ValidateChiefUserID(); err != nil {
+		return errors.Join(err, ErrUpdateNameChiefUserIDValidate)
+	}
+
+	return nil
+}
+
+func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
+	if err := in.Validate(); err != nil {
+		return domain.Chat{}, err
+	}
+
+	updatedChat := domain.Chat{
+		ID:          in.ChatID,
+		Name:        in.NewName,
+		ChiefUserID: in.SubjectUserID,
+	}
+	if err := c.ChatsRepo.Save(updatedChat); err != nil {
+		return domain.Chat{}, err
+	}
+
+	return updatedChat, nil
 }
