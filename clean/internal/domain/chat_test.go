@@ -3,10 +3,12 @@ package domain
 import (
 	"strings"
 	"testing"
+
+	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
 
 func TestChat_ValidateID(t *testing.T) {
-	RunValidateRequiredIDTest(t, func(ID string) error {
+	helpers_tests.RunValidateRequiredIDTest(t, func(ID string) error {
 		c := Chat{ID: ID}
 		return c.ValidateID()
 	})
@@ -97,7 +99,7 @@ func TestChat_ValidateName(t *testing.T) {
 }
 
 func TestChat_ValidateChiefUserID(t *testing.T) {
-	RunValidateRequiredIDTest(t, func(ChiefUserID string) error {
+	helpers_tests.RunValidateRequiredIDTest(t, func(ChiefUserID string) error {
 		c := Chat{
 			ChiefUserID: ChiefUserID,
 		}
