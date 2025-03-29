@@ -148,6 +148,7 @@ func Test_UserInvitationsInput_Validate(t *testing.T) {
 	})
 }
 
+// Test_Invitations_UserInvitations тестирование функции UserInvitations
 func Test_Invitations_UserInvitations(t *testing.T) {
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
