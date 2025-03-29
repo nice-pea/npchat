@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -270,5 +271,136 @@ func Test_CreateChat(t *testing.T) {
 		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
 		assert.Len(t, chats, count)
+	})
+}
+
+func Test_UpdateChatNameInput_Validate(t *testing.T) {
+	t.Run("Name", func(t *testing.T) {
+		type fields struct {
+			ID   string
+			Name string
+		}
+		tests := []struct {
+			name    string
+			fields  fields
+			wantErr bool
+		}{
+			{
+				name:    "пустая строка",
+				fields:  fields{Name: ""},
+				wantErr: true,
+			},
+			{
+				name:    "превышает лимит в 50 символов",
+				fields:  fields{Name: strings.Repeat("a", 51)},
+				wantErr: true,
+			},
+			{
+				name:    "содержит пробел в начале",
+				fields:  fields{Name: " name"},
+				wantErr: true,
+			},
+			{
+				name:    "содержит пробел в конце",
+				fields:  fields{Name: "name "},
+				wantErr: true,
+			},
+			{
+				name:    "содержит таб",
+				fields:  fields{Name: "na\tme"},
+				wantErr: true,
+			},
+			{
+				name:    "содержит новую строку",
+				fields:  fields{Name: "na\nme"},
+				wantErr: true,
+			},
+			{
+				name:    "содержит цифры",
+				fields:  fields{Name: "1na13me4"},
+				wantErr: false,
+			},
+			{
+				name:    "содержит пробел в середине",
+				fields:  fields{Name: "na me"},
+				wantErr: false,
+			},
+			{
+				name:    "содержит пробелы в середине",
+				fields:  fields{Name: "na  me"},
+				wantErr: false,
+			},
+			{
+				name:    "содержит знаки",
+				fields:  fields{Name: "??na??me.#1432&^$(@"},
+				wantErr: false,
+			},
+			{
+				name:    "содержит только знаки",
+				fields:  fields{Name: "?>><#(*@$&"},
+				wantErr: false,
+			},
+			{
+				name:    "содержит только пробелы",
+				fields:  fields{Name: " "},
+				wantErr: true,
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				input := UpdateChatNameInput{
+					SubjectUserID: uuid.NewString(),
+					ChatID:        uuid.NewString(),
+					Name:          tt.name,
+				}
+				if err := input.Validate(); tt.wantErr {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+			})
+		}
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := UpdateChatNameInput{
+			SubjectUserID: id,
+			ChatID:        uuid.NewString(),
+			Name:          "Name",
+		}
+		return input.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := UpdateChatNameInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        id,
+			Name:          "Name",
+		}
+		return input.Validate()
+	})
+}
+
+func Test_Chats_UpdateChatName(t *testing.T) {
+	t.Run("без ошибок", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		createInput := CreateInput{
+			ChiefUserID: uuid.NewString(),
+			Name:        "oldName",
+		}
+		createOut, err := chatsService.Create(createInput)
+		assert.NoError(t, err)
+		assert.NotZero(t, createOut)
+		input := UpdateChatNameInput{
+			SubjectUserID: createInput.ChiefUserID,
+			ChatID:        createOut.Chat.ID,
+			Name:          "newName",
+		}
+		chat, err := chatsService.UpdateChatName(input)
+		assert.NoError(t, err)
+		assert.NotZero(t, chat)
+		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		assert.NoError(t, err)
+		if assert.Len(t, chats, 1) {
+			assert.Equal(t, input.Name, chats[0].Name)
+		}
 	})
 }
