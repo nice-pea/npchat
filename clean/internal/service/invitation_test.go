@@ -129,3 +129,24 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 		}
 	})
 }
+
+
+// Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров 
+func Test_UserInvitationsInput_Validate(t *testing.T) {
+	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
+		input := UserInvitationsInput{
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
+		}
+		assert.Error(t, input.Validate())
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := UserInvitationsInput{
+			SubjectUserID: id,
+			UserID:        id,
+		}
+		return input.Validate()
+	})
+}
+
+

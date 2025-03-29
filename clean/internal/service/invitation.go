@@ -66,3 +66,17 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 
 	return invitations, err
 }
+
+type UserInvitationsInput struct {
+	SubjectUserID string
+	UserID        string
+}
+
+func (in UserInvitationsInput) Validate() error {
+	return nil
+}
+
+// UserInvitations возвращает список приглашений конкретного пользователя в чаты
+func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
+	return nil, nil
+}
