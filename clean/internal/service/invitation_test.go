@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,29 +44,16 @@ func TestChatInvitationsInput_Validate(t *testing.T) {
 		}
 		assert.Error(t, input.Validate())
 	})
-	// helpers_tests.RunValidateRequiredIDTest(t)
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := ChatInvitationsInput{
+			UserID: id,
+			ChatID: id,
+		}
+		return input.Validate()
+	})
 }
 
 func TestInvitations_ChatInvitations(t *testing.T) {
-	t.Run("UserID обязательное поле", func(t *testing.T) {
-		input := ChatInvitationsInput{
-			UserID: "",
-			ChatID: uuid.NewString(),
-		}
-		invsChat, err := newInvitationsService(t).ChatInvitations(input)
-		assert.Error(t, err)
-		assert.Len(t, invsChat, 0)
-	})
-	t.Run("ChatID обязательное поле", func(t *testing.T) {
-		input := ChatInvitationsInput{
-			ChatID: "",
-			UserID: uuid.NewString(),
-		}
-		invsChat, err := newInvitationsService(t).ChatInvitations(input)
-		assert.Error(t, err)
-		assert.Len(t, invsChat, 0)
-	})
-
 	t.Run("UserID должен быть chief в чате с ChatID", func(t *testing.T) {
 		newService := newInvitationsService(t)
 		chatID := uuid.NewString()
