@@ -1,4 +1,4 @@
-package domain
+package helpers_tests
 
 import (
 	"testing"
