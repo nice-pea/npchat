@@ -72,7 +72,23 @@ type UserInvitationsInput struct {
 	UserID        string
 }
 
+var (
+	ErrUserInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrUserInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
+	ErrUserInvitationsInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID не совпадают")
+)
+
 func (in UserInvitationsInput) Validate() error {
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return errors.Join(err, ErrUserInvitationsInputSubjectUserIDValidate)
+	}
+	if err := uuid.Validate(in.UserID); err != nil {
+		return errors.Join(err, ErrUserInvitationsInputUserIDValidate)
+	}
+	if in.UserID != in.SubjectUserID {
+		return ErrUserInvitationsInputEqualUserIDsValidate
+	}
+
 	return nil
 }
 
