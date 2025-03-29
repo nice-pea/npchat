@@ -9,7 +9,7 @@ import (
 type Invitation struct {
 	ID     string
 	UserID string
-	ChatID string `db:"chat_id"`
+	ChatID string
 }
 
 var (
