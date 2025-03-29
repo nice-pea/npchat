@@ -94,5 +94,13 @@ func (in UserInvitationsInput) Validate() error {
 
 // UserInvitations возвращает список приглашений конкретного пользователя в чаты
 func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
-	return nil, nil
+	if err := in.Validate(); err != nil {
+		return nil, err
+	}
+
+	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+		ID: in.UserID,
+	})
+
+	return invs, err
 }
