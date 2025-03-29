@@ -171,12 +171,26 @@ func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
 		return domain.Chat{}, err
 	}
 
+	chats, err := c.ChatsRepo.List(domain.ChatsFilter{
+		IDs: []string{in.ChatID},
+	})
+	if err != nil {
+		return domain.Chat{}, err
+	}
+	if len(chats) != 1 {
+		return domain.Chat{}, errors.New("чат не найден")
+	}
+
+	if in.SubjectUserID != chats[0].ChiefUserID {
+		return domain.Chat{}, errors.New("доступно только для chief")
+	}
+
 	updatedChat := domain.Chat{
 		ID:          in.ChatID,
 		Name:        in.NewName,
 		ChiefUserID: in.SubjectUserID,
 	}
-	if err := c.ChatsRepo.Save(updatedChat); err != nil {
+	if err = c.ChatsRepo.Save(updatedChat); err != nil {
 		return domain.Chat{}, err
 	}
 

@@ -401,4 +401,33 @@ func Test_Chats_UpdateName(t *testing.T) {
 			assert.Equal(t, input.NewName, chats[0].Name)
 		}
 	})
+	t.Run("только существующий чат можно обновить", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		input := UpdateNameInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        uuid.NewString(),
+			NewName:       "newName",
+		}
+		chat, err := chatsService.UpdateName(input)
+		assert.Error(t, err)
+		assert.Zero(t, chat)
+	})
+	t.Run("только chief может изменять название", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		createInput := CreateInput{
+			ChiefUserID: uuid.NewString(),
+			Name:        "oldName",
+		}
+		createOut, err := chatsService.Create(createInput)
+		assert.NoError(t, err)
+		assert.NotZero(t, createOut)
+		input := UpdateNameInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        createOut.Chat.ID,
+			NewName:       "newName",
+		}
+		updatedChat, err := chatsService.UpdateName(input)
+		assert.Error(t, err)
+		assert.Zero(t, updatedChat)
+	})
 }
