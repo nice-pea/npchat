@@ -16,7 +16,7 @@ type Chat struct {
 var (
 	ErrChatIDValidate          = errors.New("некорректный UUID")
 	ErrChatChiefUserIDValidate = errors.New("некорректный ChiefUserID")
-	ErrChatNameValidate        = errors.New("некорректный NewName")
+	ErrChatNameValidate        = errors.New("некорректный Name")
 )
 
 func (c Chat) ValidateID() error {

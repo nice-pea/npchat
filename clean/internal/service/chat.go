@@ -82,7 +82,7 @@ type CreateInput struct {
 }
 
 var (
-	ErrCreateInputNameValidate        = errors.New("некорректный NewName")
+	ErrCreateInputNameValidate        = errors.New("некорректный Name")
 	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
@@ -150,7 +150,7 @@ type UpdateNameInput struct {
 
 var (
 	ErrUpdateNameIDValidate          = errors.New("некорректный ID")
-	ErrUpdateNameNameValidate        = errors.New("некорректный NewName")
+	ErrUpdateNameNameValidate        = errors.New("некорректный Name")
 	ErrUpdateNameChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
