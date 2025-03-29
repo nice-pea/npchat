@@ -209,7 +209,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 			SubjectUserID: userId,
 			UserID:        userId,
 		}
-		localInvs := make([]domain.Invitation, 0, count)
+		localInvs := make([]domain.Invitation, count)
 		for i := range count {
 			inv := domain.Invitation{
 				ID:     userId,
