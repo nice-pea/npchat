@@ -130,8 +130,7 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 	})
 }
 
-
-// Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров 
+// Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_UserInvitationsInput_Validate(t *testing.T) {
 	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
 		input := UserInvitationsInput{
@@ -149,4 +148,90 @@ func Test_UserInvitationsInput_Validate(t *testing.T) {
 	})
 }
 
-
+func Test_Invitations_UserInvitations(t *testing.T) {
+	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		id := uuid.NewString()
+		input := UserInvitationsInput{
+			SubjectUserID: id,
+			UserID:        id,
+		}
+		invs, err := serviceInvitations.UserInvitations(input)
+		assert.NoError(t, err)
+		assert.Len(t, invs, 0)
+	})
+	t.Run("пустой список если у данного пользователя нету приглашений", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		for range 10 {
+			inv := domain.Invitation{
+				ID:     uuid.NewString(),
+				ChatID: uuid.NewString(),
+			}
+			err := serviceInvitations.InvitationsRepo.Save(inv)
+			assert.NoError(t, err)
+		}
+		ourUserID := uuid.NewString()
+		invs, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{
+			ID: ourUserID,
+		})
+		assert.NoError(t, err)
+		assert.Len(t, invs, 0)
+		allInvs, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{})
+		assert.Len(t, allInvs, 10)
+		assert.NoError(t, err)
+	})
+	t.Run("у пользователя есть приглашение", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		userId := uuid.NewString()
+		input := UserInvitationsInput{
+			SubjectUserID: userId,
+			UserID:        userId,
+		}
+		chatId := uuid.NewString()
+		err := serviceInvitations.InvitationsRepo.Save(domain.Invitation{
+			ID:     userId,
+			ChatID: chatId,
+		})
+		assert.NoError(t, err)
+		invs, err := serviceInvitations.UserInvitations(input)
+		assert.NoError(t, err)
+		if assert.Len(t, invs, 1) {
+			assert.Equal(t, chatId, invs[0].ChatID)
+			assert.Equal(t, userId, invs[0].ID)
+		}
+	})
+	t.Run("у пользователя несколько приглашений но не все из репозитория", func(t *testing.T) {
+		const count = 5
+		serviceInvitations := newInvitationsService(t)
+		userId := uuid.NewString()
+		input := UserInvitationsInput{
+			SubjectUserID: userId,
+			UserID:        userId,
+		}
+		localInvs := make([]domain.Invitation, 0, count)
+		for i := range count {
+			inv := domain.Invitation{
+				ID:     userId,
+				ChatID: uuid.NewString(),
+			}
+			localInvs[i] = inv
+			err := serviceInvitations.InvitationsRepo.Save(localInvs[i])
+			assert.NoError(t, err)
+		}
+		for range count {
+			err := serviceInvitations.InvitationsRepo.Save(domain.Invitation{
+				ID:     uuid.NewString(),
+				ChatID: uuid.NewString(),
+			})
+			assert.NoError(t, err)
+		}
+		invs, err := serviceInvitations.UserInvitations(input)
+		assert.NoError(t, err)
+		if assert.Len(t, invs, count) {
+			for i, inv := range invs {
+				assert.Equal(t, inv.ID, localInvs[i].ID)
+				assert.Equal(t, inv.ChatID, localInvs[i].ChatID)
+			}
+		}
+	})
+}
