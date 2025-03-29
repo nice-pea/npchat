@@ -166,11 +166,15 @@ func (in UpdateNameInput) Validate() error {
 	return nil
 }
 
+// UpdateName обновляет название чата.
+// Доступно только для главного администратора этого чата
 func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
+	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return domain.Chat{}, err
 	}
 
+	// Найти чат для обновления
 	chats, err := c.ChatsRepo.List(domain.ChatsFilter{
 		IDs: []string{in.ChatID},
 	})
@@ -181,14 +185,16 @@ func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
 		return domain.Chat{}, errors.New("чат не найден")
 	}
 
+	// Проверить доступ пользователя к этому действию
 	if in.SubjectUserID != chats[0].ChiefUserID {
-		return domain.Chat{}, errors.New("доступно только для chief")
+		return domain.Chat{}, errors.New("доступно только главному администратору")
 	}
 
+	// Перезаписать с новым значением
 	updatedChat := domain.Chat{
-		ID:          in.ChatID,
+		ID:          chats[0].ID,
 		Name:        in.NewName,
-		ChiefUserID: in.SubjectUserID,
+		ChiefUserID: chats[0].ChiefUserID,
 	}
 	if err = c.ChatsRepo.Save(updatedChat); err != nil {
 		return domain.Chat{}, err
