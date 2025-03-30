@@ -82,7 +82,9 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 				errs = errors.Join(errs, r.Save(inv))
 			}
 			for range amountInvs {
-				errs = errors.Join(errs, r.Save(domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}))
+				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}
+				err := r.Save(inv)
+				errs = errors.Join(errs, err)
 			}
 			assert.NoError(t, errs)
 			invs, err := r.List(domain.InvitationsFilter{UserID: userID})
