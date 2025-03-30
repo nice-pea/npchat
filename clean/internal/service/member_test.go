@@ -31,28 +31,6 @@ func assertEqualMembers(t *testing.T, expected, actual domain.Member) {
 	assert.Equal(t, expected.ChatID, actual.ChatID)
 }
 
-/*
-Создать сервис service/Members и добавить ему несколько юзкейсов:
-Получить список участников чата
-
-	пользователь должен быть участникам чата
-	в список попадают все активные участники чата
-	Входящие параметры должны валидироваться
-
-Покинуть чат
-
-	пользователь должен быть участникам чата
-	пользователь должен не должен быть главным администратором
-	Входящие параметры должны валидироваться
-
-Принудительно удалить участника
-
-	пользователь должен быть участникам чата
-	пользователь должен быть главным администратором
-	нельзя удалить самого себя
-	Входящие параметры должны валидироваться
-*/
-
 func Test_ChatMembersInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := ChatMembersInput{
@@ -139,15 +117,106 @@ func Test_Members_ChatMembers(t *testing.T) {
 	})
 }
 
-func Test_Members_Leave(t *testing.T) {
-	_ = []string{
-		"чат должен существовать",
-		"пользователь должен быть участником чата",
-		"пользователь не должен быть главным администратором чата",
-		"после выхода пользователь перестает быть участником",
-		"",
-	}
+/*
+Покинуть чат
+
+	пользователь должен быть участникам чата
+	пользователь должен не должен быть главным администратором
+	Входящие параметры должны валидироваться
+
+Принудительно удалить участника
+
+	пользователь должен быть участникам чата
+	пользователь должен быть главным администратором
+	нельзя удалить самого себя
+	Входящие параметры должны валидироваться
+*/
+
+func Test_LeaveInput_Validate(t *testing.T) {
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := LeaveInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        id,
+		}
+		return in.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := LeaveInput{
+			SubjectUserID: id,
+			ChatID:        uuid.NewString(),
+		}
+		return in.Validate()
+	})
 }
+
+func Test_Members_Leave(t *testing.T) {
+	t.Run("чат должен существовать", func(t *testing.T) {
+		membersService := newMembersService(t)
+		input := LeaveInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        uuid.NewString(),
+		}
+		err := membersService.Leave(input)
+		assert.Error(t, err)
+	})
+	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
+		membersService := newMembersService(t)
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := membersService.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+		input := LeaveInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        chat.ID,
+		}
+		err = membersService.Leave(input)
+		assert.Error(t, err)
+	})
+	t.Run("пользователь не должен быть главным администратором чата", func(t *testing.T) {
+		membersService := newMembersService(t)
+		chat := domain.Chat{ID: uuid.NewString(), ChiefUserID: uuid.New().String()}
+		err := membersService.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: chat.ChiefUserID,
+			ChatID: chat.ID,
+		}
+		err = membersService.MembersRepo.Save(member)
+		assert.NoError(t, err)
+		input := LeaveInput{
+			SubjectUserID: member.UserID,
+			ChatID:        chat.ID,
+		}
+		err = membersService.Leave(input)
+		assert.Error(t, err)
+	})
+	t.Run("после выхода пользователь перестает быть участником", func(t *testing.T) {
+		membersService := newMembersService(t)
+		chat := domain.Chat{ID: uuid.NewString(), ChiefUserID: uuid.NewString()}
+		err := membersService.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		}
+		err = membersService.MembersRepo.Save(member)
+		assert.NoError(t, err)
+		input := LeaveInput{
+			SubjectUserID: member.UserID,
+			ChatID:        chat.ID,
+		}
+		err = membersService.Leave(input)
+		assert.NoError(t, err)
+		membersFilter := domain.MembersFilter{ID: member.ID}
+		members, err := membersService.MembersRepo.List(membersFilter)
+		assert.NoError(t, err)
+		assert.Len(t, members, 0)
+	})
+}
+
 func Test_Members_Delete(t *testing.T) {
 	_ = []string{
 		"чат должен существовать",
