@@ -46,7 +46,7 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 	})
 }
 
-// Test_UserChatsInput_Validate тестирует запрос список чатов в которых участвует пользователь
+// Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
 func Test_Chats_UserChats(t *testing.T) {
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
 		id := uuid.NewString()
@@ -130,7 +130,7 @@ func Test_Chats_UserChats(t *testing.T) {
 	})
 }
 
-// Test_UserChatsInput_Validate тестирует валидацию входящих параметров для создания чата
+// Test_CreateChatInput_Validate тестирует валидацию входящих параметров для создания чата
 func Test_CreateChatInput_Validate(t *testing.T) {
 	t.Run("ошибка при пустом name", func(t *testing.T) {
 		input := CreateInput{
@@ -155,8 +155,8 @@ func Test_CreateChatInput_Validate(t *testing.T) {
 	})
 }
 
-// Test_UserChatsInput_Validate тестирует создание чата
-func Test_CreateChat(t *testing.T) {
+// Test_Chats_CreateChat тестирует создание чата
+func Test_Chats_CreateChat(t *testing.T) {
 	assertChatEqualIn := func(in CreateInput, out domain.Chat) {
 		assert.Equal(t, out.ChiefUserID, in.ChiefUserID)
 		assert.Equal(t, out.Name, in.Name)
