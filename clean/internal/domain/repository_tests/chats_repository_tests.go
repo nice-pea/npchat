@@ -1,7 +1,6 @@
 package repository_tests
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -62,11 +61,8 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 				assert.NoError(t, err)
 			}
 			expectedChat := domain.Chat{ID: uuid.NewString()}
-			assert.NoError(t, errors.Join(
-				r.Save(expectedChat),
-				r.Save(domain.Chat{ID: uuid.NewString()}),
-				r.Save(domain.Chat{ID: uuid.NewString()}),
-			))
+			err := r.Save(expectedChat)
+			assert.NoError(t, err)
 			chats, err := r.List(domain.ChatsFilter{IDs: []string{expectedChat.ID}})
 			assert.NoError(t, err)
 			if assert.Len(t, chats, 1) {
