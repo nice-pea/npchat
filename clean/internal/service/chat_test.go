@@ -24,7 +24,6 @@ func newChatsService(t *testing.T) *Chats {
 	return &Chats{
 		ChatsRepo:   chatsRepository,
 		MembersRepo: membersRepository,
-		History:     HistoryDummy{},
 	}
 }
 
