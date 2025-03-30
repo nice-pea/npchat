@@ -85,9 +85,6 @@ func (in UserInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.UserID); err != nil {
 		return errors.Join(err, ErrUserInvitationsInputUserIDValidate)
 	}
-	if in.UserID != in.SubjectUserID {
-		return ErrUserInvitationsInputEqualUserIDsValidate
-	}
 
 	return nil
 }
@@ -96,6 +93,10 @@ func (in UserInvitationsInput) Validate() error {
 func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
 	if err := in.Validate(); err != nil {
 		return nil, err
+	}
+
+	if in.UserID != in.SubjectUserID {
+		return nil, ErrUserInvitationsInputEqualUserIDsValidate
 	}
 
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
