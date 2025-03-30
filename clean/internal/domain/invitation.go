@@ -7,14 +7,15 @@ import (
 )
 
 type Invitation struct {
-	ID string
-	// UserID string
-	ChatID string `db:"chat_id"`
+	ID     string
+	UserID string
+	ChatID string
 }
 
 var (
 	ErrInvitationIDValidate     = errors.New("некорректный UUID")
 	ErrInvitationChatIDValidate = errors.New("некорректный ChatID")
+	ErrInvitationUserIDValidate = errors.New("некорректный UserID")
 )
 
 func (i Invitation) ValidateID() error {
@@ -33,6 +34,14 @@ func (i Invitation) ValidateChatID() error {
 	return nil
 }
 
+func (i Invitation) ValidateUserID() error {
+	if err := uuid.Validate(i.UserID); err != nil {
+		return errors.Join(err, ErrInvitationUserIDValidate)
+	}
+
+	return nil
+}
+
 type InvitationsRepository interface {
 	List(filter InvitationsFilter) ([]Invitation, error)
 	Save(invitation Invitation) error
@@ -42,4 +51,5 @@ type InvitationsRepository interface {
 type InvitationsFilter struct {
 	ID     string
 	ChatID string
+	UserID string
 }

@@ -70,6 +70,32 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			assert.NoError(t, err)
 			assert.Len(t, invitations, 1)
 		})
+		t.Run("с фильтром по user id", func(t *testing.T) {
+			r := newRepository()
+			const amountInvs = 2
+			userID := uuid.NewString()
+			invitations := make([]domain.Invitation, amountInvs)
+			for i := range amountInvs {
+				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}
+				invitations[i] = inv
+				err := r.Save(inv)
+				assert.NoError(t, err)
+			}
+			for range amountInvs {
+				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}
+				err := r.Save(inv)
+				assert.NoError(t, err)
+			}
+			invitationsFromRepo, err := r.List(domain.InvitationsFilter{UserID: userID})
+			assert.NoError(t, err)
+			if assert.Len(t, invitationsFromRepo, amountInvs) {
+				for i, inv := range invitationsFromRepo {
+					assert.Equal(t, inv.ID, invitations[i].ID)
+					assert.Equal(t, inv.ChatID, invitations[i].ChatID)
+					assert.Equal(t, inv.UserID, invitations[i].UserID)
+				}
+			}
+		})
 	})
 	t.Run("Save", func(t *testing.T) {
 		t.Run("чат без id", func(t *testing.T) {
