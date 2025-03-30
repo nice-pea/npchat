@@ -75,10 +75,10 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			const amountInvs = 2
 			userID := uuid.NewString()
 			var errs error
-			localInvs := make([]domain.Invitation, amountInvs)
+			invitations := make([]domain.Invitation, amountInvs)
 			for i := range amountInvs {
 				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}
-				localInvs[i] = inv
+				invitations[i] = inv
 				errs = errors.Join(errs, r.Save(inv))
 			}
 			for range amountInvs {
@@ -87,13 +87,13 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 				errs = errors.Join(errs, err)
 			}
 			assert.NoError(t, errs)
-			invs, err := r.List(domain.InvitationsFilter{UserID: userID})
+			invitationsFromRepo, err := r.List(domain.InvitationsFilter{UserID: userID})
 			assert.NoError(t, err)
-			if assert.Len(t, invs, amountInvs) {
-				for i, inv := range invs {
-					assert.Equal(t, inv.ID, localInvs[i].ID)
-					assert.Equal(t, inv.ChatID, localInvs[i].ChatID)
-					assert.Equal(t, inv.UserID, localInvs[i].UserID)
+			if assert.Len(t, invitationsFromRepo, amountInvs) {
+				for i, inv := range invitationsFromRepo {
+					assert.Equal(t, inv.ID, invitations[i].ID)
+					assert.Equal(t, inv.ChatID, invitations[i].ChatID)
+					assert.Equal(t, inv.UserID, invitations[i].UserID)
 				}
 			}
 		})
