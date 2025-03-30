@@ -74,19 +74,18 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			r := newRepository()
 			const amountInvs = 2
 			userID := uuid.NewString()
-			var errs error
 			invitations := make([]domain.Invitation, amountInvs)
 			for i := range amountInvs {
 				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}
 				invitations[i] = inv
-				errs = errors.Join(errs, r.Save(inv))
+				err := r.Save(inv)
+				assert.NoError(t, err)
 			}
 			for range amountInvs {
 				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}
 				err := r.Save(inv)
-				errs = errors.Join(errs, err)
+				assert.NoError(t, err)
 			}
-			assert.NoError(t, errs)
 			invitationsFromRepo, err := r.List(domain.InvitationsFilter{UserID: userID})
 			assert.NoError(t, err)
 			if assert.Len(t, invitationsFromRepo, amountInvs) {
