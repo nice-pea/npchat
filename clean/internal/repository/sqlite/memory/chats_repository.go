@@ -66,7 +66,7 @@ func (c *ChatsRepository) Save(chat domain.Chat) error {
 		return fmt.Errorf("invalid chat id")
 	}
 	_, err := c.DB.Exec(`
-		INSERT INTO chats(id, name, chief_user_id)
+		INSERT OR REPLACE INTO chats(id, name, chief_user_id)
 		VALUES (?, ?, ?)`,
 		chat.ID, chat.Name, chat.ChiefUserID)
 	if err != nil {
