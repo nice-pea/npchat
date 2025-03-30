@@ -54,7 +54,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			assert.NoError(t, err)
 			assert.Len(t, chats, 0)
 		})
-		t.Run("с фильтром по id вернется сохраненный чат", func(t *testing.T) {
+		t.Run("с фильтром по ID вернется сохраненный чат", func(t *testing.T) {
 			r := newRepository()
 			for range 10 {
 				err := r.Save(domain.Chat{ID: uuid.NewString()})
@@ -71,7 +71,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 		})
 	})
 	t.Run("Save", func(t *testing.T) {
-		t.Run("нельзя сохранять чат без id", func(t *testing.T) {
+		t.Run("нельзя сохранять чат без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Save(domain.Chat{
 				ID:          "",
@@ -80,7 +80,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			})
 			assert.Error(t, err)
 		})
-		t.Run("можно сохранять чат без без name", func(t *testing.T) {
+		t.Run("можно сохранять чат без без Name", func(t *testing.T) {
 			r := newRepository()
 			chat := domain.Chat{
 				ID:          uuid.NewString(),
@@ -150,7 +150,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 				assertEqualChats(t, expectedChat, chats[0])
 			}
 		})
-		t.Run("name может дублироваться", func(t *testing.T) {
+		t.Run("Name может дублироваться", func(t *testing.T) {
 			r := newRepository()
 			name := "name"
 			const count = 2
@@ -167,12 +167,12 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 		})
 	})
 	t.Run("Delete", func(t *testing.T) {
-		t.Run("параметр id обязательный", func(t *testing.T) {
+		t.Run("параметр ID обязательный", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete("")
 			assert.Error(t, err)
 		})
-		t.Run("несуществующий id не вернет ошибку", func(t *testing.T) {
+		t.Run("несуществующий ID не вернет ошибку", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete(uuid.NewString())
 			assert.NoError(t, err)

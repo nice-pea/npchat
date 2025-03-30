@@ -55,7 +55,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			assert.NoError(t, err)
 			assert.Len(t, members, 0)
 		})
-		t.Run("с фильтром по id вернется сохраненный участник", func(t *testing.T) {
+		t.Run("с фильтром по ID вернется сохраненный участник", func(t *testing.T) {
 			r := newRepository()
 			for range 10 {
 				err := r.Save(domain.Member{ID: uuid.NewString()})
@@ -70,7 +70,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				assertEqualMembers(t, expectedMember, members[0])
 			}
 		})
-		t.Run("с фильтром по chat id вернутся участники с равным chat id", func(t *testing.T) {
+		t.Run("с фильтром по ChatID вернутся участники с равным ChatID", func(t *testing.T) {
 			r := newRepository()
 			chatID := uuid.NewString()
 			assert.NoError(t, errors.Join(
@@ -83,7 +83,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			assert.NoError(t, err)
 			assert.Len(t, members, 2)
 		})
-		t.Run("с фильтром по user id вернется несколько участников", func(t *testing.T) {
+		t.Run("с фильтром по UserID вернется несколько участников", func(t *testing.T) {
 			r := newRepository()
 			userID := uuid.NewString()
 			for range 10 {
@@ -109,7 +109,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 		})
 	})
 	t.Run("Save", func(t *testing.T) {
-		t.Run("нельзя сохранять участника без id", func(t *testing.T) {
+		t.Run("нельзя сохранять участника без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Save(domain.Member{
 				ID:     "",
@@ -118,7 +118,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			})
 			assert.Error(t, err)
 		})
-		t.Run("можно сохранять участника без chat id", func(t *testing.T) {
+		t.Run("можно сохранять участника без ChatID", func(t *testing.T) {
 			r := newRepository()
 			member := domain.Member{
 				ID:     uuid.NewString(),
@@ -133,7 +133,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				assertEqualMembers(t, member, members[0])
 			}
 		})
-		t.Run("можно сохранять участника без user id", func(t *testing.T) {
+		t.Run("можно сохранять участника без UserID", func(t *testing.T) {
 			r := newRepository()
 			member := domain.Member{
 				ID:     uuid.NewString(),
@@ -188,7 +188,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				assertEqualMembers(t, expectedMember, members[0])
 			}
 		})
-		t.Run("chat id может дублироваться", func(t *testing.T) {
+		t.Run("ChatID может дублироваться", func(t *testing.T) {
 			r := newRepository()
 			chatID := uuid.NewString()
 			const count = 33
@@ -203,7 +203,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			assert.NoError(t, err)
 			assert.Len(t, members, count)
 		})
-		t.Run("chat id может дублироваться", func(t *testing.T) {
+		t.Run("UserID может дублироваться", func(t *testing.T) {
 			r := newRepository()
 			userID := uuid.NewString()
 			const count = 33
@@ -220,12 +220,12 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 		})
 	})
 	t.Run("Delete", func(t *testing.T) {
-		t.Run("параметр id обязательный", func(t *testing.T) {
+		t.Run("параметр ID обязательный", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete("")
 			assert.Error(t, err)
 		})
-		t.Run("несуществующий id не вернет ошибку", func(t *testing.T) {
+		t.Run("несуществующий ID не вернет ошибку", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete(uuid.NewString())
 			assert.NoError(t, err)
