@@ -42,6 +42,7 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 		repoInvitation := invitation{
 			ID:     uuid.NewString(),
 			ChatID: uuid.NewString(),
+			UserID: uuid.NewString(),
 		}
 		domainInvitations := invitationToDomain(repoInvitation)
 		assert.Equal(t, repoInvitation.ID, domainInvitations.ID)
@@ -51,6 +52,7 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 		domainInvitations := domain.Invitation{
 			ID:     uuid.NewString(),
 			ChatID: uuid.NewString(),
+			UserID: uuid.NewString(),
 		}
 		repoInvitation := invitationFromDomain(domainInvitations)
 		assert.Equal(t, domainInvitations.ID, repoInvitation.ID)
@@ -58,9 +60,9 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 	})
 	t.Run("несколько в domain", func(t *testing.T) {
 		repoInvitations := []invitation{
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
 		}
 		domainInvitations := invitationsToDomain(repoInvitations)
 		for i, repoInvitation := range repoInvitations {
@@ -70,9 +72,9 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 	})
 	t.Run("несколько из domain", func(t *testing.T) {
 		domainInvitations := []domain.Invitation{
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
-			{ID: uuid.NewString(), ChatID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
+			{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()},
 		}
 		repoInvitations := invitationsFromDomain(domainInvitations)
 		for i, domainInvitation := range domainInvitations {
