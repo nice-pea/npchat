@@ -201,8 +201,9 @@ func Test_Chats_CreateChat(t *testing.T) {
 		assert.NotEmpty(t, out.Chat.ID)
 		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
-		assert.Len(t, chats, 1)
-		assertChatEqualIn(input, chats[0])
+		if assert.Len(t, chats, 1) {
+			assertChatEqualIn(input, chats[0])
+		}
 	})
 	t.Run("создается участник для главного администратора", func(t *testing.T) {
 		chatsService := newChatsService(t)
