@@ -132,16 +132,16 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 
 // Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_UserInvitationsInput_Validate(t *testing.T) {
-	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
-		input := UserInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-		}
-		assert.Error(t, input.Validate())
-	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := UserInvitationsInput{
 			SubjectUserID: id,
+			UserID:        uuid.NewString(),
+		}
+		return input.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := UserInvitationsInput{
+			SubjectUserID: uuid.NewString(),
 			UserID:        id,
 		}
 		return input.Validate()
@@ -190,15 +190,16 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 		}
 		chatId := uuid.NewString()
 		err := serviceInvitations.InvitationsRepo.Save(domain.Invitation{
-			ID:     userId,
+			ID:     uuid.NewString(),
 			ChatID: chatId,
+			UserID: userId,
 		})
 		assert.NoError(t, err)
 		invs, err := serviceInvitations.UserInvitations(input)
 		assert.NoError(t, err)
 		if assert.Len(t, invs, 1) {
 			assert.Equal(t, chatId, invs[0].ChatID)
-			assert.Equal(t, userId, invs[0].ID)
+			assert.Equal(t, userId, invs[0].UserID)
 		}
 	})
 	t.Run("у пользователя несколько приглашений но не все из репозитория", func(t *testing.T) {
@@ -209,29 +210,33 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 			SubjectUserID: userId,
 			UserID:        userId,
 		}
-		localInvs := make([]domain.Invitation, count)
+		invsDomain := make([]domain.Invitation, count)
 		for i := range count {
 			inv := domain.Invitation{
-				ID:     userId,
+				ID:     uuid.NewString(),
 				ChatID: uuid.NewString(),
+				UserID: userId,
 			}
-			localInvs[i] = inv
-			err := serviceInvitations.InvitationsRepo.Save(localInvs[i])
+			invsDomain[i] = inv
+			err := serviceInvitations.InvitationsRepo.Save(invsDomain[i])
 			assert.NoError(t, err)
 		}
 		for range count {
 			err := serviceInvitations.InvitationsRepo.Save(domain.Invitation{
 				ID:     uuid.NewString(),
 				ChatID: uuid.NewString(),
+				UserID: uuid.NewString(),
 			})
 			assert.NoError(t, err)
 		}
-		invs, err := serviceInvitations.UserInvitations(input)
+
+		invsRepo, err := serviceInvitations.UserInvitations(input)
 		assert.NoError(t, err)
-		if assert.Len(t, invs, count) {
-			for i, inv := range invs {
-				assert.Equal(t, inv.ID, localInvs[i].ID)
-				assert.Equal(t, inv.ChatID, localInvs[i].ChatID)
+		if assert.Len(t, invsRepo, count) {
+			for i, inv := range invsRepo {
+				assert.Equal(t, inv.ID, invsDomain[i].ID)
+				assert.Equal(t, inv.ChatID, invsDomain[i].ChatID)
+				assert.Equal(t, inv.UserID, invsDomain[i].UserID)
 			}
 		}
 	})

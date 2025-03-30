@@ -100,7 +100,7 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	}
 
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
-		ID: in.UserID,
+		UserID: in.UserID,
 	})
 
 	return invs, err
