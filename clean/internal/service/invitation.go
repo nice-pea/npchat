@@ -105,3 +105,17 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 
 	return invs, err
 }
+
+type MemberSentInvitationsInput struct {
+	SubjectUserID string
+	UserID        string
+}
+
+func (in MemberSentInvitationsInput) Validate() error {
+	return nil
+}
+
+// MemberSentInvitations возвращает список отправленных приглошений участника
+func (i *Invitations) MemberSentInvitations(in MemberSentInvitationsInput) ([]domain.Invitation, error) {
+	return nil, nil
+}
