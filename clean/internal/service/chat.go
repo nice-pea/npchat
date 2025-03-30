@@ -22,9 +22,9 @@ type UserChatsInput struct {
 }
 
 var (
-	ErrUserChatsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrUserChatsInputUserIDValidate        = errors.New("некорректный UserID")
-	ErrUserChatsInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID не совпадают")
+	ErrUserChatsInputSubjectUserIDValidate      = errors.New("некорректный SubjectUserID")
+	ErrUserChatsInputUserIDValidate             = errors.New("некорректный UserID")
+	ErrUserChatsInputCannotViewSomeoneElseChats = errors.New("subject user не может просматривать чужой список")
 )
 
 // Validate валидирует значение отдельно каждого параметры
@@ -49,7 +49,7 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrUserChatsInputEqualUserIDsValidate
+		return nil, ErrUserChatsInputCannotViewSomeoneElseChats
 	}
 
 	// Получить список участников с фильтром по пользователю
