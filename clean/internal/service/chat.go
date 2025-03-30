@@ -12,7 +12,6 @@ import (
 type Chats struct {
 	ChatsRepo   domain.ChatsRepository
 	MembersRepo domain.MembersRepository
-	History     History
 }
 
 // UserChatsInput входящие параметры

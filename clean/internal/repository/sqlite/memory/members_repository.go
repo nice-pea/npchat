@@ -79,7 +79,7 @@ func (c *MembersRepository) Save(member domain.Member) error {
 		return fmt.Errorf("invalid member id")
 	}
 	_, err := c.DB.Exec(`
-		INSERT INTO members(id, chat_id, user_id)
+		INSERT OR REPLACE INTO members(id, chat_id, user_id)
 		VALUES (?, ?, ?)`,
 		member.ID, member.ChatID, member.UserID)
 	if err != nil {
