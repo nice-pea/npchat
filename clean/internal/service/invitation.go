@@ -112,6 +112,13 @@ type MemberSentInvitationsInput struct {
 }
 
 func (in MemberSentInvitationsInput) Validate() error {
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return errors.Join(err)
+	}
+	if err := uuid.Validate(in.UserID); err != nil {
+		return errors.Join(err)
+	}
+
 	return nil
 }
 
