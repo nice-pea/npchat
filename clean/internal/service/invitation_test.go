@@ -243,5 +243,18 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 }
 
 func Test_MemberSentInvitationsInput_Validate(t *testing.T) {
-	
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := MemberSentInvitationsInput{
+			SubjectUserID: id,
+			UserID:        uuid.NewString(),
+		}
+		return in.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := MemberSentInvitationsInput{
+			SubjectUserID: uuid.NewString(),
+			UserID:        id,
+		}
+		return in.Validate()
+	})
 }
