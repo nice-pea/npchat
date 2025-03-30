@@ -133,7 +133,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 			r := newRepository()
 			id := uuid.NewString()
 			const count = 33
-			for i := range [count]int{} {
+			for i := range count {
 				err := r.Save(domain.Chat{
 					ID:          id,
 					Name:        fmt.Sprintf("name%d", i),

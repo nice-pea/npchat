@@ -112,7 +112,7 @@ func Test_Chats_UserChats(t *testing.T) {
 		}
 		userID := uuid.NewString()
 		const count = countAll / 3
-		for i := range [count]int{} {
+		for i := range count {
 			err := chatsService.MembersRepo.Save(domain.Member{
 				ID:     uuid.NewString(),
 				UserID: userID,
@@ -246,7 +246,7 @@ func Test_Chats_CreateChat(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "name",
 		}
-		for range [count]int{} {
+		for range count {
 			out, err := chatsService.Create(input)
 			assert.NoError(t, err)
 			assert.NotZero(t, out)
