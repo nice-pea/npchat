@@ -52,7 +52,7 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 			ID:     uuid.NewString(),
 			ChatID: uuid.NewString(),
 		}
-		repoInvitation := invitation(domainInvitations)
+		repoInvitation := invitationFromDomain(domainInvitations)
 		assert.Equal(t, domainInvitations.ID, repoInvitation.ID)
 		assert.Equal(t, domainInvitations.ChatID, repoInvitation.ChatID)
 	})
@@ -62,7 +62,7 @@ func TestInvitationsRepository_Mapping(t *testing.T) {
 			{ID: uuid.NewString(), ChatID: uuid.NewString()},
 			{ID: uuid.NewString(), ChatID: uuid.NewString()},
 		}
-		domainInvitations := InvitationsToDomain(repoInvitations)
+		domainInvitations := invitationsToDomain(repoInvitations)
 		for i, repoInvitation := range repoInvitations {
 			assert.Equal(t, repoInvitation.ID, domainInvitations[i].ID)
 			assert.Equal(t, repoInvitation.ChatID, domainInvitations[i].ChatID)
