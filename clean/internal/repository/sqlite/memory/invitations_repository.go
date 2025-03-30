@@ -30,6 +30,22 @@ func invitationsToDomain(repoInvitations []invitation) []domain.Invitation {
 	return domainInvitations
 }
 
+func invitationFromDomain(domainInvitation domain.Invitation) invitation {
+	return invitation{
+		ID:     domainInvitation.ID,
+		UserID: domainInvitation.UserID,
+		ChatID: domainInvitation.ChatID,
+	}
+}
+
+func invitationsFromDomain(domainInvitations []domain.Invitation) []invitation {
+	repoInvitations := make([]invitation, len(domainInvitations))
+	for i, domainInv := range domainInvitations {
+		repoInvitations[i] = invitationFromDomain(domainInv)
+	}
+	return repoInvitations
+}
+
 func (m *SQLiteInMemory) NewInvitationsRepository() (domain.InvitationsRepository, error) {
 	return &InvitationsRepository{
 		DB: m.db,
