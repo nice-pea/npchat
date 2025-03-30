@@ -360,7 +360,7 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 	})
 }
 
-// Test_UpdateNameInput_Validate тестирует обновления названия чата
+// Test_Chats_UpdateName тестирует обновления названия чата
 func Test_Chats_UpdateName(t *testing.T) {
 	t.Run("без ошибок", func(t *testing.T) {
 		chatsService := newChatsService(t)
