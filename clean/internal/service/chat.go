@@ -15,7 +15,7 @@ type Chats struct {
 	History     History
 }
 
-// UserChatsInput параметры для запроса чатов в которых участвует пользователь
+// UserChatsInput входящие параметры
 type UserChatsInput struct {
 	SubjectUserID string
 	UserID        string
@@ -27,16 +27,13 @@ var (
 	ErrUserChatsInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID не совпадают")
 )
 
-// Validate валидирует параметры для запроса чатов в которых участвует пользователь
+// Validate валидирует значение отдельно каждого параметры
 func (in UserChatsInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
 		return errors.Join(err, ErrUserChatsInputSubjectUserIDValidate)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
 		return errors.Join(err, ErrUserChatsInputUserIDValidate)
-	}
-	if in.UserID != in.SubjectUserID {
-		return ErrUserChatsInputEqualUserIDsValidate
 	}
 
 	return nil
@@ -48,6 +45,11 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 	var err error
 	if err = in.Validate(); err != nil {
 		return nil, err
+	}
+
+	// Пользователь может запрашивать только свой список чатов
+	if in.UserID != in.SubjectUserID {
+		return nil, ErrUserChatsInputEqualUserIDsValidate
 	}
 
 	// Получить список участников с фильтром по пользователю
@@ -75,7 +77,7 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 	})
 }
 
-// CreateInput входящие параметры для создания чата
+// CreateInput входящие параметры
 type CreateInput struct {
 	Name        string
 	ChiefUserID string
@@ -86,7 +88,7 @@ var (
 	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
-// Validate валидирует параметры для создания чата
+// Validate валидирует значение отдельно каждого параметры
 func (in CreateInput) Validate() error {
 	chat := domain.Chat{
 		Name:        in.Name,
@@ -141,7 +143,7 @@ func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
 	}, nil
 }
 
-// UpdateNameInput входящие параметры для обновления названия чата
+// UpdateNameInput входящие параметры
 type UpdateNameInput struct {
 	SubjectUserID string
 	ChatID        string
@@ -154,7 +156,7 @@ var (
 	ErrUpdateNameChiefUserIDValidate = errors.New("некорректный ChiefUserID")
 )
 
-// Validate валидирует параметры для обновления названия чата
+// Validate валидирует значение отдельно каждого параметры
 func (in UpdateNameInput) Validate() error {
 	chat := domain.Chat{
 		ID:          in.ChatID,

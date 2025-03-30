@@ -30,16 +30,16 @@ func newChatsService(t *testing.T) *Chats {
 
 // Test_UserChatsInput_Validate тестирует валидацию входящих параметров запроса списка чатов в которых участвует пользователь
 func Test_UserChatsInput_Validate(t *testing.T) {
-	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
-		input := UserChatsInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-		}
-		assert.Error(t, input.Validate())
-	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := UserChatsInput{
 			SubjectUserID: id,
+			UserID:        uuid.NewString(),
+		}
+		return in.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := UserChatsInput{
+			SubjectUserID: uuid.NewString(),
 			UserID:        id,
 		}
 		return in.Validate()
@@ -85,6 +85,16 @@ func Test_Chats_UserChats(t *testing.T) {
 		userChats, err := chatsService.UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 0)
+	})
+	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		input := UserChatsInput{
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
+		}
+		chats, err := chatsService.UserChats(input)
+		assert.Error(t, err)
+		assert.Len(t, chats, 0)
 	})
 	t.Run("у пользователя может быть несколько чатов", func(t *testing.T) {
 		chatsService := newChatsService(t)
