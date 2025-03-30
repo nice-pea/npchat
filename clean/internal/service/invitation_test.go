@@ -241,3 +241,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 		}
 	})
 }
+
+func Test_MemberSentInvitationsInput_Validate(t *testing.T) {
+	
+}
