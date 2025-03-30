@@ -114,7 +114,7 @@ func ChatsRepositoryTests(t *testing.T, newRepository func() domain.ChatsReposit
 				assertEqualChats(t, chat, chats[0])
 			}
 		})
-		t.Run("сохраненной чат полностью соответствует сохраняемому", func(t *testing.T) {
+		t.Run("сохраненный чат полностью соответствует сохраняемому", func(t *testing.T) {
 			r := newRepository()
 			chat := domain.Chat{
 				ID:          uuid.NewString(),

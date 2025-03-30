@@ -148,7 +148,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 				assertEqualMembers(t, member, members[0])
 			}
 		})
-		t.Run("сохраненной участник полностью соответствует сохраняемому", func(t *testing.T) {
+		t.Run("сохраненный участник полностью соответствует сохраняемому", func(t *testing.T) {
 			r := newRepository()
 			member := domain.Member{
 				ID:     uuid.NewString(),
