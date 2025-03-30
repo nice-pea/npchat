@@ -72,21 +72,22 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 		})
 		t.Run("с фильтром по user id", func(t *testing.T) {
 			r := newRepository()
+			const amountInvs = 2
 			userID := uuid.NewString()
 			var errs error
-			localInvs := make([]domain.Invitation, 2)
-			for i := range 2 {
+			localInvs := make([]domain.Invitation, amountInvs)
+			for i := range amountInvs {
 				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID}
 				localInvs[i] = inv
 				errs = errors.Join(errs, r.Save(inv))
 			}
-			for range 2 {
+			for range amountInvs {
 				errs = errors.Join(errs, r.Save(domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString()}))
 			}
 			assert.NoError(t, errs)
 			invs, err := r.List(domain.InvitationsFilter{UserID: userID})
 			assert.NoError(t, err)
-			if assert.Len(t, invs, 2) {
+			if assert.Len(t, invs, amountInvs) {
 				for i, inv := range invs {
 					assert.Equal(t, inv.ID, localInvs[i].ID)
 					assert.Equal(t, inv.ChatID, localInvs[i].ChatID)
