@@ -14,8 +14,8 @@ type Members struct {
 }
 
 type ChatMembersInput struct {
-	ChatID        string
 	SubjectUserID string
+	ChatID        string
 }
 
 var (
@@ -35,6 +35,12 @@ func (in ChatMembersInput) Validate() error {
 	return nil
 }
 
+var (
+	ErrChatMembersChatNotExists   = errors.New("чата с таким ID не существует")
+	ErrChatMembersUserIsNotMember = errors.New("пользователь не является участником чата")
+)
+
+// ChatMembers возвращает список участников чата
 func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 	// Валидировать параметры
 	var err error
@@ -51,7 +57,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		return nil, err
 	}
 	if len(chats) != 1 {
-		return nil, errors.New("чата с таким ID не существует")
+		return nil, ErrChatMembersChatNotExists
 	}
 
 	// Получить список участников
@@ -63,7 +69,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		return nil, err
 	}
 	if len(members) == 0 {
-		return nil, errors.New("пользователь не является участником чата")
+		return nil, ErrChatMembersUserIsNotMember
 	}
 
 	// Проверить что пользователь является участником чата
@@ -71,7 +77,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		if member.UserID == in.SubjectUserID {
 			break
 		} else if i == len(members)-1 {
-			return nil, errors.New("пользователь не является участником чата")
+			return nil, ErrChatMembersUserIsNotMember
 		}
 	}
 
