@@ -314,7 +314,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 		err = membersService.DeleteMember(input)
 		assert.Error(t, err)
 	})
-	t.Run("успешно", func(t *testing.T) {
+	t.Run("после удаления участник перестает быть участником", func(t *testing.T) {
 		membersService := newMembersService(t)
 		chat := domain.Chat{ID: uuid.NewString(), ChiefUserID: uuid.NewString()}
 		err := membersService.ChatsRepo.Save(chat)
@@ -338,5 +338,9 @@ func Test_Members_DeleteMember(t *testing.T) {
 		}
 		err = membersService.DeleteMember(input)
 		assert.NoError(t, err)
+		membersFilter := domain.MembersFilter{ID: memberForDelete.ID}
+		members, err := membersService.MembersRepo.List(membersFilter)
+		assert.NoError(t, err)
+		assert.Len(t, members, 0)
 	})
 }

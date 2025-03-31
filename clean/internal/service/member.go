@@ -229,6 +229,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	if len(members) != 1 {
 		return ErrMembersDeleteMemberMemberIsNotExists
 	}
+	memberForDelete := members[0]
 
 	// Пользователь должен быть участником чата
 	membersFilter = domain.MembersFilter{
@@ -242,5 +243,5 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return ErrMembersDeleteMemberSubjectUserIsNotMember
 	}
 
-	return nil
+	return m.MembersRepo.Delete(memberForDelete.ID)
 }
