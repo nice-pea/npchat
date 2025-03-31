@@ -109,14 +109,26 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 type MemberSentInvitationsInput struct {
 	SubjectUserID string
 	UserID        string
+	ChatID        string
 }
+
+var (
+	ErrMemberSentInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrMemberSentInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
+	ErrMemberSentInvitationsInputChatIDValidate        = errors.New("некорректный ChatID")
+	ErrMemberSentInvitationsNotExistChat               = errors.New("чат не существует")
+	ErrMemberSentInvitationsNotExistMember             = errors.New("этого участника чата не сузествует")
+)
 
 func (in MemberSentInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err)
+		return errors.Join(err, ErrMemberSentInvitationsInputSubjectUserIDValidate)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err)
+		return errors.Join(err, ErrMemberSentInvitationsInputUserIDValidate)
+	}
+	if err := uuid.Validate(in.ChatID); err != nil {
+		return errors.Join(err, ErrMemberSentInvitationsInputChatIDValidate)
 	}
 
 	return nil
@@ -124,5 +136,33 @@ func (in MemberSentInvitationsInput) Validate() error {
 
 // MemberSentInvitations возвращает список отправленных приглошений участника
 func (i *Invitations) MemberSentInvitations(in MemberSentInvitationsInput) ([]domain.Invitation, error) {
-	return nil, nil
+	if err := in.Validate(); err != nil {
+		return nil, err
+	}
+	// проверка существования чата
+	chats, err := i.ChatsRepo.List(domain.ChatsFilter{
+		IDs: []string{in.ChatID},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(chats) != 1 {
+		return nil, ErrMemberSentInvitationsNotExistChat
+	}
+
+	// проверка существования такова члена чата
+	members, err := i.MembersRepo.List(domain.MembersFilter{
+		UserID: in.SubjectUserID,
+		ChatID: in.ChatID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(members) != 1 {
+		return nil, ErrMemberSentInvitationsNotExistMember
+	}
+
+	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{UserID: in.SubjectUserID, ChatID: in.ChatID})
+
+	return invs, err
 }

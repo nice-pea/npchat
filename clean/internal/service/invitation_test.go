@@ -247,13 +247,23 @@ func Test_MemberSentInvitationsInput_Validate(t *testing.T) {
 		in := MemberSentInvitationsInput{
 			SubjectUserID: id,
 			UserID:        uuid.NewString(),
+			ChatID:        uuid.NewString(),
 		}
 		return in.Validate()
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := MemberSentInvitationsInput{
 			SubjectUserID: uuid.NewString(),
+			ChatID:        uuid.NewString(),
 			UserID:        id,
+		}
+		return in.Validate()
+	})
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		in := MemberSentInvitationsInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        id,
+			UserID:        uuid.NewString(),
 		}
 		return in.Validate()
 	})
@@ -263,16 +273,23 @@ func Test_Invitations_MemberSentInvitations(t *testing.T) {
 	t.Run("получение списка для участника, у которого есть отправленные приглашения", func(t *testing.T) {
 		const amount = 3
 		serviceInvitations := newInvitationsService(t)
+		chatId := uuid.NewString()
+		err := serviceInvitations.ChatsRepo.Save(
+			domain.Chat{
+				ID: chatId,
+			})
+		assert.NoError(t, err)
 		userId := uuid.NewString()
 		input := MemberSentInvitationsInput{
 			SubjectUserID: userId,
 			UserID:        userId,
+			ChatID:        chatId,
 		}
 		for range amount {
 			inv := domain.Invitation{
 				ID:     uuid.NewString(),
 				UserID: userId,
-				ChatID: uuid.NewString(),
+				ChatID: chatId,
 			}
 			err := serviceInvitations.InvitationsRepo.Save(inv)
 			assert.NoError(t, err)
@@ -283,17 +300,24 @@ func Test_Invitations_MemberSentInvitations(t *testing.T) {
 	})
 	t.Run("UserID и SubjectUserID могут быть разными", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
+		chatId := uuid.NewString()
+		err := serviceInvitations.ChatsRepo.Save(
+			domain.Chat{
+				ID: chatId,
+			})
+		assert.NoError(t, err)
 		userId := uuid.NewString()
 		input := MemberSentInvitationsInput{
 			SubjectUserID: userId,
 			UserID:        uuid.NewString(),
+			ChatID:        chatId,
 		}
 		inv := domain.Invitation{
 			ID:     uuid.NewString(),
 			UserID: userId,
 			ChatID: uuid.NewString(),
 		}
-		err := serviceInvitations.InvitationsRepo.Save(inv)
+		err = serviceInvitations.InvitationsRepo.Save(inv)
 		assert.NoError(t, err)
 
 		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
