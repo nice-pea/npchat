@@ -18,7 +18,6 @@ func assertEqualInvitation(t *testing.T, expected, actual domain.Invitation) {
 }
 
 func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.InvitationsRepository) {
-	t.Helper()
 	t.Run("List", func(t *testing.T) {
 		t.Run("без фильтра в пустом репозитории", func(t *testing.T) {
 			r := newRepository()
