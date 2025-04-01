@@ -26,6 +26,7 @@ var (
 	ErrChatInvitationsInputChatIDValidate        = errors.New("некорректный ChatID")
 	ErrChatInvitationsNoChat                     = errors.New("не существует чата с данным ChatID")
 	ErrChatInvitationsUserIsNotChief             = errors.New("доступно только для администратора этого чата")
+	ErrChatInvitationsUserIsNotMember            = errors.New("пользователь не является участником чата")
 )
 
 // Validate валидирует параметры для запроса приглашений конкретного чата
@@ -40,6 +41,8 @@ func (in ChatInvitationsInput) Validate() error {
 }
 
 // ChatInvitations возвращает список приглашений в конкретный чат
+// если SubjectUserID является администратором то возвращается все приглашения в данный чат
+// иначе только те приглашения которые отправил именно пользователь
 func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
@@ -59,16 +62,35 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 	chat := chats[0]
 
 	// Проверить что пользователь является администратором чата
-	if chat.ChiefUserID != in.SubjectUserID {
-		return nil, ErrChatInvitationsUserIsNotChief
+	if chat.ChiefUserID == in.SubjectUserID {
+		// Получить все приглашения в этот чат
+		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+			ChatID: chat.ID,
+		})
+
+		return invitations, err
+	} else {
+		// проверить является ли пользователь участником чата
+		members, err := i.MembersRepo.List(domain.MembersFilter{
+			UserID: in.SubjectUserID,
+			ChatID: in.ChatID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(members) != 1 {
+			return nil, ErrChatInvitationsUserIsNotMember
+		}
+
+		// получить список приглашений конкретного пользователя
+		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+			ChatID:        chat.ID,
+			SubjectUserID: in.SubjectUserID,
+		})
+
+		return invitations, err
 	}
 
-	// Получить все приглашения в этот чат
-	invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
-		ChatID: chat.ID,
-	})
-
-	return invitations, err
 }
 
 type UserInvitationsInput struct {
@@ -124,7 +146,7 @@ var (
 	ErrMemberSentInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
 	ErrMemberSentInvitationsInputChatIDValidate        = errors.New("некорректный ChatID")
 	ErrMemberSentInvitationsNotExistChat               = errors.New("чат не существует")
-	ErrMemberSentInvitationsNotExistMember             = errors.New("этого участника чата не сузествует")
+	ErrMemberSentInvitationsNotExistMember             = errors.New("этого участника чата не существует")
 )
 
 func (in MemberSentInvitationsInput) Validate() error {
@@ -139,37 +161,4 @@ func (in MemberSentInvitationsInput) Validate() error {
 	}
 
 	return nil
-}
-
-// MemberSentInvitations возвращает список отправленных приглошений участника
-func (i *Invitations) MemberSentInvitations(in MemberSentInvitationsInput) ([]domain.Invitation, error) {
-	if err := in.Validate(); err != nil {
-		return nil, err
-	}
-	// проверка существования чата
-	chats, err := i.ChatsRepo.List(domain.ChatsFilter{
-		IDs: []string{in.ChatID},
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(chats) != 1 {
-		return nil, ErrMemberSentInvitationsNotExistChat
-	}
-
-	// проверка существования такова члена чата
-	members, err := i.MembersRepo.List(domain.MembersFilter{
-		UserID: in.SubjectUserID,
-		ChatID: in.ChatID,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(members) != 1 {
-		return nil, ErrMemberSentInvitationsNotExistMember
-	}
-
-	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{UserID: in.SubjectUserID, ChatID: in.ChatID})
-
-	return invs, err
 }
