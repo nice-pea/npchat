@@ -26,3 +26,10 @@ func TestInvitation_ValidateUserID(t *testing.T) {
 		return i.ValidateUserID()
 	})
 }
+
+func TestInvitation_ValidateSubjectUserID(t *testing.T) {
+	helpers_tests.RunValidateRequiredIDTest(t, func(SubjectUserID string) error {
+		i := Invitation{SubjectUserID: SubjectUserID}
+		return i.ValidateSubjectUserID()
+	})
+}
