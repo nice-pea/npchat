@@ -10,11 +10,11 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func assertEqualInvitation(t *testing.T, left, right domain.Invitation) {
-	assert.Equal(t, left.ID, right.ID)
-	assert.Equal(t, left.ChatID, right.ChatID)
-	assert.Equal(t, left.UserID, right.UserID)
-	assert.Equal(t, left.SubjectUserID, right.SubjectUserID)
+func assertEqualInvitation(t *testing.T, expected, actual domain.Invitation) {
+	assert.Equal(t, actual.ID, expected.ID)
+	assert.Equal(t, actual.ChatID, expected.ChatID)
+	assert.Equal(t, actual.UserID, expected.UserID)
+	assert.Equal(t, actual.SubjectUserID, expected.SubjectUserID)
 }
 
 func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.InvitationsRepository) {
