@@ -134,31 +134,3 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 
 	return invs, err
 }
-
-type MemberSentInvitationsInput struct {
-	SubjectUserID string
-	UserID        string
-	ChatID        string
-}
-
-var (
-	ErrMemberSentInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrMemberSentInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
-	ErrMemberSentInvitationsInputChatIDValidate        = errors.New("некорректный ChatID")
-	ErrMemberSentInvitationsNotExistChat               = errors.New("чат не существует")
-	ErrMemberSentInvitationsNotExistMember             = errors.New("этого участника чата не существует")
-)
-
-func (in MemberSentInvitationsInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrMemberSentInvitationsInputSubjectUserIDValidate)
-	}
-	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrMemberSentInvitationsInputUserIDValidate)
-	}
-	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrMemberSentInvitationsInputChatIDValidate)
-	}
-
-	return nil
-}
