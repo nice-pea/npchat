@@ -29,32 +29,32 @@ func newInvitationsService(t *testing.T) *Invitations {
 	}
 }
 
-func TestChatInvitationsInput_Validate(t *testing.T) {
+func Test_ChatInvitationsInput_Validate(t *testing.T) {
 	t.Run("UserID обязательное поле", func(t *testing.T) {
 		input := ChatInvitationsInput{
-			UserID: "",
-			ChatID: uuid.NewString(),
+			SubjectUserID: "",
+			ChatID:        uuid.NewString(),
 		}
 		assert.Error(t, input.Validate())
 	})
 	t.Run("ChatID обязательное поле", func(t *testing.T) {
 		input := ChatInvitationsInput{
-			ChatID: "",
-			UserID: uuid.NewString(),
+			ChatID:        "",
+			SubjectUserID: uuid.NewString(),
 		}
 		assert.Error(t, input.Validate())
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := ChatInvitationsInput{
-			UserID: id,
-			ChatID: id,
+			SubjectUserID: id,
+			ChatID:        id,
 		}
 		return input.Validate()
 	})
 }
 
-func TestInvitations_ChatInvitations(t *testing.T) {
-	t.Run("UserID должен быть chief в чате с ChatID", func(t *testing.T) {
+func Test_Invitations_ChatInvitations(t *testing.T) {
+	t.Run("UserID должен быть администратором в чате с ChatID", func(t *testing.T) {
 		newService := newInvitationsService(t)
 		chatID := uuid.NewString()
 
@@ -65,8 +65,8 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		input := ChatInvitationsInput{
-			ChatID: chatID,
-			UserID: uuid.NewString(),
+			ChatID:        chatID,
+			SubjectUserID: uuid.NewString(),
 		}
 		invsChat, err := newService.ChatInvitations(input)
 		assert.Error(t, err)
@@ -84,8 +84,8 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		input := ChatInvitationsInput{
-			UserID: userID,
-			ChatID: chatID,
+			SubjectUserID: userID,
+			ChatID:        chatID,
 		}
 		invsChat, err := newService.ChatInvitations(input)
 		assert.NoError(t, err)
@@ -103,8 +103,8 @@ func TestInvitations_ChatInvitations(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		input := ChatInvitationsInput{
-			UserID: userID,
-			ChatID: chatID,
+			SubjectUserID: userID,
+			ChatID:        chatID,
 		}
 
 		const countInvs = 4
