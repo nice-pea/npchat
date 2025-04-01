@@ -16,7 +16,7 @@ CREATE TABLE members
 CREATE TABLE invitations
 (
     id      TEXT PRIMARY KEY,
-    target_user_id TEXT NOT NULL,
+    subject_user_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
     chat_id TEXT NOT NULL,
     FOREIGN KEY (chat_id) REFERENCES chats ON DELETE RESTRICT
