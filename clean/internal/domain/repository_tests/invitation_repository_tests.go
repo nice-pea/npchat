@@ -11,10 +11,10 @@ import (
 )
 
 func assertEqualInvitation(t *testing.T, expected, actual domain.Invitation) {
-	assert.Equal(t, actual.ID, expected.ID)
-	assert.Equal(t, actual.ChatID, expected.ChatID)
-	assert.Equal(t, actual.UserID, expected.UserID)
-	assert.Equal(t, actual.SubjectUserID, expected.SubjectUserID)
+	assert.Equal(t, expected.ID, actual.ID)
+	assert.Equal(t, expected.ChatID, actual.ChatID)
+	assert.Equal(t, expected.UserID, actual.UserID)
+	assert.Equal(t, expected.SubjectUserID, actual.SubjectUserID)
 }
 
 func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.InvitationsRepository) {
