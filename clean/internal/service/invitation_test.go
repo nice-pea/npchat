@@ -30,7 +30,7 @@ func newInvitationsService(t *testing.T) *Invitations {
 }
 
 func Test_ChatInvitationsInput_Validate(t *testing.T) {
-	t.Run("UserID обязательное поле", func(t *testing.T) {
+	t.Run("SubjectUserID обязательное поле", func(t *testing.T) {
 		input := ChatInvitationsInput{
 			SubjectUserID: "",
 			ChatID:        uuid.NewString(),
@@ -54,80 +54,140 @@ func Test_ChatInvitationsInput_Validate(t *testing.T) {
 }
 
 func Test_Invitations_ChatInvitations(t *testing.T) {
-	t.Run("UserID должен быть администратором в чате с ChatID", func(t *testing.T) {
-		newService := newInvitationsService(t)
-		chatID := uuid.NewString()
-
-		err := newService.ChatsRepo.Save(domain.Chat{
-			ID:          chatID,
-			Name:        "Name1",
-			ChiefUserID: uuid.NewString(),
-		})
-		assert.NoError(t, err)
-		input := ChatInvitationsInput{
-			ChatID:        chatID,
-			SubjectUserID: uuid.NewString(),
-		}
-		invsChat, err := newService.ChatInvitations(input)
-		assert.Error(t, err)
-		assert.Len(t, invsChat, 0)
-	})
-
-	t.Run("пустой список из чата без приглашений", func(t *testing.T) {
-		newService := newInvitationsService(t)
-		chatID := uuid.NewString()
-		userID := uuid.NewString()
-		err := newService.ChatsRepo.Save(domain.Chat{
-			ID:          chatID,
-			Name:        "Name1",
-			ChiefUserID: userID,
-		})
-		assert.NoError(t, err)
-		input := ChatInvitationsInput{
-			SubjectUserID: userID,
-			ChatID:        chatID,
-		}
-		invsChat, err := newService.ChatInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsChat, 0)
-	})
-
-	t.Run("список из 4 приглашений из заполненного репозитория", func(t *testing.T) {
-		newService := newInvitationsService(t)
-		chatID := uuid.NewString()
-		userID := uuid.NewString()
-		err := newService.ChatsRepo.Save(domain.Chat{
-			ID:          chatID,
-			Name:        "Name1",
-			ChiefUserID: userID,
-		})
-		assert.NoError(t, err)
-		input := ChatInvitationsInput{
-			SubjectUserID: userID,
-			ChatID:        chatID,
-		}
-
-		const countInvs = 4
-		exitsInvs := make([]domain.Invitation, 0, countInvs)
-		err = nil
-		for range countInvs {
-			inv := domain.Invitation{
-				ID:     uuid.NewString(),
-				ChatID: chatID,
+	t.Run("SubjectUserID является администратором", func(t *testing.T) {
+		t.Run("пустой список из чата без приглашений", func(t *testing.T) {
+			newService := newInvitationsService(t)
+			chatID := uuid.NewString()
+			userID := uuid.NewString()
+			err := newService.ChatsRepo.Save(domain.Chat{
+				ID:          chatID,
+				Name:        "Name1",
+				ChiefUserID: userID,
+			})
+			assert.NoError(t, err)
+			input := ChatInvitationsInput{
+				SubjectUserID: userID,
+				ChatID:        chatID,
 			}
-			err = errors.Join(newService.InvitationsRepo.Save(inv))
-			exitsInvs = append(exitsInvs, inv)
-		}
+			invsChat, err := newService.ChatInvitations(input)
+			assert.NoError(t, err)
+			assert.Len(t, invsChat, 0)
+		})
 
-		assert.NoError(t, err)
-		invsChat, err := newService.ChatInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsChat, countInvs)
-		assert.Len(t, exitsInvs, countInvs)
-		for i := range countInvs {
-			assert.Equal(t, invsChat[i], exitsInvs[i])
-		}
+		t.Run("список из 4 приглашений из заполненного репозитория", func(t *testing.T) {
+			newService := newInvitationsService(t)
+			chatID := uuid.NewString()
+			userID := uuid.NewString()
+			err := newService.ChatsRepo.Save(domain.Chat{
+				ID:          chatID,
+				Name:        "Name1",
+				ChiefUserID: userID,
+			})
+			assert.NoError(t, err)
+			input := ChatInvitationsInput{
+				SubjectUserID: userID,
+				ChatID:        chatID,
+			}
+
+			const countInvs = 4
+			exitsInvs := make([]domain.Invitation, 0, countInvs)
+			err = nil
+			for range countInvs {
+				inv := domain.Invitation{
+					ID:     uuid.NewString(),
+					ChatID: chatID,
+				}
+				err = errors.Join(newService.InvitationsRepo.Save(inv))
+				exitsInvs = append(exitsInvs, inv)
+			}
+
+			assert.NoError(t, err)
+			invsChat, err := newService.ChatInvitations(input)
+			assert.NoError(t, err)
+			assert.Len(t, invsChat, countInvs)
+			assert.Len(t, exitsInvs, countInvs)
+			for i := range countInvs {
+				assert.Equal(t, invsChat[i], exitsInvs[i])
+			}
+		})
 	})
+	t.Run("SubjectUserID не является администратором", func(t *testing.T) {
+		t.Run("если SubjectUserID не является администратором в чате с ChatID то должны возвращаться только пользователя приглашения",
+			func(t *testing.T) {
+				newService := newInvitationsService(t)
+				chatID := uuid.NewString()
+
+				err := newService.ChatsRepo.Save(domain.Chat{
+					ID:          chatID,
+					Name:        "Name1",
+					ChiefUserID: uuid.NewString(),
+				})
+				assert.NoError(t, err)
+
+				member := domain.Member{
+					ID:     uuid.NewString(),
+					UserID: uuid.NewString(),
+					ChatID: chatID,
+				}
+				err = newService.MembersRepo.Save(member)
+				assert.NoError(t, err)
+
+				invitations := make([]domain.Invitation, 3)
+				for i := range len(invitations) {
+					invitation := domain.Invitation{
+						ID:            uuid.NewString(),
+						SubjectUserID: member.UserID,
+						UserID:        uuid.NewString(),
+						ChatID:        chatID,
+					}
+					invitations[i] = invitation
+					err := newService.InvitationsRepo.Save(invitation)
+					assert.NoError(t, err)
+				}
+				for range 3 {
+					invitation := domain.Invitation{
+						ID:            uuid.NewString(),
+						SubjectUserID: uuid.NewString(),
+						UserID:        uuid.NewString(),
+						ChatID:        chatID,
+					}
+					err = newService.InvitationsRepo.Save(invitation)
+					assert.NoError(t, err)
+				}
+
+				input := ChatInvitationsInput{
+					ChatID:        chatID,
+					SubjectUserID: member.UserID,
+				}
+				invsRepo, err := newService.ChatInvitations(input)
+				assert.NoError(t, err)
+				if assert.Len(t, invsRepo, len(invitations)) {
+					for i := range len(invsRepo) {
+						assert.Equal(t, invitations[i], invsRepo[i])
+					}
+				}
+			})
+		t.Run("если участника не существует", func(t *testing.T) {
+			newService := newInvitationsService(t)
+			chatID := uuid.NewString()
+
+			err := newService.ChatsRepo.Save(domain.Chat{
+				ID:          chatID,
+				Name:        "Name1",
+				ChiefUserID: uuid.NewString(),
+			})
+			assert.NoError(t, err)
+
+			input := ChatInvitationsInput{
+				ChatID:        chatID,
+				SubjectUserID: uuid.NewString(),
+			}
+			invsRepo, err := newService.ChatInvitations(input)
+			assert.Error(t, err)
+			assert.Len(t, invsRepo, 0)
+		})
+	})
+
 }
 
 // Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
@@ -242,32 +302,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 	})
 }
 
-func Test_MemberSentInvitationsInput_Validate(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := MemberSentInvitationsInput{
-			SubjectUserID: id,
-			UserID:        uuid.NewString(),
-			ChatID:        uuid.NewString(),
-		}
-		return in.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := MemberSentInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        uuid.NewString(),
-			UserID:        id,
-		}
-		return in.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := MemberSentInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        id,
-			UserID:        uuid.NewString(),
-		}
-		return in.Validate()
-	})
-}
+/*
 
 func Test_Invitations_MemberSentInvitations(t *testing.T) {
 	t.Run("получение списка для участника, у которого есть отправленные приглашения", func(t *testing.T) {
@@ -377,3 +412,4 @@ func Test_Invitations_MemberSentInvitations(t *testing.T) {
 		assert.Len(t, invsRepo, 0)
 	})
 }
+*/
