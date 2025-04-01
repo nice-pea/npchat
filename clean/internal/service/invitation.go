@@ -58,7 +58,7 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 	}
 	chat := chats[0]
 
-	// Проверить что пользователь является администратором чата	
+	// Проверить что пользователь является администратором чата
 	if chat.ChiefUserID != in.SubjectUserID {
 		return nil, ErrChatInvitationsUserIsNotChief
 	}
@@ -79,7 +79,7 @@ type UserInvitationsInput struct {
 var (
 	ErrUserInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
 	ErrUserInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
-	ErrUserInvitationsInputEqualUserIDsValidate  = errors.New("UserID и SubjectUserID не совпадают")
+	ErrUserInvitationsInputEqualUserIDsValidate  = errors.New("доступно только самому пользователю")
 )
 
 func (in UserInvitationsInput) Validate() error {
@@ -95,14 +95,17 @@ func (in UserInvitationsInput) Validate() error {
 
 // UserInvitations возвращает список приглашений конкретного пользователя в чаты
 func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
+	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return nil, err
 	}
 
+	// Пользователь должен видеть только свои приглашения
 	if in.UserID != in.SubjectUserID {
 		return nil, ErrUserInvitationsInputEqualUserIDsValidate
 	}
 
+	// получить список приглашений
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
 		UserID: in.UserID,
 	})
