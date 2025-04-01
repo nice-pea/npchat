@@ -67,7 +67,7 @@ func (c *InvitationsRepository) List(filter domain.InvitationsFilter) ([]domain.
 			WHERE ($1 = "" OR $1 = id)
 				AND ($2 = "" OR $2 = chat_id)
 				AND ($3 = "" OR $3 = user_id)
-				AND ($3 = "" OR $3 = subject_user_id)
+				AND ($4 = "" OR $4 = subject_user_id)
 		`, filter.ID, filter.ChatID, filter.UserID, filter.SubjectUserID); err != nil {
 		return nil, fmt.Errorf("error selecting chats: %w", err)
 	}
