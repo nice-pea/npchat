@@ -10,6 +10,13 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
+func assertEqualInvitation(t *testing.T, left, right domain.Invitation) {
+	assert.Equal(t, left.ID, right.ID)
+	assert.Equal(t, left.ChatID, right.ChatID)
+	assert.Equal(t, left.UserID, right.UserID)
+	assert.Equal(t, left.SubjectUserID, right.SubjectUserID)
+}
+
 func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.InvitationsRepository) {
 	t.Helper()
 	t.Run("List", func(t *testing.T) {
@@ -76,13 +83,13 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			userID := uuid.NewString()
 			invitations := make([]domain.Invitation, amountInvs)
 			for i := range amountInvs {
-				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: userID, SubjectUserID: uuid.NewString()}
+				inv := domain.Invitation{ID: uuid.NewString(), UserID: userID}
 				invitations[i] = inv
 				err := r.Save(inv)
 				assert.NoError(t, err)
 			}
 			for range amountInvs {
-				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString(), SubjectUserID: uuid.NewString()}
+				inv := domain.Invitation{ID: uuid.NewString()}
 				err := r.Save(inv)
 				assert.NoError(t, err)
 			}
@@ -90,10 +97,7 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			assert.NoError(t, err)
 			if assert.Len(t, invitationsFromRepo, amountInvs) {
 				for i, inv := range invitationsFromRepo {
-					assert.Equal(t, inv.ID, invitations[i].ID)
-					assert.Equal(t, inv.ChatID, invitations[i].ChatID)
-					assert.Equal(t, inv.UserID, invitations[i].UserID)
-					assert.Equal(t, inv.SubjectUserID, invitations[i].SubjectUserID)
+					assertEqualInvitation(t, inv, invitations[i])
 				}
 			}
 		})
@@ -103,7 +107,7 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			subjectUserID := uuid.NewString()
 			invitations := make([]domain.Invitation, amountInvs)
 			for i := range amountInvs {
-				inv := domain.Invitation{ID: uuid.NewString(), ChatID: uuid.NewString(), UserID: uuid.NewString(), SubjectUserID: subjectUserID}
+				inv := domain.Invitation{ID: uuid.NewString(), SubjectUserID: subjectUserID}
 				invitations[i] = inv
 				err := r.Save(inv)
 				assert.NoError(t, err)
@@ -117,10 +121,7 @@ func InvitationsRepositoryTests(t *testing.T, newRepository func() domain.Invita
 			assert.NoError(t, err)
 			if assert.Len(t, invitationsFromRepo, amountInvs) {
 				for i, inv := range invitationsFromRepo {
-					assert.Equal(t, inv.ID, invitations[i].ID)
-					assert.Equal(t, inv.ChatID, invitations[i].ChatID)
-					assert.Equal(t, inv.UserID, invitations[i].UserID)
-					assert.Equal(t, inv.SubjectUserID, invitations[i].SubjectUserID)
+					assertEqualInvitation(t, inv, invitations[i])
 				}
 			}
 		})
