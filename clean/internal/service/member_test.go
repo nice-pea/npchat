@@ -221,6 +221,17 @@ func Test_DeleteMemberInput_Validate(t *testing.T) {
 
 // Test_Members_DeleteMember тестирует удаление участника чата
 func Test_Members_DeleteMember(t *testing.T) {
+	t.Run("нельзя удалить самого себя", func(t *testing.T) {
+		membersService := newMembersService(t)
+		userID := uuid.NewString()
+		input := DeleteMemberInput{
+			SubjectUserID: userID,
+			ChatID:        uuid.NewString(),
+			UserID:        userID,
+		}
+		err := membersService.DeleteMember(input)
+		assert.Error(t, err)
+	})
 	t.Run("чат должен существовать", func(t *testing.T) {
 		membersService := newMembersService(t)
 		input := DeleteMemberInput{
@@ -231,52 +242,47 @@ func Test_Members_DeleteMember(t *testing.T) {
 		err := membersService.DeleteMember(input)
 		assert.Error(t, err)
 	})
-	t.Run("удаляемый участник должен существовать", func(t *testing.T) {
+	t.Run("subject должен быть участником чата", func(t *testing.T) {
 		membersService := newMembersService(t)
 		chat := domain.Chat{ID: uuid.NewString()}
 		err := membersService.ChatsRepo.Save(chat)
 		assert.NoError(t, err)
-		member := domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		}
-		err = membersService.MembersRepo.Save(member)
 		input := DeleteMemberInput{
-			SubjectUserID: member.UserID,
+			SubjectUserID: uuid.NewString(),
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
 		assert.Error(t, err)
 	})
-	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
+	t.Run("subject должен быть главным администратором чата", func(t *testing.T) {
 		membersService := newMembersService(t)
 		chat := domain.Chat{ID: uuid.NewString()}
 		err := membersService.ChatsRepo.Save(chat)
 		assert.NoError(t, err)
-		member := domain.Member{
+		subjectMember := domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
 			ChatID: chat.ID,
 		}
-		err = membersService.MembersRepo.Save(member)
+		err = membersService.MembersRepo.Save(subjectMember)
+		assert.NoError(t, err)
 		input := DeleteMemberInput{
-			SubjectUserID: uuid.NewString(),
+			SubjectUserID: subjectMember.UserID,
 			ChatID:        chat.ID,
-			UserID:        member.UserID,
+			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
 		assert.Error(t, err)
 	})
-	t.Run("нельзя удалить самого себя", func(t *testing.T) {
+	t.Run("user должен быть участником чата", func(t *testing.T) {
 		membersService := newMembersService(t)
-		chat := domain.Chat{ID: uuid.NewString()}
+		chat := domain.Chat{ID: uuid.NewString(), ChiefUserID: uuid.NewString()}
 		err := membersService.ChatsRepo.Save(chat)
 		assert.NoError(t, err)
 		member := domain.Member{
 			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
+			UserID: chat.ChiefUserID,
 			ChatID: chat.ID,
 		}
 		err = membersService.MembersRepo.Save(member)
@@ -284,32 +290,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 		input := DeleteMemberInput{
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
-			UserID:        member.UserID,
-		}
-		err = membersService.DeleteMember(input)
-		assert.Error(t, err)
-	})
-	t.Run("пользователь должен быть главным администратором чата", func(t *testing.T) {
-		membersService := newMembersService(t)
-		chat := domain.Chat{ID: uuid.NewString()}
-		err := membersService.ChatsRepo.Save(chat)
-		assert.NoError(t, err)
-		memberForDelete := domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		}
-		err = membersService.MembersRepo.Save(memberForDelete)
-		subjectMember := domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		}
-		err = membersService.MembersRepo.Save(subjectMember)
-		input := DeleteMemberInput{
-			SubjectUserID: subjectMember.UserID,
-			ChatID:        chat.ID,
-			UserID:        memberForDelete.UserID,
+			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
 		assert.Error(t, err)
@@ -325,12 +306,14 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID: chat.ID,
 		}
 		err = membersService.MembersRepo.Save(memberForDelete)
+		assert.NoError(t, err)
 		subjectMember := domain.Member{
 			ID:     uuid.NewString(),
 			UserID: chat.ChiefUserID,
 			ChatID: chat.ID,
 		}
 		err = membersService.MembersRepo.Save(subjectMember)
+		assert.NoError(t, err)
 		input := DeleteMemberInput{
 			SubjectUserID: subjectMember.UserID,
 			ChatID:        chat.ID,

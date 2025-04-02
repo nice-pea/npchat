@@ -217,14 +217,9 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return ErrMembersLeaveChatNotExists
 	}
 
-	// Пользователь должен быть главным администратором
-	if chats[0].ChiefUserID != in.SubjectUserID {
-		return ErrMembersDeleteMemberSubjectUserIsNotChief
-	}
-
-	// Удаляемый участник должен существовать
+	// Пользователь должен быть участником чата
 	membersFilter := domain.MembersFilter{
-		UserID: in.UserID,
+		UserID: in.SubjectUserID,
 		ChatID: in.ChatID,
 	}
 	members, err := m.MembersRepo.List(membersFilter)
@@ -232,21 +227,26 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return err
 	}
 	if len(members) != 1 {
-		return ErrMembersDeleteMemberMemberIsNotExists
-	}
-	memberForDelete := members[0]
-
-	// Пользователь должен быть участником чата
-	membersFilter = domain.MembersFilter{
-		UserID: in.SubjectUserID,
-		ChatID: in.ChatID,
-	}
-	if members, err = m.MembersRepo.List(membersFilter); err != nil {
-		return err
-	}
-	if len(members) != 1 {
 		return ErrMembersDeleteMemberSubjectUserIsNotMember
 	}
 
-	return m.MembersRepo.Delete(memberForDelete.ID)
+	// Пользователь должен быть главным администратором
+	if chats[0].ChiefUserID != in.SubjectUserID {
+		return ErrMembersDeleteMemberSubjectUserIsNotChief
+	}
+
+	// Удаляемый участник должен существовать
+	membersFilter = domain.MembersFilter{
+		UserID: in.UserID,
+		ChatID: in.ChatID,
+	}
+	members, err = m.MembersRepo.List(membersFilter)
+	if err != nil {
+		return err
+	}
+	if len(members) != 1 {
+		return ErrMembersDeleteMemberMemberIsNotExists
+	}
+
+	return m.MembersRepo.Delete(members[0].ID)
 }
