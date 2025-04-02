@@ -52,30 +52,20 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 	}
 
 	// Проверить существование чата
-	chatsFilter := domain.ChatsFilter{
-		IDs: []string{in.ChatID},
-	}
-	chats, err := m.ChatsRepo.List(chatsFilter)
-	if err != nil {
+	if _, err = m.chatMustExists(in.ChatID); err != nil {
 		return nil, err
-	}
-	if len(chats) != 1 {
-		return nil, ErrChatNotExists
 	}
 
 	// Получить список участников
-	membersFilter := domain.MembersFilter{
-		ChatID: in.ChatID,
-	}
-	members, err := m.MembersRepo.List(membersFilter)
-	if err != nil {
+	var members []domain.Member
+	if members, err = m.chatMembers(in.ChatID); err != nil {
 		return nil, err
-	}
-	if len(members) == 0 {
-		return nil, ErrSubjectUserIsNotMember
 	}
 
 	// Проверить что пользователь является участником чата
+	if len(members) == 0 {
+		return nil, ErrSubjectUserIsNotMember
+	}
 	for i, member := range members {
 		if member.UserID == in.SubjectUserID {
 			break
@@ -114,37 +104,24 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 	}
 
 	// Проверить существование чата
-	chatsFilter := domain.ChatsFilter{
-		IDs: []string{in.ChatID},
-	}
-	chats, err := m.ChatsRepo.List(chatsFilter)
-	if err != nil {
+	var chat domain.Chat
+	if chat, err = m.chatMustExists(in.ChatID); err != nil {
 		return err
-	}
-	if len(chats) != 1 {
-		return ErrChatNotExists
 	}
 
 	// Пользователь должен быть участником чата
-	membersFilter := domain.MembersFilter{
-		UserID: in.SubjectUserID,
-		ChatID: in.ChatID,
-	}
-	members, err := m.MembersRepo.List(membersFilter)
-	if err != nil {
+	var subjectMember domain.Member
+	if subjectMember, err = m.subjectUserMustBeMember(in.SubjectUserID, chat.ID); err != nil {
 		return err
-	}
-	if len(members) != 1 {
-		return ErrSubjectUserIsNotMember
 	}
 
 	// Пользователь не должен быть главным администратором
-	if members[0].UserID == chats[0].ChiefUserID {
+	if in.SubjectUserID == chat.ChiefUserID {
 		return ErrSubjectUserShouldNotBeChief
 	}
 
 	// Удалить пользователя из чата
-	if err = m.MembersRepo.Delete(members[0].ID); err != nil {
+	if err = m.MembersRepo.Delete(subjectMember.ID); err != nil {
 		return err
 	}
 
@@ -187,52 +164,94 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Проверить существование чата
-	chatsFilter := domain.ChatsFilter{
-		IDs: []string{in.ChatID},
-	}
-	chats, err := m.ChatsRepo.List(chatsFilter)
-	if err != nil {
+	var chat domain.Chat
+	if chat, err = m.chatMustExists(in.ChatID); err != nil {
 		return err
-	}
-	if len(chats) != 1 {
-		return ErrChatNotExists
 	}
 
 	// Пользователь должен быть участником чата
-	membersFilter := domain.MembersFilter{
-		UserID: in.SubjectUserID,
-		ChatID: in.ChatID,
-	}
-	members, err := m.MembersRepo.List(membersFilter)
-	if err != nil {
+	if _, err = m.subjectUserMustBeMember(in.SubjectUserID, chat.ID); err != nil {
 		return err
-	}
-	if len(members) != 1 {
-		return ErrSubjectUserIsNotMember
 	}
 
 	// Пользователь должен быть главным администратором
-	if chats[0].ChiefUserID != in.SubjectUserID {
+	if chat.ChiefUserID != in.SubjectUserID {
 		return ErrSubjectUserIsNotChief
 	}
 
 	// Удаляемый участник должен существовать
-	membersFilter = domain.MembersFilter{
-		UserID: in.UserID,
-		ChatID: in.ChatID,
-	}
-	members, err = m.MembersRepo.List(membersFilter)
-	if err != nil {
+	var member domain.Member
+	if member, err = m.userMustBeMember(in.UserID, chat.ID); err != nil {
 		return err
-	}
-	if len(members) != 1 {
-		return ErrUserIsNotMember
 	}
 
 	// Удалить участника
-	if err = m.MembersRepo.Delete(members[0].ID); err != nil {
+	if err = m.MembersRepo.Delete(member.ID); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// Проверить существование чата
+func (m *Members) chatMustExists(chatID string) (domain.Chat, error) {
+	chatsFilter := domain.ChatsFilter{
+		IDs: []string{chatID},
+	}
+	chats, err := m.ChatsRepo.List(chatsFilter)
+	if err != nil {
+		return domain.Chat{}, err
+	}
+	if len(chats) != 1 {
+		return domain.Chat{}, ErrChatNotExists
+	}
+
+	return chats[0], nil
+}
+
+// Получить список участников
+func (m *Members) chatMembers(chatID string) ([]domain.Member, error) {
+	membersFilter := domain.MembersFilter{
+		ChatID: chatID,
+	}
+	members, err := m.MembersRepo.List(membersFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
+// Пользователь должен быть участником чата
+func (m *Members) userMustBeMember(userID, chatID string) (domain.Member, error) {
+	membersFilter := domain.MembersFilter{
+		UserID: userID,
+		ChatID: chatID,
+	}
+	members, err := m.MembersRepo.List(membersFilter)
+	if err != nil {
+		return domain.Member{}, err
+	}
+	if len(members) != 1 {
+		return domain.Member{}, ErrUserIsNotMember
+	}
+
+	return members[0], nil
+}
+
+// Пользователь должен быть участником чата
+func (m *Members) subjectUserMustBeMember(subjectUserID, chatID string) (domain.Member, error) {
+	membersFilter := domain.MembersFilter{
+		UserID: subjectUserID,
+		ChatID: chatID,
+	}
+	members, err := m.MembersRepo.List(membersFilter)
+	if err != nil {
+		return domain.Member{}, err
+	}
+	if len(members) != 1 {
+		return domain.Member{}, ErrSubjectUserIsNotMember
+	}
+
+	return members[0], nil
 }
