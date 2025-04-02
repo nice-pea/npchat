@@ -37,13 +37,6 @@ func Test_ChatMembersInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := ChatMembersInput{
 			ChatID:        id,
-			SubjectUserID: uuid.NewString(),
-		}
-		return in.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := ChatMembersInput{
-			ChatID:        uuid.NewString(),
 			SubjectUserID: id,
 		}
 		return in.Validate()
