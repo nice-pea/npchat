@@ -187,7 +187,7 @@ func (in DeleteMemberInput) Validate() error {
 
 var (
 	ErrMembersDeleteMemberCannotDeleteHimself    = errors.New("пользователь не может удалить самого себя")
-	ErrMembersDeleteMemberMemberIsNotExists      = errors.New("участника не существует чата")
+	ErrMembersDeleteMemberMemberIsNotExists      = errors.New("участника не существует")
 	ErrMembersDeleteMemberSubjectUserIsNotMember = errors.New("пользователь не является участником чата")
 	ErrMembersDeleteMemberSubjectUserIsNotChief  = errors.New("пользователь не является главным администратором чата")
 )
