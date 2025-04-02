@@ -9,7 +9,7 @@ type Repo interface {
 }
 
 // chat возвращает чат либо ошибку ErrChatNotExists
-func chat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, error) {
+func getChat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, error) {
 	chatsFilter := domain.ChatsFilter{
 		IDs: []string{chatID},
 	}
