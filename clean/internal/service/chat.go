@@ -179,7 +179,7 @@ func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
 
 	// Проверить доступ пользователя к этому действию
 	if in.SubjectUserID != chats[0].ChiefUserID {
-		return domain.Chat{}, errors.New("доступно только главному администратору")
+		return domain.Chat{}, ErrSubjectUserIsNotChief
 	}
 
 	// Перезаписать с новым значением

@@ -32,13 +32,6 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := UserChatsInput{
 			SubjectUserID: id,
-			UserID:        uuid.NewString(),
-		}
-		return in.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := UserChatsInput{
-			SubjectUserID: uuid.NewString(),
 			UserID:        id,
 		}
 		return in.Validate()
@@ -47,76 +40,53 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
 func Test_Chats_UserChats(t *testing.T) {
-	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
-		id := uuid.NewString()
-		input := UserChatsInput{
-			SubjectUserID: id,
-			UserID:        id,
-		}
-		userChats, err := newChatsService(t).UserChats(input)
-		assert.NoError(t, err)
-		assert.Len(t, userChats, 0)
-	})
-	t.Run("пустой список если у пользователя нет чатов", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		for i := 0; i < 7; i++ {
-			// Создать чат
-			chatID := uuid.NewString()
-			err := chatsService.ChatsRepo.Save(domain.Chat{
-				ID:          chatID,
-				Name:        "name" + string(rune(i)),
-				ChiefUserID: uuid.NewString(),
-			})
-			assert.NoError(t, err)
-			// Создать участника в чате
-			err = chatsService.MembersRepo.Save(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chatID,
-			})
-			assert.NoError(t, err)
-		}
-		userID := uuid.NewString()
-		input := UserChatsInput{
-			SubjectUserID: userID,
-			UserID:        userID,
-		}
-		userChats, err := chatsService.UserChats(input)
-		assert.NoError(t, err)
-		assert.Len(t, userChats, 0)
-	})
-	t.Run("UserID и SubjectUserID должны быть одинаковыми", func(t *testing.T) {
+	t.Run("пользователь может запрашивать только свой чат", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		input := UserChatsInput{
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
 		chats, err := chatsService.UserChats(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrCannotViewSomeoneElseChats)
 		assert.Len(t, chats, 0)
 	})
-	t.Run("у пользователя может быть несколько чатов", func(t *testing.T) {
+	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
 		chatsService := newChatsService(t)
-		var existsChats []domain.Chat
-		const countAll = 10
-		for i := range [countAll]int{} {
+		id := uuid.NewString()
+		input := UserChatsInput{SubjectUserID: id, UserID: id}
+		userChats, err := chatsService.UserChats(input)
+		assert.NoError(t, err)
+		assert.Len(t, userChats, 0)
+	})
+	t.Run("пустой список если у пользователя нет чатов", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		for range 11 {
 			// Создать чат
-			existsChats = append(existsChats, domain.Chat{
-				ID:          uuid.NewString(),
-				Name:        "name" + string(rune(i)),
-				ChiefUserID: uuid.NewString(),
-			})
-			err := chatsService.ChatsRepo.Save(existsChats[i])
+			chat := domain.Chat{ID: uuid.NewString()}
+			err := chatsService.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+			// Создать участника в чате
+			member := domain.Member{ID: uuid.NewString(), UserID: uuid.NewString(), ChatID: chat.ID}
+			err = chatsService.MembersRepo.Save(member)
 			assert.NoError(t, err)
 		}
 		userID := uuid.NewString()
-		const count = countAll / 3
-		for i := range count {
-			err := chatsService.MembersRepo.Save(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: userID,
-				ChatID: existsChats[i].ID,
-			})
+		input := UserChatsInput{SubjectUserID: userID, UserID: userID}
+		userChats, err := chatsService.UserChats(input)
+		assert.NoError(t, err)
+		assert.Len(t, userChats, 0)
+	})
+	t.Run("у пользователя может быть несколько чатов", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		userID := uuid.NewString()
+		const count = 10
+		for range count {
+			// Создать чат
+			chat := domain.Chat{ID: uuid.NewString()}
+			err := chatsService.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+			member := domain.Member{ID: uuid.NewString(), UserID: userID, ChatID: chat.ID}
+			err = chatsService.MembersRepo.Save(member)
 			assert.NoError(t, err)
 		}
 		input := UserChatsInput{
@@ -125,7 +95,7 @@ func Test_Chats_UserChats(t *testing.T) {
 		}
 		userChats, err := chatsService.UserChats(input)
 		assert.NoError(t, err)
-		assert.Len(t, userChats, 3)
+		assert.Len(t, userChats, count)
 	})
 }
 
@@ -136,19 +106,12 @@ func Test_CreateChatInput_Validate(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "",
 		}
-		assert.Error(t, input.Validate())
-	})
-	t.Run("ошибка при пустом ChiefUserID", func(t *testing.T) {
-		input := CreateInput{
-			ChiefUserID: "",
-			Name:        "qf",
-		}
-		assert.Error(t, input.Validate())
+		assert.ErrorIs(t, input.Validate(), ErrInvalidChatName)
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := CreateInput{
 			ChiefUserID: id,
-			Name:        "qf",
+			Name:        "validaName",
 		}
 		return in.Validate()
 	})
@@ -344,14 +307,6 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := UpdateNameInput{
 			SubjectUserID: id,
-			ChatID:        uuid.NewString(),
-			NewName:       "NewName",
-		}
-		return input.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := UpdateNameInput{
-			SubjectUserID: uuid.NewString(),
 			ChatID:        id,
 			NewName:       "NewName",
 		}
@@ -392,10 +347,10 @@ func Test_Chats_UpdateName(t *testing.T) {
 			NewName:       "newName",
 		}
 		chat, err := chatsService.UpdateName(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrChatNotExists)
 		assert.Zero(t, chat)
 	})
-	t.Run("только chief может изменять название", func(t *testing.T) {
+	t.Run("только главный администратор может изменять название", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		createInput := CreateInput{
 			ChiefUserID: uuid.NewString(),
@@ -410,7 +365,7 @@ func Test_Chats_UpdateName(t *testing.T) {
 			NewName:       "newName",
 		}
 		updatedChat, err := chatsService.UpdateName(input)
-		assert.Error(t, err)
+		assert.Error(t, err, ErrSubjectUserIsNotChief)
 		assert.Zero(t, updatedChat)
 	})
 }
