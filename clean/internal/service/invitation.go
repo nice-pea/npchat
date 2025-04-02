@@ -21,21 +21,13 @@ type ChatInvitationsInput struct {
 	ChatID        string
 }
 
-var (
-	ErrChatInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrChatInvitationsInputChatIDValidate        = errors.New("некорректный ChatID")
-	ErrChatInvitationsNoChat                     = errors.New("не существует чата с данным ChatID")
-	ErrChatInvitationsUserIsNotChief             = errors.New("доступно только для администратора этого чата")
-	ErrChatInvitationsUserIsNotMember            = errors.New("пользователь не является участником чата")
-)
-
 // Validate валидирует параметры для запроса приглашений конкретного чата
 func (in ChatInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrChatInvitationsInputChatIDValidate)
+		return errors.Join(err, ErrInvalidChatID)
 	}
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrChatInvitationsInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidSubjectUserID)
 	}
 	return nil
 }
@@ -57,7 +49,7 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 		return nil, err
 	}
 	if len(chats) != 1 {
-		return nil, ErrChatInvitationsNoChat
+		return nil, ErrChatNotExists
 	}
 	chat := chats[0]
 
@@ -79,7 +71,7 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 			return nil, err
 		}
 		if len(members) != 1 {
-			return nil, ErrChatInvitationsUserIsNotMember
+			return nil, ErrUserIsNotMember
 		}
 
 		// получить список приглашений конкретного пользователя
@@ -98,18 +90,12 @@ type UserInvitationsInput struct {
 	UserID        string
 }
 
-var (
-	ErrUserInvitationsInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrUserInvitationsInputUserIDValidate        = errors.New("некорректный UserID")
-	ErrUserInvitationsInputEqualUserIDsValidate  = errors.New("доступно только самому пользователю")
-)
-
 func (in UserInvitationsInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrUserInvitationsInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidSubjectUserID)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrUserInvitationsInputUserIDValidate)
+		return errors.Join(err, ErrInvalidUserID)
 	}
 
 	return nil
@@ -124,7 +110,7 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 
 	// Пользователь должен видеть только свои приглашения
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrUserInvitationsInputEqualUserIDsValidate
+		return nil, ErrCannotViewSomeoneElseChats
 	}
 
 	// Пользователь должен существовать
