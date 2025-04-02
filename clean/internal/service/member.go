@@ -25,6 +25,7 @@ var (
 	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
 )
 
+// ChatMembersInput входящие параметры
 type ChatMembersInput struct {
 	SubjectUserID string
 	ChatID        string
@@ -86,6 +87,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 	return members, nil
 }
 
+// LeaveChatInput входящие параметры
 type LeaveChatInput struct {
 	SubjectUserID string
 	ChatID        string
@@ -149,6 +151,7 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 	return nil
 }
 
+// DeleteMemberInput входящие параметры
 type DeleteMemberInput struct {
 	SubjectUserID string
 	ChatID        string
