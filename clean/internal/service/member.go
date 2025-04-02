@@ -46,32 +46,24 @@ func (in ChatMembersInput) Validate() error {
 // ChatMembers возвращает список участников чата
 func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 	// Валидировать параметры
-	var err error
-	if err = in.Validate(); err != nil {
+	if err := in.Validate(); err != nil {
 		return nil, err
 	}
 
 	// Проверить существование чата
-	if _, err = m.chatMustExists(in.ChatID); err != nil {
+	if _, err := m.chat(in.ChatID); err != nil {
+		return nil, err
+	}
+
+	// Пользователь должен быть участником чата
+	if _, err := m.subjectUserMember(in.SubjectUserID, in.ChatID); err != nil {
 		return nil, err
 	}
 
 	// Получить список участников
-	var members []domain.Member
-	if members, err = m.chatMembers(in.ChatID); err != nil {
+	members, err := m.chatMembers(in.ChatID)
+	if err != nil {
 		return nil, err
-	}
-
-	// Проверить что пользователь является участником чата
-	if len(members) == 0 {
-		return nil, ErrSubjectUserIsNotMember
-	}
-	for i, member := range members {
-		if member.UserID == in.SubjectUserID {
-			break
-		} else if i == len(members)-1 {
-			return nil, ErrSubjectUserIsNotMember
-		}
 	}
 
 	return members, nil
@@ -98,20 +90,19 @@ func (in LeaveChatInput) Validate() error {
 // LeaveChat удаляет участника из чата
 func (m *Members) LeaveChat(in LeaveChatInput) error {
 	// Валидировать параметры
-	var err error
-	if err = in.Validate(); err != nil {
+	if err := in.Validate(); err != nil {
 		return err
 	}
 
 	// Проверить существование чата
-	var chat domain.Chat
-	if chat, err = m.chatMustExists(in.ChatID); err != nil {
+	chat, err := m.chat(in.ChatID)
+	if err != nil {
 		return err
 	}
 
 	// Пользователь должен быть участником чата
-	var subjectMember domain.Member
-	if subjectMember, err = m.subjectUserMustBeMember(in.SubjectUserID, chat.ID); err != nil {
+	subjectMember, err := m.subjectUserMember(in.SubjectUserID, chat.ID)
+	if err != nil {
 		return err
 	}
 
@@ -153,8 +144,7 @@ func (in DeleteMemberInput) Validate() error {
 // DeleteMember удаляет участника чата
 func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	// Валидировать параметры
-	var err error
-	if err = in.Validate(); err != nil {
+	if err := in.Validate(); err != nil {
 		return err
 	}
 
@@ -164,13 +154,13 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Проверить существование чата
-	var chat domain.Chat
-	if chat, err = m.chatMustExists(in.ChatID); err != nil {
+	chat, err := m.chat(in.ChatID)
+	if err != nil {
 		return err
 	}
 
 	// Пользователь должен быть участником чата
-	if _, err = m.subjectUserMustBeMember(in.SubjectUserID, chat.ID); err != nil {
+	if _, err = m.subjectUserMember(in.SubjectUserID, in.ChatID); err != nil {
 		return err
 	}
 
@@ -180,8 +170,8 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Удаляемый участник должен существовать
-	var member domain.Member
-	if member, err = m.userMustBeMember(in.UserID, chat.ID); err != nil {
+	member, err := m.userMember(in.UserID, in.ChatID)
+	if err != nil {
 		return err
 	}
 
@@ -193,8 +183,8 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	return nil
 }
 
-// Проверить существование чата
-func (m *Members) chatMustExists(chatID string) (domain.Chat, error) {
+// chat возвращает чат либо ошибку ErrChatNotExists
+func (m *Members) chat(chatID string) (domain.Chat, error) {
 	chatsFilter := domain.ChatsFilter{
 		IDs: []string{chatID},
 	}
@@ -222,8 +212,19 @@ func (m *Members) chatMembers(chatID string) ([]domain.Member, error) {
 	return members, nil
 }
 
-// Пользователь должен быть участником чата
-func (m *Members) userMustBeMember(userID, chatID string) (domain.Member, error) {
+// subjectUserMember вернет участника либо ошибку ErrUserIsNotMember
+func (m *Members) userMember(userID, chatID string) (domain.Member, error) {
+	return m.memberOrErr(userID, chatID, ErrUserIsNotMember)
+}
+
+// subjectUserMember вернет участника либо ошибку ErrSubjectUserIsNotMember
+func (m *Members) subjectUserMember(subjectUserID, chatID string) (domain.Member, error) {
+	return m.memberOrErr(subjectUserID, chatID, ErrSubjectUserIsNotMember)
+}
+
+// memberOrErr возвращает участника чата по userID, chatID.
+// Вернет errOnNotExists ошибку если участника не будет существовать.
+func (m *Members) memberOrErr(userID, chatID string, errOnNotExists error) (domain.Member, error) {
 	membersFilter := domain.MembersFilter{
 		UserID: userID,
 		ChatID: chatID,
@@ -233,24 +234,7 @@ func (m *Members) userMustBeMember(userID, chatID string) (domain.Member, error)
 		return domain.Member{}, err
 	}
 	if len(members) != 1 {
-		return domain.Member{}, ErrUserIsNotMember
-	}
-
-	return members[0], nil
-}
-
-// Пользователь должен быть участником чата
-func (m *Members) subjectUserMustBeMember(subjectUserID, chatID string) (domain.Member, error) {
-	membersFilter := domain.MembersFilter{
-		UserID: subjectUserID,
-		ChatID: chatID,
-	}
-	members, err := m.MembersRepo.List(membersFilter)
-	if err != nil {
-		return domain.Member{}, err
-	}
-	if len(members) != 1 {
-		return domain.Member{}, ErrSubjectUserIsNotMember
+		return domain.Member{}, errOnNotExists
 	}
 
 	return members[0], nil
