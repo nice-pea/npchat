@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -65,7 +66,7 @@ func (c *UsersRepository) List(filter domain.UsersFilter) ([]domain.User, error)
 
 func (c *UsersRepository) Save(user domain.User) error {
 	if user.ID == "" {
-		return fmt.Errorf("invalid user id")
+		return errors.New("invalid user id")
 	}
 	_, err := c.DB.Exec(`
 		INSERT OR REPLACE INTO users(id)
@@ -80,7 +81,7 @@ func (c *UsersRepository) Save(user domain.User) error {
 
 func (c *UsersRepository) Delete(id string) error {
 	if id == "" {
-		return fmt.Errorf("invalid user id")
+		return errors.New("invalid user id")
 	}
 	_, err := c.DB.Exec("DELETE FROM users WHERE id = ?", id)
 	if err != nil {
