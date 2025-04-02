@@ -14,15 +14,15 @@ type Members struct {
 }
 
 var (
-	ErrInvalidSubjectUserID      = errors.New("некорректный SubjectUserID")
-	ErrInvalidChatID             = errors.New("некорректный ChatID")
-	ErrInvalidUserID             = errors.New("некорректный UserID")
-	ErrUserIsNotMember           = errors.New("user не является участником чата")
-	ErrSubjectUserIsNotMember    = errors.New("subject user не является участником чата")
-	ErrChatNotExists             = errors.New("чата с таким ID не существует")
-	ErrMemberCannotDeleteHimself = errors.New("участник не может удалить самого себя")
-	ErrUserShouldNotBeChief      = errors.New("пользователь является главным администратором чата")
-	ErrSubjectUserIsNotChief     = errors.New("пользователь не является главным администратором чата")
+	ErrInvalidSubjectUserID        = errors.New("некорректный SubjectUserID")
+	ErrInvalidChatID               = errors.New("некорректный ChatID")
+	ErrInvalidUserID               = errors.New("некорректный UserID")
+	ErrUserIsNotMember             = errors.New("user не является участником чата")
+	ErrSubjectUserIsNotMember      = errors.New("subject user не является участником чата")
+	ErrChatNotExists               = errors.New("чата с таким ID не существует")
+	ErrMemberCannotDeleteHimself   = errors.New("участник не может удалить самого себя")
+	ErrSubjectUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
+	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
 )
 
 type ChatMembersInput struct {
@@ -138,7 +138,7 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 
 	// Пользователь не должен быть главным администратором
 	if members[0].UserID == chats[0].ChiefUserID {
-		return ErrUserShouldNotBeChief
+		return ErrSubjectUserShouldNotBeChief
 	}
 
 	// Удалить пользователя из чата

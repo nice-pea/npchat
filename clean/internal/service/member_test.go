@@ -52,7 +52,7 @@ func Test_Members_ChatMembers(t *testing.T) {
 			SubjectUserID: uuid.NewString(),
 		}
 		members, err := membersService.ChatMembers(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrChatNotExists)
 		assert.Len(t, members, 0)
 	})
 	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
@@ -72,7 +72,7 @@ func Test_Members_ChatMembers(t *testing.T) {
 			SubjectUserID: member.UserID,
 		}
 		members, err := membersService.ChatMembers(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
 		assert.Len(t, members, 0)
 	})
 	t.Run("возвращается список участников чата", func(t *testing.T) {
@@ -140,7 +140,7 @@ func Test_Members_LeaveChat(t *testing.T) {
 			ChatID:        uuid.NewString(),
 		}
 		err := membersService.LeaveChat(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrChatNotExists)
 	})
 	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -154,7 +154,7 @@ func Test_Members_LeaveChat(t *testing.T) {
 			ChatID:        chat.ID,
 		}
 		err = membersService.LeaveChat(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
 	})
 	t.Run("пользователь не должен быть главным администратором чата", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -173,7 +173,7 @@ func Test_Members_LeaveChat(t *testing.T) {
 			ChatID:        chat.ID,
 		}
 		err = membersService.LeaveChat(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrSubjectUserShouldNotBeChief)
 	})
 	t.Run("после выхода пользователь перестает быть участником", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -223,7 +223,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 			UserID:        userID,
 		}
 		err := membersService.DeleteMember(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrMemberCannotDeleteHimself)
 	})
 	t.Run("чат должен существовать", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -233,7 +233,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		err := membersService.DeleteMember(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrChatNotExists)
 	})
 	t.Run("subject должен быть участником чата", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -246,7 +246,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
 	})
 	t.Run("subject должен быть главным администратором чата", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -266,7 +266,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
 	})
 	t.Run("user должен быть участником чата", func(t *testing.T) {
 		membersService := newMembersService(t)
@@ -286,7 +286,7 @@ func Test_Members_DeleteMember(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		err = membersService.DeleteMember(input)
-		assert.Error(t, err)
+		assert.ErrorIs(t, err, ErrUserIsNotMember)
 	})
 	t.Run("после удаления участник перестает быть участником", func(t *testing.T) {
 		membersService := newMembersService(t)
