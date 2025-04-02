@@ -128,7 +128,6 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	}
 
 	// Пользователь должен существовать
-	
 
 	// получить список приглашений
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
@@ -136,4 +135,61 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	})
 
 	return invs, err
+}
+
+// chat возвращает чат либо ошибку ErrChatNotExists
+func (i *Invitations) chat(chatID string) (domain.Chat, error) {
+	chatsFilter := domain.ChatsFilter{
+		IDs: []string{chatID},
+	}
+	chats, err := i.ChatsRepo.List(chatsFilter)
+	if err != nil {
+		return domain.Chat{}, err
+	}
+	if len(chats) != 1 {
+		return domain.Chat{}, ErrChatNotExists
+	}
+
+	return chats[0], nil
+}
+
+// Получить список участников
+func (i *Invitations) chatMembers(chatID string) ([]domain.Member, error) {
+	membersFilter := domain.MembersFilter{
+		ChatID: chatID,
+	}
+	members, err := i.MembersRepo.List(membersFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	return members, nil
+}
+
+// UserMember вернет участника либо ошибку ErrUserIsNotMember
+func (i *Invitations) userMember(userID, chatID string) (domain.Member, error) {
+	return i.memberOrErr(userID, chatID, ErrUserIsNotMember)
+}
+
+// subjectUserMember вернет участника либо ошибку ErrSubjectUserIsNotMember
+func (i *Invitations) subjectUserMember(subjectUserID, chatID string) (domain.Member, error) {
+	return i.memberOrErr(subjectUserID, chatID, ErrSubjectUserIsNotMember)
+}
+
+// memberOrErr возвращает участника чата по userID, chatID.
+// Вернет errOnNotExists ошибку если участника не будет существовать.
+func (i *Invitations) memberOrErr(userID, chatID string, errOnNotExists error) (domain.Member, error) {
+	membersFilter := domain.MembersFilter{
+		UserID: userID,
+		ChatID: chatID,
+	}
+	members, err := i.MembersRepo.List(membersFilter)
+	if err != nil {
+		return domain.Member{}, err
+	}
+	if len(members) != 1 {
+		return domain.Member{}, errOnNotExists
+	}
+
+	return members[0], nil
 }
