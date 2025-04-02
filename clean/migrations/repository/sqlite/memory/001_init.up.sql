@@ -3,6 +3,7 @@ CREATE TABLE chats
     id   TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     chief_user_id TEXT NOT NULL
+    FOREIGN KEY (chief_user_id) REFERENCES users ON DELETE RESTRICT
 );
 
 CREATE TABLE members
