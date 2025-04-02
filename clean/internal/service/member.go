@@ -13,17 +13,7 @@ type Members struct {
 	ChatsRepo   domain.ChatsRepository
 }
 
-var (
-	ErrInvalidSubjectUserID        = errors.New("некорректный SubjectUserID")
-	ErrInvalidChatID               = errors.New("некорректный ChatID")
-	ErrInvalidUserID               = errors.New("некорректный UserID")
-	ErrUserIsNotMember             = errors.New("user не является участником чата")
-	ErrSubjectUserIsNotMember      = errors.New("subject user не является участником чата")
-	ErrChatNotExists               = errors.New("чата с таким ID не существует")
-	ErrMemberCannotDeleteHimself   = errors.New("участник не может удалить самого себя")
-	ErrSubjectUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
-	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
-)
+
 
 // ChatMembersInput входящие параметры
 type ChatMembersInput struct {
