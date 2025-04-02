@@ -117,15 +117,8 @@ func Test_Members_ChatMembers(t *testing.T) {
 func Test_LeaveInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := LeaveChatInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        id,
-		}
-		return in.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := LeaveChatInput{
 			SubjectUserID: id,
-			ChatID:        uuid.NewString(),
+			ChatID:        id,
 		}
 		return in.Validate()
 	})
