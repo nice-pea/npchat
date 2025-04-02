@@ -13,32 +13,34 @@ type Members struct {
 	ChatsRepo   domain.ChatsRepository
 }
 
+var (
+	ErrInvalidSubjectUserID      = errors.New("некорректный SubjectUserID")
+	ErrInvalidChatID             = errors.New("некорректный ChatID")
+	ErrInvalidUserID             = errors.New("некорректный UserID")
+	ErrUserIsNotMember           = errors.New("user не является участником чата")
+	ErrSubjectUserIsNotMember    = errors.New("subject user не является участником чата")
+	ErrChatNotExists             = errors.New("чата с таким ID не существует")
+	ErrMemberCannotDeleteHimself = errors.New("участник не может удалить самого себя")
+	ErrUserShouldNotBeChief      = errors.New("пользователь является главным администратором чата")
+	ErrSubjectUserIsNotChief     = errors.New("пользователь не является главным администратором чата")
+)
+
 type ChatMembersInput struct {
 	SubjectUserID string
 	ChatID        string
 }
 
-var (
-	ErrChatMembersInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrChatMembersInputChatIDValidate        = errors.New("некорректный ChatID")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in ChatMembersInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrChatMembersInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidUserID)
 	}
 	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrChatMembersInputChatIDValidate)
+		return errors.Join(err, ErrInvalidChatID)
 	}
 
 	return nil
 }
-
-var (
-	ErrChatMembersChatNotExists   = errors.New("чата с таким ID не существует")
-	ErrChatMembersUserIsNotMember = errors.New("пользователь не является участником чата")
-)
 
 // ChatMembers возвращает список участников чата
 func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
@@ -57,7 +59,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		return nil, err
 	}
 	if len(chats) != 1 {
-		return nil, ErrChatMembersChatNotExists
+		return nil, ErrChatNotExists
 	}
 
 	// Получить список участников
@@ -69,7 +71,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		return nil, err
 	}
 	if len(members) == 0 {
-		return nil, ErrChatMembersUserIsNotMember
+		return nil, ErrSubjectUserIsNotMember
 	}
 
 	// Проверить что пользователь является участником чата
@@ -77,7 +79,7 @@ func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
 		if member.UserID == in.SubjectUserID {
 			break
 		} else if i == len(members)-1 {
-			return nil, ErrChatMembersUserIsNotMember
+			return nil, ErrSubjectUserIsNotMember
 		}
 	}
 
@@ -89,28 +91,17 @@ type LeaveChatInput struct {
 	ChatID        string
 }
 
-var (
-	ErrLeaveChatInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrLeaveChatInputChatIDValidate        = errors.New("некорректный ChatID")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in LeaveChatInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrLeaveChatInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidSubjectUserID)
 	}
 	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrLeaveChatInputChatIDValidate)
+		return errors.Join(err, ErrInvalidChatID)
 	}
 
 	return nil
 }
-
-var (
-	ErrMembersLeaveChatNotExists            = errors.New("чата с таким ID не существует")
-	ErrMembersLeaveChatUserIsNotMember      = errors.New("пользователь не является участником чата")
-	ErrMembersLeaveChatUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
-)
 
 // LeaveChat удаляет участника из чата
 func (m *Members) LeaveChat(in LeaveChatInput) error {
@@ -129,7 +120,7 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 		return err
 	}
 	if len(chats) != 1 {
-		return ErrMembersLeaveChatNotExists
+		return ErrChatNotExists
 	}
 
 	// Пользователь должен быть участником чата
@@ -142,12 +133,12 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 		return err
 	}
 	if len(members) != 1 {
-		return ErrMembersLeaveChatUserIsNotMember
+		return ErrSubjectUserIsNotMember
 	}
 
 	// Пользователь не должен быть главным администратором
 	if members[0].UserID == chats[0].ChiefUserID {
-		return ErrMembersLeaveChatUserShouldNotBeChief
+		return ErrUserShouldNotBeChief
 	}
 
 	// Удалить пользователя из чата
@@ -164,33 +155,20 @@ type DeleteMemberInput struct {
 	UserID        string
 }
 
-var (
-	ErrDeleteMemberInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
-	ErrDeleteMemberInputChatIDValidate        = errors.New("некорректный ChatID")
-	ErrDeleteMemberInputUserIDValidate        = errors.New("некорректный UserID")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in DeleteMemberInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrDeleteMemberInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidSubjectUserID)
 	}
 	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrDeleteMemberInputChatIDValidate)
+		return errors.Join(err, ErrInvalidChatID)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrDeleteMemberInputUserIDValidate)
+		return errors.Join(err, ErrInvalidUserID)
 	}
 
 	return nil
 }
-
-var (
-	ErrMembersDeleteMemberCannotDeleteHimself    = errors.New("пользователь не может удалить самого себя")
-	ErrMembersDeleteMemberMemberIsNotExists      = errors.New("участника не существует")
-	ErrMembersDeleteMemberSubjectUserIsNotMember = errors.New("пользователь не является участником чата")
-	ErrMembersDeleteMemberSubjectUserIsNotChief  = errors.New("пользователь не является главным администратором чата")
-)
 
 // DeleteMember удаляет участника чата
 func (m *Members) DeleteMember(in DeleteMemberInput) error {
@@ -202,7 +180,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 
 	// Проверить попытку удалить самого себя
 	if in.UserID == in.SubjectUserID {
-		return ErrMembersDeleteMemberCannotDeleteHimself
+		return ErrMemberCannotDeleteHimself
 	}
 
 	// Проверить существование чата
@@ -214,7 +192,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return err
 	}
 	if len(chats) != 1 {
-		return ErrMembersLeaveChatNotExists
+		return ErrChatNotExists
 	}
 
 	// Пользователь должен быть участником чата
@@ -227,12 +205,12 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return err
 	}
 	if len(members) != 1 {
-		return ErrMembersDeleteMemberSubjectUserIsNotMember
+		return ErrSubjectUserIsNotMember
 	}
 
 	// Пользователь должен быть главным администратором
 	if chats[0].ChiefUserID != in.SubjectUserID {
-		return ErrMembersDeleteMemberSubjectUserIsNotChief
+		return ErrSubjectUserIsNotChief
 	}
 
 	// Удаляемый участник должен существовать
@@ -245,7 +223,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return err
 	}
 	if len(members) != 1 {
-		return ErrMembersDeleteMemberMemberIsNotExists
+		return ErrUserIsNotMember
 	}
 
 	// Удалить участника
