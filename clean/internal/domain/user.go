@@ -25,7 +25,7 @@ func (u User) ValidateID() error {
 
 type UsersRepository interface {
 	List(filter UsersFilter) ([]User, error)
-	Save(member User) error
+	Save(user User) error
 	Delete(id string) error
 }
 
