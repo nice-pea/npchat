@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
 )
 
 func TestNewUsersRepository(t *testing.T) {
@@ -23,13 +24,13 @@ func TestNewUsersRepository(t *testing.T) {
 }
 
 func TestUsersRepository(t *testing.T) {
-	repository_tests.UsersRepositoryTests(t, func() domain.MembersRepository {
+	repository_tests.UsersRepositoryTests(t, func() domain.UsersRepository {
 		sqlim, err := Init(Config{
 			MigrationsDir: "../../../../migrations/repository/sqlite/memory",
 		})
 		assert.Nil(t, err)
 		assert.NotNil(t, sqlim)
-		repo, err := sqlim.NewMembersRepository()
+		repo, err := sqlim.NewUsersRepository()
 		assert.Nil(t, err)
 		assert.NotNil(t, repo)
 		return repo
