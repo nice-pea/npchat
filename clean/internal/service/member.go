@@ -248,5 +248,10 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 		return ErrMembersDeleteMemberMemberIsNotExists
 	}
 
-	return m.MembersRepo.Delete(members[0].ID)
+	// Удалить участника
+	if err = m.MembersRepo.Delete(members[0].ID); err != nil {
+		return err
+	}
+
+	return nil
 }
