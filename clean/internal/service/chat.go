@@ -20,19 +20,13 @@ type UserChatsInput struct {
 	UserID        string
 }
 
-var (
-	ErrUserChatsInputSubjectUserIDValidate      = errors.New("некорректный SubjectUserID")
-	ErrUserChatsInputUserIDValidate             = errors.New("некорректный UserID")
-	ErrUserChatsInputCannotViewSomeoneElseChats = errors.New("subject user не может просматривать чужой список")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in UserChatsInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrUserChatsInputSubjectUserIDValidate)
+		return errors.Join(err, ErrInvalidSubjectUserID)
 	}
 	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrUserChatsInputUserIDValidate)
+		return errors.Join(err, ErrInvalidUserID)
 	}
 
 	return nil
@@ -48,7 +42,7 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrUserChatsInputCannotViewSomeoneElseChats
+		return nil, ErrCannotViewSomeoneElseChats
 	}
 
 	// Получить список участников с фильтром по пользователю
@@ -82,11 +76,6 @@ type CreateInput struct {
 	ChiefUserID string
 }
 
-var (
-	ErrCreateInputNameValidate        = errors.New("некорректный Name")
-	ErrCreateInputChiefUserIDValidate = errors.New("некорректный ChiefUserID")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in CreateInput) Validate() error {
 	chat := domain.Chat{
@@ -94,10 +83,10 @@ func (in CreateInput) Validate() error {
 		ChiefUserID: in.ChiefUserID,
 	}
 	if err := chat.ValidateName(); err != nil {
-		return errors.Join(err, ErrCreateInputNameValidate)
+		return errors.Join(err, ErrInvalidName)
 	}
 	if err := chat.ValidateChiefUserID(); err != nil {
-		return errors.Join(err, ErrCreateInputChiefUserIDValidate)
+		return errors.Join(err, ErrInvalidChiefUserID)
 	}
 
 	return nil
@@ -149,12 +138,6 @@ type UpdateNameInput struct {
 	NewName       string
 }
 
-var (
-	ErrUpdateNameIDValidate          = errors.New("некорректный ID")
-	ErrUpdateNameNameValidate        = errors.New("некорректный Name")
-	ErrUpdateNameChiefUserIDValidate = errors.New("некорректный ChiefUserID")
-)
-
 // Validate валидирует значение отдельно каждого параметры
 func (in UpdateNameInput) Validate() error {
 	chat := domain.Chat{
@@ -163,13 +146,13 @@ func (in UpdateNameInput) Validate() error {
 		ChiefUserID: in.SubjectUserID,
 	}
 	if err := chat.ValidateID(); err != nil {
-		return errors.Join(err, ErrUpdateNameIDValidate)
+		return errors.Join(err, ErrInvalidID)
 	}
 	if err := chat.ValidateName(); err != nil {
-		return errors.Join(err, ErrUpdateNameNameValidate)
+		return errors.Join(err, ErrInvalidName)
 	}
 	if err := chat.ValidateChiefUserID(); err != nil {
-		return errors.Join(err, ErrUpdateNameChiefUserIDValidate)
+		return errors.Join(err, ErrInvalidChiefUserID)
 	}
 
 	return nil
