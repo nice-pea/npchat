@@ -89,13 +89,18 @@ type LeaveChatInput struct {
 	ChatID        string
 }
 
+var (
+	ErrLeaveChatInputSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrLeaveChatInputChatIDValidate        = errors.New("некорректный ChatID")
+)
+
 // Validate валидирует значение отдельно каждого параметры
 func (in LeaveChatInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrChatMembersInputSubjectUserIDValidate)
+		return errors.Join(err, ErrLeaveChatInputSubjectUserIDValidate)
 	}
 	if err := uuid.Validate(in.ChatID); err != nil {
-		return errors.Join(err, ErrChatMembersInputChatIDValidate)
+		return errors.Join(err, ErrLeaveChatInputChatIDValidate)
 	}
 
 	return nil
