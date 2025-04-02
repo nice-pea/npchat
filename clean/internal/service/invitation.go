@@ -127,6 +127,9 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 		return nil, ErrUserInvitationsInputEqualUserIDsValidate
 	}
 
+	// Пользователь должен существовать
+	
+
 	// получить список приглашений
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
 		UserID: in.UserID,
