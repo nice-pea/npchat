@@ -384,11 +384,11 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		input := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
 		err = serviceInvitations.SendChatInvitation(input)
-		assert.ErrorIs(t, err, ErrUserIsNotMember)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
 	})
 	t.Run("UserID не должен состоять в чате ChatID", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
@@ -422,7 +422,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		input := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
 		err = serviceInvitations.SendChatInvitation(input)
@@ -436,13 +436,13 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 			chief := domain.Member{
 				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
+				UserID: userId,
 				ChatID: chatId,
 			}
 			err := serviceInvitations.MembersRepo.Save(chief)
 			assert.NoError(t, err)
 			chat := domain.Chat{
-				ID:          uuid.NewString(),
+				ID:          chatId,
 				ChiefUserID: userId,
 			}
 			err = serviceInvitations.ChatsRepo.Save(chat)
@@ -456,7 +456,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 			input := SendChatInvitationInput{
 				ChatID:        chat.ID,
-				SubjectUserID: chief.ID,
+				SubjectUserID: chief.UserID,
 				UserID:        targetUser.ID,
 			}
 			err = serviceInvitations.SendChatInvitation(input)
@@ -474,7 +474,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 			member := domain.Member{
 				ID:     uuid.NewString(),
 				UserID: uuid.NewString(),
-				ChatID: uuid.NewString(),
+				ChatID: chat.ID,
 			}
 			err = serviceInvitations.MembersRepo.Save(member)
 			assert.NoError(t, err)
@@ -487,7 +487,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 			input := SendChatInvitationInput{
 				ChatID:        chat.ID,
-				SubjectUserID: member.ID,
+				SubjectUserID: member.UserID,
 				UserID:        targetUser.ID,
 			}
 			err = serviceInvitations.SendChatInvitation(input)
@@ -512,7 +512,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		input := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        uuid.NewString(),
 		}
 		err = serviceInvitations.SendChatInvitation(input)
@@ -555,7 +555,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		member := domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
+			ChatID: chat.ID,
 		}
 		err = serviceInvitations.MembersRepo.Save(member)
 		assert.NoError(t, err)
@@ -568,7 +568,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		input := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
 		err = serviceInvitations.SendChatInvitation(input)
@@ -589,7 +589,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		member := domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
+			ChatID: chat.ID,
 		}
 		err = serviceInvitations.MembersRepo.Save(member)
 		assert.NoError(t, err)
@@ -602,7 +602,7 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		input1 := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        targetUser1.ID,
 		}
 		err = serviceInvitations.SendChatInvitation(input1)
@@ -611,12 +611,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		targetUser2 := domain.User{
 			ID: uuid.NewString(),
 		}
-		err = serviceInvitations.UsersRepo.Save(targetUser1)
+		err = serviceInvitations.UsersRepo.Save(targetUser2)
 		assert.NoError(t, err)
 
 		input2 := SendChatInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: member.ID,
+			SubjectUserID: member.UserID,
 			UserID:        targetUser2.ID,
 		}
 
