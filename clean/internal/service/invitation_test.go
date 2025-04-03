@@ -633,3 +633,19 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		}
 	})
 }
+
+func Test_AcceptInvitationInput_Validate(t *testing.T) {
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		inp := AcceptInvitationInput{
+			SubjectUserID: id,
+			ChatID:        id,
+		}
+		return inp.Validate()
+	})
+}
+
+func Test_Invitations_AcceptInvitation(t *testing.T) {
+	t.Run("", func(t *testing.T) {
+
+	})
+}
