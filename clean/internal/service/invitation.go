@@ -129,6 +129,7 @@ func (in SendChatInvitationInput) Validate() error {
 	return nil
 }
 
+// SendChatInvitation отправляет приглашения пользователям UserID
 func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
 	if err := in.Validate(); err != nil {
 		return err
@@ -171,5 +172,19 @@ func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
 		return err
 	}
 
+	return nil
+}
+
+type AcceptInvitationInput struct {
+	SubjectUserID string
+	ChatID        string
+}
+
+func (in AcceptInvitationInput) Validate() error {
+	return nil
+}
+
+// AcceptInvitation пинимает приглашения в чат
+func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	return nil
 }
