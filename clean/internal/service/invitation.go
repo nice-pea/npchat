@@ -181,6 +181,13 @@ type AcceptInvitationInput struct {
 }
 
 func (in AcceptInvitationInput) Validate() error {
+	if err := uuid.Validate(in.ChatID); err != nil {
+		return ErrInvalidChatID
+	}
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return ErrInvalidSubjectUserID
+	}
+
 	return nil
 }
 
