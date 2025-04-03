@@ -622,5 +622,14 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 
 		err = serviceInvitations.SendChatInvitation(input2)
 		assert.NoError(t, err)
+
+		invsRepo, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{})
+		assert.NoError(t, err)
+
+		for i, invInput := range []SendChatInvitationInput{input1, input2} {
+			assert.Equal(t, invInput.ChatID, invsRepo[i].ChatID)
+			assert.Equal(t, invInput.SubjectUserID, invsRepo[i].SubjectUserID)
+			assert.Equal(t, invInput.UserID, invsRepo[i].UserID)
+		}
 	})
 }
