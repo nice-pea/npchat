@@ -19,5 +19,5 @@ var (
 	ErrUserNotExists               = errors.New("пользователя не существует")
 	ErrUserAlreadyInChat           = errors.New("пользователь уже состоит в чате")
 	ErrUserAlreadyInviteInChat     = errors.New("пользователь уже приглашен в чате")
-	ErrInvitationNotExists         = errors.New("проглашение не существует")
+	ErrInvitationNotExists         = errors.New("приглашение не существует")
 )

@@ -645,7 +645,68 @@ func Test_AcceptInvitationInput_Validate(t *testing.T) {
 }
 
 func Test_Invitations_AcceptInvitation(t *testing.T) {
-	t.Run("", func(t *testing.T) {
+	t.Run("принятие не существующего приглашения", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
 
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		user := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
+		input := AcceptInvitationInput{
+			SubjectUserID: user.ID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.AcceptInvitation(input)
+		assert.ErrorIs(t, err, ErrInvitationNotExists)
+
+		members, err := serviceInvitations.MembersRepo.List(domain.MembersFilter{})
+		assert.NoError(t, err)
+		assert.Len(t, members, 0)
 	})
+	t.Run("принятие существующего приглашения", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		user := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
+		invitation := domain.Invitation{
+			ID:            uuid.NewString(),
+			SubjectUserID: uuid.NewString(),
+			UserID:        user.ID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.InvitationsRepo.Save(invitation)
+		assert.NoError(t, err)
+
+		input := AcceptInvitationInput{
+			SubjectUserID: user.ID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.AcceptInvitation(input)
+		assert.NoError(t, err)
+
+		members, err := serviceInvitations.MembersRepo.List(domain.MembersFilter{})
+		assert.NoError(t, err)
+		assert.Len(t, members, 1)
+		assert.Equal(t, user.ID, members[0].UserID)
+		assert.Equal(t, chat.ID, members[0].ChatID)
+	})
+
 }
