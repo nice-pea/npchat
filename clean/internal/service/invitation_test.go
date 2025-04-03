@@ -543,4 +543,84 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.SendChatInvitation(input)
 		assert.ErrorIs(t, err, ErrChatNotExists)
 	})
+	t.Run("UserID нельзя приглашать более 1 раза", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: uuid.NewString(),
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		targetUser := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser)
+		assert.NoError(t, err)
+
+		input := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        targetUser.ID,
+		}
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.NoError(t, err)
+
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.ErrorIs(t, err, ErrUserAlreadyInviteInChat)
+	})
+	t.Run("можно приглашать больее 1 раза разных пользователей", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: uuid.NewString(),
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		targetUser1 := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser1)
+		assert.NoError(t, err)
+
+		input1 := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        targetUser1.ID,
+		}
+		err = serviceInvitations.SendChatInvitation(input1)
+		assert.NoError(t, err)
+
+		targetUser2 := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser1)
+		assert.NoError(t, err)
+
+		input2 := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        targetUser2.ID,
+		}
+
+		err = serviceInvitations.SendChatInvitation(input2)
+		assert.NoError(t, err)
+	})
 }
