@@ -63,7 +63,7 @@ func memberOrErr(membersRepo domain.MembersRepository, userID, chatID string, er
 
 // getUser возвращает пользователя по id
 // вернет ErrUserNotExists если пользователя не существует
-func userOrErr(usersRepo domain.UsersRepository, id string) (domain.User, error) {
+func getUser(usersRepo domain.UsersRepository, id string) (domain.User, error) {
 	users, err := usersRepo.List(domain.UsersFilter{
 		ID: id,
 	})
