@@ -20,11 +20,14 @@ func newInvitationsService(t *testing.T) *Invitations {
 	assert.NoError(t, err)
 	invitationsRepository, err := sqLiteInMemory.NewInvitationsRepository()
 	assert.NoError(t, err)
+	usersRepository, err := sqLiteInMemory.NewUsersRepository()
+	assert.NoError(t, err)
 
 	return &Invitations{
 		ChatsRepo:       chatsRepository,
 		MembersRepo:     membersRepository,
 		InvitationsRepo: invitationsRepository,
+		UsersRepo:       usersRepository,
 		History:         HistoryDummy{},
 	}
 }
@@ -213,12 +216,28 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
 		id := uuid.NewString()
+		user := domain.User{
+			ID: id,
+		}
+		err := serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
 		input := UserInvitationsInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
 		invs, err := serviceInvitations.UserInvitations(input)
 		assert.NoError(t, err)
+		assert.Len(t, invs, 0)
+	})
+	t.Run("пользователь должен существовать", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		id := uuid.NewString()
+		input := UserInvitationsInput{
+			SubjectUserID: id,
+			UserID:        id,
+		}
+		invs, err := serviceInvitations.UserInvitations(input)
+		assert.ErrorIs(t, err, ErrUserNotExists)
 		assert.Len(t, invs, 0)
 	})
 	t.Run("пустой список если у данного пользователя нету приглашений", func(t *testing.T) {
@@ -232,9 +251,18 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 			assert.NoError(t, err)
 		}
 		ourUserID := uuid.NewString()
-		invs, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{
+		user := domain.User{
 			ID: ourUserID,
-		})
+		}
+		err := serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+		input := UserInvitationsInput{
+			SubjectUserID: ourUserID,
+			UserID:        ourUserID,
+		}
+
+		invs, err := serviceInvitations.UserInvitations(input)
+
 		assert.NoError(t, err)
 		assert.Len(t, invs, 0)
 		allInvs, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{})
@@ -244,12 +272,19 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 	t.Run("у пользователя есть приглашение", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
 		userId := uuid.NewString()
+
+		user := domain.User{
+			ID: userId,
+		}
+		err := serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
 		input := UserInvitationsInput{
 			SubjectUserID: userId,
 			UserID:        userId,
 		}
 		chatId := uuid.NewString()
-		err := serviceInvitations.InvitationsRepo.Save(domain.Invitation{
+		err = serviceInvitations.InvitationsRepo.Save(domain.Invitation{
 			ID:     uuid.NewString(),
 			ChatID: chatId,
 			UserID: userId,
@@ -266,6 +301,12 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 		const count = 5
 		serviceInvitations := newInvitationsService(t)
 		userId := uuid.NewString()
+		user := domain.User{
+			ID: userId,
+		}
+		err := serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
 		input := UserInvitationsInput{
 			SubjectUserID: userId,
 			UserID:        userId,
