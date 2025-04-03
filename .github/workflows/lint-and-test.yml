@@ -3,48 +3,40 @@ name: Run Linters and Tests
 
 # Указываем триггеры для запуска workflow
 on:
-  # Позволяет вручную запускать workflow через интерфейс GitHub
   workflow_dispatch:
-  # Запускает workflow при пуше в ветку master
   push:
     branches: [ master ]
-  # Запускает workflow при запросе проверки в группе слияния
   merge_group:
     types: [ checks_requested ]
+  pull_request:
+      types: [ ready_for_review ]
 
 # Определяем jobs, которые будут выполняться в рамках workflow
 jobs:
-  # Job для запуска инструментов
-  tools:
-    # Указываем, что job будет выполняться на последней версии Ubuntu
+  go-tools:
     runs-on: ubuntu-latest
     steps:
-      # Шаг для клонирования репозитория
       - uses: actions/checkout@v4
 
-      # Шаг для установки Go
       - name: Install Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.24
 
-      # Шаг для запуска go vet, который проверяет код на наличие потенциальных ошибок
       - name: Run go vet
-        run: go vet ./clean/...
+        working-directory: clean
+        run: go vet ./...
 
-      # Шаг для запуска тестов Go с подробным выводом
       - name: Run go test
-        run: go test -v --short ./clean/...
+        working-directory: clean
+        run: go test -v --short ./...
 
-  # Job для запуска линтера golangci-lint
   golangci:
-    runs-on: ubuntu-latest  # Указываем, что job будет выполняться на последней версии Ubuntu
+    runs-on: ubuntu-latest
+    needs: go-tools
     steps:
-      # Шаг для запуска golangci-lint
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6.0.1
         with:
-          # Указываем рабочую директорию для линтера
-          working-directory: ./clean
-          # Указываем аргументы для линтера, включая таймаут
+          working-directory: clean
           args: --timeout 10m
