@@ -343,114 +343,15 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 	})
 }
 
-/*
-
-func Test_Invitations_MemberSentInvitations(t *testing.T) {
-	t.Run("получение списка для участника, у которого есть отправленные приглашения", func(t *testing.T) {
-		const amount = 3
-		serviceInvitations := newInvitationsService(t)
-		chatId := uuid.NewString()
-		err := serviceInvitations.ChatsRepo.Save(
-			domain.Chat{
-				ID: chatId,
-			})
-		assert.NoError(t, err)
-		userId := uuid.NewString()
-		input := MemberSentInvitationsInput{
-			SubjectUserID: userId,
-			UserID:        userId,
-			ChatID:        chatId,
+func Test_SendChatInvitationInput_Validate(t *testing.T) {	
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := SendChatInvitationInput{
+			SubjectUserID: id,
+			ChatID:        id,
+			UserID:        id,
 		}
-		for range amount {
-			inv := domain.Invitation{
-				ID:     uuid.NewString(),
-				UserID: userId,
-				ChatID: chatId,
-			}
-			err := serviceInvitations.InvitationsRepo.Save(inv)
-			assert.NoError(t, err)
-		}
-		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsRepo, amount)
-	})
-	t.Run("UserID и SubjectUserID могут быть разными", func(t *testing.T) {
-		serviceInvitations := newInvitationsService(t)
-		chatId := uuid.NewString()
-		err := serviceInvitations.ChatsRepo.Save(
-			domain.Chat{
-				ID: chatId,
-			})
-		assert.NoError(t, err)
-		userId := uuid.NewString()
-		input := MemberSentInvitationsInput{
-			SubjectUserID: userId,
-			UserID:        uuid.NewString(),
-			ChatID:        chatId,
-		}
-		inv := domain.Invitation{
-			ID:     uuid.NewString(),
-			UserID: userId,
-			ChatID: uuid.NewString(),
-		}
-		err = serviceInvitations.InvitationsRepo.Save(inv)
-		assert.NoError(t, err)
-
-		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsRepo, 1)
-	})
-	t.Run("получение списка приглашений для участника без отправленных приглашений", func(t *testing.T) {
-		serviceInvitations := newInvitationsService(t)
-		userId := uuid.NewString()
-		input := MemberSentInvitationsInput{
-			SubjectUserID: userId,
-			UserID:        userId,
-		}
-		inv := domain.Invitation{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
-		}
-		err := serviceInvitations.InvitationsRepo.Save(inv)
-		assert.NoError(t, err)
-		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsRepo, 0)
-	})
-	t.Run("передача несуществующего UserID", func(t *testing.T) {
-		serviceInvitations := newInvitationsService(t)
-		input := MemberSentInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-		}
-		inv := domain.Invitation{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
-		}
-		err := serviceInvitations.InvitationsRepo.Save(inv)
-		assert.NoError(t, err)
-		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
-		assert.NoError(t, err)
-		assert.Len(t, invsRepo, 0)
-	})
-	t.Run("вызов метода с некоректными аргументами", func(t *testing.T) {
-		serviceInvitations := newInvitationsService(t)
-		input := MemberSentInvitationsInput{
-			SubjectUserID: "",
-			UserID:        uuid.NewString(),
-		}
-		inv := domain.Invitation{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
-		}
-		err := serviceInvitations.InvitationsRepo.Save(inv)
-		assert.NoError(t, err)
-		invsRepo, err := serviceInvitations.MemberSentInvitations(input)
-		assert.Error(t, err)
-		assert.Len(t, invsRepo, 0)
+		return input.Validate()
 	})
 }
-*/
+
+func Test_Invitations_SendChatInvitation(t *testing.T) {}
