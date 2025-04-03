@@ -9,7 +9,7 @@ on:
   merge_group:
     types: [ checks_requested ]
   pull_request:
-      types: [ ready_for_review ]
+    types: [ ready_for_review ]
 
 # Определяем jobs, которые будут выполняться в рамках workflow
 jobs:
@@ -37,6 +37,6 @@ jobs:
     steps:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6.0.1
+        working-directory: clean
         with:
-          working-directory: clean
           args: --timeout 10m
