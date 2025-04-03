@@ -4,10 +4,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-type Repo interface {
-	Members
-}
-
 // chat возвращает чат либо ошибку ErrChatNotExists
 func getChat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, error) {
 	chatsFilter := domain.ChatsFilter{
