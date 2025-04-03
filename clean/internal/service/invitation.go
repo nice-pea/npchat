@@ -48,6 +48,12 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 		return nil, err
 	}
 
+	// проверить является ли пользователь участником чата
+	_, err = subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Проверить что пользователь является администратором чата
 	if chat.ChiefUserID == in.SubjectUserID {
 		// Получить все приглашения в этот чат
@@ -55,12 +61,6 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 
 		return invitations, err
 	} else {
-		// проверить является ли пользователь участником чата
-		_, err := subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID)
-		if err != nil {
-			return nil, err
-		}
-
 		// получить список приглашений конкретного пользователя
 		invitations, err := getInitationsSpecificUserInThisChat(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
 
@@ -103,7 +103,7 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 		return nil, err
 	}
 
-	// получить список приглашений
+	// получить список полученных пользователем приглашений
 	invs, err := getInitationsSpecificUser(i.InvitationsRepo, in.UserID)
 
 	return invs, err
