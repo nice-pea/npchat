@@ -16,4 +16,5 @@ var (
 	ErrSubjectUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
 	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
 	ErrCannotViewSomeoneElseChats  = errors.New("subject user не может просматривать чужой список")
+	ErrUserNotExists               = errors.New("пользователя не существует")
 )
