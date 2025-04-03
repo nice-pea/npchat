@@ -4,7 +4,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// chat возвращает чат либо ошибку ErrChatNotExists
+// getChat возвращает чат либо ошибку ErrChatNotExists
 func getChat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, error) {
 	chatsFilter := domain.ChatsFilter{
 		IDs: []string{chatID},
@@ -20,7 +20,7 @@ func getChat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, erro
 	return chats[0], nil
 }
 
-// Получить список участников
+// chatMembers возвращает список участников
 func chatMembers(membersRepo domain.MembersRepository, chatID string) ([]domain.Member, error) {
 	membersFilter := domain.MembersFilter{
 		ChatID: chatID,
@@ -33,7 +33,7 @@ func chatMembers(membersRepo domain.MembersRepository, chatID string) ([]domain.
 	return members, nil
 }
 
-// UserMember вернет участника либо ошибку ErrUserIsNotMember
+// userMember вернет участника либо ошибку ErrUserIsNotMember
 func userMember(membersRepo domain.MembersRepository, userID, chatID string) (domain.Member, error) {
 	return memberOrErr(membersRepo, userID, chatID, ErrUserIsNotMember)
 }
@@ -61,6 +61,8 @@ func memberOrErr(membersRepo domain.MembersRepository, userID, chatID string, er
 	return members[0], nil
 }
 
+// getUser возвращает пользователя по id
+// вернет ErrUserNotExists если пользователя не существует
 func userOrErr(usersRepo domain.UsersRepository, id string) (domain.User, error) {
 	users, err := usersRepo.List(domain.UsersFilter{
 		ID: id,
@@ -71,5 +73,5 @@ func userOrErr(usersRepo domain.UsersRepository, id string) (domain.User, error)
 	if len(users) != 1 {
 		return domain.User{}, ErrUserNotExists
 	}
-	return users[1], nil
+	return users[0], nil
 }
