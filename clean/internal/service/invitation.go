@@ -109,6 +109,30 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	return invs, err
 }
 
+type SendChatInvitationInput struct {
+	ChatID        string
+	SubjectUserID string
+	UserID        string
+}
+
+func (in SendChatInvitationInput) Validate() error {
+	if err := uuid.Validate(in.ChatID); err != nil {
+		return ErrInvalidChatID
+	}
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return ErrInvalidSubjectUserID
+	}
+	if err := uuid.Validate(in.UserID); err != nil {
+		return ErrInvalidUserID
+	}
+
+	return nil
+}
+
+func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
+	return nil
+}
+
 // getInitationsInThisChat возвращает список всех приглашений в конкретный чат
 func getInitationsInThisChat(invitationsRepo domain.InvitationsRepository, chatId string) ([]domain.Invitation, error) {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
