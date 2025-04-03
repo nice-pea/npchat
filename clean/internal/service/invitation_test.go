@@ -343,7 +343,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 	})
 }
 
-func Test_SendChatInvitationInput_Validate(t *testing.T) {	
+func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := SendChatInvitationInput{
 			SubjectUserID: id,
@@ -354,4 +354,193 @@ func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	})
 }
 
-func Test_Invitations_SendChatInvitation(t *testing.T) {}
+func Test_Invitations_SendChatInvitation(t *testing.T) {
+	t.Run("участник отправляющий приглашения должен состоять в чате", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		subjectUser := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(subjectUser)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: subjectUser.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		targetUser := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser)
+		assert.NoError(t, err)
+
+		input := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        targetUser.ID,
+		}
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.ErrorIs(t, err, ErrUserIsNotMember)
+	})
+	t.Run("UserID не должен состоять в чате ChatID", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		targetUser := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser)
+		assert.NoError(t, err)
+
+		targetMember := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: targetUser.ID,
+			ChatID: chat.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(targetMember)
+		assert.NoError(t, err)
+
+		input := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        targetUser.ID,
+		}
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.ErrorIs(t, err, ErrUserAlreadyInChat)
+	})
+	t.Run("приглашать участников могут все члены чата", func(t *testing.T) {
+		t.Run("админситратор", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+			chatId := uuid.NewString()
+			userId := uuid.NewString()
+
+			chief := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chatId,
+			}
+			err := serviceInvitations.MembersRepo.Save(chief)
+			assert.NoError(t, err)
+			chat := domain.Chat{
+				ID:          uuid.NewString(),
+				ChiefUserID: userId,
+			}
+			err = serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			targetUser := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(targetUser)
+			assert.NoError(t, err)
+
+			input := SendChatInvitationInput{
+				ChatID:        chat.ID,
+				SubjectUserID: chief.ID,
+				UserID:        targetUser.ID,
+			}
+			err = serviceInvitations.SendChatInvitation(input)
+			assert.NoError(t, err)
+		})
+		t.Run("обычный участник чата", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+
+			chat := domain.Chat{
+				ID: uuid.NewString(),
+			}
+			err := serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: uuid.NewString(),
+			}
+			err = serviceInvitations.MembersRepo.Save(member)
+			assert.NoError(t, err)
+
+			targetUser := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(targetUser)
+			assert.NoError(t, err)
+
+			input := SendChatInvitationInput{
+				ChatID:        chat.ID,
+				SubjectUserID: member.ID,
+				UserID:        targetUser.ID,
+			}
+			err = serviceInvitations.SendChatInvitation(input)
+			assert.NoError(t, err)
+		})
+	})
+	t.Run("UserID должен существовать", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		input := SendChatInvitationInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.ID,
+			UserID:        uuid.NewString(),
+		}
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.ErrorIs(t, err, ErrUserNotExists)
+	})
+	t.Run("ChatID должен существовать", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: uuid.NewString(),
+		}
+		err := serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		targetUser := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(targetUser)
+		assert.NoError(t, err)
+
+		input := SendChatInvitationInput{
+			ChatID:        uuid.NewString(),
+			SubjectUserID: member.ID,
+			UserID:        targetUser.ID,
+		}
+		err = serviceInvitations.SendChatInvitation(input)
+		assert.ErrorIs(t, err, ErrChatNotExists)
+	})
+}
