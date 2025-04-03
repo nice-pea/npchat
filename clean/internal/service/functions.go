@@ -64,3 +64,16 @@ func memberOrErr(membersRepo domain.MembersRepository, userID, chatID string, er
 
 	return members[0], nil
 }
+
+func userOrErr(usersRepo domain.UsersRepository, id string) (domain.User, error) {
+	users, err := usersRepo.List(domain.UsersFilter{
+		ID: id,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	if len(users) != 1 {
+		return domain.User{}, ErrUserNotExists
+	}
+	return users[1], nil
+}
