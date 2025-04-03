@@ -100,3 +100,19 @@ func getInitationsSpecificUser(invitationsRepo domain.InvitationsRepository, use
 	})
 	return invitations, err
 }
+
+// getInitation возвращает приглашенение в конкретный чат
+func getInitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		UserID: userId,
+		ChatID: chatId,
+	})
+	if err != nil {
+		return domain.Invitation{}, err
+	}
+	if len(invitations) != 1 {
+		return domain.Invitation{}, ErrInvitationNotExists
+	}
+
+	return invitations[0], nil
+}

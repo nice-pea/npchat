@@ -130,5 +130,46 @@ func (in SendChatInvitationInput) Validate() error {
 }
 
 func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
+	if err := in.Validate(); err != nil {
+		return err
+	}
+
+	// проверить существование чата
+	if _, err := getChat(i.ChatsRepo, in.ChatID); err != nil {
+		return err
+	}
+
+	// проверить, состоит ли SubjectUserID в чате
+	if _, err := subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID); err != nil {
+		return err
+	}
+
+	// проверить, не состоит ли UserID в чате
+	if _, err := userMember(i.MembersRepo, in.UserID, in.ChatID); err == nil {
+		return ErrUserAlreadyInChat
+	}
+
+	// проверить, существует ли UserID
+	if _, err := getUser(i.UsersRepo, in.UserID); err != nil {
+		return err
+	}
+
+	// проверить, не существет ли приглашение для этого пользователя в этот чат
+	if _, err := getInitation(i.InvitationsRepo, in.UserID, in.ChatID); err == nil {
+		return ErrUserAlreadyInviteInChat
+	}
+
+	// отправить приглашение
+	invitation := domain.Invitation{
+		ID:            uuid.NewString(),
+		SubjectUserID: in.SubjectUserID,
+		UserID:        in.UserID,
+		ChatID:        in.ChatID,
+	}
+	err := i.InvitationsRepo.Save(invitation)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

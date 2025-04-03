@@ -18,4 +18,6 @@ var (
 	ErrCannotViewSomeoneElseChats  = errors.New("subject user не может просматривать чужой список")
 	ErrUserNotExists               = errors.New("пользователя не существует")
 	ErrUserAlreadyInChat           = errors.New("пользователь уже состоит в чате")
+	ErrUserAlreadyInviteInChat     = errors.New("пользователь уже приглашен в чате")
+	ErrInvitationNotExists         = errors.New("проглашение не существует")
 )
