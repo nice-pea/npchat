@@ -193,5 +193,10 @@ func (in AcceptInvitationInput) Validate() error {
 
 // AcceptInvitation пинимает приглашения в чат
 func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
+	// Валидировать входные данные
+	if err := in.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
