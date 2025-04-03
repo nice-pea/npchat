@@ -12,6 +12,7 @@ type Invitations struct {
 	ChatsRepo       domain.ChatsRepository
 	MembersRepo     domain.MembersRepository
 	InvitationsRepo domain.InvitationsRepository
+	UsersRepo       domain.UsersRepository
 	History         History
 }
 
@@ -101,6 +102,9 @@ func (in UserInvitationsInput) Validate() error {
 	return nil
 }
 
+// TODO: перенести в errors
+var ErrUserNotExists = errors.New("пользователя не существует")
+
 // UserInvitations возвращает список приглашений конкретного пользователя в чаты
 func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
 	// Валидировать параметры
@@ -114,6 +118,15 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	}
 
 	// Пользователь должен существовать
+	users, err := i.UsersRepo.List(domain.UsersFilter{
+		ID: in.UserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(users) != 1 {
+		return nil, ErrUserNotExists
+	}
 
 	// получить список приглашений
 	invs, err := i.InvitationsRepo.List(domain.InvitationsFilter{
