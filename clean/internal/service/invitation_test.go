@@ -671,7 +671,7 @@ func Test_Invitations_AcceptInvitation(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, members, 0)
 	})
-	t.Run("принятие существующего приглашения", func(t *testing.T) {
+	t.Run("после принятия существующего приглашения, пользователь становится участником чата", func(t *testing.T) {
 		serviceInvitations := newInvitationsService(t)
 
 		chat := domain.Chat{
