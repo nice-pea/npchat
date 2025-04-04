@@ -765,3 +765,14 @@ func Test_Invitations_AcceptInvitation(t *testing.T) {
 		assert.Len(t, members, 0)
 	})
 }
+
+func Test_CancelInvitationInput_Validate(t *testing.T) {
+	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
+		input := CancelInvitationInput{
+			SubjectUserID: id,
+			UserID:        id,
+			ChatID:        id,
+		}
+		return input.Validate()
+	})
+}
