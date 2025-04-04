@@ -233,3 +233,18 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 	return nil
 }
+
+type CancelInvitationInput struct {
+	SubjectUserID string
+	UserID        string
+	ChatID        string
+}
+
+func (in CancelInvitationInput) Validate() error {
+	return nil
+}
+
+// CancelInvitation отменяет приглашение
+func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
+	return nil
+}
