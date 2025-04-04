@@ -776,3 +776,300 @@ func Test_CancelInvitationInput_Validate(t *testing.T) {
 		return input.Validate()
 	})
 }
+
+func Test_Invitations_CancelInvitation(t *testing.T) {
+	t.Run("отменить не существующее приглашение", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		user := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
+		input := CancelInvitationInput{
+			SubjectUserID: user.ID,
+			ChatID:        chat.ID,
+			UserID:        user.ID,
+		}
+		err = serviceInvitations.CancelInvitation(input)
+		assert.ErrorIs(t, err, ErrInvitationNotExists)
+	})
+	t.Run("приглашение могут отменить только инициатор, администратор и приглашаемый пользователь", func(t *testing.T) {
+		t.Run("инициатор", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+
+			chat := domain.Chat{
+				ID: uuid.NewString(),
+			}
+			err := serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			user := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(user)
+			assert.NoError(t, err)
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			}
+			err = serviceInvitations.MembersRepo.Save(member)
+			assert.NoError(t, err)
+
+			invitation := domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: member.UserID,
+				UserID:        user.ID,
+				ChatID:        chat.ID,
+			}
+			err = serviceInvitations.InvitationsRepo.Save(invitation)
+			assert.NoError(t, err)
+
+			input := CancelInvitationInput{
+				SubjectUserID: invitation.SubjectUserID,
+				ChatID:        invitation.ChatID,
+				UserID:        invitation.UserID,
+			}
+			err = serviceInvitations.CancelInvitation(input)
+			assert.NoError(t, err)
+		})
+		t.Run("администратор", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+
+			chatId := uuid.NewString()
+
+			chiefMember := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chatId,
+			}
+			err := serviceInvitations.MembersRepo.Save(chiefMember)
+			assert.NoError(t, err)
+
+			chat := domain.Chat{
+				ID:          chatId,
+				ChiefUserID: chiefMember.UserID,
+			}
+			err = serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			}
+			err = serviceInvitations.MembersRepo.Save(member)
+			assert.NoError(t, err)
+
+			user := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(user)
+			assert.NoError(t, err)
+
+			invitation := domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: member.UserID,
+				UserID:        user.ID,
+				ChatID:        chat.ID,
+			}
+			err = serviceInvitations.InvitationsRepo.Save(invitation)
+			assert.NoError(t, err)
+
+			input := CancelInvitationInput{
+				SubjectUserID: chat.ChiefUserID,
+				ChatID:        invitation.ChatID,
+				UserID:        invitation.UserID,
+			}
+			err = serviceInvitations.CancelInvitation(input)
+			assert.NoError(t, err)
+		})
+		t.Run("приглашаемый участник", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+
+			chat := domain.Chat{
+				ID: uuid.NewString(),
+			}
+			err := serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			user := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(user)
+			assert.NoError(t, err)
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			}
+			err = serviceInvitations.MembersRepo.Save(member)
+			assert.NoError(t, err)
+
+			invitation := domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: member.UserID,
+				UserID:        user.ID,
+				ChatID:        chat.ID,
+			}
+			err = serviceInvitations.InvitationsRepo.Save(invitation)
+			assert.NoError(t, err)
+
+			input := CancelInvitationInput{
+				SubjectUserID: user.ID,
+				ChatID:        chat.ID,
+				UserID:        user.ID,
+			}
+			err = serviceInvitations.CancelInvitation(input)
+			assert.NoError(t, err)
+		})
+		t.Run("посторонний участник чата", func(t *testing.T) {
+			serviceInvitations := newInvitationsService(t)
+
+			chat := domain.Chat{
+				ID: uuid.NewString(),
+			}
+			err := serviceInvitations.ChatsRepo.Save(chat)
+			assert.NoError(t, err)
+
+			user := domain.User{
+				ID: uuid.NewString(),
+			}
+			err = serviceInvitations.UsersRepo.Save(user)
+			assert.NoError(t, err)
+
+			member1 := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			}
+			err = serviceInvitations.MembersRepo.Save(member1)
+			assert.NoError(t, err)
+
+			invitation := domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: member1.UserID,
+				UserID:        user.ID,
+				ChatID:        chat.ID,
+			}
+			err = serviceInvitations.InvitationsRepo.Save(invitation)
+			assert.NoError(t, err)
+
+			member2 := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			}
+			err = serviceInvitations.MembersRepo.Save(member2)
+			assert.NoError(t, err)
+
+			input := CancelInvitationInput{
+				SubjectUserID: member2.UserID,
+				ChatID:        invitation.ChatID,
+				UserID:        invitation.UserID,
+			}
+			err = serviceInvitations.CancelInvitation(input)
+			assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
+		})
+	})
+	t.Run("после отмены, в участник чата не добавляется", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		user := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		invitation := domain.Invitation{
+			ID:            uuid.NewString(),
+			SubjectUserID: member.UserID,
+			UserID:        user.ID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.InvitationsRepo.Save(invitation)
+		assert.NoError(t, err)
+
+		input := CancelInvitationInput{
+			SubjectUserID: invitation.SubjectUserID,
+			ChatID:        invitation.ChatID,
+			UserID:        invitation.UserID,
+		}
+		err = serviceInvitations.CancelInvitation(input)
+		assert.NoError(t, err)
+
+		members, err := serviceInvitations.MembersRepo.List(domain.MembersFilter{})
+		assert.NoError(t, err)
+		if assert.Len(t, members, 1) {
+			assertEqualMembers(t, member, members[0])
+		}
+	})
+	t.Run("после отмены, приглашение удаляется", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		user := domain.User{
+			ID: uuid.NewString(),
+		}
+		err = serviceInvitations.UsersRepo.Save(user)
+		assert.NoError(t, err)
+
+		member := domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		}
+		err = serviceInvitations.MembersRepo.Save(member)
+		assert.NoError(t, err)
+
+		invitation := domain.Invitation{
+			ID:            uuid.NewString(),
+			SubjectUserID: member.UserID,
+			UserID:        user.ID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.InvitationsRepo.Save(invitation)
+		assert.NoError(t, err)
+
+		input := CancelInvitationInput{
+			SubjectUserID: invitation.SubjectUserID,
+			ChatID:        invitation.ChatID,
+			UserID:        invitation.UserID,
+		}
+		err = serviceInvitations.CancelInvitation(input)
+		assert.NoError(t, err)
+
+		invitations, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{})
+		assert.NoError(t, err)
+		assert.Len(t, invitations, 0)
+	})
+}
