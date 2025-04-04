@@ -277,6 +277,14 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 	subjectUserId := invitation.SubjectUserID
 	targetUserId := invitation.UserID
 
+	if in.SubjectUserID == subjectUserId {
+		// проверить, существование участника чата
+		_, err := subjectUserMember(i.MembersRepo, subjectUserId, in.ChatID)
+		if err != nil {
+			return err
+		}
+	}
+
 	if !(in.SubjectUserID == chiefUserId || in.SubjectUserID == subjectUserId || in.SubjectUserID == targetUserId) {
 		return ErrSubjectUserIsNotChief
 	}
