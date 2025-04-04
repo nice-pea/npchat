@@ -198,5 +198,38 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 		return err
 	}
 
+	// проверить существование приглашения
+	invitation, err := getInitation(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
+	if err != nil {
+		return err
+	}
+
+	//проверить существование пользователя
+	if _, err := getUser(i.UsersRepo, in.SubjectUserID); err != nil {
+		return err
+	}
+
+	// проверить, существование чата
+	if _, err := getChat(i.ChatsRepo, in.ChatID); err != nil {
+		return err
+	}
+
+	// создаем участника чата
+	member := domain.Member{
+		ID:     uuid.NewString(),
+		UserID: in.SubjectUserID,
+		ChatID: in.ChatID,
+	}
+	err = i.MembersRepo.Save(member)
+	if err != nil {
+		return err
+	}
+
+	// удаляем приглашение
+	err = i.InvitationsRepo.Delete(invitation.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
