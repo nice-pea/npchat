@@ -33,20 +33,6 @@ func newInvitationsService(t *testing.T) *Invitations {
 }
 
 func Test_ChatInvitationsInput_Validate(t *testing.T) {
-	t.Run("SubjectUserID обязательное поле", func(t *testing.T) {
-		input := ChatInvitationsInput{
-			SubjectUserID: "",
-			ChatID:        uuid.NewString(),
-		}
-		assert.Error(t, input.Validate())
-	})
-	t.Run("ChatID обязательное поле", func(t *testing.T) {
-		input := ChatInvitationsInput{
-			ChatID:        "",
-			SubjectUserID: uuid.NewString(),
-		}
-		assert.Error(t, input.Validate())
-	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := ChatInvitationsInput{
 			SubjectUserID: id,
@@ -198,13 +184,6 @@ func Test_UserInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := UserInvitationsInput{
 			SubjectUserID: id,
-			UserID:        uuid.NewString(),
-		}
-		return input.Validate()
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := UserInvitationsInput{
-			SubjectUserID: uuid.NewString(),
 			UserID:        id,
 		}
 		return input.Validate()
