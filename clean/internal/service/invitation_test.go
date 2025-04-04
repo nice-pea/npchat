@@ -735,5 +735,33 @@ func Test_Invitations_AcceptInvitation(t *testing.T) {
 		err = serviceInvitations.AcceptInvitation(input)
 		assert.ErrorIs(t, err, ErrChatNotExists)
 	})
+	t.Run("пользователя не существует", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
 
+		chat := domain.Chat{
+			ID: uuid.NewString(),
+		}
+		err := serviceInvitations.ChatsRepo.Save(chat)
+		assert.NoError(t, err)
+
+		invitation := domain.Invitation{
+			ID:            uuid.NewString(),
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.InvitationsRepo.Save(invitation)
+		assert.NoError(t, err)
+
+		input := AcceptInvitationInput{
+			SubjectUserID: invitation.UserID,
+			ChatID:        chat.ID,
+		}
+		err = serviceInvitations.AcceptInvitation(input)
+		assert.ErrorIs(t, err, ErrUserNotExists)
+
+		members, err := serviceInvitations.MembersRepo.List(domain.MembersFilter{})
+		assert.NoError(t, err)
+		assert.Len(t, members, 0)
+	})
 }
