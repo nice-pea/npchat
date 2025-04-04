@@ -241,6 +241,16 @@ type CancelInvitationInput struct {
 }
 
 func (in CancelInvitationInput) Validate() error {
+	if err := uuid.Validate(in.SubjectUserID); err != nil {
+		return ErrInvalidSubjectUserID
+	}
+	if err := uuid.Validate(in.UserID); err != nil {
+		return ErrInvalidUserID
+	}
+	if err := uuid.Validate(in.ChatID); err != nil {
+		return ErrInvalidChatID
+	}
+
 	return nil
 }
 
