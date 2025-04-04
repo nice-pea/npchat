@@ -156,7 +156,7 @@ func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
 	}
 
 	// проверить, не существет ли приглашение для этого пользователя в этот чат
-	if _, err := getInitation(i.InvitationsRepo, in.UserID, in.ChatID); err == nil {
+	if _, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID); err == nil {
 		return ErrUserAlreadyInviteInChat
 	}
 
@@ -199,7 +199,7 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	}
 
 	// проверить существование приглашения
-	invitation, err := getInitation(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
+	invitation, err := getInvitation(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
 	if err != nil {
 		return err
 	}
@@ -256,5 +256,34 @@ func (in CancelInvitationInput) Validate() error {
 
 // CancelInvitation отменяет приглашение
 func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
+	// Валидировать входные данные
+	if err := in.Validate(); err != nil {
+		return err
+	}
+
+	// проверить существование приглашения
+	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
+	if err != nil {
+		return err
+	}
+
+	// проверить, существование чата
+	chat, err := getChat(i.ChatsRepo, in.ChatID)
+	if err != nil {
+		return err
+	}
+
+	chiefUserId := chat.ChiefUserID
+	subjectUserId := invitation.SubjectUserID
+	targetUserId := invitation.UserID
+
+	if !(in.SubjectUserID == chiefUserId || in.SubjectUserID == subjectUserId || in.SubjectUserID == targetUserId) {
+		return ErrSubjectUserIsNotChief
+	}
+	err = i.InvitationsRepo.Delete(invitation.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

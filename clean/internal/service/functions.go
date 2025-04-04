@@ -102,7 +102,7 @@ func getInitationsSpecificUser(invitationsRepo domain.InvitationsRepository, use
 }
 
 // getInitation возвращает приглашенение в конкретный чат
-func getInitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
+func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		UserID: userId,
 		ChatID: chatId,
