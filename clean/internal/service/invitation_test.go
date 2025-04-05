@@ -242,7 +242,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		invs, err := serviceInvitations.UserInvitations(input)
-		assert.ErrorIs(t, err, ErrUnauthorizedInvitationView)
+		assert.ErrorIs(t, err, ErrUnauthorizedInvitationsView)
 		assert.Len(t, invs, 0)
 	})
 	t.Run("пустой список если у данного пользователя нету приглашений", func(t *testing.T) {

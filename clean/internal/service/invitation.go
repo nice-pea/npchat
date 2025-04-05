@@ -99,7 +99,7 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 
 	// Пользователь должен видеть только свои приглашения
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrUnauthorizedInvitationView
+		return nil, ErrUnauthorizedInvitationsView
 	}
 
 	// Пользователь должен существовать
