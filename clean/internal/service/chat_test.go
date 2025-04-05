@@ -47,7 +47,7 @@ func Test_Chats_UserChats(t *testing.T) {
 			UserID:        uuid.NewString(),
 		}
 		chats, err := chatsService.UserChats(input)
-		assert.ErrorIs(t, err, ErrCannotViewSomeoneElseChats)
+		assert.ErrorIs(t, err, ErrUnauthorizedChatsView)
 		assert.Len(t, chats, 0)
 	})
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {

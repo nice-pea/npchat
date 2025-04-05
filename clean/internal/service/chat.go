@@ -42,7 +42,7 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrCannotViewSomeoneElseChats
+		return nil, ErrUnauthorizedChatsView
 	}
 
 	// Получить список участников с фильтром по пользователю
