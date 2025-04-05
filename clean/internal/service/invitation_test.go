@@ -973,7 +973,7 @@ func Test_Invitations_CancelInvitation(t *testing.T) {
 				UserID:        invitation.UserID,
 			}
 			err = serviceInvitations.CancelInvitation(input)
-			assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
+			assert.ErrorIs(t, err, ErrSubjectUserNotAllowed)
 		})
 	})
 	t.Run("после отмены, в участник чата не добавляется", func(t *testing.T) {
