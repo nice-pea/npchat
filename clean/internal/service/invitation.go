@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
@@ -33,9 +34,9 @@ func (in ChatInvitationsInput) Validate() error {
 	return nil
 }
 
-// ChatInvitations возвращает список приглашений в конкретный чат
-// если SubjectUserID является администратором то возвращается все приглашения в данный чат
-// иначе только те приглашения которые отправил именно пользователь
+// ChatInvitations возвращает список приглашений в конкретный чат.
+// Если SubjectUserID является администратором, то возвращается все приглашения в данный чат,
+// иначе только те приглашения, которые отправил именно пользователь.
 func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
@@ -98,7 +99,7 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 
 	// Пользователь должен видеть только свои приглашения
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrCannotViewSomeoneElseChats
+		return nil, ErrUnauthorizedInvitationView
 	}
 
 	// Пользователь должен существовать
@@ -135,7 +136,7 @@ func (in SendInvitationInput) Validate() error {
 	return nil
 }
 
-// SendChatInvitation отправляет приглашения пользователям UserID
+// SendInvitation отправляет приглашения пользователям UserID
 func (i *Invitations) SendInvitation(in SendInvitationInput) error {
 	if err := in.Validate(); err != nil {
 		return err
@@ -161,8 +162,8 @@ func (i *Invitations) SendInvitation(in SendInvitationInput) error {
 		return err
 	}
 
-	// Проверить, не существет ли приглашение для этого пользователя в этот чат
-	if _, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID); err == nil {
+	// Проверить, не существует ли приглашение для этого пользователя в этот чат
+	if err := invitationMustNotExists(i.InvitationsRepo, in.UserID, in.ChatID); err != nil {
 		return ErrUserAlreadyInviteInChat
 	}
 
@@ -197,7 +198,7 @@ func (in AcceptInvitationInput) Validate() error {
 	return nil
 }
 
-// AcceptInvitation пинимает приглашения в чат
+// AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
 func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	// Валидировать входные данные
 	if err := in.Validate(); err != nil {
@@ -211,12 +212,12 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	}
 
 	// Проверить существование пользователя
-	if _, err := getUser(i.UsersRepo, in.SubjectUserID); err != nil {
+	if _, err = getUser(i.UsersRepo, in.SubjectUserID); err != nil {
 		return err
 	}
 
 	// Проверить, существование чата
-	if _, err := getChat(i.ChatsRepo, in.ChatID); err != nil {
+	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
 		return err
 	}
 
@@ -306,7 +307,7 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 	return nil
 }
 
-// getInitation возвращает приглашенение в конкретный чат
+// getInvitation возвращает приглашение в конкретный чат
 func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		UserID: userId,
@@ -320,4 +321,20 @@ func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId 
 	}
 
 	return invitations[0], nil
+}
+
+// invitationMustNotExists возвращает ошибку ErrUserAlreadyInviteInChat, если приглашение по таким фильтрам существует
+func invitationMustNotExists(invitationsRepo domain.InvitationsRepository, userId, chatId string) error {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		UserID: userId,
+		ChatID: chatId,
+	})
+	if err != nil {
+		return err
+	}
+	if len(invitations) > 0 {
+		return ErrUserAlreadyInviteInChat
+	}
+
+	return nil
 }

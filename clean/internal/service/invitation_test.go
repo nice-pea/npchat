@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
-	"github.com/stretchr/testify/assert"
 )
 
 func newInvitationsService(t *testing.T) *Invitations {
@@ -232,6 +233,16 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 		}
 		invs, err := serviceInvitations.UserInvitations(input)
 		assert.ErrorIs(t, err, ErrUserNotExists)
+		assert.Len(t, invs, 0)
+	})
+	t.Run("пользователь может просматривать только свои приглашения", func(t *testing.T) {
+		serviceInvitations := newInvitationsService(t)
+		input := UserInvitationsInput{
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
+		}
+		invs, err := serviceInvitations.UserInvitations(input)
+		assert.ErrorIs(t, err, ErrUnauthorizedInvitationView)
 		assert.Len(t, invs, 0)
 	})
 	t.Run("пустой список если у данного пользователя нету приглашений", func(t *testing.T) {
