@@ -163,7 +163,7 @@ func (i *Invitations) SendInvitation(in SendInvitationInput) error {
 	}
 
 	// Проверить, не существует ли приглашение для этого пользователя в этот чат
-	if err := invitationMustNotExists(i.InvitationsRepo, in.UserID, in.ChatID); err != nil {
+	if err := invitationMustNotExist(i.InvitationsRepo, in.UserID, in.ChatID); err != nil {
 		return ErrUserAlreadyInviteInChat
 	}
 
@@ -323,8 +323,8 @@ func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId 
 	return invitations[0], nil
 }
 
-// invitationMustNotExists возвращает ошибку ErrUserAlreadyInviteInChat, если приглашение по таким фильтрам существует
-func invitationMustNotExists(invitationsRepo domain.InvitationsRepository, userId, chatId string) error {
+// invitationMustNotExist возвращает ошибку ErrUserAlreadyInviteInChat, если приглашение по таким фильтрам существует
+func invitationMustNotExist(invitationsRepo domain.InvitationsRepository, userId, chatId string) error {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		UserID: userId,
 		ChatID: chatId,
