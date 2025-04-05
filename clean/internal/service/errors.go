@@ -16,7 +16,7 @@ var (
 	ErrSubjectUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
 	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
 	ErrCannotViewSomeoneElseChats  = errors.New("subject user не может просматривать чужой список")
-	ErrUnauthorizedInvitationView  = errors.New("пользователь не может просматривать чужой список приглашений")
+	ErrUnauthorizedInvitationView  = errors.New("нельзя просматривать чужой список приглашений")
 	ErrUserNotExists               = errors.New("пользователя не существует")
 	ErrUserAlreadyInChat           = errors.New("пользователь уже состоит в чате")
 	ErrUserAlreadyInviteInChat     = errors.New("пользователь уже приглашен в чат")
