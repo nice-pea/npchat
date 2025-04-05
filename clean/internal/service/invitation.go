@@ -13,7 +13,6 @@ type Invitations struct {
 	MembersRepo     domain.MembersRepository
 	InvitationsRepo domain.InvitationsRepository
 	UsersRepo       domain.UsersRepository
-	History         History
 }
 
 // ChatInvitationsInput параметры для запроса приглашений конкретного чата
@@ -57,12 +56,17 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 	// Проверить что пользователь является администратором чата
 	if chat.ChiefUserID == in.SubjectUserID {
 		// Получить все приглашения в этот чат
-		invitations, err := getInitationsInThisChat(i.InvitationsRepo, in.ChatID)
+		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+			ChatID: in.ChatID,
+		})
 
 		return invitations, err
 	} else {
 		// получить список приглашений конкретного пользователя
-		invitations, err := getInitationsSpecificUserInThisChat(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
+		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+			SubjectUserID: in.SubjectUserID,
+			ChatID:        in.ChatID,
+		})
 
 		return invitations, err
 	}
@@ -104,9 +108,11 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 	}
 
 	// получить список полученных пользователем приглашений
-	invs, err := getInitationsSpecificUser(i.InvitationsRepo, in.UserID)
+	invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
+		UserID: in.UserID,
+	})
 
-	return invs, err
+	return invitations, err
 }
 
 type SendChatInvitationInput struct {

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -28,7 +27,6 @@ func newInvitationsService(t *testing.T) *Invitations {
 		MembersRepo:     membersRepository,
 		InvitationsRepo: invitationsRepository,
 		UsersRepo:       usersRepository,
-		History:         HistoryDummy{},
 	}
 }
 
@@ -54,6 +52,15 @@ func Test_Invitations_ChatInvitations(t *testing.T) {
 				ChiefUserID: userID,
 			})
 			assert.NoError(t, err)
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: userID,
+				ChatID: chatID,
+			}
+			err = newService.MembersRepo.Save(member)
+			assert.NoError(t, err)
+
 			input := ChatInvitationsInput{
 				SubjectUserID: userID,
 				ChatID:        chatID,
@@ -73,30 +80,38 @@ func Test_Invitations_ChatInvitations(t *testing.T) {
 				ChiefUserID: userID,
 			})
 			assert.NoError(t, err)
-			input := ChatInvitationsInput{
-				SubjectUserID: userID,
-				ChatID:        chatID,
+
+			member := domain.Member{
+				ID:     uuid.NewString(),
+				UserID: userID,
+				ChatID: chatID,
 			}
+			err = newService.MembersRepo.Save(member)
+			assert.NoError(t, err)
 
 			const countInvs = 4
 			exitsInvs := make([]domain.Invitation, 0, countInvs)
-			err = nil
 			for range countInvs {
 				inv := domain.Invitation{
 					ID:     uuid.NewString(),
 					ChatID: chatID,
 				}
-				err = errors.Join(newService.InvitationsRepo.Save(inv))
+				err := newService.InvitationsRepo.Save(inv)
+				assert.NoError(t, err)
 				exitsInvs = append(exitsInvs, inv)
 			}
 
-			assert.NoError(t, err)
+			input := ChatInvitationsInput{
+				SubjectUserID: userID,
+				ChatID:        chatID,
+			}
+
 			invsChat, err := newService.ChatInvitations(input)
 			assert.NoError(t, err)
-			assert.Len(t, invsChat, countInvs)
-			assert.Len(t, exitsInvs, countInvs)
-			for i := range countInvs {
-				assert.Equal(t, invsChat[i], exitsInvs[i])
+			if assert.Len(t, invsChat, countInvs) {
+				for i := range countInvs {
+					assert.Equal(t, invsChat[i], exitsInvs[i])
+				}
 			}
 		})
 	})
