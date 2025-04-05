@@ -106,12 +106,12 @@ func Test_CreateChatInput_Validate(t *testing.T) {
 			ChiefUserID: uuid.NewString(),
 			Name:        "",
 		}
-		assert.ErrorIs(t, input.Validate(), ErrInvalidChatName)
+		assert.ErrorIs(t, input.Validate(), ErrInvalidName)
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := CreateInput{
 			ChiefUserID: id,
-			Name:        "validaName",
+			Name:        "validName",
 		}
 		return in.Validate()
 	})
@@ -124,30 +124,33 @@ func Test_Chats_CreateChat(t *testing.T) {
 		assert.Equal(t, out.Name, in.Name)
 	}
 	t.Run("создание чата без ошибок", func(t *testing.T) {
+		chatsService := newChatsService(t)
 		input := CreateInput{
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		out, err := newChatsService(t).Create(input)
+		out, err := chatsService.Create(input)
 		assert.NoError(t, err)
 		assert.NotZero(t, out)
 	})
 	t.Run("выходящие совпадают с заданными", func(t *testing.T) {
+		chatsService := newChatsService(t)
 		input := CreateInput{
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		out, err := newChatsService(t).Create(input)
+		out, err := chatsService.Create(input)
 		assert.NoError(t, err)
 		assert.NotZero(t, out)
 		assertChatEqualIn(input, out.Chat)
 	})
 	t.Run("возвращается чат с новым id", func(t *testing.T) {
+		chatsService := newChatsService(t)
 		input := CreateInput{
 			ChiefUserID: uuid.NewString(),
 			Name:        "Name",
 		}
-		out, err := newChatsService(t).Create(input)
+		out, err := chatsService.Create(input)
 		assert.NoError(t, err)
 		assert.NotZero(t, out)
 		assert.NotZero(t, out.Chat.ID)
@@ -187,7 +190,7 @@ func Test_Chats_CreateChat(t *testing.T) {
 	t.Run("пользователь создал много чатов", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		userID := uuid.NewString()
-		count := 900
+		const count = 900
 		for i := 0; i < count; i++ {
 			input := CreateInput{
 				ChiefUserID: userID,
@@ -316,29 +319,6 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 
 // Test_Chats_UpdateName тестирует обновления названия чата
 func Test_Chats_UpdateName(t *testing.T) {
-	t.Run("без ошибок", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		createInput := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "oldName",
-		}
-		createOut, err := chatsService.Create(createInput)
-		assert.NoError(t, err)
-		assert.NotZero(t, createOut)
-		input := UpdateNameInput{
-			SubjectUserID: createInput.ChiefUserID,
-			ChatID:        createOut.Chat.ID,
-			NewName:       "newName",
-		}
-		chat, err := chatsService.UpdateName(input)
-		assert.NoError(t, err)
-		assert.NotZero(t, chat)
-		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
-		assert.NoError(t, err)
-		if assert.Len(t, chats, 1) {
-			assert.Equal(t, input.NewName, chats[0].Name)
-		}
-	})
 	t.Run("только существующий чат можно обновить", func(t *testing.T) {
 		chatsService := newChatsService(t)
 		input := UpdateNameInput{
@@ -365,7 +345,30 @@ func Test_Chats_UpdateName(t *testing.T) {
 			NewName:       "newName",
 		}
 		updatedChat, err := chatsService.UpdateName(input)
-		assert.Error(t, err, ErrSubjectUserIsNotChief)
+		assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
 		assert.Zero(t, updatedChat)
+	})
+	t.Run("без ошибок", func(t *testing.T) {
+		chatsService := newChatsService(t)
+		createInput := CreateInput{
+			ChiefUserID: uuid.NewString(),
+			Name:        "oldName",
+		}
+		createOut, err := chatsService.Create(createInput)
+		assert.NoError(t, err)
+		assert.NotZero(t, createOut)
+		input := UpdateNameInput{
+			SubjectUserID: createInput.ChiefUserID,
+			ChatID:        createOut.Chat.ID,
+			NewName:       "newName",
+		}
+		chat, err := chatsService.UpdateName(input)
+		assert.NoError(t, err)
+		assert.NotZero(t, chat)
+		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		assert.NoError(t, err)
+		if assert.Len(t, chats, 1) {
+			assert.Equal(t, input.NewName, chats[0].Name)
+		}
 	})
 }
