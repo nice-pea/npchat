@@ -132,28 +132,3 @@ func (in SendChatInvitationInput) Validate() error {
 func (i *Invitations) SendChatInvitation(in SendChatInvitationInput) error {
 	return nil
 }
-
-// getInitationsInThisChat возвращает список всех приглашений в конкретный чат
-func getInitationsInThisChat(invitationsRepo domain.InvitationsRepository, chatId string) ([]domain.Invitation, error) {
-	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
-		ChatID: chatId,
-	})
-	return invitations, err
-}
-
-// getInitationsSpecificUserInThisChat возвращает список приглашений конкретного пользователя в конкретный чат
-func getInitationsSpecificUserInThisChat(invitationsRepo domain.InvitationsRepository, subjectUserId, chatId string) ([]domain.Invitation, error) {
-	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
-		SubjectUserID: subjectUserId,
-		ChatID:        chatId,
-	})
-	return invitations, err
-}
-
-// getInitationsSpecificUser возвращает список приглашений конкретного пользователя в чаты
-func getInitationsSpecificUser(invitationsRepo domain.InvitationsRepository, userId string) ([]domain.Invitation, error) {
-	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
-		UserID: userId,
-	})
-	return invitations, err
-}

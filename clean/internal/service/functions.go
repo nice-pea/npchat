@@ -61,17 +61,42 @@ func memberOrErr(membersRepo domain.MembersRepository, userID, chatID string, er
 	return members[0], nil
 }
 
-//// getUser возвращает пользователя по id
-//// вернет ErrUserNotExists если пользователя не существует
-//func getUser(usersRepo domain.UsersRepository, id string) (domain.User, error) {
-//	users, err := usersRepo.List(domain.UsersFilter{
-//		ID: id,
-//	})
-//	if err != nil {
-//		return domain.User{}, err
-//	}
-//	if len(users) != 1 {
-//		return domain.User{}, ErrUserNotExists
-//	}
-//	return users[0], nil
-//}
+// getUser возвращает пользователя по id
+// вернет ErrUserNotExists если пользователя не существует
+func getUser(usersRepo domain.UsersRepository, id string) (domain.User, error) {
+	users, err := usersRepo.List(domain.UsersFilter{
+		ID: id,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	if len(users) != 1 {
+		return domain.User{}, ErrUserNotExists
+	}
+	return users[0], nil
+}
+
+// getInitationsInThisChat возвращает список всех приглашений в конкретный чат
+func getInitationsInThisChat(invitationsRepo domain.InvitationsRepository, chatId string) ([]domain.Invitation, error) {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		ChatID: chatId,
+	})
+	return invitations, err
+}
+
+// getInitationsSpecificUserInThisChat возвращает список приглашений конкретного пользователя в конкретный чат
+func getInitationsSpecificUserInThisChat(invitationsRepo domain.InvitationsRepository, subjectUserId, chatId string) ([]domain.Invitation, error) {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		SubjectUserID: subjectUserId,
+		ChatID:        chatId,
+	})
+	return invitations, err
+}
+
+// getInitationsSpecificUser возвращает список приглашений конкретного пользователя в чаты
+func getInitationsSpecificUser(invitationsRepo domain.InvitationsRepository, userId string) ([]domain.Invitation, error) {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		UserID: userId,
+	})
+	return invitations, err
+}
