@@ -75,4 +75,3 @@ func getUser(usersRepo domain.UsersRepository, id string) (domain.User, error) {
 	}
 	return users[0], nil
 }
-

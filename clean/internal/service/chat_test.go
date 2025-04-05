@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"strings"
 	"testing"
 
@@ -13,17 +14,65 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 )
 
-// newChatsService создает объект сервиса Chats с sqlite/memory репозиториями
-func newChatsService(t *testing.T) *Chats {
+type chatTestEnv struct {
+	chatsService *Chats
+	t            *testing.T
+}
+
+func initChatTestEnv(t *testing.T) chatTestEnv {
+	env := chatTestEnv{
+		chatsService: &Chats{},
+		t:            t,
+	}
 	sqLiteInMemory, err := memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
 	assert.NoError(t, err)
-	chatsRepository, err := sqLiteInMemory.NewChatsRepository()
+	env.chatsService.ChatsRepo, err = sqLiteInMemory.NewChatsRepository()
 	assert.NoError(t, err)
-	membersRepository, err := sqLiteInMemory.NewMembersRepository()
+	env.chatsService.MembersRepo, err = sqLiteInMemory.NewMembersRepository()
 	assert.NoError(t, err)
-	return &Chats{
-		ChatsRepo:   chatsRepository,
-		MembersRepo: membersRepository,
+
+	return env
+}
+
+func (e *chatTestEnv) newUserChatsInput(userID string) UserChatsInput {
+	return UserChatsInput{
+		SubjectUserID: userID,
+		UserID:        userID,
+	}
+}
+
+func (e *chatTestEnv) saveChat(chat domain.Chat) domain.Chat {
+	// chat := domain.Chat{
+	//	ID:          uuid.NewString(),
+	//	Name:        name,
+	//	ChiefUserID: chiefUserID,
+	//}
+	err := e.chatsService.ChatsRepo.Save(chat)
+	assert.NoError(e.t, err)
+
+	return chat
+}
+
+func (e *chatTestEnv) saveMember(member domain.Member) domain.Member {
+	//member := domain.Member{
+	//	ID:     uuid.NewString(),
+	//	UserID: userID,
+	//	ChatID: chatID,
+	//}
+	err := e.chatsService.MembersRepo.Save(member)
+	assert.NoError(e.t, err)
+
+	return member
+}
+
+func (e *chatTestEnv) assertChatEqualInput(in CreateInput, chat domain.Chat) {
+	assert.Equal(e.t, in.Name, chat.Name)
+	assert.Equal(e.t, in.ChiefUserID, chat.ChiefUserID)
+}
+func (e *chatTestEnv) newCreateInputRandom() CreateInput {
+	return CreateInput{
+		ChiefUserID: uuid.NewString(),
+		Name:        fmt.Sprintf("name%d", rand.Int()),
 	}
 }
 
@@ -41,62 +90,58 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
 func Test_Chats_UserChats(t *testing.T) {
 	t.Run("пользователь может запрашивать только свой чат", func(t *testing.T) {
-		chatsService := newChatsService(t)
+		env := initChatTestEnv(t)
 		input := UserChatsInput{
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		chats, err := chatsService.UserChats(input)
+		chats, err := env.chatsService.UserChats(input)
 		assert.ErrorIs(t, err, ErrUnauthorizedChatsView)
 		assert.Len(t, chats, 0)
 	})
 	t.Run("пустой список из пустого репозитория", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		id := uuid.NewString()
-		input := UserChatsInput{SubjectUserID: id, UserID: id}
-		userChats, err := chatsService.UserChats(input)
+		env := initChatTestEnv(t)
+		input := env.newUserChatsInput(uuid.NewString())
+		userChats, err := env.chatsService.UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 0)
 	})
 	t.Run("пустой список если у пользователя нет чатов", func(t *testing.T) {
-		chatsService := newChatsService(t)
+		env := initChatTestEnv(t)
 		const chatsAllCount = 11
 		for range chatsAllCount {
-			// Создать чат
-			chat := domain.Chat{ID: uuid.NewString()}
-			err := chatsService.ChatsRepo.Save(chat)
-			assert.NoError(t, err)
-			// Создать участника в чате
-			member := domain.Member{ID: uuid.NewString(), UserID: uuid.NewString(), ChatID: chat.ID}
-			err = chatsService.MembersRepo.Save(member)
-			assert.NoError(t, err)
+			chat := env.saveChat(domain.Chat{
+				ID: uuid.NewString(),
+			})
+			env.saveMember(domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			})
 		}
-		userID := uuid.NewString()
-		input := UserChatsInput{SubjectUserID: userID, UserID: userID}
-		userChats, err := chatsService.UserChats(input)
+		input := env.newUserChatsInput(uuid.NewString())
+		userChats, err := env.chatsService.UserChats(input)
 		assert.NoError(t, err)
 		assert.Len(t, userChats, 0)
 	})
 	t.Run("у пользователя может быть несколько чатов", func(t *testing.T) {
-		chatsService := newChatsService(t)
+		env := initChatTestEnv(t)
 		userID := uuid.NewString()
-		const count = 10
-		for range count {
-			// Создать чат
-			chat := domain.Chat{ID: uuid.NewString()}
-			err := chatsService.ChatsRepo.Save(chat)
-			assert.NoError(t, err)
-			member := domain.Member{ID: uuid.NewString(), UserID: userID, ChatID: chat.ID}
-			err = chatsService.MembersRepo.Save(member)
-			assert.NoError(t, err)
+		const chatsAllCount = 11
+		for range chatsAllCount {
+			chat := env.saveChat(domain.Chat{
+				ID: uuid.NewString(),
+			})
+			env.saveMember(domain.Member{
+				ID:     uuid.NewString(),
+				UserID: userID,
+				ChatID: chat.ID,
+			})
 		}
-		input := UserChatsInput{
-			SubjectUserID: userID,
-			UserID:        userID,
-		}
-		userChats, err := chatsService.UserChats(input)
+		input := env.newUserChatsInput(userID)
+		userChats, err := env.chatsService.UserChats(input)
 		assert.NoError(t, err)
-		assert.Len(t, userChats, count)
+		assert.Len(t, userChats, chatsAllCount)
 	})
 }
 
@@ -120,107 +165,83 @@ func Test_CreateChatInput_Validate(t *testing.T) {
 
 // Test_Chats_CreateChat тестирует создание чата
 func Test_Chats_CreateChat(t *testing.T) {
-	assertChatEqualIn := func(in CreateInput, out domain.Chat) {
-		assert.Equal(t, out.ChiefUserID, in.ChiefUserID)
-		assert.Equal(t, out.Name, in.Name)
-	}
-	t.Run("создание чата без ошибок", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "Name",
-		}
-		out, err := chatsService.Create(input)
-		assert.NoError(t, err)
-		assert.NotZero(t, out)
-	})
 	t.Run("выходящие совпадают с заданными", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "Name",
-		}
-		out, err := chatsService.Create(input)
+		env := initChatTestEnv(t)
+		// Создать чат
+		input := env.newCreateInputRandom()
+		out, err := env.chatsService.Create(input)
 		assert.NoError(t, err)
-		assert.NotZero(t, out)
-		assertChatEqualIn(input, out.Chat)
-	})
-	t.Run("возвращается чат с новым id", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "Name",
-		}
-		out, err := chatsService.Create(input)
-		assert.NoError(t, err)
-		assert.NotZero(t, out)
-		assert.NotZero(t, out.Chat.ID)
+		// Сравнить результат с входящими значениями
+		assert.Equal(t, input.ChiefUserID, out.ChiefMember.UserID)
+		env.assertChatEqualInput(input, out.Chat)
 	})
 	t.Run("можно затем прочитать из репозитория", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "Name",
-		}
-		out, err := chatsService.Create(input)
+		env := initChatTestEnv(t)
+		// Создать чат
+		input := env.newCreateInputRandom()
+		out, err := env.chatsService.Create(input)
 		assert.NoError(t, err)
-		assert.NotEmpty(t, out.Chat.ID)
-		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		assert.NotZero(t, out)
+		// Получить список чатов
+		chats, err := env.chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
+		// В списке этот чат будет единственным
 		if assert.Len(t, chats, 1) {
-			assertChatEqualIn(input, chats[0])
+			env.assertChatEqualInput(input, chats[0])
 		}
 	})
 	t.Run("создается участник для главного администратора", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "Name",
-		}
-		out, err := chatsService.Create(input)
+		env := initChatTestEnv(t)
+		// Создать чат
+		input := env.newCreateInputRandom()
+		out, err := env.chatsService.Create(input)
 		assert.NoError(t, err)
-		assert.NotEmpty(t, out.Chat.ID)
-		assertChatEqualIn(input, out.Chat)
-		members, err := chatsService.MembersRepo.List(domain.MembersFilter{})
+		assert.NotZero(t, out)
+		// Получить список участников
+		members, err := env.chatsService.MembersRepo.List(domain.MembersFilter{})
 		assert.NoError(t, err)
+		// В списке этот участник будет единственным
 		if assert.Len(t, members, 1) {
+			// Участником является главный администратор созданного чата
 			assert.Equal(t, input.ChiefUserID, members[0].UserID)
 			assert.Equal(t, out.Chat.ID, members[0].ChatID)
 		}
 	})
-	t.Run("пользователь создал много чатов", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		userID := uuid.NewString()
-		const count = 900
-		for i := 0; i < count; i++ {
-			input := CreateInput{
-				ChiefUserID: userID,
-				Name:        fmt.Sprintf("Name%d", i),
-			}
-			out, err := chatsService.Create(input)
+	t.Run("можно создать чаты с одинаковым именем", func(t *testing.T) {
+		env := initChatTestEnv(t)
+		input := env.newCreateInputRandom()
+		// Создать несколько чатов с одинаковым именем
+		const chatsAllCount = 2
+		for range chatsAllCount {
+			out, err := env.chatsService.Create(input)
 			assert.NoError(t, err)
 			assert.NotZero(t, out)
 		}
-		list, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		// Получить список чатов
+		chats, err := env.chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
-		assert.Len(t, list, count)
+		// Количество чатов равно количеству созданных
+		assert.Len(t, chats, chatsAllCount)
 	})
-	t.Run("можно создать с одинаковыми параметрами", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		const count = 20
-		input := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "name",
-		}
-		for range count {
-			out, err := chatsService.Create(input)
+	t.Run("количество созданных чатов на одного пользователя не ограничено", func(t *testing.T) {
+		env := initChatTestEnv(t)
+		// Пользователь
+		userID := uuid.NewString()
+		// Создать много чатов от лица пользователя
+		const chatsAllCount = 900
+		for range chatsAllCount {
+			out, err := env.chatsService.Create(CreateInput{
+				ChiefUserID: userID,
+				Name:        "name",
+			})
 			assert.NoError(t, err)
 			assert.NotZero(t, out)
-			assertChatEqualIn(input, out.Chat)
 		}
-		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		// Получить список чатов
+		chats, err := env.chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
-		assert.Len(t, chats, count)
+		// Количество чатов равно количеству созданных
+		assert.Len(t, chats, chatsAllCount)
 	})
 }
 
@@ -321,54 +342,61 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 // Test_Chats_UpdateName тестирует обновления названия чата
 func Test_Chats_UpdateName(t *testing.T) {
 	t.Run("только существующий чат можно обновить", func(t *testing.T) {
-		chatsService := newChatsService(t)
+		env := initChatTestEnv(t)
 		input := UpdateNameInput{
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 			NewName:       "newName",
 		}
-		chat, err := chatsService.UpdateName(input)
+		// Обновить название чата
+		chat, err := env.chatsService.UpdateName(input)
+		// Вернется ошибка, потому что чата не существует
 		assert.ErrorIs(t, err, ErrChatNotExists)
 		assert.Zero(t, chat)
 	})
 	t.Run("только главный администратор может изменять название", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		createInput := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "oldName",
-		}
-		createOut, err := chatsService.Create(createInput)
+		env := initChatTestEnv(t)
+		// Создать чат
+		inputChatCreate := env.newCreateInputRandom()
+		out, err := env.chatsService.Create(inputChatCreate)
 		assert.NoError(t, err)
-		assert.NotZero(t, createOut)
+		assert.NotZero(t, out)
+		// Попытаться изменить название от имени случайного пользователя
 		input := UpdateNameInput{
 			SubjectUserID: uuid.NewString(),
-			ChatID:        createOut.Chat.ID,
+			ChatID:        out.Chat.ID,
 			NewName:       "newName",
 		}
-		updatedChat, err := chatsService.UpdateName(input)
+		updatedChat, err := env.chatsService.UpdateName(input)
+		// Вернется ошибка, потому что пользователь не главный администратор чата
 		assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
 		assert.Zero(t, updatedChat)
 	})
-	t.Run("без ошибок", func(t *testing.T) {
-		chatsService := newChatsService(t)
-		createInput := CreateInput{
-			ChiefUserID: uuid.NewString(),
-			Name:        "oldName",
-		}
-		createOut, err := chatsService.Create(createInput)
+	t.Run("новое название чата сохранится и его можно прочитать", func(t *testing.T) {
+		env := initChatTestEnv(t)
+		// Создать чат
+		inputChatCreate := env.newCreateInputRandom()
+		out, err := env.chatsService.Create(inputChatCreate)
 		assert.NoError(t, err)
-		assert.NotZero(t, createOut)
+		assert.NotZero(t, out)
+		// Попытаться изменить название от имени случайного пользователя
 		input := UpdateNameInput{
-			SubjectUserID: createInput.ChiefUserID,
-			ChatID:        createOut.Chat.ID,
+			SubjectUserID: out.Chat.ChiefUserID,
+			ChatID:        out.Chat.ID,
 			NewName:       "newName",
 		}
-		chat, err := chatsService.UpdateName(input)
+		updatedChat, err := env.chatsService.UpdateName(input)
 		assert.NoError(t, err)
-		assert.NotZero(t, chat)
-		chats, err := chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		assert.NotZero(t, updatedChat)
+		// Результат совпадает с входящими значениями
+		assert.Equal(t, input.ChatID, updatedChat.ID)
+		assert.Equal(t, input.NewName, updatedChat.Name)
+		// Получить список чатов
+		chats, err := env.chatsService.ChatsRepo.List(domain.ChatsFilter{})
 		assert.NoError(t, err)
+		// В списке этот чат будет единственным
 		if assert.Len(t, chats, 1) {
+			assert.Equal(t, input.ChatID, chats[0].ID)
 			assert.Equal(t, input.NewName, chats[0].Name)
 		}
 	})
