@@ -60,7 +60,8 @@ func Test_Chats_UserChats(t *testing.T) {
 	})
 	t.Run("пустой список если у пользователя нет чатов", func(t *testing.T) {
 		chatsService := newChatsService(t)
-		for range 11 {
+		const chatsAllCount = 11
+		for range chatsAllCount {
 			// Создать чат
 			chat := domain.Chat{ID: uuid.NewString()}
 			err := chatsService.ChatsRepo.Save(chat)
