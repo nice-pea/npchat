@@ -76,18 +76,3 @@ func getUser(usersRepo domain.UsersRepository, id string) (domain.User, error) {
 	return users[0], nil
 }
 
-// getInitation возвращает приглашенение в конкретный чат
-func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
-	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
-		UserID: userId,
-		ChatID: chatId,
-	})
-	if err != nil {
-		return domain.Invitation{}, err
-	}
-	if len(invitations) != 1 {
-		return domain.Invitation{}, ErrInvitationNotExists
-	}
-
-	return invitations[0], nil
-}

@@ -339,7 +339,7 @@ func Test_Invitations_UserInvitations(t *testing.T) {
 
 func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			SubjectUserID: id,
 			ChatID:        id,
 			UserID:        id,
@@ -376,12 +376,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.UsersRepo.Save(targetUser)
 		assert.NoError(t, err)
 
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
 	})
 	t.Run("UserID не должен состоять в чате ChatID", func(t *testing.T) {
@@ -414,12 +414,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.MembersRepo.Save(targetMember)
 		assert.NoError(t, err)
 
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.ErrorIs(t, err, ErrUserAlreadyInChat)
 	})
 	t.Run("приглашать участников могут все члены чата", func(t *testing.T) {
@@ -448,12 +448,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 			err = serviceInvitations.UsersRepo.Save(targetUser)
 			assert.NoError(t, err)
 
-			input := SendChatInvitationInput{
+			input := SendInvitationInput{
 				ChatID:        chat.ID,
 				SubjectUserID: chief.UserID,
 				UserID:        targetUser.ID,
 			}
-			err = serviceInvitations.SendChatInvitation(input)
+			err = serviceInvitations.SendInvitation(input)
 			assert.NoError(t, err)
 		})
 		t.Run("обычный участник чата", func(t *testing.T) {
@@ -479,12 +479,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 			err = serviceInvitations.UsersRepo.Save(targetUser)
 			assert.NoError(t, err)
 
-			input := SendChatInvitationInput{
+			input := SendInvitationInput{
 				ChatID:        chat.ID,
 				SubjectUserID: member.UserID,
 				UserID:        targetUser.ID,
 			}
-			err = serviceInvitations.SendChatInvitation(input)
+			err = serviceInvitations.SendInvitation(input)
 			assert.NoError(t, err)
 		})
 	})
@@ -504,12 +504,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.MembersRepo.Save(member)
 		assert.NoError(t, err)
 
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        uuid.NewString(),
 		}
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.ErrorIs(t, err, ErrUserNotExists)
 	})
 	t.Run("ChatID должен существовать", func(t *testing.T) {
@@ -529,12 +529,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.UsersRepo.Save(targetUser)
 		assert.NoError(t, err)
 
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			ChatID:        uuid.NewString(),
 			SubjectUserID: member.ID,
 			UserID:        targetUser.ID,
 		}
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.ErrorIs(t, err, ErrChatNotExists)
 	})
 	t.Run("UserID нельзя приглашать более 1 раза", func(t *testing.T) {
@@ -560,15 +560,15 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.UsersRepo.Save(targetUser)
 		assert.NoError(t, err)
 
-		input := SendChatInvitationInput{
+		input := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        targetUser.ID,
 		}
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.NoError(t, err)
 
-		err = serviceInvitations.SendChatInvitation(input)
+		err = serviceInvitations.SendInvitation(input)
 		assert.ErrorIs(t, err, ErrUserAlreadyInviteInChat)
 	})
 	t.Run("можно приглашать больее 1 раза разных пользователей", func(t *testing.T) {
@@ -594,12 +594,12 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.UsersRepo.Save(targetUser1)
 		assert.NoError(t, err)
 
-		input1 := SendChatInvitationInput{
+		input1 := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        targetUser1.ID,
 		}
-		err = serviceInvitations.SendChatInvitation(input1)
+		err = serviceInvitations.SendInvitation(input1)
 		assert.NoError(t, err)
 
 		targetUser2 := domain.User{
@@ -608,19 +608,19 @@ func Test_Invitations_SendChatInvitation(t *testing.T) {
 		err = serviceInvitations.UsersRepo.Save(targetUser2)
 		assert.NoError(t, err)
 
-		input2 := SendChatInvitationInput{
+		input2 := SendInvitationInput{
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 			UserID:        targetUser2.ID,
 		}
 
-		err = serviceInvitations.SendChatInvitation(input2)
+		err = serviceInvitations.SendInvitation(input2)
 		assert.NoError(t, err)
 
 		invsRepo, err := serviceInvitations.InvitationsRepo.List(domain.InvitationsFilter{})
 		assert.NoError(t, err)
 		assert.Len(t, invsRepo, 2)
-		for i, invInput := range []SendChatInvitationInput{input1, input2} {
+		for i, invInput := range []SendInvitationInput{input1, input2} {
 			assert.Equal(t, invInput.ChatID, invsRepo[i].ChatID)
 			assert.Equal(t, invInput.SubjectUserID, invsRepo[i].SubjectUserID)
 			assert.Equal(t, invInput.UserID, invsRepo[i].UserID)
