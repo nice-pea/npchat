@@ -24,6 +24,7 @@ func Test_ServicesTestSuite(t *testing.T) {
 func (suite *servicesTestSuite) SetupSubTest() {
 	var err error
 	require := suite.Require()
+
 	// Инициализация SQLiteMemory
 	suite.sqliteMemory, err = memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
 	require.NoError(err)

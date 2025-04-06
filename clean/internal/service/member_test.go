@@ -68,17 +68,17 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		})
 		// Создать несколько участников в чате
 		const membersAllCount = 20
-		savedMembers := make([]domain.Member, membersAllCount)
+		membersSaved := make([]domain.Member, membersAllCount)
 		for i := range membersAllCount {
 			// Создать участника в чате
-			savedMembers[i] = suite.saveMember(domain.Member{
+			membersSaved[i] = suite.saveMember(domain.Member{
 				ID:     uuid.NewString(),
 				UserID: uuid.NewString(),
 				ChatID: chat.ID,
 			})
 		}
 		// Запрашивать список будет первый участник
-		subjectMember := savedMembers[0]
+		subjectMember := membersSaved[0]
 		// Получить список участников в чате
 		input := ChatMembersInput{
 			ChatID:        subjectMember.ChatID,
@@ -88,8 +88,8 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		suite.NoError(err)
 		if suite.Len(membersFromRepo, membersAllCount) {
 			// Сравнить каждого сохраненного участника с ранее созданным
-			for i := range savedMembers {
-				suite.assertEqualMembers(savedMembers[i], membersFromRepo[i])
+			for i := range membersSaved {
+				suite.assertEqualMembers(membersSaved[i], membersFromRepo[i])
 			}
 		}
 	})
