@@ -41,7 +41,7 @@ func usersFromDomain(domainUsers []domain.User) []user {
 	return repoUsers
 }
 
-func (m *SQLiteInMemory) NewUsersRepository() (domain.UsersRepository, error) {
+func (m *SQLiteMemory) NewUsersRepository() (domain.UsersRepository, error) {
 	return &UsersRepository{
 		DB: m.db,
 	}, nil

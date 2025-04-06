@@ -4,52 +4,16 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 )
 
-type membersTestEnv struct {
-	membersService *Members
-	t              *testing.T
-}
-
-func initMembersTestEnv(t *testing.T) membersTestEnv {
-	env := membersTestEnv{
-		membersService: &Members{},
-		t:              t,
-	}
-	sqLiteInMemory, err := memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
-	assert.NoError(t, err)
-	env.membersService.ChatsRepo, err = sqLiteInMemory.NewChatsRepository()
-	assert.NoError(t, err)
-	env.membersService.MembersRepo, err = sqLiteInMemory.NewMembersRepository()
-	assert.NoError(t, err)
-
-	return env
-}
-
 // assertEqualMembers сравнивает поля domain.Member
-func (e *membersTestEnv) assertEqualMembers(expected, actual domain.Member) {
-	assert.Equal(e.t, expected.ID, actual.ID)
-	assert.Equal(e.t, expected.UserID, actual.UserID)
-	assert.Equal(e.t, expected.ChatID, actual.ChatID)
-}
-
-func (e *membersTestEnv) saveChat(chat domain.Chat) domain.Chat {
-	err := e.membersService.ChatsRepo.Save(chat)
-	assert.NoError(e.t, err)
-
-	return chat
-}
-
-func (e *membersTestEnv) saveMember(member domain.Member) domain.Member {
-	err := e.membersService.MembersRepo.Save(member)
-	assert.NoError(e.t, err)
-
-	return member
+func (suite *servicesTestSuite) assertEqualMembers(expected, actual domain.Member) {
+	suite.Equal(expected.ID, actual.ID)
+	suite.Equal(expected.UserID, actual.UserID)
+	suite.Equal(expected.ChatID, actual.ChatID)
 }
 
 // Test_ChatMembersInput_Validate тестирует валидацию входящих параметров
@@ -64,26 +28,24 @@ func Test_ChatMembersInput_Validate(t *testing.T) {
 }
 
 // Test_Members_ChatMembers тестирует получение списка участников чата
-func Test_Members_ChatMembers(t *testing.T) {
-	t.Run("чат должен существовать", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+func (suite *servicesTestSuite) Test_Members_ChatMembers() {
+	suite.Run("чат должен существовать", func() {
 		input := ChatMembersInput{
 			ChatID:        uuid.NewString(),
 			SubjectUserID: uuid.NewString(),
 		}
-		// Запросить список участников чата
-		members, err := env.membersService.ChatMembers(input)
-		assert.ErrorIs(t, err, ErrChatNotExists)
-		assert.Empty(t, members)
+		members, err := suite.membersService.ChatMembers(input)
+		suite.ErrorIs(err, ErrChatNotExists)
+		suite.Empty(members)
 	})
-	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника в другом чате
-		member := env.saveMember(domain.Member{
+		member := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
 			ChatID: uuid.NewString(),
@@ -93,15 +55,15 @@ func Test_Members_ChatMembers(t *testing.T) {
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 		}
-		members, err := env.membersService.ChatMembers(input)
+		members, err := suite.membersService.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
-		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
-		assert.Empty(t, members)
+		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.Empty(members)
 	})
-	t.Run("возвращается список участников чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("возвращается список участников чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать несколько участников в чате
@@ -109,7 +71,7 @@ func Test_Members_ChatMembers(t *testing.T) {
 		savedMembers := make([]domain.Member, membersAllCount)
 		for i := range membersAllCount {
 			// Создать участника в чате
-			savedMembers[i] = env.saveMember(domain.Member{
+			savedMembers[i] = suite.saveMember(domain.Member{
 				ID:     uuid.NewString(),
 				UserID: uuid.NewString(),
 				ChatID: chat.ID,
@@ -122,12 +84,12 @@ func Test_Members_ChatMembers(t *testing.T) {
 			ChatID:        subjectMember.ChatID,
 			SubjectUserID: subjectMember.UserID,
 		}
-		membersFromRepo, err := env.membersService.ChatMembers(input)
-		assert.NoError(t, err)
-		if assert.Len(t, membersFromRepo, membersAllCount) {
+		membersFromRepo, err := suite.membersService.ChatMembers(input)
+		suite.NoError(err)
+		if suite.Len(membersFromRepo, membersAllCount) {
 			// Сравнить каждого сохраненного участника с ранее созданным
 			for i := range savedMembers {
-				env.assertEqualMembers(savedMembers[i], membersFromRepo[i])
+				suite.assertEqualMembers(savedMembers[i], membersFromRepo[i])
 			}
 		}
 	})
@@ -145,22 +107,21 @@ func Test_LeaveInput_Validate(t *testing.T) {
 }
 
 // Test_Members_LeaveChat тестирует выход участника из чата
-func Test_Members_LeaveChat(t *testing.T) {
-	t.Run("чат должен существовать", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+func (suite *servicesTestSuite) Test_Members_LeaveChat() {
+	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
 		input := LeaveChatInput{
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 		}
-		err := env.membersService.LeaveChat(input)
+		err := suite.membersService.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
-		assert.ErrorIs(t, err, ErrChatNotExists)
+		suite.ErrorIs(err, ErrChatNotExists)
 	})
-	t.Run("пользователь должен быть участником чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Покинуть чат
@@ -168,19 +129,19 @@ func Test_Members_LeaveChat(t *testing.T) {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        chat.ID,
 		}
-		err := env.membersService.LeaveChat(input)
+		err := suite.membersService.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь не участник чата
-		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 	})
-	t.Run("пользователь не должен быть главным администратором чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("пользователь не должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
 		// Создать участника главного администратора в этом чате
-		member := env.saveMember(domain.Member{
+		member := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: chat.ChiefUserID,
 			ChatID: chat.ID,
@@ -190,18 +151,18 @@ func Test_Members_LeaveChat(t *testing.T) {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		err := env.membersService.LeaveChat(input)
+		err := suite.membersService.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь главный администратор чата
-		assert.ErrorIs(t, err, ErrSubjectUserShouldNotBeChief)
+		suite.ErrorIs(err, ErrSubjectUserShouldNotBeChief)
 	})
-	t.Run("после выхода пользователь перестает быть участником", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("после выхода пользователь перестает быть участником", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника в этом чате
-		member := env.saveMember(domain.Member{
+		member := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
 			ChatID: chat.ID,
@@ -211,14 +172,14 @@ func Test_Members_LeaveChat(t *testing.T) {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		err := env.membersService.LeaveChat(input)
-		assert.NoError(t, err)
+		err := suite.membersService.LeaveChat(input)
+		suite.Require().NoError(err)
 		// Получить список участников чата
 		membersFilter := domain.MembersFilter{ID: member.ID}
-		members, err := env.membersService.MembersRepo.List(membersFilter)
-		assert.NoError(t, err)
+		members, err := suite.membersService.MembersRepo.List(membersFilter)
+		suite.Require().NoError(err)
 		// В чате не осталось участников
-		assert.Empty(t, members)
+		suite.Empty(members)
 	})
 }
 
@@ -235,9 +196,8 @@ func Test_DeleteMemberInput_Validate(t *testing.T) {
 }
 
 // Test_Members_DeleteMember тестирует удаление участника чата
-func Test_Members_DeleteMember(t *testing.T) {
-	t.Run("нельзя удалить самого себя", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+func (suite *servicesTestSuite) Test_Members_DeleteMember() {
+	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
 		userID := uuid.NewString()
 		input := DeleteMemberInput{
@@ -245,26 +205,26 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID:        uuid.NewString(),
 			UserID:        userID,
 		}
-		err := env.membersService.DeleteMember(input)
+		err := suite.membersService.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь пытается удалить самого себя
-		assert.ErrorIs(t, err, ErrMemberCannotDeleteHimself)
+		suite.ErrorIs(err, ErrMemberCannotDeleteHimself)
 	})
-	t.Run("чат должен существовать", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("чат должен существовать", func() {
 		// Удалить участника
 		input := DeleteMemberInput{
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		err := env.membersService.DeleteMember(input)
+		err := suite.membersService.DeleteMember(input)
 		// Вернется ошибка, потому что чата не существует
-		assert.ErrorIs(t, err, ErrChatNotExists)
+		suite.ErrorIs(err, ErrChatNotExists)
 	})
-	t.Run("subject должен быть участником чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("subject должен быть участником чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Удалить участника
@@ -273,18 +233,18 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := env.membersService.DeleteMember(input)
+		err := suite.membersService.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь не участник чата
-		assert.ErrorIs(t, err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 	})
-	t.Run("subject должен быть главным администратором чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("subject должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника
-		subjectMember := env.saveMember(domain.Member{
+		subjectMember := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
 			ChatID: chat.ID,
@@ -295,19 +255,19 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := env.membersService.DeleteMember(input)
+		err := suite.membersService.DeleteMember(input)
 		// Вернется ошибка, потому что участник не главный администратор
-		assert.ErrorIs(t, err, ErrSubjectUserIsNotChief)
+		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
 	})
-	t.Run("user должен быть участником чата", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("user должен быть участником чата", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
 		// Создать участника
-		member := env.saveMember(domain.Member{
+		member := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: chat.ChiefUserID,
 			ChatID: chat.ID,
@@ -318,25 +278,25 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := env.membersService.DeleteMember(input)
+		err := suite.membersService.DeleteMember(input)
 		// Вернется ошибка, потому что удаляемый пользователь не является участником
-		assert.ErrorIs(t, err, ErrUserIsNotMember)
+		suite.ErrorIs(err, ErrUserIsNotMember)
 	})
-	t.Run("после удаления участник перестает быть участником", func(t *testing.T) {
-		env := initMembersTestEnv(t)
+
+	suite.Run("после удаления участник перестает быть участником", func() {
 		// Создать чат
-		chat := env.saveChat(domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
 		// Создать участника для удаления
-		memberForDelete := env.saveMember(domain.Member{
+		memberForDelete := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: uuid.NewString(),
 			ChatID: chat.ID,
 		})
 		// Создать участника
-		subjectMember := env.saveMember(domain.Member{
+		subjectMember := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
 			UserID: chat.ChiefUserID,
 			ChatID: chat.ID,
@@ -347,13 +307,13 @@ func Test_Members_DeleteMember(t *testing.T) {
 			ChatID:        chat.ID,
 			UserID:        memberForDelete.UserID,
 		}
-		err := env.membersService.DeleteMember(input)
-		assert.NoError(t, err)
+		err := suite.membersService.DeleteMember(input)
+		suite.Require().NoError(err)
 		// Найти удаленного участника
 		membersFilter := domain.MembersFilter{ID: memberForDelete.ID}
-		members, err := env.membersService.MembersRepo.List(membersFilter)
-		assert.NoError(t, err)
+		members, err := suite.membersService.MembersRepo.List(membersFilter)
+		suite.Require().NoError(err)
 		// Такого участника больше нет
-		assert.Empty(t, members)
+		suite.Empty(members)
 	})
 }

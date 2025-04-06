@@ -32,7 +32,7 @@ func chatsToDomain(repoChats []chat) []domain.Chat {
 	return domainChats
 }
 
-func (m *SQLiteInMemory) NewChatsRepository() (domain.ChatsRepository, error) {
+func (m *SQLiteMemory) NewChatsRepository() (domain.ChatsRepository, error) {
 	return &ChatsRepository{
 		DB: m.db,
 	}, nil
