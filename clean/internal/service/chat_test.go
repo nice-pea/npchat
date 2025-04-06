@@ -14,13 +14,13 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
 )
 
-type chatTestEnv struct {
+type chatsTestEnv struct {
 	chatsService *Chats
 	t            *testing.T
 }
 
-func initChatTestEnv(t *testing.T) chatTestEnv {
-	env := chatTestEnv{
+func initChatTestEnv(t *testing.T) chatsTestEnv {
+	env := chatsTestEnv{
 		chatsService: &Chats{},
 		t:            t,
 	}
@@ -34,42 +34,32 @@ func initChatTestEnv(t *testing.T) chatTestEnv {
 	return env
 }
 
-func (e *chatTestEnv) newUserChatsInput(userID string) UserChatsInput {
+func (e *chatsTestEnv) newUserChatsInput(userID string) UserChatsInput {
 	return UserChatsInput{
 		SubjectUserID: userID,
 		UserID:        userID,
 	}
 }
 
-func (e *chatTestEnv) saveChat(chat domain.Chat) domain.Chat {
-	// chat := domain.Chat{
-	//	ID:          uuid.NewString(),
-	//	Name:        name,
-	//	ChiefUserID: chiefUserID,
-	//}
+func (e *chatsTestEnv) saveChat(chat domain.Chat) domain.Chat {
 	err := e.chatsService.ChatsRepo.Save(chat)
 	assert.NoError(e.t, err)
 
 	return chat
 }
 
-func (e *chatTestEnv) saveMember(member domain.Member) domain.Member {
-	//member := domain.Member{
-	//	ID:     uuid.NewString(),
-	//	UserID: userID,
-	//	ChatID: chatID,
-	//}
+func (e *chatsTestEnv) saveMember(member domain.Member) domain.Member {
 	err := e.chatsService.MembersRepo.Save(member)
 	assert.NoError(e.t, err)
 
 	return member
 }
 
-func (e *chatTestEnv) assertChatEqualInput(in CreateInput, chat domain.Chat) {
+func (e *chatsTestEnv) assertChatEqualInput(in CreateInput, chat domain.Chat) {
 	assert.Equal(e.t, in.Name, chat.Name)
 	assert.Equal(e.t, in.ChiefUserID, chat.ChiefUserID)
 }
-func (e *chatTestEnv) newCreateInputRandom() CreateInput {
+func (e *chatsTestEnv) newCreateInputRandom() CreateInput {
 	return CreateInput{
 		ChiefUserID: uuid.NewString(),
 		Name:        fmt.Sprintf("name%d", rand.Int()),
