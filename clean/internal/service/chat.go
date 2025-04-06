@@ -42,14 +42,14 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectUserID {
-		return nil, ErrCannotViewSomeoneElseChats
+		return nil, ErrUnauthorizedChatsView
 	}
 
 	// Получить список участников с фильтром по пользователю
-	var members []domain.Member
-	if members, err = c.MembersRepo.List(domain.MembersFilter{
+	members, err := c.MembersRepo.List(domain.MembersFilter{
 		UserID: in.UserID,
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -65,9 +65,11 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 	}
 
 	// Вернуть список чатов с фильтром по ID
-	return c.ChatsRepo.List(domain.ChatsFilter{
+	chats, err := c.ChatsRepo.List(domain.ChatsFilter{
 		IDs: chatIds,
 	})
+
+	return chats, err
 }
 
 // CreateInput входящие параметры
@@ -167,26 +169,21 @@ func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
 	}
 
 	// Найти чат для обновления
-	chats, err := c.ChatsRepo.List(domain.ChatsFilter{
-		IDs: []string{in.ChatID},
-	})
+	chat, err := getChat(c.ChatsRepo, in.ChatID)
 	if err != nil {
 		return domain.Chat{}, err
 	}
-	if len(chats) != 1 {
-		return domain.Chat{}, errors.New("чат не найден")
-	}
 
 	// Проверить доступ пользователя к этому действию
-	if in.SubjectUserID != chats[0].ChiefUserID {
-		return domain.Chat{}, errors.New("доступно только главному администратору")
+	if in.SubjectUserID != chat.ChiefUserID {
+		return domain.Chat{}, ErrSubjectUserIsNotChief
 	}
 
 	// Перезаписать с новым значением
 	updatedChat := domain.Chat{
-		ID:          chats[0].ID,
+		ID:          chat.ID,
 		Name:        in.NewName,
-		ChiefUserID: chats[0].ChiefUserID,
+		ChiefUserID: chat.ChiefUserID,
 	}
 	if err = c.ChatsRepo.Save(updatedChat); err != nil {
 		return domain.Chat{}, err

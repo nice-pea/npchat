@@ -15,7 +15,7 @@ var (
 	ErrMemberCannotDeleteHimself   = errors.New("участник не может удалить самого себя")
 	ErrSubjectUserShouldNotBeChief = errors.New("пользователь является главным администратором чата")
 	ErrSubjectUserIsNotChief       = errors.New("пользователь не является главным администратором чата")
-	ErrCannotViewSomeoneElseChats  = errors.New("subject user не может просматривать чужой список")
+	ErrUnauthorizedChatsView       = errors.New("нельзя просматривать чужой список чатов")
 	ErrUnauthorizedInvitationsView = errors.New("нельзя просматривать чужой список приглашений")
 	ErrUserNotExists               = errors.New("пользователя не существует")
 	ErrUserAlreadyInChat           = errors.New("пользователь уже состоит в чате")
