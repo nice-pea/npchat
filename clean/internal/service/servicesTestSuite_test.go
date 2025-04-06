@@ -69,7 +69,7 @@ func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
 }
 
 func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
-	err := suite.chatsService.MembersRepo.Save(member)
+	err := suite.membersService.MembersRepo.Save(member)
 	suite.Require().NoError(err)
 
 	return member
