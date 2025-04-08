@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -36,120 +35,123 @@ func Test_ChatInvitationsInput_Validate(t *testing.T) {
 }
 
 func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
-	suite.Run("SubjectUserID является администратором", func() {
-		suite.Run("пустой список из чата без приглашений", func() {
-			chat := suite.saveChat(domain.Chat{
-				ID:          uuid.NewString(),
-				ChiefUserID: uuid.NewString(),
-			})
-			member := suite.saveMember(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: chat.ChiefUserID,
-				ChatID: chat.ID,
-			})
-			input := ChatInvitationsInput{
-				SubjectUserID: member.UserID,
-				ChatID:        chat.ID,
-			}
-			invitations, err := suite.invitationsService.ChatInvitations(input)
-			suite.NoError(err)
-			suite.Empty(invitations)
-		})
-
-		suite.Run("созданные приглашения можно получить из репозитория", func() {
-			chat := suite.saveChat(domain.Chat{
-				ID:          uuid.NewString(),
-				ChiefUserID: uuid.NewString(),
-			})
-
-			member := suite.saveMember(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: chat.ChiefUserID,
-				ChatID: chat.ID,
-			})
-
-			invitationsSaved := make([]domain.Invitation, 4)
-			for i := range invitationsSaved {
-				invitationsSaved[i] = suite.saveInvitation(domain.Invitation{
-					ID:     uuid.NewString(),
-					ChatID: chat.ID,
-				})
-			}
-
-			input := ChatInvitationsInput{
-				SubjectUserID: member.UserID,
-				ChatID:        chat.ID,
-			}
-			invitationFromService, err := suite.invitationsService.ChatInvitations(input)
-			suite.Require().NoError(err)
-
-			if suite.Len(invitationFromService, len(invitationsSaved)) {
-				for i, saved := range invitationsSaved {
-					suite.Equal(saved, invitationFromService[i])
-				}
-			}
-		})
+	suite.Run("чат должен существовать", func() {
+		input := ChatInvitationsInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        uuid.NewString(),
+		}
+		invitations, err := suite.invitationsService.ChatInvitations(input)
+		suite.ErrorIs(err, ErrChatNotExists)
+		suite.Empty(invitations)
 	})
-	suite.Run("SubjectUserID не является администратором", func() {
-		suite.Run("участник, не администратор, видит только им отправленные приглашения", func() {
-			chat := suite.saveChat(domain.Chat{
-				ID:          uuid.NewString(),
-				ChiefUserID: uuid.NewString(),
-			})
-
-			member := suite.saveMember(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			})
-
-			invitationsSaved := make([]domain.Invitation, 3)
-			for i := range invitationsSaved {
-				invitationsSaved[i] = suite.saveInvitation(domain.Invitation{
-					ID:            uuid.NewString(),
-					SubjectUserID: member.UserID,
-					UserID:        uuid.NewString(),
-					ChatID:        chat.ID,
-				})
-			}
-
-			for range 3 {
-				suite.saveInvitation(domain.Invitation{
-					ID:            uuid.NewString(),
-					SubjectUserID: uuid.NewString(),
-					UserID:        uuid.NewString(),
-					ChatID:        chat.ID,
-				})
-			}
-
-			input := ChatInvitationsInput{
-				ChatID:        chat.ID,
-				SubjectUserID: member.UserID,
-			}
-			invitationsFromService, err := suite.invitationsService.ChatInvitations(input)
-			suite.Require().NoError(err)
-
-			if suite.Len(invitationsFromService, len(invitationsSaved)) {
-				for i, saved := range invitationsSaved {
-					suite.Equal(saved, invitationsFromService[i])
-				}
-			}
+	suite.Run("субъект должен быть участником чата", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
 		})
-		suite.Run("если участника не существует", func() {
-			chat := suite.saveChat(domain.Chat{
-				ID:          uuid.NewString(),
-				ChiefUserID: uuid.NewString(),
-			})
-			input := ChatInvitationsInput{
+		input := ChatInvitationsInput{
+			ChatID:        chat.ID,
+			SubjectUserID: uuid.NewString(),
+		}
+		invitations, err := suite.invitationsService.ChatInvitations(input)
+		suite.Error(err)
+		suite.Empty(invitations)
+	})
+	suite.Run("пустой список из чата без приглашений", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
+		})
+		member := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: chat.ChiefUserID,
+			ChatID: chat.ID,
+		})
+		input := ChatInvitationsInput{
+			SubjectUserID: member.UserID,
+			ChatID:        chat.ID,
+		}
+		invitations, err := suite.invitationsService.ChatInvitations(input)
+		suite.NoError(err)
+		suite.Empty(invitations)
+	})
+	suite.Run("субъект не администратор чата и видит только отправленные им приглашения", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
+		})
+
+		member := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		})
+
+		subjectInvitations := make([]domain.Invitation, 3)
+		for i := range subjectInvitations {
+			subjectInvitations[i] = suite.saveInvitation(domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: member.UserID,
+				UserID:        uuid.NewString(),
 				ChatID:        chat.ID,
+			})
+		}
+
+		for range 3 {
+			suite.saveInvitation(domain.Invitation{
+				ID:            uuid.NewString(),
 				SubjectUserID: uuid.NewString(),
-			}
-			invitations, err := suite.invitationsService.ChatInvitations(input)
-			suite.Error(err)
-			suite.Empty(invitations)
-		})
-	})
+				UserID:        uuid.NewString(),
+				ChatID:        chat.ID,
+			})
+		}
 
+		input := ChatInvitationsInput{
+			ChatID:        chat.ID,
+			SubjectUserID: member.UserID,
+		}
+		invitationsFromService, err := suite.invitationsService.ChatInvitations(input)
+		suite.Require().NoError(err)
+
+		if suite.Len(invitationsFromService, len(subjectInvitations)) {
+			for i, subjectInvitation := range subjectInvitations {
+				suite.Equal(subjectInvitation, invitationsFromService[i])
+			}
+		}
+	})
+	suite.Run("субъект является администратором чата и видит все отправленные приглашения в чат", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
+		})
+
+		member := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: chat.ChiefUserID,
+			ChatID: chat.ID,
+		})
+
+		invitationsSaved := make([]domain.Invitation, 4)
+		for i := range invitationsSaved {
+			invitationsSaved[i] = suite.saveInvitation(domain.Invitation{
+				ID:     uuid.NewString(),
+				ChatID: chat.ID,
+			})
+		}
+
+		input := ChatInvitationsInput{
+			SubjectUserID: member.UserID,
+			ChatID:        chat.ID,
+		}
+		invitationFromService, err := suite.invitationsService.ChatInvitations(input)
+		suite.Require().NoError(err)
+
+		if suite.Len(invitationFromService, len(invitationsSaved)) {
+			for i, saved := range invitationsSaved {
+				suite.Equal(saved, invitationFromService[i])
+			}
+		}
+	})
 }
 
 // Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
@@ -165,18 +167,6 @@ func Test_UserInvitationsInput_Validate(t *testing.T) {
 
 // Test_Invitations_UserInvitations тестирование функции UserInvitations
 func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
-	suite.Run("пустой список из пустого репозитория", func() {
-		user := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
-		input := UserInvitationsInput{
-			SubjectUserID: user.ID,
-			UserID:        user.ID,
-		}
-		invitations, err := suite.invitationsService.UserInvitations(input)
-		suite.NoError(err)
-		suite.Empty(invitations)
-	})
 	suite.Run("пользователь должен существовать", func() {
 		id := uuid.NewString()
 		input := UserInvitationsInput{
@@ -196,99 +186,58 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 		suite.ErrorIs(err, ErrUnauthorizedInvitationsView)
 		suite.Empty(invitations)
 	})
-	suite.Run("пустой список если у данного пользователя нету приглашений", func() {
-		const savedInvitationsCount = 10
-		for range savedInvitationsCount {
-			suite.saveInvitation(domain.Invitation{
-				ID:     uuid.NewString(),
-				ChatID: uuid.NewString(),
-			})
-		}
-		ourUser := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
-
-		input := UserInvitationsInput{
-			SubjectUserID: ourUser.ID,
-			UserID:        ourUser.ID,
-		}
-
-		invitations, err := suite.invitationsService.UserInvitations(input)
-		suite.NoError(err)
-		suite.Empty(invitations)
-
-		invitationsFromRepo, err := suite.invitationsService.InvitationsRepo.List(domain.InvitationsFilter{})
-		suite.Len(invitationsFromRepo, savedInvitationsCount)
-		suite.NoError(err)
-	})
-	suite.Run("у пользователя есть приглашение", func() {
+	suite.Run("пользователя не приглашали и потому вернется пустой список", func() {
 		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
 		})
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:     uuid.NewString(),
-			ChatID: uuid.NewString(),
-			UserID: user.ID,
-		})
-
 		input := UserInvitationsInput{
 			SubjectUserID: user.ID,
 			UserID:        user.ID,
 		}
 		invitations, err := suite.invitationsService.UserInvitations(input)
-		suite.Require().NoError(err)
-
-		if suite.Len(invitations, 1) {
-			suite.Equal(invitation.ChatID, invitations[0].ChatID)
-			suite.Equal(invitation.UserID, invitations[0].UserID)
-		}
-	})
-	suite.Run("у пользователя несколько приглашений но не все из репозитория", func() {
-		const count = 5
-		userId := uuid.NewString()
-		user := domain.User{
-			ID: userId,
-		}
-		err := suite.invitationsService.UsersRepo.Save(user)
 		suite.NoError(err)
+		suite.Empty(invitations)
+	})
+	suite.Run("из многих приглашений несколько направлено пользователю и потому вернутся только они", func() {
+		user := suite.saveUser(domain.User{
+			ID: uuid.NewString(),
+		})
 
-		input := UserInvitationsInput{
-			SubjectUserID: userId,
-			UserID:        userId,
-		}
-		invsDomain := make([]domain.Invitation, count)
-		for i := range count {
-			inv := domain.Invitation{
+		invitationsOfUser := make([]domain.Invitation, 5)
+		for i := range invitationsOfUser {
+			invitationsOfUser[i] = suite.saveInvitation(domain.Invitation{
 				ID:     uuid.NewString(),
 				ChatID: uuid.NewString(),
-				UserID: userId,
-			}
-			invsDomain[i] = inv
-			err := suite.invitationsService.InvitationsRepo.Save(invsDomain[i])
-			suite.NoError(err)
+				UserID: user.ID,
+			})
 		}
-		for range count {
-			err := suite.invitationsService.InvitationsRepo.Save(domain.Invitation{
+
+		for range 10 {
+			suite.saveInvitation(domain.Invitation{
 				ID:     uuid.NewString(),
 				ChatID: uuid.NewString(),
 				UserID: uuid.NewString(),
 			})
-			suite.NoError(err)
 		}
 
-		invsRepo, err := suite.invitationsService.UserInvitations(input)
+		input := UserInvitationsInput{
+			SubjectUserID: user.ID,
+			UserID:        user.ID,
+		}
+		invitationsFromRepo, err := suite.invitationsService.UserInvitations(input)
 		suite.NoError(err)
-		if suite.Len(invsRepo, count) {
-			for i, inv := range invsRepo {
-				suite.Equal(inv.ID, invsDomain[i].ID)
-				suite.Equal(inv.ChatID, invsDomain[i].ChatID)
-				suite.Equal(inv.UserID, invsDomain[i].UserID)
+
+		if suite.Len(invitationsFromRepo, len(invitationsOfUser)) {
+			for i, invitation := range invitationsOfUser {
+				suite.Equal(invitation.ID, invitationsFromRepo[i].ID)
+				suite.Equal(invitation.ChatID, invitationsFromRepo[i].ChatID)
+				suite.Equal(invitation.UserID, invitationsFromRepo[i].UserID)
 			}
 		}
 	})
 }
 
-func Test_SendChatInvitationInput_Validate() {
+func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := SendInvitationInput{
 			SubjectUserID: id,
@@ -299,7 +248,7 @@ func Test_SendChatInvitationInput_Validate() {
 	})
 }
 
-func Test_Invitations_SendChatInvitation() {
+func Test_Invitations_SendChatInvitation(t *testing.T) {
 	suite.Run("участник отправляющий приглашения должен состоять в чате", func() {
 		chat := domain.Chat{
 			ID: uuid.NewString(),
