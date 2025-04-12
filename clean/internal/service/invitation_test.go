@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
@@ -413,98 +412,67 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		err := suite.invitationsService.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrChatNotExists)
 	})
-	suite.Run("приглашения  должен существовать", func() {
-
-		chat := domain.Chat{
+	suite.Run("приглашение должно существовать", func() {
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		user := domain.User{
-			ID: uuid.NewString(),
-		}
-		err = suite.invitationsService.UsersRepo.Save(user)
-		suite.NoError(err)
+		})
 
 		input := AcceptInvitationInput{
-			SubjectUserID: user.ID,
+			SubjectUserID: uuid.NewString(),
 			ChatID:        chat.ID,
 		}
-		err = suite.invitationsService.AcceptInvitation(input)
+		err := suite.invitationsService.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
-
-		members, err := suite.invitationsService.MembersRepo.List(domain.MembersFilter{})
-		suite.NoError(err)
-		suite.Len(members, 0)
 	})
-	suite.Run("пользователя должен существовать", func() {
-
-		chat := domain.Chat{
+	suite.Run("пользователь должен существовать", func() {
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		invitation := domain.Invitation{
+		})
+		invitation := suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 			ChatID:        chat.ID,
-		}
-		err = suite.invitationsService.InvitationsRepo.Save(invitation)
-		suite.NoError(err)
+		})
 
 		input := AcceptInvitationInput{
 			SubjectUserID: invitation.UserID,
 			ChatID:        chat.ID,
 		}
-		err = suite.invitationsService.AcceptInvitation(input)
+		err := suite.invitationsService.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrUserNotExists)
-
-		members, err := suite.invitationsService.MembersRepo.List(domain.MembersFilter{})
-		suite.NoError(err)
-		suite.Len(members, 0)
 	})
-	suite.Run("после принятия существующего приглашения, пользователь становится участником чата", func() {
-
-		chat := domain.Chat{
+	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		user := domain.User{
+		})
+		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
-		}
-		err = suite.invitationsService.UsersRepo.Save(user)
-		suite.NoError(err)
-
-		invitation := domain.Invitation{
+		})
+		suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
 			SubjectUserID: uuid.NewString(),
 			UserID:        user.ID,
 			ChatID:        chat.ID,
-		}
-		err = suite.invitationsService.InvitationsRepo.Save(invitation)
-		suite.NoError(err)
+		})
 
 		input := AcceptInvitationInput{
 			SubjectUserID: user.ID,
 			ChatID:        chat.ID,
 		}
-		err = suite.invitationsService.AcceptInvitation(input)
+		err := suite.invitationsService.AcceptInvitation(input)
 		suite.NoError(err)
 
 		members, err := suite.invitationsService.MembersRepo.List(domain.MembersFilter{})
 		suite.NoError(err)
-		suite.Len(members, 1)
+		suite.Require().Len(members, 1)
+
 		suite.Equal(user.ID, members[0].UserID)
 		suite.Equal(chat.ID, members[0].ChatID)
 	})
 }
 
-func Test_CancelInvitationInput_Validate() {
+func Test_CancelInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := CancelInvitationInput{
 			SubjectUserID: id,
@@ -515,301 +483,138 @@ func Test_CancelInvitationInput_Validate() {
 	})
 }
 
-func Test_Invitations_CancelInvitation() {
+func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("чат должен существовать", func() {
-
-	})
-	suite.Run("приглашение должен существовать", func() {
-
-	})
-	suite.Run("отменить не существующее приглашение", func() {
-		chat := domain.Chat{
-			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		user := domain.User{
-			ID: uuid.NewString(),
-		}
-		err = suite.invitationsService.UsersRepo.Save(user)
-		suite.NoError(err)
-
 		input := CancelInvitationInput{
-			SubjectUserID: user.ID,
-			ChatID:        chat.ID,
-			UserID:        user.ID,
+			SubjectUserID: uuid.NewString(),
+			ChatID:        uuid.NewString(),
+			UserID:        uuid.NewString(),
 		}
-		err = suite.invitationsService.CancelInvitation(input)
+		err := suite.invitationsService.CancelInvitation(input)
+		suite.ErrorIs(err, ErrChatNotExists)
+	})
+	suite.Run("приглашение должно существовать", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID: uuid.NewString(),
+		})
+		input := CancelInvitationInput{
+			SubjectUserID: uuid.NewString(),
+			ChatID:        chat.ID,
+			UserID:        uuid.NewString(),
+		}
+		err := suite.invitationsService.CancelInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
-	suite.Run("приглашение могут отменить только инициатор, администратор и приглашаемый пользователь", func() {
-		suite.Run("инициатор", func() {
-			suite.invitationsService := newInvitationsService(t)
-
-			chat := domain.Chat{
-				ID: uuid.NewString(),
-			}
-			err := suite.invitationsService.ChatsRepo.Save(chat)
-			suite.NoError(err)
-
-			user := domain.User{
-				ID: uuid.NewString(),
-			}
-			err = suite.invitationsService.UsersRepo.Save(user)
-			suite.NoError(err)
-
-			member := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			}
-			err = suite.invitationsService.MembersRepo.Save(member)
-			suite.NoError(err)
-
-			invitation := domain.Invitation{
-				ID:            uuid.NewString(),
-				SubjectUserID: member.UserID,
-				UserID:        user.ID,
-				ChatID:        chat.ID,
-			}
-			err = suite.invitationsService.InvitationsRepo.Save(invitation)
-			suite.NoError(err)
-
-			input := CancelInvitationInput{
-				SubjectUserID: invitation.SubjectUserID,
-				ChatID:        invitation.ChatID,
-				UserID:        invitation.UserID,
-			}
-			err = suite.invitationsService.CancelInvitation(input)
-			suite.NoError(err)
-		})
-		suite.Run("администратор", func() {
-			suite.invitationsService := newInvitationsService(t)
-
-			chatId := uuid.NewString()
-
-			chiefMember := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chatId,
-			}
-			err := suite.invitationsService.MembersRepo.Save(chiefMember)
-			suite.NoError(err)
-
-			chat := domain.Chat{
-				ID:          chatId,
-				ChiefUserID: chiefMember.UserID,
-			}
-			err = suite.invitationsService.ChatsRepo.Save(chat)
-			suite.NoError(err)
-
-			member := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			}
-			err = suite.invitationsService.MembersRepo.Save(member)
-			suite.NoError(err)
-
-			user := domain.User{
-				ID: uuid.NewString(),
-			}
-			err = suite.invitationsService.UsersRepo.Save(user)
-			suite.NoError(err)
-
-			invitation := domain.Invitation{
-				ID:            uuid.NewString(),
-				SubjectUserID: member.UserID,
-				UserID:        user.ID,
-				ChatID:        chat.ID,
-			}
-			err = suite.invitationsService.InvitationsRepo.Save(invitation)
-			suite.NoError(err)
-
-			input := CancelInvitationInput{
-				SubjectUserID: chat.ChiefUserID,
-				ChatID:        invitation.ChatID,
-				UserID:        invitation.UserID,
-			}
-			err = suite.invitationsService.CancelInvitation(input)
-			suite.NoError(err)
-		})
-		suite.Run("приглашаемый участник", func() {
-			suite.invitationsService := newInvitationsService(t)
-
-			chat := domain.Chat{
-				ID: uuid.NewString(),
-			}
-			err := suite.invitationsService.ChatsRepo.Save(chat)
-			suite.NoError(err)
-
-			user := domain.User{
-				ID: uuid.NewString(),
-			}
-			err = suite.invitationsService.UsersRepo.Save(user)
-			suite.NoError(err)
-
-			member := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			}
-			err = suite.invitationsService.MembersRepo.Save(member)
-			suite.NoError(err)
-
-			invitation := domain.Invitation{
-				ID:            uuid.NewString(),
-				SubjectUserID: member.UserID,
-				UserID:        user.ID,
-				ChatID:        chat.ID,
-			}
-			err = suite.invitationsService.InvitationsRepo.Save(invitation)
-			suite.NoError(err)
-
-			input := CancelInvitationInput{
-				SubjectUserID: user.ID,
-				ChatID:        chat.ID,
-				UserID:        user.ID,
-			}
-			err = suite.invitationsService.CancelInvitation(input)
-			suite.NoError(err)
-		})
-		suite.Run("посторонний участник чата", func() {
-			suite.invitationsService := newInvitationsService(t)
-
-			chat := domain.Chat{
-				ID: uuid.NewString(),
-			}
-			err := suite.invitationsService.ChatsRepo.Save(chat)
-			suite.NoError(err)
-
-			user := domain.User{
-				ID: uuid.NewString(),
-			}
-			err = suite.invitationsService.UsersRepo.Save(user)
-			suite.NoError(err)
-
-			member1 := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			}
-			err = suite.invitationsService.MembersRepo.Save(member1)
-			suite.NoError(err)
-
-			invitation := domain.Invitation{
-				ID:            uuid.NewString(),
-				SubjectUserID: member1.UserID,
-				UserID:        user.ID,
-				ChatID:        chat.ID,
-			}
-			err = suite.invitationsService.InvitationsRepo.Save(invitation)
-			suite.NoError(err)
-
-			member2 := domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			}
-			err = suite.invitationsService.MembersRepo.Save(member2)
-			suite.NoError(err)
-
-			input := CancelInvitationInput{
-				SubjectUserID: member2.UserID,
-				ChatID:        invitation.ChatID,
-				UserID:        invitation.UserID,
-			}
-			err = suite.invitationsService.CancelInvitation(input)
-			suite.ErrorIs(err, ErrSubjectUserNotAllowed)
-		})
-	})
-	suite.Run("после отмены, в участник чата не добавляется", func() {
-
-		chat := domain.Chat{
+	suite.Run("пользователь должен существовать", func() {
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		user := domain.User{
-			ID: uuid.NewString(),
-		}
-		err = suite.invitationsService.UsersRepo.Save(user)
-		suite.NoError(err)
-
-		member := domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		}
-		err = suite.invitationsService.MembersRepo.Save(member)
-		suite.NoError(err)
-
-		invitation := domain.Invitation{
+		})
+		invitation := suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
-			SubjectUserID: member.UserID,
-			UserID:        user.ID,
+			SubjectUserID: uuid.NewString(),
+			UserID:        uuid.NewString(),
 			ChatID:        chat.ID,
-		}
-		err = suite.invitationsService.InvitationsRepo.Save(invitation)
-		suite.NoError(err)
+		})
 
 		input := CancelInvitationInput{
-			SubjectUserID: invitation.SubjectUserID,
-			ChatID:        invitation.ChatID,
+			SubjectUserID: uuid.NewString(),
+			ChatID:        chat.ID,
 			UserID:        invitation.UserID,
 		}
-		err = suite.invitationsService.CancelInvitation(input)
-		suite.NoError(err)
+		err := suite.invitationsService.CancelInvitation(input)
+		suite.ErrorIs(err, ErrUserNotExists)
+	})
+	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
+		})
+		user := suite.saveUser(domain.User{
+			ID: uuid.NewString(),
+		})
+		subjectUserInviter := domain.User{ID: uuid.NewString()}
 
-		members, err := suite.invitationsService.MembersRepo.List(domain.MembersFilter{})
-		suite.NoError(err)
-		if suite.Len(members, 1) {
-			//assertEqualMembers(t, member, members[0])
+		cancelInvitationSubjectIDs := []string{
+			chat.ChiefUserID,      // главный администратор
+			subjectUserInviter.ID, // пригласивший
+			user.ID,               // приглашаемый
+		}
+		for _, subjectUserID := range cancelInvitationSubjectIDs {
+			suite.saveInvitation(domain.Invitation{
+				ID:            uuid.NewString(),
+				SubjectUserID: subjectUserInviter.ID,
+				UserID:        user.ID,
+				ChatID:        chat.ID,
+			})
+			input := CancelInvitationInput{
+				SubjectUserID: subjectUserID,
+				ChatID:        chat.ID,
+				UserID:        user.ID,
+			}
+			err := suite.invitationsService.CancelInvitation(input)
+			suite.Require().NoError(err)
 		}
 	})
+	suite.Run("другие участники не могут отменять приглашать ", func() {
+		chat := suite.saveChat(domain.Chat{
+			ID:          uuid.NewString(),
+			ChiefUserID: uuid.NewString(),
+		})
+		user := suite.saveUser(domain.User{
+			ID: uuid.NewString(),
+		})
+		// Случайный участник
+		member := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+		})
+		suite.saveInvitation(domain.Invitation{
+			ID:            uuid.NewString(),
+			SubjectUserID: uuid.NewString(),
+			UserID:        user.ID,
+			ChatID:        chat.ID,
+		})
+
+		input := CancelInvitationInput{
+			SubjectUserID: member.UserID,
+			ChatID:        chat.ID,
+			UserID:        user.ID,
+		}
+		err := suite.invitationsService.CancelInvitation(input)
+		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
+	})
+
 	suite.Run("после отмены, приглашение удаляется", func() {
-
-		chat := domain.Chat{
+		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
-		}
-		err := suite.invitationsService.ChatsRepo.Save(chat)
-		suite.NoError(err)
-
-		user := domain.User{
+		})
+		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
-		}
-		err = suite.invitationsService.UsersRepo.Save(user)
-		suite.NoError(err)
+		})
 
-		member := domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		}
-		err = suite.invitationsService.MembersRepo.Save(member)
-		suite.NoError(err)
+		//member := suite.saveMember(domain.Member{
+		//	ID:     uuid.NewString(),
+		//	UserID: uuid.NewString(),
+		//	ChatID: chat.ID,
+		//})
 
-		invitation := domain.Invitation{
+		invitation := suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
-			SubjectUserID: member.UserID,
+			SubjectUserID: uuid.NewString(),
 			UserID:        user.ID,
 			ChatID:        chat.ID,
-		}
-		err = suite.invitationsService.InvitationsRepo.Save(invitation)
-		suite.NoError(err)
+		})
 
 		input := CancelInvitationInput{
 			SubjectUserID: invitation.SubjectUserID,
 			ChatID:        invitation.ChatID,
 			UserID:        invitation.UserID,
 		}
-		err = suite.invitationsService.CancelInvitation(input)
-		suite.NoError(err)
+		err := suite.invitationsService.CancelInvitation(input)
+		suite.Require().NoError(err)
 
 		invitations, err := suite.invitationsService.InvitationsRepo.List(domain.InvitationsFilter{})
 		suite.NoError(err)
-		suite.Len(invitations, 0)
+		suite.Empty(invitations, 0)
 	})
 }
