@@ -200,8 +200,15 @@ func (in AcceptInvitationInput) Validate() error {
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
 func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
+	var err error
+
 	// Валидировать входные данные
-	if err := in.Validate(); err != nil {
+	if err = in.Validate(); err != nil {
+		return err
+	}
+
+	// Проверить, существование чата
+	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
 		return err
 	}
 
@@ -213,11 +220,6 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 	// Проверить существование пользователя
 	if _, err = getUser(i.UsersRepo, in.SubjectUserID); err != nil {
-		return err
-	}
-
-	// Проверить, существование чата
-	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
 		return err
 	}
 
@@ -268,14 +270,14 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
+	// Получить чат
+	chat, err := getChat(i.ChatsRepo, in.ChatID)
 	if err != nil {
 		return err
 	}
 
-	// Получить чат
-	chat, err := getChat(i.ChatsRepo, in.ChatID)
+	// Проверить существование приглашения
+	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
 	if err != nil {
 		return err
 	}

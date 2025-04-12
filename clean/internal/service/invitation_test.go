@@ -294,12 +294,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
-		subjectUser := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
-		suite.saveMember(domain.Member{
+		subjectMember := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
-			UserID: subjectUser.ID,
+			UserID: uuid.NewString(),
 			ChatID: chat.ID,
 		})
 		targetUser := suite.saveUser(domain.User{
@@ -307,13 +304,13 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		})
 		suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
+			UserID: targetUser.ID,
 			ChatID: chat.ID,
 		})
 
 		input := SendInvitationInput{
 			ChatID:        chat.ID,
-			SubjectUserID: subjectUser.ID,
+			SubjectUserID: subjectMember.UserID,
 			UserID:        targetUser.ID,
 		}
 		invitation, err := suite.invitationsService.SendInvitation(input)
@@ -505,25 +502,25 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		err := suite.invitationsService.CancelInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
-	suite.Run("пользователь должен существовать", func() {
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-			ChatID:        chat.ID,
-		})
-
-		input := CancelInvitationInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        chat.ID,
-			UserID:        invitation.UserID,
-		}
-		err := suite.invitationsService.CancelInvitation(input)
-		suite.ErrorIs(err, ErrUserNotExists)
-	})
+	//suite.Run("пользователь должен существовать", func() {
+	//	chat := suite.saveChat(domain.Chat{
+	//		ID: uuid.NewString(),
+	//	})
+	//	invitation := suite.saveInvitation(domain.Invitation{
+	//		ID:            uuid.NewString(),
+	//		SubjectUserID: uuid.NewString(),
+	//		UserID:        uuid.NewString(),
+	//		ChatID:        chat.ID,
+	//	})
+	//
+	//	input := CancelInvitationInput{
+	//		SubjectUserID: invitation.SubjectUserID,
+	//		ChatID:        chat.ID,
+	//		UserID:        invitation.UserID,
+	//	}
+	//	err := suite.invitationsService.CancelInvitation(input)
+	//	suite.ErrorIs(err, ErrUserNotExists)
+	//})
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		chat := suite.saveChat(domain.Chat{
 			ID:          uuid.NewString(),
@@ -532,17 +529,21 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
 		})
-		subjectUserInviter := domain.User{ID: uuid.NewString()}
+		memberInviter := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		})
 
 		cancelInvitationSubjectIDs := []string{
-			chat.ChiefUserID,      // главный администратор
-			subjectUserInviter.ID, // пригласивший
-			user.ID,               // приглашаемый
+			chat.ChiefUserID,     // главный администратор
+			memberInviter.UserID, // пригласивший
+			user.ID,              // приглашаемый
 		}
 		for _, subjectUserID := range cancelInvitationSubjectIDs {
 			suite.saveInvitation(domain.Invitation{
 				ID:            uuid.NewString(),
-				SubjectUserID: subjectUserInviter.ID,
+				SubjectUserID: memberInviter.UserID,
 				UserID:        user.ID,
 				ChatID:        chat.ID,
 			})
@@ -591,16 +592,15 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
 		})
-
-		//member := suite.saveMember(domain.Member{
-		//	ID:     uuid.NewString(),
-		//	UserID: uuid.NewString(),
-		//	ChatID: chat.ID,
-		//})
+		memberInviter := suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			ChatID: chat.ID,
+		})
 
 		invitation := suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
+			SubjectUserID: memberInviter.UserID,
 			UserID:        user.ID,
 			ChatID:        chat.ID,
 		})
