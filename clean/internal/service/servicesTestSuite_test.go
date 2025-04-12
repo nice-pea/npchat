@@ -21,6 +21,7 @@ func Test_ServicesTestSuite(t *testing.T) {
 	suite.Run(t, new(servicesTestSuite))
 }
 
+// TearDownSubTest выполняется перед каждым подтестом, связанным с suite
 func (suite *servicesTestSuite) SetupSubTest() {
 	var err error
 	require := suite.Require()
@@ -56,11 +57,13 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	}
 }
 
+// TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *servicesTestSuite) TearDownSubTest() {
 	err := suite.sqliteMemory.Close()
 	suite.Require().NoError(err)
 }
 
+// saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
 	err := suite.chatsService.ChatsRepo.Save(chat)
 	suite.Require().NoError(err)
@@ -68,6 +71,7 @@ func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
 	return chat
 }
 
+// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
 	err := suite.membersService.MembersRepo.Save(member)
 	suite.Require().NoError(err)
