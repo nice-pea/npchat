@@ -465,6 +465,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 	})
 
 	suite.Run("приглашение должно существовать", func() {
+		// Создать чат
 		chat := suite.saveChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
