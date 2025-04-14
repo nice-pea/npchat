@@ -9,22 +9,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
 
-// saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
-	err := suite.invitationsService.InvitationsRepo.Save(invitation)
-	suite.Require().NoError(err)
-
-	return invitation
-}
-
-// saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveUser(user domain.User) domain.User {
-	err := suite.invitationsService.UsersRepo.Save(user)
-	suite.Require().NoError(err)
-
-	return user
-}
-
 // Test_ChatInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_ChatInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
