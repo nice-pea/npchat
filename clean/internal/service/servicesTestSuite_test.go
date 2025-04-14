@@ -21,7 +21,7 @@ func Test_ServicesTestSuite(t *testing.T) {
 	suite.Run(t, new(servicesTestSuite))
 }
 
-// TearDownSubTest выполняется перед каждым подтестом, связанным с suite
+// SetupSubTest выполняется перед каждым подтестом, связанным с suite
 func (suite *servicesTestSuite) SetupSubTest() {
 	var err error
 	require := suite.Require()
