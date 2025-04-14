@@ -117,8 +117,8 @@ func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitat
 }
 
 type SendInvitationInput struct {
-	ChatID        string
 	SubjectUserID string
+	ChatID        string
 	UserID        string
 }
 
@@ -136,35 +136,35 @@ func (in SendInvitationInput) Validate() error {
 	return nil
 }
 
-// SendInvitation отправляет приглашения пользователям UserID
-func (i *Invitations) SendInvitation(in SendInvitationInput) error {
+// SendInvitation отправляет приглашения пользователю от участника чата
+func (i *Invitations) SendInvitation(in SendInvitationInput) (domain.Invitation, error) {
 	if err := in.Validate(); err != nil {
-		return err
+		return domain.Invitation{}, err
 	}
 
 	// Проверить существование чата
 	if _, err := getChat(i.ChatsRepo, in.ChatID); err != nil {
-		return err
+		return domain.Invitation{}, err
 	}
 
 	// Проверить, состоит ли SubjectUserID в чате
 	if _, err := subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID); err != nil {
-		return err
+		return domain.Invitation{}, err
 	}
 
 	// Проверить, не состоит ли UserID в чате
 	if _, err := userMember(i.MembersRepo, in.UserID, in.ChatID); err == nil {
-		return ErrUserAlreadyInChat
+		return domain.Invitation{}, ErrUserIsAlreadyInChat
 	}
 
 	// Проверить, существует ли UserID
 	if _, err := getUser(i.UsersRepo, in.UserID); err != nil {
-		return err
+		return domain.Invitation{}, err
 	}
 
 	// Проверить, не существует ли приглашение для этого пользователя в этот чат
 	if err := invitationMustNotExist(i.InvitationsRepo, in.UserID, in.ChatID); err != nil {
-		return ErrUserAlreadyInviteInChat
+		return domain.Invitation{}, ErrUserIsAlreadyInvited
 	}
 
 	// Отправить приглашение
@@ -176,10 +176,10 @@ func (i *Invitations) SendInvitation(in SendInvitationInput) error {
 	}
 	err := i.InvitationsRepo.Save(invitation)
 	if err != nil {
-		return err
+		return domain.Invitation{}, err
 	}
 
-	return nil
+	return invitation, nil
 }
 
 type AcceptInvitationInput struct {
@@ -200,8 +200,15 @@ func (in AcceptInvitationInput) Validate() error {
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
 func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
+	var err error
+
 	// Валидировать входные данные
-	if err := in.Validate(); err != nil {
+	if err = in.Validate(); err != nil {
+		return err
+	}
+
+	// Проверить, существование чата
+	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
 		return err
 	}
 
@@ -213,11 +220,6 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 	// Проверить существование пользователя
 	if _, err = getUser(i.UsersRepo, in.SubjectUserID); err != nil {
-		return err
-	}
-
-	// Проверить, существование чата
-	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
 		return err
 	}
 
@@ -268,14 +270,14 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
+	// Получить чат
+	chat, err := getChat(i.ChatsRepo, in.ChatID)
 	if err != nil {
 		return err
 	}
 
-	// Получить чат
-	chat, err := getChat(i.ChatsRepo, in.ChatID)
+	// Проверить существование приглашения
+	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
 	if err != nil {
 		return err
 	}
@@ -323,7 +325,7 @@ func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId 
 	return invitations[0], nil
 }
 
-// invitationMustNotExist возвращает ошибку ErrUserAlreadyInviteInChat, если приглашение по таким фильтрам существует
+// invitationMustNotExist возвращает ошибку ErrUserIsAlreadyInvited, если приглашение по таким фильтрам существует
 func invitationMustNotExist(invitationsRepo domain.InvitationsRepository, userId, chatId string) error {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		UserID: userId,
@@ -333,7 +335,7 @@ func invitationMustNotExist(invitationsRepo domain.InvitationsRepository, userId
 		return err
 	}
 	if len(invitations) > 0 {
-		return ErrUserAlreadyInviteInChat
+		return ErrUserIsAlreadyInvited
 	}
 
 	return nil

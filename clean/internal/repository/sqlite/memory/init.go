@@ -13,23 +13,27 @@ import (
 type Config struct {
 	MigrationsDir string
 }
-type SQLiteInMemory struct {
+type SQLiteMemory struct {
 	db *sqlx.DB
 }
 
-func Init(config Config) (*SQLiteInMemory, error) {
+func Init(config Config) (*SQLiteMemory, error) {
 	db, err := sqlx.Connect("sqlite", ":memory:")
 	if err != nil {
 		return nil, err
 	}
-	sqlin := &SQLiteInMemory{
+	sqliteMemory := &SQLiteMemory{
 		db: db,
 	}
-	if err = migrate(sqlin.db, config.MigrationsDir); err != nil {
+	if err = migrate(sqliteMemory.db, config.MigrationsDir); err != nil {
 		return nil, err
 	}
 
-	return sqlin, nil
+	return sqliteMemory, nil
+}
+
+func (m *SQLiteMemory) Close() error {
+	return m.db.Close()
 }
 
 func migrate(db *sqlx.DB, migrationsDir string) error {

@@ -49,7 +49,7 @@ func invitationsFromDomain(domainInvitations []domain.Invitation) []invitation {
 	return repoInvitations
 }
 
-func (m *SQLiteInMemory) NewInvitationsRepository() (domain.InvitationsRepository, error) {
+func (m *SQLiteMemory) NewInvitationsRepository() (domain.InvitationsRepository, error) {
 	return &InvitationsRepository{
 		DB: m.db,
 	}, nil
