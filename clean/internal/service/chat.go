@@ -8,7 +8,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// Chats сервис объединяющий случаи использования(юзкейсы) в контексте сущности
+// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
 type Chats struct {
 	ChatsRepo   domain.ChatsRepository
 	MembersRepo domain.MembersRepository
@@ -32,7 +32,7 @@ func (in UserChatsInput) Validate() error {
 	return nil
 }
 
-// UserChats возвращает список чатов в которых участвует пользователь
+// UserChats возвращает список чатов, в которых участвует пользователь
 func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 	// Валидировать параметры
 	var err error
@@ -58,7 +58,7 @@ func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
 		return nil, nil
 	}
 
-	// Собрать ID чатов к которым принадлежат участники
+	// Собрать ID чатов, к которым принадлежат участники
 	chatIds := make([]string, len(members))
 	for i, member := range members {
 		chatIds[i] = member.ChatID
