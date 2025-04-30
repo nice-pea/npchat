@@ -1,4 +1,4 @@
-package memory
+package sqlite
 
 import (
 	"fmt"
@@ -12,17 +12,18 @@ import (
 
 type Config struct {
 	MigrationsDir string
+	//DSN           string
 }
-type SQLiteMemory struct {
+type RepositoryFactory struct {
 	db *sqlx.DB
 }
 
-func Init(config Config) (*SQLiteMemory, error) {
+func InitRepositoryFactory(config Config) (*RepositoryFactory, error) {
 	db, err := sqlx.Connect("sqlite", ":memory:")
 	if err != nil {
 		return nil, err
 	}
-	sqliteMemory := &SQLiteMemory{
+	sqliteMemory := &RepositoryFactory{
 		db: db,
 	}
 	if err = migrate(sqliteMemory.db, config.MigrationsDir); err != nil {
@@ -32,7 +33,7 @@ func Init(config Config) (*SQLiteMemory, error) {
 	return sqliteMemory, nil
 }
 
-func (m *SQLiteMemory) Close() error {
+func (m *RepositoryFactory) Close() error {
 	return m.db.Close()
 }
 

@@ -1,4 +1,4 @@
-package memory
+package sqlite
 
 import (
 	"testing"
@@ -11,12 +11,10 @@ import (
 
 func TestNewChatsRepository(t *testing.T) {
 	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
-		sqlim, err := Init(Config{
-			MigrationsDir: "../../../../migrations/repository/sqlite/memory",
-		})
+		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
-		assert.NotNil(t, sqlim)
-		repo, err := sqlim.NewChatsRepository()
+		assert.NotNil(t, repositoryFactory)
+		repo, err := repositoryFactory.NewChatsRepository()
 		assert.Nil(t, err)
 		assert.NotNil(t, repo)
 	})
@@ -24,12 +22,10 @@ func TestNewChatsRepository(t *testing.T) {
 
 func TestChatsRepository(t *testing.T) {
 	repository_tests.ChatsRepositoryTests(t, func() domain.ChatsRepository {
-		sqlim, err := Init(Config{
-			MigrationsDir: "../../../../migrations/repository/sqlite/memory",
-		})
+		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
-		assert.NotNil(t, sqlim)
-		repo, err := sqlim.NewChatsRepository()
+		assert.NotNil(t, repositoryFactory)
+		repo, err := repositoryFactory.NewChatsRepository()
 		assert.Nil(t, err)
 		assert.NotNil(t, repo)
 		return repo

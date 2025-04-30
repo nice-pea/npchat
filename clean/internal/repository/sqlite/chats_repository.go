@@ -1,4 +1,4 @@
-package memory
+package sqlite
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func chatsToDomain(repoChats []chat) []domain.Chat {
 	return domainChats
 }
 
-func (m *SQLiteMemory) NewChatsRepository() (domain.ChatsRepository, error) {
+func (m *RepositoryFactory) NewChatsRepository() (domain.ChatsRepository, error) {
 	return &ChatsRepository{
 		DB: m.db,
 	}, nil

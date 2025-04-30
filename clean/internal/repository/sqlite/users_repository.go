@@ -1,4 +1,4 @@
-package memory
+package sqlite
 
 import (
 	"errors"
@@ -41,7 +41,7 @@ func usersFromDomain(domainUsers []domain.User) []user {
 	return repoUsers
 }
 
-func (m *SQLiteMemory) NewUsersRepository() (domain.UsersRepository, error) {
+func (m *RepositoryFactory) NewUsersRepository() (domain.UsersRepository, error) {
 	return &UsersRepository{
 		DB: m.db,
 	}, nil

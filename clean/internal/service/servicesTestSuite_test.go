@@ -6,12 +6,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
+	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
 
 type servicesTestSuite struct {
 	suite.Suite
-	sqliteMemory       *memory.SQLiteMemory
+	factory            *sqlite.RepositoryFactory
 	chatsService       *Chats
 	membersService     *Members
 	invitationsService *Invitations
@@ -27,17 +27,17 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require := suite.Require()
 
 	// Инициализация SQLiteMemory
-	suite.sqliteMemory, err = memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
+	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	chatsRepository, err := suite.sqliteMemory.NewChatsRepository()
+	chatsRepository, err := suite.factory.NewChatsRepository()
 	require.NoError(err)
-	membersRepository, err := suite.sqliteMemory.NewMembersRepository()
+	membersRepository, err := suite.factory.NewMembersRepository()
 	require.NoError(err)
-	invitationsRepository, err := suite.sqliteMemory.NewInvitationsRepository()
+	invitationsRepository, err := suite.factory.NewInvitationsRepository()
 	require.NoError(err)
-	usersRepository, err := suite.sqliteMemory.NewUsersRepository()
+	usersRepository, err := suite.factory.NewUsersRepository()
 	require.NoError(err)
 
 	// Создание сервисов
@@ -59,7 +59,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *servicesTestSuite) TearDownSubTest() {
-	err := suite.sqliteMemory.Close()
+	err := suite.factory.Close()
 	suite.Require().NoError(err)
 }
 
