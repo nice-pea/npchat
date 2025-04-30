@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"slices"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/service"
@@ -10,8 +11,8 @@ import (
 // Context представляет контекст HTTP-запроса
 type Context struct {
 	requestID string
-	subjectID string
 	request   *http.Request
+	session   domain.Session
 }
 
 type HandlerFunc func(Context) (any, error)
@@ -21,11 +22,9 @@ type Controller struct {
 	chats       service.Chats
 	invitations service.Invitations
 	members     service.Members
-	auth        interface {
-		ByHeader(r *http.Request) (domain.User, error)
-	}
+	sessions    service.Sessions
 
-	mux *http.ServeMux
+	http.ServeMux
 }
 
 func InitController(chats service.Chats, invitations service.Invitations, members service.Members) *Controller {
@@ -33,14 +32,22 @@ func InitController(chats service.Chats, invitations service.Invitations, member
 		chats:       chats,
 		invitations: invitations,
 		members:     members,
-		mux:         http.NewServeMux(),
+		ServeMux:    http.ServeMux{},
 	}
 	registerHandlers(c)
 
 	return c
 }
 
-// ServeHTTP обрабатывает HTTP-запросы
-func (c *Controller) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c.mux.ServeHTTP(w, r)
+func (c *Controller) HandleFunc(pattern string, handlerFunc HandlerFunc, middlewares ...middleware) {
+	c.ServeMux.HandleFunc(pattern, c.modulation(chain(handlerFunc, middlewares...)))
+}
+
+type middleware func(HandlerFunc) HandlerFunc
+
+func chain(h HandlerFunc, middlewares ...middleware) HandlerFunc {
+	for _, mw := range slices.Backward(middlewares) {
+		h = mw(h)
+	}
+	return h
 }

@@ -24,8 +24,8 @@ func (c *Controller) CreateChat(context Context) (any, error) {
 // GetChats возвращает список чатов пользователя
 func (c *Controller) GetChats(context Context) (any, error) {
 	input := service.UserChatsInput{
-		SubjectUserID: context.subjectID,
-		UserID:        context.subjectID,
+		SubjectUserID: context.session.UserID,
+		UserID:        context.session.UserID,
 	}
 
 	chats, err := c.chats.UserChats(input)

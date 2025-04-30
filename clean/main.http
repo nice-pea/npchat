@@ -5,8 +5,8 @@ Accept: application/json
 ### Create new chat
 POST http://localhost:8080/chats
 Content-Type: application/json
-X-Request-ID: test-request-id
-X-Subject-ID: test-user-id
+X-Request-ID: {{$uuid}}
+Authorization: Bearer {{$uuid}}
 
 {
   "name": "Test Chat",
@@ -16,5 +16,5 @@ X-Subject-ID: test-user-id
 ### Get user chats
 GET http://localhost:8080/chats
 Accept: application/json
-X-Request-ID: test-request-id
-X-Subject-ID: test-user-id
+X-Request-ID: {{$uuid}}
+Authorization: Bearer {{$uuid}}

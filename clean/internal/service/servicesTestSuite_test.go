@@ -11,10 +11,23 @@ import (
 
 type servicesTestSuite struct {
 	suite.Suite
-	factory            *sqlite.RepositoryFactory
+	rr struct {
+		chats       domain.ChatsRepository
+		members     domain.MembersRepository
+		invitations domain.InvitationsRepository
+		sessions    domain.SessionsRepository
+		users       domain.UsersRepository
+	}
+	ss struct {
+		chats       *Chats
+		members     *Members
+		invitations *Invitations
+		sessions    *Sessions
+	}
 	chatsService       *Chats
 	membersService     *Members
 	invitationsService *Invitations
+	sessionsService    *Sessions
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
@@ -27,34 +40,41 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require := suite.Require()
 
 	// Инициализация SQLiteMemory
-	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
+	factory, err := sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	chatsRepository, err := suite.factory.NewChatsRepository()
+	suite.rr.chats, err = factory.NewChatsRepository()
 	require.NoError(err)
-	membersRepository, err := suite.factory.NewMembersRepository()
+	suite.rr.members, err = factory.NewMembersRepository()
 	require.NoError(err)
-	invitationsRepository, err := suite.factory.NewInvitationsRepository()
+	suite.rr.invitations, err = factory.NewInvitationsRepository()
 	require.NoError(err)
-	usersRepository, err := suite.factory.NewUsersRepository()
+	suite.rr.users, err = factory.NewUsersRepository()
+	require.NoError(err)
+	suite.rr.sessions, err = factory.NewSessionsRepository()
 	require.NoError(err)
 
 	// Создание сервисов
 	suite.chatsService = &Chats{
-		ChatsRepo:   chatsRepository,
-		MembersRepo: membersRepository,
+		ChatsRepo:   suite.rr.chats,
+		MembersRepo: suite.rr.members,
 	}
 	suite.membersService = &Members{
-		ChatsRepo:   chatsRepository,
-		MembersRepo: membersRepository,
+		ChatsRepo:   suite.rr.chats,
+		MembersRepo: suite.rr.members,
 	}
 	suite.invitationsService = &Invitations{
-		ChatsRepo:       chatsRepository,
-		MembersRepo:     membersRepository,
-		InvitationsRepo: invitationsRepository,
-		UsersRepo:       usersRepository,
+		ChatsRepo:       suite.rr.chats,
+		MembersRepo:     suite.rr.members,
+		InvitationsRepo: suite.rr.invitations,
+		UsersRepo:       suite.rr.users,
 	}
+
+	suite.ss.chats = suite.chatsService
+	suite.ss.members = suite.membersService
+	suite.ss.invitations = suite.invitationsService
+	suite.ss.sessions = &Sessions{}
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
