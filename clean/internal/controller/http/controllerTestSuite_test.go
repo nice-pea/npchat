@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type servicesTestSuite struct {
+type controllerTestSuite struct {
 	suite.Suite
 	ctrl Controller
 	//sqliteMemory       *memory.SQLiteMemory
@@ -16,11 +16,11 @@ type servicesTestSuite struct {
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
-	suite.Run(t, new(servicesTestSuite))
+	suite.Run(t, new(controllerTestSuite))
 }
 
 // SetupSubTest выполняется перед каждым подтестом, связанным с suite
-func (suite *servicesTestSuite) SetupSubTest() {
+func (suite *controllerTestSuite) SetupSubTest() {
 	//var err error
 	//require := suite.Require()
 	//
@@ -56,7 +56,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
-func (suite *servicesTestSuite) TearDownSubTest() {
+func (suite *controllerTestSuite) TearDownSubTest() {
 	//err := suite.sqliteMemory.Close()
 	//suite.Require().NoError(err)
 }

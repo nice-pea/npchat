@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (suite *servicesTestSuite) Test_Server() {
+func (suite *controllerTestSuite) Test_Server() {
 	suite.Run("это http сервер", func() {
 		var _ http.Handler = new(Controller)
 	})
@@ -12,8 +12,8 @@ func (suite *servicesTestSuite) Test_Server() {
 		c := &Context{
 			requestID: "",
 			subjectID: "",
-			writer:    (http.ResponseWriter)(nil),
-			request:   (*http.Request)(nil),
+			//writer:    (http.ResponseWriter)(nil),
+			request: (*http.Request)(nil),
 		}
 
 		//var _ interface {
@@ -25,12 +25,29 @@ func (suite *servicesTestSuite) Test_Server() {
 		_ = c
 	})
 	suite.Run("есть метод modulation", func() {
-		var _ func(http.Handler) func(Context) (any, error) = modulation
-		//modulation(http.Handler) func() (any, error)
-	})
-	suite.Run("наличие методов", func() {
+		//// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
+		//var f func(HandlerFunc) http.HandlerFunc
+		//// Проверить существование такой функции
+		//f = modulation
+		//_ = f
+		// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
 		var _ interface {
+			modulation(HandlerFunc) http.HandlerFunc
+		} = new(Controller)
+	})
+	//suite.Run("есть middleware для наполнения Context значениями", func() {
+	//	// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
+	//	var mw func(HandlerFunc) HandlerFunc
+	//	// Проверить существование такой функции
+	//	mw = initContext
+	//	_ = mw
+	//})
+	suite.Run("наличие методов", func() {
+		// Контроллер содержит методы для обработки следующих запросов:
+		var _ interface {
+			// Создать чат
 			CreateChat(Context) (any, error)
+			// Получить список чатов
 			GetChats(Context) (any, error)
 		} = new(Controller)
 	})
