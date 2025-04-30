@@ -18,7 +18,7 @@ func (s *Sessions) Find(in SessionsFindInput) ([]domain.Session, error) {
 		return nil, ErrInvalidToken
 	}
 
-	sessions, err := s.SessionsRepo.List(domain.SessionFilter{Token: in.Token})
+	sessions, err := s.SessionsRepo.List(domain.SessionsFilter{Token: in.Token})
 	if err != nil {
 		return nil, err
 	}

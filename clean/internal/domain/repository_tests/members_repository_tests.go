@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
@@ -23,7 +24,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			r := newRepository()
 			members, err := r.List(domain.MembersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, members, 0)
+			assert.Empty(t, members)
 		})
 		t.Run("без фильтра из репозитория вернутся все сохраненные участники", func(t *testing.T) {
 			r := newRepository()
@@ -35,7 +36,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 					ChatID: uuid.NewString(),
 				}
 				err := r.Save(members[i])
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			membersFromRepo, err := r.List(domain.MembersFilter{})
 			assert.NoError(t, err)
@@ -45,15 +46,15 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			r := newRepository()
 			member := domain.Member{ID: uuid.NewString()}
 			err := r.Save(member)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			members, err := r.List(domain.MembersFilter{})
-			assert.NoError(t, err)
-			assert.Len(t, members, 1)
+			require.NoError(t, err)
+			require.Len(t, members, 1)
 			err = r.Delete(member.ID)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			members, err = r.List(domain.MembersFilter{})
-			assert.NoError(t, err)
-			assert.Len(t, members, 0)
+			require.NoError(t, err)
+			require.Empty(t, members)
 		})
 		t.Run("с фильтром по ID вернется сохраненный участник", func(t *testing.T) {
 			r := newRepository()
@@ -63,17 +64,16 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			}
 			expectedMember := domain.Member{ID: uuid.NewString()}
 			err := r.Save(expectedMember)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			members, err := r.List(domain.MembersFilter{ID: expectedMember.ID})
-			assert.NoError(t, err)
-			if assert.Len(t, members, 1) {
-				assertEqualMembers(t, expectedMember, members[0])
-			}
+			require.NoError(t, err)
+			require.Len(t, members, 1)
+			assertEqualMembers(t, expectedMember, members[0])
 		})
 		t.Run("с фильтром по ChatID вернутся участники с равным ChatID", func(t *testing.T) {
 			r := newRepository()
 			chatID := uuid.NewString()
-			assert.NoError(t, errors.Join(
+			require.NoError(t, errors.Join(
 				r.Save(domain.Member{ID: uuid.NewString(), ChatID: chatID}),
 				r.Save(domain.Member{ID: uuid.NewString(), ChatID: chatID}),
 				r.Save(domain.Member{ID: uuid.NewString(), ChatID: uuid.NewString()}),
@@ -144,9 +144,8 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			assert.NoError(t, err)
 			members, err := r.List(domain.MembersFilter{})
 			assert.NoError(t, err)
-			if assert.Len(t, members, 1) {
-				assertEqualMembers(t, member, members[0])
-			}
+			require.Len(t, members, 1)
+			assertEqualMembers(t, member, members[0])
 		})
 		t.Run("сохраненный участник полностью соответствует сохраняемому", func(t *testing.T) {
 			r := newRepository()
@@ -158,10 +157,9 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			err := r.Save(member)
 			assert.NoError(t, err)
 			members, err := r.List(domain.MembersFilter{})
-			assert.NoError(t, err)
-			if assert.Len(t, members, 1) {
-				assertEqualMembers(t, member, members[0])
-			}
+			require.NoError(t, err)
+			require.Len(t, members, 1)
+			assertEqualMembers(t, member, members[0])
 		})
 		t.Run("перезапись с новыми значениями по ID", func(t *testing.T) {
 			r := newRepository()
@@ -183,10 +181,9 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			err := r.Save(expectedMember)
 			assert.NoError(t, err)
 			members, err := r.List(domain.MembersFilter{ID: id})
-			assert.NoError(t, err)
-			if assert.Len(t, members, 1) {
-				assertEqualMembers(t, expectedMember, members[0])
-			}
+			require.NoError(t, err)
+			require.Len(t, members, 1)
+			assertEqualMembers(t, expectedMember, members[0])
 		})
 		t.Run("ChatID может дублироваться", func(t *testing.T) {
 			r := newRepository()
@@ -249,7 +246,7 @@ func MembersRepositoryTests(t *testing.T, newRepository func() domain.MembersRep
 			}
 			chats, err := r.List(domain.MembersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, chats, 0)
+			assert.Empty(t, chats)
 		})
 	})
 }

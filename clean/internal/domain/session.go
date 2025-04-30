@@ -51,10 +51,10 @@ const (
 
 type SessionsRepository interface {
 	Save(session Session) error
-	List(filter SessionFilter) ([]Session, error)
+	List(filter SessionsFilter) ([]Session, error)
 	Delete(id string) error
 }
 
-type SessionFilter struct {
+type SessionsFilter struct {
 	Token string
 }

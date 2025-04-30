@@ -11,7 +11,8 @@ import (
 
 type servicesTestSuite struct {
 	suite.Suite
-	rr struct {
+	factory *sqlite.RepositoryFactory
+	rr      struct {
 		chats       domain.ChatsRepository
 		members     domain.MembersRepository
 		invitations domain.InvitationsRepository
@@ -40,19 +41,19 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require := suite.Require()
 
 	// Инициализация SQLiteMemory
-	factory, err := sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
+	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	suite.rr.chats, err = factory.NewChatsRepository()
+	suite.rr.chats, err = suite.factory.NewChatsRepository()
 	require.NoError(err)
-	suite.rr.members, err = factory.NewMembersRepository()
+	suite.rr.members, err = suite.factory.NewMembersRepository()
 	require.NoError(err)
-	suite.rr.invitations, err = factory.NewInvitationsRepository()
+	suite.rr.invitations, err = suite.factory.NewInvitationsRepository()
 	require.NoError(err)
-	suite.rr.users, err = factory.NewUsersRepository()
+	suite.rr.users, err = suite.factory.NewUsersRepository()
 	require.NoError(err)
-	suite.rr.sessions, err = factory.NewSessionsRepository()
+	suite.rr.sessions, err = suite.factory.NewSessionsRepository()
 	require.NoError(err)
 
 	// Создание сервисов

@@ -30,3 +30,13 @@ CREATE TABLE users
 (
     id      TEXT PRIMARY KEY
 );
+
+CREATE TABLE sessions
+(
+
+    id      TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token TEXT NOT NULL,
+    status INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users ON DELETE RESTRICT
+);

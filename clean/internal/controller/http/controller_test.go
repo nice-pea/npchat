@@ -2,6 +2,8 @@ package http
 
 import (
 	"net/http"
+
+	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 func (suite *controllerTestSuite) Test_Server() {
@@ -9,20 +11,11 @@ func (suite *controllerTestSuite) Test_Server() {
 		var _ http.Handler = new(Controller)
 	})
 	suite.Run("context с доступом к данным", func() {
-		c := &Context{
+		_ = &Context{
 			requestID: "",
-			subjectID: "",
-			//writer:    (http.ResponseWriter)(nil),
-			request: (*http.Request)(nil),
+			request:   (*http.Request)(nil),
+			session:   domain.Session{},
 		}
-
-		//var _ interface {
-		//	RequestID() string
-		//	SubjectID() string
-		//	Writer() http.ResponseWriter
-		//	Request() http.Request
-		//} = c
-		_ = c
 	})
 	suite.Run("есть метод modulation", func() {
 		//// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc

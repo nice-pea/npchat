@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
@@ -13,22 +14,22 @@ import (
 func TestNewUsersRepository(t *testing.T) {
 	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.Nil(t, err)
-		assert.NotNil(t, repositoryFactory)
+		assert.NoError(t, err)
+		require.NotZero(t, repositoryFactory)
 		repo, err := repositoryFactory.NewUsersRepository()
-		assert.Nil(t, err)
-		assert.NotNil(t, repo)
+		assert.NoError(t, err)
+		assert.NotZero(t, repo)
 	})
 }
 
 func TestUsersRepository(t *testing.T) {
 	repository_tests.UsersRepositoryTests(t, func() domain.UsersRepository {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.Nil(t, err)
-		assert.NotNil(t, repositoryFactory)
+		assert.NoError(t, err)
+		require.NotZero(t, repositoryFactory)
 		repo, err := repositoryFactory.NewUsersRepository()
-		assert.Nil(t, err)
-		assert.NotNil(t, repo)
+		assert.NoError(t, err)
+		require.NotZero(t, repo)
 		return repo
 	})
 }

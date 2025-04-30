@@ -23,6 +23,14 @@ func chatToDomain(repoChat chat) domain.Chat {
 	}
 }
 
+func chatFromDomain(domainChat domain.Chat) chat {
+	return chat{
+		ID:          domainChat.ID,
+		Name:        domainChat.Name,
+		ChiefUserID: domainChat.ChiefUserID,
+	}
+}
+
 func chatsToDomain(repoChats []chat) []domain.Chat {
 	domainChats := make([]domain.Chat, len(repoChats))
 	for i, repoChat := range repoChats {
@@ -42,8 +50,8 @@ type ChatsRepository struct {
 	DB *sqlx.DB
 }
 
-func (c *ChatsRepository) List(filter domain.ChatsFilter) ([]domain.Chat, error) {
-	// Построить запрос используя bqb
+func (r *ChatsRepository) List(filter domain.ChatsFilter) ([]domain.Chat, error) {
+	// Построить запрос, используя bqb
 	where := bqb.Optional("WHERE")
 	if len(filter.IDs) > 0 {
 		where.And("id IN (?)", filter.IDs)
@@ -52,37 +60,38 @@ func (c *ChatsRepository) List(filter domain.ChatsFilter) ([]domain.Chat, error)
 	if err != nil {
 		return nil, err
 	}
-	// Выполнить запрос используя sqlx
+
+	// Выполнить запрос, используя sqlx
 	chats := make([]chat, 0)
-	if err = c.DB.Select(&chats, sql, args...); err != nil {
-		return nil, fmt.Errorf("error selecting chats: %w", err)
+	if err = r.DB.Select(&chats, sql, args...); err != nil {
+		return nil, fmt.Errorf("DB.Select: %w", err)
 	}
 
 	return chatsToDomain(chats), nil
 }
 
-func (c *ChatsRepository) Save(chat domain.Chat) error {
+func (r *ChatsRepository) Save(chat domain.Chat) error {
 	if chat.ID == "" {
 		return fmt.Errorf("invalid chat id")
 	}
-	_, err := c.DB.Exec(`
+	_, err := r.DB.NamedExec(`
 		INSERT OR REPLACE INTO chats(id, name, chief_user_id)
-		VALUES (?, ?, ?)`,
-		chat.ID, chat.Name, chat.ChiefUserID)
+		VALUES (:id, :name, :chief_user_id)
+	`, chatFromDomain(chat))
 	if err != nil {
-		return fmt.Errorf("error inserting chat: %w", err)
+		return fmt.Errorf("DB.NamedExec: %w", err)
 	}
 
 	return nil
 }
 
-func (c *ChatsRepository) Delete(id string) error {
+func (r *ChatsRepository) Delete(id string) error {
 	if id == "" {
 		return fmt.Errorf("invalid chat id")
 	}
-	_, err := c.DB.Exec("DELETE FROM chats WHERE id = ?", id)
+	_, err := r.DB.Exec(`DELETE FROM chats WHERE id = ?`, id)
 	if err != nil {
-		return fmt.Errorf("error deleting chat: %w", err)
+		return fmt.Errorf("DB.Exec: %w", err)
 	}
 
 	return nil

@@ -51,41 +51,41 @@ type UsersRepository struct {
 	DB *sqlx.DB
 }
 
-func (c *UsersRepository) List(filter domain.UsersFilter) ([]domain.User, error) {
+func (r *UsersRepository) List(filter domain.UsersFilter) ([]domain.User, error) {
 	users := make([]user, 0)
-	if err := c.DB.Select(&users, `
+	if err := r.DB.Select(&users, `
 			SELECT * 
 			FROM users 
-			WHERE ($1 = "" OR $1 = id)
+			WHERE ($1 = '' OR $1 = id)
 		`, filter.ID); err != nil {
-		return nil, fmt.Errorf("error selecting users: %w", err)
+		return nil, fmt.Errorf("DB.Select: %w", err)
 	}
 
 	return usersToDomain(users), nil
 }
 
-func (c *UsersRepository) Save(user domain.User) error {
+func (r *UsersRepository) Save(user domain.User) error {
 	if user.ID == "" {
 		return errors.New("invalid user id")
 	}
-	_, err := c.DB.Exec(`
+	_, err := r.DB.NamedExec(`
 		INSERT OR REPLACE INTO users(id)
-		VALUES (?)`,
-		user.ID)
+		VALUES (:id)
+	`, user)
 	if err != nil {
-		return fmt.Errorf("error inserting user: %w", err)
+		return fmt.Errorf("DB.NamedExec: %w", err)
 	}
 
 	return nil
 }
 
-func (c *UsersRepository) Delete(id string) error {
+func (r *UsersRepository) Delete(id string) error {
 	if id == "" {
 		return errors.New("invalid user id")
 	}
-	_, err := c.DB.Exec("DELETE FROM users WHERE id = ?", id)
+	_, err := r.DB.Exec(`DELETE FROM users WHERE id = ?`, id)
 	if err != nil {
-		return fmt.Errorf("error deleting user: %w", err)
+		return fmt.Errorf("DB.Exec: %w", err)
 	}
 
 	return nil

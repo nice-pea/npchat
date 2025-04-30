@@ -5,28 +5,31 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 func UsersRepositoryTests(t *testing.T, newRepository func() domain.UsersRepository) {
 	t.Run("List", func(t *testing.T) {
-		t.Run("без фильтра в пустом репозитории", func(t *testing.T) {
+		t.Run("из пустого репозитория вернутся пустой список", func(t *testing.T) {
 			r := newRepository()
 			users, err := r.List(domain.UsersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, users, 0)
+			assert.Empty(t, users)
 		})
-		t.Run("без фильтра только один чат", func(t *testing.T) {
+		t.Run("без фильтра вернутся все пользователи", func(t *testing.T) {
 			r := newRepository()
-			user := domain.User{
-				ID: uuid.NewString(),
+			const usersCount = 11
+			for range usersCount {
+				require.NoError(t, r.Save(domain.User{
+					ID: uuid.NewString(),
+				}))
 			}
-			err := r.Save(user)
-			assert.NoError(t, err)
 			users, err := r.List(domain.UsersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, users, 1)
+			assert.Len(t, users, usersCount)
 		})
 		t.Run("без фильтра отсутствует после удаления", func(t *testing.T) {
 			r := newRepository()
@@ -34,66 +37,68 @@ func UsersRepositoryTests(t *testing.T, newRepository func() domain.UsersReposit
 				ID: uuid.NewString(),
 			}
 			err := r.Save(user)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			users, err := r.List(domain.UsersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, users, 1)
+			require.Len(t, users, 1)
 			err = r.Delete(user.ID)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			users, err = r.List(domain.UsersFilter{})
 			assert.NoError(t, err)
-			assert.Len(t, users, 0)
+			assert.Empty(t, users)
 		})
 		t.Run("с фильтром по id", func(t *testing.T) {
 			r := newRepository()
 			id := uuid.NewString()
-			assert.NoError(t, errors.Join(
+			require.NoError(t, errors.Join(
 				r.Save(domain.User{ID: id}),
 				r.Save(domain.User{ID: uuid.NewString()}),
 				r.Save(domain.User{ID: uuid.NewString()}),
 			))
 			users, err := r.List(domain.UsersFilter{ID: id})
 			assert.NoError(t, err)
-			if assert.Len(t, users, 1) {
-				assert.Equal(t, id, users[0].ID)
-			}
+			require.Len(t, users, 1)
+			assert.Equal(t, id, users[0].ID)
 		})
 	})
 	t.Run("Save", func(t *testing.T) {
-		t.Run("без ID", func(t *testing.T) {
+		t.Run("ID обязательно должен быть передан", func(t *testing.T) {
 			r := newRepository()
 			err := r.Save(domain.User{
 				ID: "",
 			})
 			assert.Error(t, err)
 		})
-		t.Run("без ошибок", func(t *testing.T) {
+		t.Run("сохраненного пользователя можно прочитать из репозитория", func(t *testing.T) {
 			r := newRepository()
-			err := r.Save(domain.User{
+			user := domain.User{
 				ID: uuid.NewString(),
-			})
+			}
+			err := r.Save(user)
 			assert.NoError(t, err)
+			users, err := r.List(domain.UsersFilter{})
+			assert.NoError(t, err)
+			require.Len(t, users, 1)
+			assert.Equal(t, user, users[0])
 		})
-		t.Run("дубль ID", func(t *testing.T) {
+		t.Run("можно несколько раз сохранять с одним ID", func(t *testing.T) {
 			r := newRepository()
-			id := uuid.NewString()
-			err := r.Save(domain.User{
-				ID: id,
-			})
+			user := domain.User{ID: uuid.NewString()}
+			for range 10 {
+				require.NoError(t, r.Save(user))
+			}
+			users, err := r.List(domain.UsersFilter{})
 			assert.NoError(t, err)
-			err = r.Save(domain.User{
-				ID: id,
-			})
-			assert.NoError(t, err) // с чем связанно, тут не возвращается error?
+			assert.Len(t, users, 1)
 		})
 	})
 	t.Run("Delete", func(t *testing.T) {
-		t.Run("с пустым id", func(t *testing.T) {
+		t.Run("ID обязательно должен быть передан", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete("")
 			assert.Error(t, err)
 		})
-		t.Run("несуществующий id", func(t *testing.T) {
+		t.Run("удаление несуществующей записи не вернет ошибку", func(t *testing.T) {
 			r := newRepository()
 			err := r.Delete(uuid.NewString())
 			assert.NoError(t, err)
@@ -104,11 +109,11 @@ func UsersRepositoryTests(t *testing.T, newRepository func() domain.UsersReposit
 			err := r.Save(domain.User{
 				ID: id,
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = r.Delete(id)
 			assert.NoError(t, err)
 		})
-		t.Run("дважды удаленный", func(t *testing.T) {
+		t.Run("можно несколько раз удалять", func(t *testing.T) {
 			r := newRepository()
 			id := uuid.NewString()
 			err := r.Save(domain.User{
