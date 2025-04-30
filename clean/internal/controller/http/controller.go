@@ -19,19 +19,20 @@ type HandlerFunc func(Context) (any, error)
 
 // Controller обрабатывает HTTP-запросы
 type Controller struct {
-	chats       service.Chats
-	invitations service.Invitations
-	members     service.Members
-	sessions    service.Sessions
+	chats       *service.Chats
+	invitations *service.Invitations
+	members     *service.Members
+	sessions    *service.Sessions
 
 	http.ServeMux
 }
 
-func InitController(chats service.Chats, invitations service.Invitations, members service.Members) *Controller {
+func InitController(chats *service.Chats, invitations *service.Invitations, members *service.Members, sessions *service.Sessions) *Controller {
 	c := &Controller{
 		chats:       chats,
 		invitations: invitations,
 		members:     members,
+		sessions:    sessions,
 		ServeMux:    http.ServeMux{},
 	}
 	registerHandlers(c)
