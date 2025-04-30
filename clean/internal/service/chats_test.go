@@ -50,14 +50,14 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		chats, err := suite.chatsService.UserChats(input)
+		chats, err := suite.ss.chats.UserChats(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
 		suite.Empty(chats)
 	})
 
 	suite.Run("пустой список из пустого репозитория", func() {
 		input := suite.newUserChatsInput(uuid.NewString())
-		userChats, err := suite.chatsService.UserChats(input)
+		userChats, err := suite.ss.chats.UserChats(input)
 		suite.NoError(err)
 		suite.Empty(userChats)
 	})
@@ -75,7 +75,7 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 			})
 		}
 		input := suite.newUserChatsInput(uuid.NewString())
-		userChats, err := suite.chatsService.UserChats(input)
+		userChats, err := suite.ss.chats.UserChats(input)
 		suite.NoError(err)
 		suite.Empty(userChats)
 	})
@@ -94,7 +94,7 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 			})
 		}
 		input := suite.newUserChatsInput(userID)
-		userChats, err := suite.chatsService.UserChats(input)
+		userChats, err := suite.ss.chats.UserChats(input)
 		suite.NoError(err)
 		suite.Len(userChats, chatsAllCount)
 	})
@@ -123,7 +123,7 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 	suite.Run("выходящие совпадают с заданными", func() {
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		out, err := suite.chatsService.Create(input)
+		out, err := suite.ss.chats.Create(input)
 		suite.NoError(err)
 		// Сравнить результат с входящими значениями
 		suite.Equal(input.ChiefUserID, out.ChiefMember.UserID)
@@ -133,11 +133,11 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 	suite.Run("можно затем прочитать из репозитория", func() {
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		out, err := suite.chatsService.Create(input)
+		out, err := suite.ss.chats.Create(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 		// Получить список чатов
-		chats, err := suite.chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		chats, err := suite.ss.chats.ChatsRepo.List(domain.ChatsFilter{})
 		suite.Require().NoError(err)
 		// В списке этот чат будет единственным
 		if suite.Len(chats, 1) {
@@ -148,11 +148,11 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 	suite.Run("создается участник для главного администратора", func() {
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		out, err := suite.chatsService.Create(input)
+		out, err := suite.ss.chats.Create(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 		// Получить список участников
-		members, err := suite.chatsService.MembersRepo.List(domain.MembersFilter{})
+		members, err := suite.ss.chats.MembersRepo.List(domain.MembersFilter{})
 		suite.NoError(err)
 		// В списке этот участник будет единственным
 		if suite.Len(members, 1) {
@@ -167,12 +167,12 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 		// Создать несколько чатов с одинаковым именем
 		const chatsAllCount = 2
 		for range chatsAllCount {
-			out, err := suite.chatsService.Create(input)
+			out, err := suite.ss.chats.Create(input)
 			suite.Require().NoError(err)
 			suite.Require().NotZero(out)
 		}
 		// Получить список чатов
-		chats, err := suite.chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		chats, err := suite.ss.chats.ChatsRepo.List(domain.ChatsFilter{})
 		suite.NoError(err)
 		// Количество чатов равно количеству созданных
 		suite.Len(chats, chatsAllCount)
@@ -184,7 +184,7 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 		// Создать много чатов от лица пользователя
 		const chatsAllCount = 900
 		for range chatsAllCount {
-			out, err := suite.chatsService.Create(CreateInput{
+			out, err := suite.ss.chats.Create(CreateInput{
 				ChiefUserID: userID,
 				Name:        "name",
 			})
@@ -192,7 +192,7 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 			suite.Require().NotZero(out)
 		}
 		// Получить список чатов
-		chats, err := suite.chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		chats, err := suite.ss.chats.ChatsRepo.List(domain.ChatsFilter{})
 		suite.NoError(err)
 		// Количество чатов равно количеству созданных
 		suite.Len(chats, chatsAllCount)
@@ -302,7 +302,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 			NewName:       "newName",
 		}
 		// Обновить название чата
-		chat, err := suite.chatsService.UpdateName(input)
+		chat, err := suite.ss.chats.UpdateName(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Zero(chat)
@@ -311,7 +311,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 	suite.Run("только главный администратор может изменять название", func() {
 		// Создать чат
 		inputChatCreate := suite.newCreateInputRandom()
-		createdOut, err := suite.chatsService.Create(inputChatCreate)
+		createdOut, err := suite.ss.chats.Create(inputChatCreate)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(createdOut)
 		// Попытаться изменить название от имени случайного пользователя
@@ -320,7 +320,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 			ChatID:        createdOut.Chat.ID,
 			NewName:       "newName",
 		}
-		updatedChat, err := suite.chatsService.UpdateName(input)
+		updatedChat, err := suite.ss.chats.UpdateName(input)
 		// Вернется ошибка, потому что пользователь не главный администратор чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
 		suite.Zero(updatedChat)
@@ -329,7 +329,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 	suite.Run("новое название чата сохранится и его можно прочитать", func() {
 		// Создать чат
 		inputChatCreate := suite.newCreateInputRandom()
-		createdOut, err := suite.chatsService.Create(inputChatCreate)
+		createdOut, err := suite.ss.chats.Create(inputChatCreate)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(createdOut)
 		// Попытаться изменить название от имени случайного пользователя
@@ -338,14 +338,14 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 			ChatID:        createdOut.Chat.ID,
 			NewName:       "newName",
 		}
-		updatedChat, err := suite.chatsService.UpdateName(input)
+		updatedChat, err := suite.ss.chats.UpdateName(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(updatedChat)
 		// Результат совпадает с входящими значениями
 		suite.Require().Equal(input.ChatID, updatedChat.ID)
 		suite.Require().Equal(input.NewName, updatedChat.Name)
 		// Получить список чатов
-		chats, err := suite.chatsService.ChatsRepo.List(domain.ChatsFilter{})
+		chats, err := suite.ss.chats.ChatsRepo.List(domain.ChatsFilter{})
 		suite.Require().NoError(err)
 		// В списке этот чат будет единственным
 		if suite.Len(chats, 1) {

@@ -34,7 +34,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 			ChatID:        uuid.NewString(),
 			SubjectUserID: uuid.NewString(),
 		}
-		members, err := suite.membersService.ChatMembers(input)
+		members, err := suite.ss.members.ChatMembers(input)
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Empty(members)
 	})
@@ -55,7 +55,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 		}
-		members, err := suite.membersService.ChatMembers(input)
+		members, err := suite.ss.members.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 		suite.Empty(members)
@@ -84,7 +84,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 			ChatID:        subjectMember.ChatID,
 			SubjectUserID: subjectMember.UserID,
 		}
-		membersFromRepo, err := suite.membersService.ChatMembers(input)
+		membersFromRepo, err := suite.ss.members.ChatMembers(input)
 		suite.NoError(err)
 		if suite.Len(membersFromRepo, membersAllCount) {
 			// Сравнить каждого сохраненного участника с ранее созданным
@@ -114,7 +114,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 		}
-		err := suite.membersService.LeaveChat(input)
+		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 	})
@@ -129,7 +129,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        chat.ID,
 		}
-		err := suite.membersService.LeaveChat(input)
+		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 	})
@@ -151,7 +151,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		err := suite.membersService.LeaveChat(input)
+		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь главный администратор чата
 		suite.ErrorIs(err, ErrSubjectUserShouldNotBeChief)
 	})
@@ -172,11 +172,11 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		err := suite.membersService.LeaveChat(input)
+		err := suite.ss.members.LeaveChat(input)
 		suite.Require().NoError(err)
 		// Получить список участников чата
 		membersFilter := domain.MembersFilter{ID: member.ID}
-		members, err := suite.membersService.MembersRepo.List(membersFilter)
+		members, err := suite.ss.members.MembersRepo.List(membersFilter)
 		suite.Require().NoError(err)
 		// В чате не осталось участников
 		suite.Empty(members)
@@ -205,7 +205,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        uuid.NewString(),
 			UserID:        userID,
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь пытается удалить самого себя
 		suite.ErrorIs(err, ErrMemberCannotDeleteHimself)
 	})
@@ -217,7 +217,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 	})
@@ -233,7 +233,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 	})
@@ -255,7 +255,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что участник не главный администратор
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
 	})
@@ -278,7 +278,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что удаляемый пользователь не является участником
 		suite.ErrorIs(err, ErrUserIsNotMember)
 	})
@@ -307,11 +307,11 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID:        chat.ID,
 			UserID:        memberForDelete.UserID,
 		}
-		err := suite.membersService.DeleteMember(input)
+		err := suite.ss.members.DeleteMember(input)
 		suite.Require().NoError(err)
 		// Найти удаленного участника
 		membersFilter := domain.MembersFilter{ID: memberForDelete.ID}
-		members, err := suite.membersService.MembersRepo.List(membersFilter)
+		members, err := suite.ss.members.MembersRepo.List(membersFilter)
 		suite.Require().NoError(err)
 		// Такого участника больше нет
 		suite.Empty(members)

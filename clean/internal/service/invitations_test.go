@@ -28,7 +28,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 		}
-		invitations, err := suite.invitationsService.ChatInvitations(input)
+		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Empty(invitations)
@@ -45,7 +45,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			ChatID:        chat.ID,
 			SubjectUserID: uuid.NewString(),
 		}
-		invitations, err := suite.invitationsService.ChatInvitations(input)
+		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 		suite.Empty(invitations)
@@ -67,7 +67,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		invitations, err := suite.invitationsService.ChatInvitations(input)
+		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		suite.NoError(err)
 		suite.Empty(invitations)
 	})
@@ -108,7 +108,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			ChatID:        chat.ID,
 			SubjectUserID: member.UserID,
 		}
-		invitationsFromService, err := suite.invitationsService.ChatInvitations(input)
+		invitationsFromService, err := suite.ss.invitations.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения отправленные участником
 		if suite.Len(invitationsFromService, len(subjectInvitations)) {
@@ -144,7 +144,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			SubjectUserID: member.UserID,
 			ChatID:        chat.ID,
 		}
-		invitationFromService, err := suite.invitationsService.ChatInvitations(input)
+		invitationFromService, err := suite.ss.invitations.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения все приглашения
 		if suite.Len(invitationFromService, len(invitationsSaved)) {
@@ -175,7 +175,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			SubjectUserID: id,
 			UserID:        id,
 		}
-		invitations, err := suite.invitationsService.UserInvitations(input)
+		invitations, err := suite.ss.invitations.UserInvitations(input)
 		// Вернется ошибка, потому что пользователя не существует
 		suite.ErrorIs(err, ErrUserNotExists)
 		suite.Empty(invitations)
@@ -187,7 +187,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		invitations, err := suite.invitationsService.UserInvitations(input)
+		invitations, err := suite.ss.invitations.UserInvitations(input)
 		// Вернется ошибка, потому что пользователь пытается просмотреть чужие приглашения
 		suite.ErrorIs(err, ErrUnauthorizedInvitationsView)
 		suite.Empty(invitations)
@@ -203,7 +203,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			SubjectUserID: user.ID,
 			UserID:        user.ID,
 		}
-		invitations, err := suite.invitationsService.UserInvitations(input)
+		invitations, err := suite.ss.invitations.UserInvitations(input)
 		suite.NoError(err)
 		suite.Empty(invitations)
 	})
@@ -235,7 +235,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			SubjectUserID: user.ID,
 			UserID:        user.ID,
 		}
-		invitationsFromRepo, err := suite.invitationsService.UserInvitations(input)
+		invitationsFromRepo, err := suite.ss.invitations.UserInvitations(input)
 		suite.NoError(err)
 		// В списке будут только приглашения направленные пользователю
 		if suite.Len(invitationsFromRepo, len(invitationsOfUser)) {
@@ -269,7 +269,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChatID:        uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		invitation, err := suite.invitationsService.SendInvitation(input)
+		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Zero(invitation)
@@ -287,7 +287,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		invitation, err := suite.invitationsService.SendInvitation(input)
+		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что субъект не является участником чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
 		suite.Zero(invitation)
@@ -310,7 +310,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			SubjectUserID: member.UserID,
 			UserID:        uuid.NewString(),
 		}
-		invitation, err := suite.invitationsService.SendInvitation(input)
+		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемого пользователя не существует
 		suite.ErrorIs(err, ErrUserNotExists)
 		suite.Zero(invitation)
@@ -343,7 +343,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			SubjectUserID: subjectMember.UserID,
 			UserID:        targetUser.ID,
 		}
-		invitation, err := suite.invitationsService.SendInvitation(input)
+		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемый пользователь уже является участником этого чата
 		suite.ErrorIs(err, ErrUserIsAlreadyInChat)
 		suite.Zero(invitation)
@@ -370,11 +370,11 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			SubjectUserID: subjectMember.UserID,
 			UserID:        targetUser.ID,
 		}
-		invitation, err := suite.invitationsService.SendInvitation(input)
+		invitation, err := suite.ss.invitations.SendInvitation(input)
 		suite.NoError(err)
 		suite.Require().NotZero(invitation)
 		// Отправить повторно приглашение
-		invitation, err = suite.invitationsService.SendInvitation(input)
+		invitation, err = suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что этот пользователь уже приглашен в чат
 		suite.ErrorIs(err, ErrUserIsAlreadyInvited)
 		suite.Zero(invitation)
@@ -405,14 +405,14 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 					SubjectUserID: subjectMember.UserID,
 					UserID:        targetUser.ID,
 				}
-				invitation, err := suite.invitationsService.SendInvitation(input)
+				invitation, err := suite.ss.invitations.SendInvitation(input)
 				suite.NoError(err)
 				suite.Require().NotZero(invitation)
 				createdInvitations = append(createdInvitations, invitation)
 			}
 		}
 		// Получить список приглашений
-		invitationsFromRepo, err := suite.invitationsService.InvitationsRepo.List(domain.InvitationsFilter{})
+		invitationsFromRepo, err := suite.ss.invitations.InvitationsRepo.List(domain.InvitationsFilter{})
 		suite.NoError(err)
 		// В списке содержатся все созданные приглашения
 		suite.Require().Len(invitationsFromRepo, len(createdInvitations))
@@ -443,7 +443,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        uuid.NewString(),
 		}
-		err := suite.invitationsService.AcceptInvitation(input)
+		err := suite.ss.invitations.AcceptInvitation(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 	})
@@ -458,7 +458,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			SubjectUserID: uuid.NewString(),
 			ChatID:        chat.ID,
 		}
-		err := suite.invitationsService.AcceptInvitation(input)
+		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
 
@@ -479,7 +479,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			SubjectUserID: invitation.UserID,
 			ChatID:        chat.ID,
 		}
-		err := suite.invitationsService.AcceptInvitation(input)
+		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrUserNotExists)
 	})
 
@@ -503,10 +503,10 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			SubjectUserID: user.ID,
 			ChatID:        chat.ID,
 		}
-		err := suite.invitationsService.AcceptInvitation(input)
+		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.NoError(err)
 		// Получить список участников
-		members, err := suite.invitationsService.MembersRepo.List(domain.MembersFilter{})
+		members, err := suite.ss.invitations.MembersRepo.List(domain.MembersFilter{})
 		suite.NoError(err)
 		// В списке будет только один участник, который принял приглашение
 		suite.Require().Len(members, 1)
@@ -536,7 +536,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			ChatID:        uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		err := suite.invitationsService.CancelInvitation(input)
+		err := suite.ss.invitations.CancelInvitation(input)
 		// Вернется ошибка потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 	})
@@ -552,7 +552,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			ChatID:        chat.ID,
 			UserID:        uuid.NewString(),
 		}
-		err := suite.invitationsService.CancelInvitation(input)
+		err := suite.ss.invitations.CancelInvitation(input)
 		// Вернется ошибка потому что приглашения не существует
 		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
@@ -593,7 +593,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 				ChatID:        chat.ID,
 				UserID:        userID,
 			}
-			err := suite.invitationsService.CancelInvitation(input)
+			err := suite.ss.invitations.CancelInvitation(input)
 			suite.Require().NoError(err)
 		}
 	})
@@ -623,7 +623,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			ChatID:        chat.ID,
 			UserID:        userID,
 		}
-		err := suite.invitationsService.CancelInvitation(input)
+		err := suite.ss.invitations.CancelInvitation(input)
 		// Вернется ошибка, потому что случайный участник не может отменять приглашение
 		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
 	})
@@ -652,10 +652,10 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			ChatID:        invitation.ChatID,
 			UserID:        invitation.UserID,
 		}
-		err := suite.invitationsService.CancelInvitation(input)
+		err := suite.ss.invitations.CancelInvitation(input)
 		suite.Require().NoError(err)
 		// Получить список приглашений
-		invitations, err := suite.invitationsService.InvitationsRepo.List(domain.InvitationsFilter{})
+		invitations, err := suite.ss.invitations.InvitationsRepo.List(domain.InvitationsFilter{})
 		suite.NoError(err)
 		suite.Empty(invitations)
 	})

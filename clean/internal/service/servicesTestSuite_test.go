@@ -25,10 +25,6 @@ type servicesTestSuite struct {
 		invitations *Invitations
 		sessions    *Sessions
 	}
-	chatsService       *Chats
-	membersService     *Members
-	invitationsService *Invitations
-	sessionsService    *Sessions
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
@@ -59,24 +55,20 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require.NoError(err)
 
 	// Создание сервисов
-	suite.chatsService = &Chats{
+	suite.ss.chats = &Chats{
 		ChatsRepo:   suite.rr.chats,
 		MembersRepo: suite.rr.members,
 	}
-	suite.membersService = &Members{
+	suite.ss.members = &Members{
 		ChatsRepo:   suite.rr.chats,
 		MembersRepo: suite.rr.members,
 	}
-	suite.invitationsService = &Invitations{
+	suite.ss.invitations = &Invitations{
 		ChatsRepo:       suite.rr.chats,
 		MembersRepo:     suite.rr.members,
 		InvitationsRepo: suite.rr.invitations,
 		UsersRepo:       suite.rr.users,
 	}
-
-	suite.ss.chats = suite.chatsService
-	suite.ss.members = suite.membersService
-	suite.ss.invitations = suite.invitationsService
 	suite.ss.sessions = &Sessions{
 		SessionsRepo: suite.rr.sessions,
 	}
@@ -90,7 +82,7 @@ func (suite *servicesTestSuite) TearDownSubTest() {
 
 // saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
-	err := suite.chatsService.ChatsRepo.Save(chat)
+	err := suite.rr.chats.Save(chat)
 	suite.Require().NoError(err)
 
 	return chat
@@ -98,7 +90,7 @@ func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
 
 // saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
-	err := suite.membersService.MembersRepo.Save(member)
+	err := suite.rr.members.Save(member)
 	suite.Require().NoError(err)
 
 	return member
@@ -106,7 +98,7 @@ func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
 
 // saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
-	err := suite.invitationsService.InvitationsRepo.Save(invitation)
+	err := suite.rr.invitations.Save(invitation)
 	suite.Require().NoError(err)
 
 	return invitation
@@ -114,7 +106,7 @@ func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) dom
 
 // saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveUser(user domain.User) domain.User {
-	err := suite.invitationsService.UsersRepo.Save(user)
+	err := suite.rr.users.Save(user)
 	suite.Require().NoError(err)
 
 	return user
