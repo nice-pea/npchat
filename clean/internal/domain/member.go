@@ -22,7 +22,6 @@ func (m Member) ValidateID() error {
 	if err := uuid.Validate(m.ID); err != nil {
 		return errors.Join(err, ErrMemberIDValidate)
 	}
-
 	return nil
 }
 
@@ -30,14 +29,13 @@ func (m Member) ValidateChatID() error {
 	if err := uuid.Validate(m.ChatID); err != nil {
 		return errors.Join(err, ErrMemberChatIDValidate)
 	}
-
 	return nil
 }
+
 func (m Member) ValidateUserID() error {
 	if err := uuid.Validate(m.UserID); err != nil {
 		return errors.Join(err, ErrMemberUserIDValidate)
 	}
-
 	return nil
 }
 

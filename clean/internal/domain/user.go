@@ -19,7 +19,6 @@ func (u User) ValidateID() error {
 	if err := uuid.Validate(u.ID); err != nil {
 		return errors.Join(err, ErrUserIDValidate)
 	}
-
 	return nil
 }
 
