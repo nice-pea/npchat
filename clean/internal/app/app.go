@@ -19,12 +19,14 @@ type repositories struct {
 	invitations domain.InvitationsRepository
 	members     domain.MembersRepository
 	users       domain.UsersRepository
+	sessions    domain.SessionsRepository
 }
 
 type services struct {
 	chats       service.Chats
 	invitations service.Invitations
 	members     service.Members
+	sessions    service.Sessions
 }
 
 func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error) {
@@ -46,6 +48,9 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 	}
 	if rs.users, err = factory.NewUsersRepository(); err != nil {
 		return nil, func() {}, fmt.Errorf("factory.NewUsersRepository: %w", err)
+	}
+	if rs.sessions, err = factory.NewSessionsRepository(); err != nil {
+		return nil, func() {}, fmt.Errorf("factory.NewSessionsRepository: %w", err)
 	}
 
 	return rs, func() {
@@ -70,6 +75,9 @@ func initServices(repos *repositories) *services {
 		members: service.Members{
 			MembersRepo: repos.members,
 			ChatsRepo:   repos.chats,
+		},
+		sessions: service.Sessions{
+			SessionsRepo: repos.sessions,
 		},
 	}
 }

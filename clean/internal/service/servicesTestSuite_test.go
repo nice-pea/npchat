@@ -77,7 +77,9 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.ss.chats = suite.chatsService
 	suite.ss.members = suite.membersService
 	suite.ss.invitations = suite.invitationsService
-	suite.ss.sessions = &Sessions{}
+	suite.ss.sessions = &Sessions{
+		SessionsRepo: suite.rr.sessions,
+	}
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
