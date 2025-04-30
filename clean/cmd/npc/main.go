@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	slog.Info("main: Starting")
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		if err := app.Run(ctx); err != nil {
