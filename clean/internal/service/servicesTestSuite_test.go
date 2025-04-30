@@ -41,7 +41,9 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require := suite.Require()
 
 	// Инициализация SQLiteMemory
-	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{MigrationsDir: "../../migrations/repository/sqlite/sqlite"})
+	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{
+		MigrationsDir: "../../migrations/repository/sqlite",
+	})
 	require.NoError(err)
 
 	// Инициализация репозиториев
