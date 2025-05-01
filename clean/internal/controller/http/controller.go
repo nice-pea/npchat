@@ -44,6 +44,50 @@ func (c *Controller) HandleFunc(pattern string, handlerFunc HandlerFunc, middlew
 	c.ServeMux.HandleFunc(pattern, c.modulation(chain(handlerFunc, middlewares...)))
 }
 
+func (c *Controller) LoginByCredentials(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) MyChats(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) UpdateChatName(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) LeaveChat(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) ChatMembers(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) MyInvitations(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) ChatInvitations(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) SendInvitation(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) AcceptInvitation(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) CancelInvitation(context Context) (any, error) {
+	return nil, nil
+}
+
+func (c *Controller) DeleteMember(context Context) (any, error) {
+	return nil, nil
+}
+
 type middleware func(HandlerFunc) HandlerFunc
 
 func chain(h HandlerFunc, middlewares ...middleware) HandlerFunc {

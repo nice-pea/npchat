@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -24,7 +25,7 @@ func (suite *controllerTestSuite) TestPing() {
 	suite.Run("на ping вернется pong", func() {
 		resp, err := http.Get(suite.server.URL + "/ping")
 		suite.Require().NoError(err)
-		defer resp.Body.Close() //nolint:errcheck
+		defer func() { _ = resp.Body.Close() }()
 
 		suite.Require().Equal(http.StatusOK, resp.StatusCode)
 
@@ -73,6 +74,39 @@ func (suite *controllerTestSuite) newRndUserWithSession(sessionStatus int) (out 
 	return
 }
 
+type domainLoginCredentials struct {
+	UserID   string
+	Login    string
+	Password string
+}
+
+func (suite *controllerTestSuite) newRndUserWithLoginCredentials() domainLoginCredentials {
+	credentials := domainLoginCredentials{
+		UserID:   uuid.NewString(),
+		Login:    uuid.NewString(),
+		Password: uuid.NewString(),
+	}
+	err := suite.rr.users.Save(domain.User{ID: credentials.UserID})
+	suite.Require().NoError(err)
+	err = suite.rr.loginCreds.Save(credentials)
+	suite.Require().NoError(err)
+
+	return credentials
+}
+func (suite *controllerTestSuite) jsonBody(v any) io.Reader {
+	body, err := json.Marshal(v)
+	suite.Require().NoError(err)
+	return bytes.NewBuffer(body)
+}
+
+// saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
+func (suite *controllerTestSuite) saveUser(user domain.User) domain.User {
+	err := suite.rr.users.Save(user)
+	suite.Require().NoError(err)
+
+	return user
+}
+
 func (suite *controllerTestSuite) TestClientMiddlewares() {
 	const existingClientAPIEndpoint = "/chats"
 
@@ -84,7 +118,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
-		defer resp.Body.Close() //nolint:errcheck
+		defer func() { _ = resp.Body.Close() }()
 
 		// Проверить код ответа
 		suite.Require().Equal(http.StatusBadRequest, resp.StatusCode)
@@ -106,7 +140,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
-		defer resp.Body.Close() //nolint:errcheck
+		defer func() { _ = resp.Body.Close() }()
 
 		// Проверить код ответа
 		suite.Require().Equal(http.StatusBadRequest, resp.StatusCode)
@@ -129,7 +163,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
-		defer resp.Body.Close() //nolint:errcheck
+		defer func() { _ = resp.Body.Close() }()
 
 		// Проверить код ответа
 		suite.Require().Equal(http.StatusUnauthorized, resp.StatusCode)
@@ -150,158 +184,230 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
-		defer resp.Body.Close() //nolint:errcheck
+		defer func() { _ = resp.Body.Close() }()
 
 		// Проверить код ответа
 		suite.Require().Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
-// TestCreateChat tests the CreateChat handler
+func (suite *controllerTestSuite) TestLoginByCredentials() {
+	suite.Run("успешная авторизация", func() {
+		// Создать нового пользователя с login credentials
+		lc := suite.newRndUserWithLoginCredentials()
+
+		// Создать запрос
+		body := suite.jsonBody(map[string]string{
+			"login":    lc.Login,
+			"password": lc.Password,
+		})
+		req := suite.newClientRequest("POST", "/login/credentials", "", body)
+
+		// Выполнение запроса
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		// Проверка результата
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+
+	suite.Run("неверные учетные данные", func() {
+		credentials := map[string]string{
+			"login":    "wronguser",
+			"password": "wrongpass",
+		}
+		body, err := json.Marshal(credentials)
+		suite.Require().NoError(err)
+
+		req := suite.newClientRequest("POST", "/login", "", bytes.NewBuffer(body))
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusUnauthorized, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestMyChats() {
+	suite.Run("получение списка чатов", func() {
+		// Создаем тестового пользователя с сессией
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+
+		req := suite.newClientRequest("GET", "/chats", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
 func (suite *controllerTestSuite) TestCreateChat() {
-	suite.Run("should create a chat successfully", func() {
-		// This handler should:
-		// 1. Parse the request body to get the chat name and chief user ID
-		// 2. Call the chats.Create service method
-		// 3. Return the created chat and chief member
-		suite.T().Skip("Implementation exists, test needs to be implemented")
+	suite.Run("создание нового чата", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+
+		chatData := map[string]string{
+			"name": "Test Chat",
+		}
+		body, err := json.Marshal(chatData)
+		suite.Require().NoError(err)
+
+		req := suite.newClientRequest("POST", "/chats", uws.Session.Token, bytes.NewBuffer(body))
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusCreated, resp.StatusCode)
 	})
 }
 
-// TestGetChats tests the GetChats handler
-func (suite *controllerTestSuite) TestGetChats() {
-	suite.Run("should return user chats", func() {
-		// This handler should:
-		// 1. Get the user ID from the session
-		// 2. Call the chats.UserChats service method
-		// 3. Return the list of chats
-		suite.T().Skip("Implementation exists, test needs to be implemented")
-	})
-}
-
-// Tests for not yet implemented handlers - Chats service
-
-// TestUpdateChatName tests the UpdateChatName handler
-func (suite *controllerTestSuite) TestUpdateChatName() {
-	suite.Run("should update chat name", func() {
-		// This handler should:
-		// 1. Parse the request body to get the chat ID and new name
-		// 2. Get the user ID from the session
-		// 3. Call the chats.UpdateName service method
-		// 4. Return the updated chat
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// Tests for not yet implemented handlers - Invitations service
-
-// TestChatInvitations tests the ChatInvitations handler
-func (suite *controllerTestSuite) TestChatInvitations() {
-	suite.Run("should return chat invitations", func() {
-		// This handler should:
-		// 1. Get the chat ID from the URL path
-		// 2. Get the user ID from the session
-		// 3. Call the invitations.ChatInvitations service method
-		// 4. Return the list of invitations
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// TestUserInvitations tests the UserInvitations handler
-func (suite *controllerTestSuite) TestUserInvitations() {
-	suite.Run("should return user invitations", func() {
-		// This handler should:
-		// 1. Get the user ID from the session
-		// 2. Call the invitations.UserInvitations service method
-		// 3. Return the list of invitations
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// TestSendInvitation tests the SendInvitation handler
-func (suite *controllerTestSuite) TestSendInvitation() {
-	suite.Run("should send invitation", func() {
-		// This handler should:
-		// 1. Parse the request body to get the chat ID and user ID
-		// 2. Get the subject user ID from the session
-		// 3. Call the invitations.SendInvitation service method
-		// 4. Return the created invitation
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// TestAcceptInvitation tests the AcceptInvitation handler
-func (suite *controllerTestSuite) TestAcceptInvitation() {
-	suite.Run("should accept invitation", func() {
-		// This handler should:
-		// 1. Parse the request body to get the chat ID
-		// 2. Get the user ID from the session
-		// 3. Call the invitations.AcceptInvitation service method
-		// 4. Return success
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// TestCancelInvitation tests the CancelInvitation handler
-func (suite *controllerTestSuite) TestCancelInvitation() {
-	suite.Run("should cancel invitation", func() {
-		// This handler should:
-		// 1. Parse the request body to get the chat ID and user ID
-		// 2. Get the subject user ID from the session
-		// 3. Call the invitations.CancelInvitation service method
-		// 4. Return success
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
-
-// Tests for not yet implemented handlers - Members service
-
-// TestChatMembers tests the ChatMembers handler
 func (suite *controllerTestSuite) TestChatMembers() {
-	suite.Run("should return chat members", func() {
-		// This handler should:
-		// 1. Get the chat ID from the URL path
-		// 2. Get the user ID from the session
-		// 3. Call the members.ChatMembers service method
-		// 4. Return the list of members
-		suite.T().Skip("Handler not yet implemented")
+	suite.Run("получение списка участников чата", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+
+		req := suite.newClientRequest("GET", "/chats/"+chatID+"/members", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
-// TestLeaveChat tests the LeaveChat handler
+func (suite *controllerTestSuite) TestUpdateChatName() {
+	suite.Run("обновление названия чата", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+
+		updateData := map[string]string{
+			"name": "New Chat Name",
+		}
+		body, err := json.Marshal(updateData)
+		suite.Require().NoError(err)
+
+		req := suite.newClientRequest("PUT", "/chats/"+chatID+"/name", uws.Session.Token, bytes.NewBuffer(body))
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestChatInvitations() {
+	suite.Run("получение списка приглашений в чат", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+
+		req := suite.newClientRequest("GET", "/chats/"+chatID+"/invitations", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestMyInvitations() {
+	suite.Run("получение списка моих приглашений", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+
+		req := suite.newClientRequest("GET", "/invitations", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestSendInvitation() {
+	suite.Run("отправка приглашения в чат", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+
+		inviteData := map[string]string{
+			"user_id": uuid.New().String(),
+		}
+		body, err := json.Marshal(inviteData)
+		suite.Require().NoError(err)
+
+		req := suite.newClientRequest("POST", "/chats/"+chatID+"/invitations", uws.Session.Token, bytes.NewBuffer(body))
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusCreated, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestAcceptInvitation() {
+	suite.Run("принятие приглашения в чат", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		invitationID := uuid.New().String()
+
+		req := suite.newClientRequest("POST", "/invitations/"+invitationID+"/accept", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
+func (suite *controllerTestSuite) TestCancelInvitation() {
+	suite.Run("отмена приглашения в чат", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		invitationID := uuid.New().String()
+
+		req := suite.newClientRequest("DELETE", "/invitations/"+invitationID, uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
+	})
+}
+
 func (suite *controllerTestSuite) TestLeaveChat() {
-	suite.Run("should leave chat", func() {
-		// This handler should:
-		// 1. Get the chat ID from the URL path
-		// 2. Get the user ID from the session
-		// 3. Call the members.LeaveChat service method
-		// 4. Return success
-		suite.T().Skip("Handler not yet implemented")
+	suite.Run("выход из чата", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+
+		req := suite.newClientRequest("POST", "/chats/"+chatID+"/leave", uws.Session.Token, nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
-// TestDeleteMember tests the DeleteMember handler
 func (suite *controllerTestSuite) TestDeleteMember() {
-	suite.Run("should delete member", func() {
-		// This handler should:
-		// 1. Get the chat ID from the URL path
-		// 2. Parse the request body to get the user ID to delete
-		// 3. Get the subject user ID from the session
-		// 4. Call the members.DeleteMember service method
-		// 5. Return success
-		suite.T().Skip("Handler not yet implemented")
-	})
-}
+	suite.Run("удаление участника из чата", func() {
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		chatID := uuid.New().String()
+		memberID := uuid.New().String()
 
-// Tests for not yet implemented handlers - Sessions service
+		req := suite.newClientRequest("DELETE", "/chats/"+chatID+"/members/"+memberID, uws.Session.Token, nil)
 
-// TestFindSession tests the FindSession handler
-func (suite *controllerTestSuite) TestFindSession() {
-	suite.Run("should find session", func() {
-		// This handler should:
-		// 1. Get the token from the query parameters
-		// 2. Call the sessions.Find service method
-		// 3. Return the found sessions
-		suite.T().Skip("Handler not yet implemented")
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer func() { _ = resp.Body.Close() }()
+
+		suite.Equal(http.StatusOK, resp.StatusCode)
 	})
 }

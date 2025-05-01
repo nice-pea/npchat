@@ -22,6 +22,9 @@ type controllerTestSuite struct {
 		invitations domain.InvitationsRepository
 		sessions    domain.SessionsRepository
 		users       domain.UsersRepository
+		loginCreds  interface {
+			Save(domainLoginCredentials) error
+		}
 	}
 	ss struct {
 		chats       *service.Chats
