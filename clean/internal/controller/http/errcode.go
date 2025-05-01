@@ -4,11 +4,12 @@ import (
 	"errors"
 )
 
+type ErrCode interface {
+	ErrCode() string
+}
+
 func errCode(err error) string {
-	var errWithCode interface {
-		ErrCode() string
-		Error() string
-	}
+	var errWithCode ErrCode
 	if errors.As(err, &errWithCode) {
 		return errWithCode.ErrCode()
 	}
