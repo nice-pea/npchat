@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+
+	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 type responseMessage struct {
@@ -35,6 +37,7 @@ func (suite *controllerTestSuite) TestPing() {
 
 const headerXRequestID = "X-Request-ID"
 const headerAccept = "Accept"
+const headerAuthorization = "Authorization"
 
 func (suite *controllerTestSuite) TestClientMiddlewares() {
 	const existingClientAPIEndpoint = "/chats"
@@ -103,6 +106,33 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		suite.Require().NoError(err)
 		suite.Equal(ErrUnauthorized.Error(), respData.Error)
 		suite.Equal(ErrCodeInvalidAuthorizationHeader, respData.ErrCode)
+	})
+
+	suite.Run("аутентификация сессии/вернется существующая сессия", func() {
+		// Сохранить сессию
+		session := domain.Session{
+			ID:     uuid.NewString(),
+			UserID: uuid.NewString(),
+			Token:  uuid.NewString(),
+			Status: domain.SessionStatusVerified,
+		}
+		err := suite.rr.sessions.Save(session)
+		suite.Require().NoError(err)
+
+		// Создать запрос
+		req, err := http.NewRequest("GET", suite.server.URL+existingClientAPIEndpoint, nil)
+		suite.Require().NoError(err)
+		req.Header.Set(headerXRequestID, uuid.NewString())
+		req.Header.Set(headerAccept, "application/json")
+		req.Header.Set(headerAuthorization, "Bearer "+session.Token)
+
+		// Выполнить запрос
+		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
+		defer resp.Body.Close() //nolint:errcheck
+
+		// Проверить код ответа
+		suite.Require().Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
