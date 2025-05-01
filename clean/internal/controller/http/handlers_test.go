@@ -46,6 +46,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
 		defer resp.Body.Close() //nolint:errcheck
 
 		// Проверить код ответа
@@ -67,6 +68,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
 		defer resp.Body.Close() //nolint:errcheck
 
 		// Проверить код ответа
@@ -89,6 +91,7 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
+		suite.Require().NoError(err)
 		defer resp.Body.Close() //nolint:errcheck
 
 		// Проверить код ответа
