@@ -13,16 +13,14 @@ func errCode(err error) string {
 		return errWithCode.ErrCode()
 	}
 
-	if errors.Is(err, ErrUnauthorized) {
+	switch {
+	case errors.Is(err, ErrUnauthorized):
 		return ErrCodeInvalidAuthorizationHeader
-	}
-	if errors.Is(err, ErrJsonMarshalResponseData) {
+	case errors.Is(err, ErrJsonMarshalResponseData):
 		return ErrCodeUnmarshalJSONResponseData
-	}
-	if errors.Is(err, ErrUnknownRequestID) {
+	case errors.Is(err, ErrUnknownRequestID):
 		return ErrCodeInvalidXRequestIDHeader
-	}
-	if errors.Is(err, ErrUnsupportedAcceptedContentType) {
+	case errors.Is(err, ErrUnsupportedAcceptedContentType):
 		return ErrCodeUnsupportedAcceptedContentType
 	}
 
