@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -40,6 +41,12 @@ func getSession(c *Controller, r *http.Request) domain.Session {
 	return sessions[0]
 }
 
+var (
+	ErrJsonMarshalResponseData = errors.New("json marshal response data")
+	ErrWriteResponseBytes      = errors.New("write response bytes")
+	ErrParseRequestURL         = errors.New("parse request url")
+)
+
 func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
@@ -50,7 +57,8 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 
 		// Получить значения из URL
 		if err = r.ParseForm(); err != nil {
-			slog.Warn("modulation: parse form: "+err.Error(),
+			err = errors.Join(ErrParseRequestURL, err)
+			slog.Warn("modulation: "+strings.ReplaceAll(err.Error(), "\n", ": "),
 				slog.String("url", r.RequestURI),
 				slog.String("host", r.Host),
 				slog.String("referer", r.Referer()),
@@ -64,8 +72,11 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		respData, err = handle(ctx)
 		if err != nil {
 			// Если есть ошибка
-			w.WriteHeader(http.StatusBadRequest)
-			respData = ResponseError{Error: err.Error()}
+			w.WriteHeader(httpStatusCodeByErr(err))
+			respData = ResponseError{
+				Error:   err.Error(),
+				ErrCode: errCode(err),
+			}
 		}
 
 		// Если ответ это строка, перезаписать структурой
@@ -76,9 +87,10 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 
 		// Сериализация ответа
 		if b, err = json.Marshal(respData); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			b = []byte(fmt.Sprintf("{\"error\":\"%v\"}", err))
-			slog.Error("modulation: marshal json: "+err.Error(),
+			err = errors.Join(ErrJsonMarshalResponseData, err)
+			w.WriteHeader(httpStatusCodeByErr(err))
+			b = []byte(fmt.Sprintf(`{"error":"%v","errcode":"%v"}`, err, errCode(err)))
+			slog.Error("modulation: "+strings.ReplaceAll(err.Error(), "\n", ": "),
 				slog.String("url", r.RequestURI),
 				slog.String("host", r.Host),
 				slog.String("referer", r.Referer()),
@@ -88,7 +100,9 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		// Отправить ответ
 		w.Header().Add("Content-Type", "application/json")
 		if _, err = w.Write(b); err != nil {
-			slog.Error("modulation: write bytes: "+err.Error(),
+			err = errors.Join(ErrWriteResponseBytes, err)
+			w.WriteHeader(httpStatusCodeByErr(err))
+			slog.Error("modulation: "+err.Error(),
 				slog.String("url", r.RequestURI),
 				slog.String("host", r.Host),
 				slog.String("referer", r.Referer()),

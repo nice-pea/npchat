@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -28,17 +29,12 @@ type controllerTestSuite struct {
 		invitations *service.Invitations
 		sessions    *service.Sessions
 	}
-	server http.Server
+	server *httptest.Server
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
 	suite.Run(t, new(controllerTestSuite))
 }
-
-const (
-	serverAddr    = "localhost:36462"
-	serverBaseUrl = "http://" + serverAddr
-)
 
 // SetupSubTest выполняется перед каждым подтестом, связанным с suite
 func (suite *controllerTestSuite) SetupSubTest() {
@@ -90,12 +86,7 @@ func (suite *controllerTestSuite) SetupSubTest() {
 		ServeMux:    http.ServeMux{},
 	}
 	registerHandlers(suite.ctrl)
-	suite.server = http.Server{
-		Addr:    serverAddr,
-		Handler: suite.ctrl,
-	}
-
-	go suite.server.ListenAndServe() //nolint:errcheck
+	suite.server = httptest.NewServer(suite.ctrl)
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite

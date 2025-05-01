@@ -3,26 +3,51 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
-// Tests for implemented handlers
-type ResponseMessage struct {
+type responseMessage struct {
 	Message string `json:"message"`
+}
+
+type responseError struct {
+	Error   string `json:"error"`
+	ErrCode string `json:"errcode"`
 }
 
 // TestPing tests the Ping handler
 func (suite *controllerTestSuite) TestPing() {
 	suite.Run("на ping вернется pong", func() {
-		resp, err := http.Get(serverBaseUrl + "/ping")
+		resp, err := http.Get(suite.server.URL + "/ping")
 		suite.Require().NoError(err)
 		defer resp.Body.Close() //nolint:errcheck
 
-		var respData ResponseMessage
+		var respData responseMessage
 		err = json.NewDecoder(resp.Body).Decode(&respData)
 		suite.Require().NoError(err)
 
 		suite.Equal(http.StatusOK, resp.StatusCode)
-		suite.Equal(ResponseMessage{Message: "pong"}, respData)
+		suite.Equal(responseMessage{Message: "pong"}, respData)
+	})
+}
+
+func (suite *controllerTestSuite) TestRequireAuthorizedSession() {
+	suite.Run("защищенные эндпоинты будут возвращать ошибку", func() {
+		req, err := http.NewRequest("GET", suite.server.URL+"/chats", nil)
+		suite.Require().NoError(err)
+		req.Header.Set("X-Request-ID", uuid.NewString())
+		req.Header.Set("Accept", "application/json")
+
+		resp, err := http.DefaultClient.Do(req)
+		defer resp.Body.Close() //nolint:errcheck
+
+		suite.Require().Equal(http.StatusUnauthorized, resp.StatusCode)
+
+		var respData responseError
+		err = json.NewDecoder(resp.Body).Decode(&respData)
+		suite.Require().NoError(err)
+		suite.Equal(ErrUnauthorized.Error(), respData.Error)
 	})
 }
 
