@@ -85,7 +85,7 @@ func (suite *controllerTestSuite) SetupSubTest() {
 		sessions:    suite.ss.sessions,
 		ServeMux:    http.ServeMux{},
 	}
-	registerHandlers(suite.ctrl)
+	suite.ctrl.registerHandlers()
 	suite.server = httptest.NewServer(suite.ctrl)
 }
 

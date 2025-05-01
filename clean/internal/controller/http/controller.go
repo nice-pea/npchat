@@ -35,7 +35,7 @@ func InitController(chats *service.Chats, invitations *service.Invitations, memb
 		sessions:    sessions,
 		ServeMux:    http.ServeMux{},
 	}
-	registerHandlers(c)
+	c.registerHandlers()
 
 	return c
 }

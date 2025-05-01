@@ -1,10 +1,10 @@
 package http
 
-func registerHandlers(c *Controller) {
+func (c *Controller) registerHandlers() {
 	clientChain := []middleware{
-		requireRequestID,
+		c.requireRequestID,
 		requireAcceptJson,
-		requireAuthorizedSession,
+		c.requireAuthorizedSession,
 	}
 	c.HandleFunc("POST /chats", c.CreateChat, clientChain...)
 	c.HandleFunc("GET /chats", c.GetChats, clientChain...)

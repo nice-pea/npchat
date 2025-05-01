@@ -6,40 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
-
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/service"
 )
-
-func initContext(c *Controller, r *http.Request) Context {
-	return Context{
-		requestID: r.Header.Get("X-Request-ID"),
-		request:   r,
-		session:   getSession(c, r),
-	}
-}
-
-func getSession(c *Controller, r *http.Request) domain.Session {
-	header := r.Header.Get("Authorization")
-	token, _ := strings.CutPrefix(header, "Bearer ")
-	if token == "" {
-		return domain.Session{}
-	}
-
-	sessions, err := c.sessions.Find(service.SessionsFindInput{
-		Token: token,
-	})
-	if err != nil {
-		slog.Error("getSession: c.sessions.Find: " + err.Error())
-		return domain.Session{}
-	}
-	if len(sessions) != 1 {
-		return domain.Session{}
-	}
-
-	return sessions[0]
-}
 
 var (
 	ErrJsonMarshalResponseData = errors.New("json marshal response data")
@@ -60,11 +27,8 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 			logWarn(r, errors.Join(ErrParseRequestURL, err))
 		}
 
-		// Инициализация контекста запроса
-		ctx := initContext(c, r)
-
 		// Выполнить обработку запроса
-		respData, err = handle(ctx)
+		respData, err = handle(Context{request: r})
 		if err != nil {
 			// Если есть ошибка
 			w.WriteHeader(httpStatusCodeByErr(err))
