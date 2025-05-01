@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -38,6 +39,39 @@ func (suite *controllerTestSuite) TestPing() {
 const headerXRequestID = "X-Request-ID"
 const headerAccept = "Accept"
 const headerAuthorization = "Authorization"
+
+func (suite *controllerTestSuite) newClientRequest(method, path, token string, body io.Reader) *http.Request {
+	req, err := http.NewRequest(method, suite.server.URL+path, body)
+	suite.Require().NoError(err)
+	req.Header.Set(headerXRequestID, uuid.NewString())
+	req.Header.Set(headerAccept, "application/json")
+	if token != "" {
+		req.Header.Set(headerAuthorization, "Bearer "+token)
+	}
+	return req
+}
+
+func (suite *controllerTestSuite) newRndUserWithSession(sessionStatus int) (out struct {
+	User    domain.User
+	Session domain.Session
+}) {
+	out.User = domain.User{
+		ID: uuid.NewString(),
+	}
+	err := suite.rr.users.Save(out.User)
+	suite.Require().NoError(err)
+
+	out.Session = domain.Session{
+		ID:     uuid.NewString(),
+		UserID: out.User.ID,
+		Token:  uuid.NewString(),
+		Status: sessionStatus,
+	}
+	err = suite.rr.sessions.Save(out.Session)
+	suite.Require().NoError(err)
+
+	return
+}
 
 func (suite *controllerTestSuite) TestClientMiddlewares() {
 	const existingClientAPIEndpoint = "/chats"
@@ -108,23 +142,10 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		suite.Equal(ErrCodeInvalidAuthorizationHeader, respData.ErrCode)
 	})
 
-	suite.Run("аутентификация сессии/вернется существующая сессия", func() {
-		// Сохранить сессию
-		session := domain.Session{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			Token:  uuid.NewString(),
-			Status: domain.SessionStatusVerified,
-		}
-		err := suite.rr.sessions.Save(session)
-		suite.Require().NoError(err)
-
+	suite.Run("аутентификация сессии/запросы Verified сессий проходят успешно", func() {
 		// Создать запрос
-		req, err := http.NewRequest("GET", suite.server.URL+existingClientAPIEndpoint, nil)
-		suite.Require().NoError(err)
-		req.Header.Set(headerXRequestID, uuid.NewString())
-		req.Header.Set(headerAccept, "application/json")
-		req.Header.Set(headerAuthorization, "Bearer "+session.Token)
+		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
+		req := suite.newClientRequest("GET", existingClientAPIEndpoint, uws.Session.Token, nil)
 
 		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
