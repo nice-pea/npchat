@@ -57,12 +57,7 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 
 		// Получить значения из URL
 		if err = r.ParseForm(); err != nil {
-			err = errors.Join(ErrParseRequestURL, err)
-			slog.Warn("modulation: "+strings.ReplaceAll(err.Error(), "\n", ": "),
-				slog.String("url", r.RequestURI),
-				slog.String("host", r.Host),
-				slog.String("referer", r.Referer()),
-			)
+			logWarn(r, errors.Join(ErrParseRequestURL, err))
 		}
 
 		// Инициализация контекста запроса
@@ -89,12 +84,8 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		if b, err = json.Marshal(respData); err != nil {
 			err = errors.Join(ErrJsonMarshalResponseData, err)
 			w.WriteHeader(httpStatusCodeByErr(err))
+			logErr(r, err)
 			b = []byte(fmt.Sprintf(`{"error":"%v","errcode":"%v"}`, err, errCode(err)))
-			slog.Error("modulation: "+strings.ReplaceAll(err.Error(), "\n", ": "),
-				slog.String("url", r.RequestURI),
-				slog.String("host", r.Host),
-				slog.String("referer", r.Referer()),
-			)
 		}
 
 		// Отправить ответ
@@ -102,13 +93,25 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		if _, err = w.Write(b); err != nil {
 			err = errors.Join(ErrWriteResponseBytes, err)
 			w.WriteHeader(httpStatusCodeByErr(err))
-			slog.Error("modulation: "+err.Error(),
-				slog.String("url", r.RequestURI),
-				slog.String("host", r.Host),
-				slog.String("referer", r.Referer()),
-			)
+			logErr(r, err)
 		}
 	}
+}
+
+func logErr(r *http.Request, err error) {
+	slog.Error("modulation: "+err.Error(),
+		slog.String("url", r.RequestURI),
+		slog.String("host", r.Host),
+		slog.String("referer", r.Referer()),
+	)
+}
+
+func logWarn(r *http.Request, err error) {
+	slog.Warn("modulation: "+err.Error(),
+		slog.String("url", r.RequestURI),
+		slog.String("host", r.Host),
+		slog.String("referer", r.Referer()),
+	)
 }
 
 type ResponseError struct {
