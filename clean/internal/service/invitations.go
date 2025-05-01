@@ -9,7 +9,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// Invitations сервис объединяющий случаи использования(юзкейсы) в контексте сущности
+// Invitations сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
 type Invitations struct {
 	ChatsRepo       domain.ChatsRepository
 	MembersRepo     domain.MembersRepository
@@ -55,7 +55,7 @@ func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitat
 		return nil, err
 	}
 
-	// Проверить что пользователь является администратором чата
+	// Проверить, что пользователь является администратором чата
 	if chat.ChiefUserID == in.SubjectUserID {
 		// Получить все приглашения в этот чат
 		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{

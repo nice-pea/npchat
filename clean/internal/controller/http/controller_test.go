@@ -18,50 +18,26 @@ func (suite *controllerTestSuite) Test_Server() {
 		}
 	})
 	suite.Run("есть метод modulation", func() {
-		//// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
-		//var f func(HandlerFunc) http.HandlerFunc
-		//// Проверить существование такой функции
-		//f = modulation
-		//_ = f
 		// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
 		var _ interface {
 			modulation(HandlerFunc) http.HandlerFunc
 		} = new(Controller)
 	})
-	//suite.Run("есть middleware для наполнения Context значениями", func() {
-	//	// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
-	//	var mw func(HandlerFunc) HandlerFunc
-	//	// Проверить существование такой функции
-	//	mw = initContext
-	//	_ = mw
-	//})
 	suite.Run("наличие методов", func() {
 		// Контроллер содержит методы для обработки следующих запросов:
 		var _ interface {
-			// Создать чат
-			CreateChat(Context) (any, error)
-			// Получить список чатов
-			GetChats(Context) (any, error)
+			LoginByCredentials(Context) (any, error) // Авторизация по логину/паролю
+			MyChats(Context) (any, error)            // Получить список чатов
+			CreateChat(Context) (any, error)         // Создать чат
+			ChatMembers(Context) (any, error)        // Получить список участников чата
+			UpdateChatName(Context) (any, error)     // Обновить название чата
+			ChatInvitations(Context) (any, error)    // Получить список приглашений в чат
+			MyInvitations(Context) (any, error)      // Получить список моих приглашений
+			SendInvitation(Context) (any, error)     // Отправить приглашение в чат
+			AcceptInvitation(Context) (any, error)   // Принять приглашение в чат
+			CancelInvitation(Context) (any, error)   // Отменить приглашение в чат
+			LeaveChat(Context) (any, error)          // Покинуть чат
+			DeleteMember(Context) (any, error)       // Удалить участника из чата
 		} = new(Controller)
 	})
-
-	//c := Controller{
-	//	chats:       service.Chats{},
-	//	invitations: service.Invitations{},
-	//	members:     service.Members{},
-	//}
-	//http.NewServeMux()
-	//
-	//require.IsType(t, new(interface {
-	//	chats() service.Chats
-	//	invitations() service.Invitations
-	//	members() service.Members
-	//}), c)
-	//
-	//addr := ":8080"
-	//go func() {
-	//	err := http.ListenAndServe(addr, c)
-	//	assert.NoError(t, err)
-	//}()
-
 }
