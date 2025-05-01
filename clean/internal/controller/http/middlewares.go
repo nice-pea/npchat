@@ -8,7 +8,6 @@ var ErrUnauthorized = errors.New("unauthorized. Please, use token in header: Aut
 
 func requireAuthorizedSession(next HandlerFunc) HandlerFunc {
 	return func(context Context) (any, error) {
-		println("requireAuthorizedSession")
 		if context.session.ID == "" {
 			return nil, ErrUnauthorized
 		}
@@ -21,7 +20,6 @@ var ErrUnknownRequestID = errors.New("unknown request ID. Please, use X-Request-
 
 func requireRequestID(next HandlerFunc) HandlerFunc {
 	return func(context Context) (any, error) {
-		println("requireRequestID")
 		if context.requestID == "" {
 			return nil, ErrUnknownRequestID
 		}
@@ -30,13 +28,12 @@ func requireRequestID(next HandlerFunc) HandlerFunc {
 	}
 }
 
-var ErrOnlyJsonSupported = errors.New("only JSON format is supported. Please, use Accept: application/json header")
+var ErrUnsupportedAcceptedContentType = errors.New("unsupported Accept header value. Please, use Accept: application/json header")
 
 func requireAcceptJson(next HandlerFunc) HandlerFunc {
 	return func(context Context) (any, error) {
-		println("requireAcceptJson")
 		if context.request.Header.Get("Accept") != "application/json" {
-			return nil, ErrOnlyJsonSupported
+			return nil, ErrUnsupportedAcceptedContentType
 		}
 
 		return next(context)

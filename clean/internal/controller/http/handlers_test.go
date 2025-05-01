@@ -23,31 +23,83 @@ func (suite *controllerTestSuite) TestPing() {
 		suite.Require().NoError(err)
 		defer resp.Body.Close() //nolint:errcheck
 
+		suite.Require().Equal(http.StatusOK, resp.StatusCode)
+
 		var respData responseMessage
 		err = json.NewDecoder(resp.Body).Decode(&respData)
 		suite.Require().NoError(err)
 
-		suite.Equal(http.StatusOK, resp.StatusCode)
 		suite.Equal(responseMessage{Message: "pong"}, respData)
 	})
 }
 
-func (suite *controllerTestSuite) TestRequireAuthorizedSession() {
-	suite.Run("защищенные эндпоинты будут возвращать ошибку", func() {
-		req, err := http.NewRequest("GET", suite.server.URL+"/chats", nil)
-		suite.Require().NoError(err)
-		req.Header.Set("X-Request-ID", uuid.NewString())
-		req.Header.Set("Accept", "application/json")
+const headerXRequestID = "X-Request-ID"
+const headerAccept = "Accept"
 
+func (suite *controllerTestSuite) TestClientMiddlewares() {
+	const existingClientAPIEndpoint = "/chats"
+
+	suite.Run("идентификатор запроса/обязательно должен быть передан заголовок с идентификатором запроса", func() {
+		// Создать запрос
+		req, err := http.NewRequest("GET", suite.server.URL+existingClientAPIEndpoint, nil)
+		suite.Require().NoError(err)
+
+		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		defer resp.Body.Close() //nolint:errcheck
 
+		// Проверить код ответа
+		suite.Require().Equal(http.StatusBadRequest, resp.StatusCode)
+
+		// Проверить ответ
+		var respData responseError
+		err = json.NewDecoder(resp.Body).Decode(&respData)
+		suite.Require().NoError(err)
+		suite.Equal(ErrUnknownRequestID.Error(), respData.Error)
+		suite.Equal(ErrCodeInvalidXRequestIDHeader, respData.ErrCode)
+	})
+
+	suite.Run("тип содержимого/api поддерживает только контент json", func() {
+		// Создать запрос
+		req, err := http.NewRequest("GET", suite.server.URL+existingClientAPIEndpoint, nil)
+		suite.Require().NoError(err)
+		req.Header.Set(headerXRequestID, uuid.NewString())
+
+		// Выполнить запрос
+		resp, err := http.DefaultClient.Do(req)
+		defer resp.Body.Close() //nolint:errcheck
+
+		// Проверить код ответа
+		suite.Require().Equal(http.StatusBadRequest, resp.StatusCode)
+
+		// Проверить ответ
+		var respData responseError
+		err = json.NewDecoder(resp.Body).Decode(&respData)
+		suite.Require().NoError(err)
+		suite.Equal(ErrUnsupportedAcceptedContentType.Error(), respData.Error)
+		suite.Equal(ErrCodeUnsupportedAcceptedContentType, respData.ErrCode)
+	})
+
+	suite.Run("аутентификация сессии/защищенные эндпоинты будут возвращать ошибку", func() {
+		// Создать запрос
+		req, err := http.NewRequest("GET", suite.server.URL+existingClientAPIEndpoint, nil)
+		suite.Require().NoError(err)
+		req.Header.Set(headerXRequestID, uuid.NewString())
+		req.Header.Set(headerAccept, "application/json")
+
+		// Выполнить запрос
+		resp, err := http.DefaultClient.Do(req)
+		defer resp.Body.Close() //nolint:errcheck
+
+		// Проверить код ответа
 		suite.Require().Equal(http.StatusUnauthorized, resp.StatusCode)
 
+		// Проверить ответ
 		var respData responseError
 		err = json.NewDecoder(resp.Body).Decode(&respData)
 		suite.Require().NoError(err)
 		suite.Equal(ErrUnauthorized.Error(), respData.Error)
+		suite.Equal(ErrCodeInvalidAuthorizationHeader, respData.ErrCode)
 	})
 }
 
