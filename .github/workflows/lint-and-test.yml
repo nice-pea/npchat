@@ -23,7 +23,6 @@ jobs:
           go-version: 1.24
 
       - name: Run go test
-        working-directory: clean
         run: go test -v -short -vet=all ./...
 
   golangci-lint:
@@ -36,5 +35,4 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
-          working-directory: clean
           args: --timeout 10m
