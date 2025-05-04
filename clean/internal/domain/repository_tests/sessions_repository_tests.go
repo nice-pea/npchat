@@ -27,26 +27,25 @@ func SessionsRepositoryTests(t *testing.T, newRepository func() domain.SessionsR
 				Status: domain.SessionStatusNew,
 			}
 			err := r.Save(session)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			sessions, err := r.List(domain.SessionsFilter{})
 			assert.NoError(t, err)
 			assert.Len(t, sessions, 1)
 		})
 		t.Run("фильтр по токену", func(t *testing.T) {
 			r := newRepository()
-			token := "test-token"
 			session := domain.Session{
 				ID:     uuid.NewString(),
 				UserID: uuid.NewString(),
-				Token:  token,
+				Token:  "test-token",
 				Status: domain.SessionStatusNew,
 			}
 			err := r.Save(session)
-			assert.NoError(t, err)
-			sessions, err := r.List(domain.SessionsFilter{Token: token})
+			require.NoError(t, err)
+			sessions, err := r.List(domain.SessionsFilter{Token: session.Token})
 			assert.NoError(t, err)
 			if assert.Len(t, sessions, 1) {
-				assert.Equal(t, token, sessions[0].Token)
+				assert.Equal(t, session.Token, sessions[0].Token)
 			}
 		})
 	})
@@ -67,7 +66,7 @@ func SessionsRepositoryTests(t *testing.T, newRepository func() domain.SessionsR
 				Status: domain.SessionStatusNew,
 			}
 			err := r.Save(session)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			sessions, err := r.List(domain.SessionsFilter{})
 			assert.NoError(t, err)
 			require.Len(t, sessions, 1)
@@ -94,7 +93,7 @@ func SessionsRepositoryTests(t *testing.T, newRepository func() domain.SessionsR
 				Token:  uuid.NewString(),
 				Status: domain.SessionStatusNew,
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = r.Delete(id)
 			assert.NoError(t, err)
 		})
@@ -107,9 +106,9 @@ func SessionsRepositoryTests(t *testing.T, newRepository func() domain.SessionsR
 				Token:  uuid.NewString(),
 				Status: domain.SessionStatusNew,
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = r.Delete(id)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = r.Delete(id)
 			assert.NoError(t, err)
 		})

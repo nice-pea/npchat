@@ -74,14 +74,8 @@ func (suite *controllerTestSuite) newRndUserWithSession(sessionStatus int) (out 
 	return
 }
 
-type domainLoginCredentials struct {
-	UserID   string
-	Login    string
-	Password string
-}
-
-func (suite *controllerTestSuite) newRndUserWithLoginCredentials() domainLoginCredentials {
-	credentials := domainLoginCredentials{
+func (suite *controllerTestSuite) newRndUserWithLoginCredentials() domain.LoginCredentials {
+	credentials := domain.LoginCredentials{
 		UserID:   uuid.NewString(),
 		Login:    uuid.NewString(),
 		Password: uuid.NewString(),
@@ -213,20 +207,23 @@ func (suite *controllerTestSuite) TestLoginByCredentials() {
 	})
 
 	suite.Run("неверные учетные данные", func() {
+		// Создать нового пользователя с login credentials
+		lc := suite.newRndUserWithLoginCredentials()
+
 		credentials := map[string]string{
-			"login":    "wronguser",
+			"login":    lc.Login,
 			"password": "wrongpass",
 		}
 		body, err := json.Marshal(credentials)
 		suite.Require().NoError(err)
 
-		req := suite.newClientRequest("POST", "/login", "", bytes.NewBuffer(body))
+		req := suite.newClientRequest("POST", "/login/credentials", "", bytes.NewBuffer(body))
 
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusUnauthorized, resp.StatusCode)
+		suite.Equal(http.StatusBadRequest, resp.StatusCode)
 	})
 }
 

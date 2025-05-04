@@ -40,3 +40,11 @@ CREATE TABLE sessions
     status INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users ON DELETE RESTRICT
 );
+
+CREATE TABLE login_credentials
+(
+    user_id TEXT PRIMARY KEY,
+    login TEXT NOT NULL,
+    password TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users ON DELETE RESTRICT
+);

@@ -13,17 +13,19 @@ type servicesTestSuite struct {
 	suite.Suite
 	factory *sqlite.RepositoryFactory
 	rr      struct {
-		chats       domain.ChatsRepository
-		members     domain.MembersRepository
-		invitations domain.InvitationsRepository
-		sessions    domain.SessionsRepository
-		users       domain.UsersRepository
+		chats            domain.ChatsRepository
+		members          domain.MembersRepository
+		invitations      domain.InvitationsRepository
+		sessions         domain.SessionsRepository
+		users            domain.UsersRepository
+		loginCredentials domain.LoginCredentialsRepository
 	}
 	ss struct {
-		chats       *Chats
-		members     *Members
-		invitations *Invitations
-		sessions    *Sessions
+		chats            *Chats
+		members          *Members
+		invitations      *Invitations
+		sessions         *Sessions
+		loginCredentials *LoginCredentials
 	}
 }
 
@@ -53,6 +55,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require.NoError(err)
 	suite.rr.sessions, err = suite.factory.NewSessionsRepository()
 	require.NoError(err)
+	suite.rr.loginCredentials = suite.factory.NewLoginCredentialsRepository()
 
 	// Создание сервисов
 	suite.ss.chats = &Chats{
@@ -71,6 +74,10 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	}
 	suite.ss.sessions = &Sessions{
 		SessionsRepo: suite.rr.sessions,
+	}
+	suite.ss.loginCredentials = &LoginCredentials{
+		LoginCredentialsRepo: suite.rr.loginCredentials,
+		SessionsRepo:         suite.rr.sessions,
 	}
 }
 

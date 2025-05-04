@@ -22,15 +22,14 @@ type controllerTestSuite struct {
 		invitations domain.InvitationsRepository
 		sessions    domain.SessionsRepository
 		users       domain.UsersRepository
-		loginCreds  interface {
-			Save(domainLoginCredentials) error
-		}
+		loginCreds  domain.LoginCredentialsRepository
 	}
 	ss struct {
-		chats       *service.Chats
-		members     *service.Members
-		invitations *service.Invitations
-		sessions    *service.Sessions
+		chats            *service.Chats
+		members          *service.Members
+		invitations      *service.Invitations
+		sessions         *service.Sessions
+		loginCredentials *service.LoginCredentials
 	}
 	server *httptest.Server
 }
@@ -61,6 +60,7 @@ func (suite *controllerTestSuite) SetupSubTest() {
 	require.NoError(err)
 	suite.rr.sessions, err = suite.factory.NewSessionsRepository()
 	require.NoError(err)
+	suite.rr.loginCreds = suite.factory.NewLoginCredentialsRepository()
 
 	// Создание сервисов
 	suite.ss.chats = &service.Chats{
@@ -80,13 +80,18 @@ func (suite *controllerTestSuite) SetupSubTest() {
 	suite.ss.sessions = &service.Sessions{
 		SessionsRepo: suite.rr.sessions,
 	}
+	suite.ss.loginCredentials = &service.LoginCredentials{
+		LoginCredentialsRepo: suite.rr.loginCreds,
+		SessionsRepo:         suite.rr.sessions,
+	}
 
 	suite.ctrl = &Controller{
-		chats:       suite.ss.chats,
-		invitations: suite.ss.invitations,
-		members:     suite.ss.members,
-		sessions:    suite.ss.sessions,
-		ServeMux:    http.ServeMux{},
+		chats:            suite.ss.chats,
+		invitations:      suite.ss.invitations,
+		members:          suite.ss.members,
+		sessions:         suite.ss.sessions,
+		loginCredentials: suite.ss.loginCredentials,
+		ServeMux:         http.ServeMux{},
 	}
 	suite.ctrl.registerHandlers()
 	suite.server = httptest.NewServer(suite.ctrl)
