@@ -6,15 +6,27 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite/memory"
+	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
 
 type servicesTestSuite struct {
 	suite.Suite
-	sqliteMemory       *memory.SQLiteMemory
-	chatsService       *Chats
-	membersService     *Members
-	invitationsService *Invitations
+	factory *sqlite.RepositoryFactory
+	rr      struct {
+		chats            domain.ChatsRepository
+		members          domain.MembersRepository
+		invitations      domain.InvitationsRepository
+		sessions         domain.SessionsRepository
+		users            domain.UsersRepository
+		loginCredentials domain.LoginCredentialsRepository
+	}
+	ss struct {
+		chats            *Chats
+		members          *Members
+		invitations      *Invitations
+		sessions         *Sessions
+		loginCredentials *LoginCredentials
+	}
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
@@ -27,45 +39,52 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require := suite.Require()
 
 	// Инициализация SQLiteMemory
-	suite.sqliteMemory, err = memory.Init(memory.Config{MigrationsDir: "../../migrations/repository/sqlite/memory"})
+	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{
+		MigrationsDir: "../../migrations/repository/sqlite",
+	})
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	chatsRepository, err := suite.sqliteMemory.NewChatsRepository()
-	require.NoError(err)
-	membersRepository, err := suite.sqliteMemory.NewMembersRepository()
-	require.NoError(err)
-	invitationsRepository, err := suite.sqliteMemory.NewInvitationsRepository()
-	require.NoError(err)
-	usersRepository, err := suite.sqliteMemory.NewUsersRepository()
-	require.NoError(err)
+	suite.rr.chats = suite.factory.NewChatsRepository()
+	suite.rr.members = suite.factory.NewMembersRepository()
+	suite.rr.invitations = suite.factory.NewInvitationsRepository()
+	suite.rr.users = suite.factory.NewUsersRepository()
+	suite.rr.sessions = suite.factory.NewSessionsRepository()
+	suite.rr.loginCredentials = suite.factory.NewLoginCredentialsRepository()
 
 	// Создание сервисов
-	suite.chatsService = &Chats{
-		ChatsRepo:   chatsRepository,
-		MembersRepo: membersRepository,
+	suite.ss.chats = &Chats{
+		ChatsRepo:   suite.rr.chats,
+		MembersRepo: suite.rr.members,
 	}
-	suite.membersService = &Members{
-		ChatsRepo:   chatsRepository,
-		MembersRepo: membersRepository,
+	suite.ss.members = &Members{
+		ChatsRepo:   suite.rr.chats,
+		MembersRepo: suite.rr.members,
 	}
-	suite.invitationsService = &Invitations{
-		ChatsRepo:       chatsRepository,
-		MembersRepo:     membersRepository,
-		InvitationsRepo: invitationsRepository,
-		UsersRepo:       usersRepository,
+	suite.ss.invitations = &Invitations{
+		ChatsRepo:       suite.rr.chats,
+		MembersRepo:     suite.rr.members,
+		InvitationsRepo: suite.rr.invitations,
+		UsersRepo:       suite.rr.users,
+	}
+	suite.ss.sessions = &Sessions{
+		SessionsRepo: suite.rr.sessions,
+	}
+	suite.ss.loginCredentials = &LoginCredentials{
+		LoginCredentialsRepo: suite.rr.loginCredentials,
+		SessionsRepo:         suite.rr.sessions,
 	}
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *servicesTestSuite) TearDownSubTest() {
-	err := suite.sqliteMemory.Close()
+	err := suite.factory.Close()
 	suite.Require().NoError(err)
 }
 
 // saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
-	err := suite.chatsService.ChatsRepo.Save(chat)
+	err := suite.rr.chats.Save(chat)
 	suite.Require().NoError(err)
 
 	return chat
@@ -73,7 +92,7 @@ func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
 
 // saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
-	err := suite.membersService.MembersRepo.Save(member)
+	err := suite.rr.members.Save(member)
 	suite.Require().NoError(err)
 
 	return member
@@ -81,7 +100,7 @@ func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
 
 // saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
-	err := suite.invitationsService.InvitationsRepo.Save(invitation)
+	err := suite.rr.invitations.Save(invitation)
 	suite.Require().NoError(err)
 
 	return invitation
@@ -89,7 +108,7 @@ func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) dom
 
 // saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) saveUser(user domain.User) domain.User {
-	err := suite.invitationsService.UsersRepo.Save(user)
+	err := suite.rr.users.Save(user)
 	suite.Require().NoError(err)
 
 	return user

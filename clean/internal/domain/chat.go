@@ -23,7 +23,6 @@ func (c Chat) ValidateID() error {
 	if err := uuid.Validate(c.ID); err != nil {
 		return errors.Join(err, ErrChatIDValidate)
 	}
-
 	return nil
 }
 
@@ -32,7 +31,6 @@ func (c Chat) ValidateName() error {
 	if !chatNameRegexp.MatchString(c.Name) {
 		return ErrChatNameValidate
 	}
-
 	return nil
 }
 
@@ -40,7 +38,6 @@ func (c Chat) ValidateChiefUserID() error {
 	if err := uuid.Validate(c.ChiefUserID); err != nil {
 		return errors.Join(err, ErrChatChiefUserIDValidate)
 	}
-
 	return nil
 }
 

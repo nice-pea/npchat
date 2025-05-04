@@ -3,6 +3,8 @@ package service
 import "errors"
 
 var (
+	ErrInvalidLogin                = errors.New("некорректный Login")
+	ErrInvalidToken                = errors.New("некорректный Token")
 	ErrInvalidID                   = errors.New("некорректный ID")
 	ErrInvalidSubjectUserID        = errors.New("некорректный SubjectUserID")
 	ErrInvalidChatID               = errors.New("некорректный ChatID")

@@ -1,0 +1,20 @@
+### Check server availability
+GET http://localhost:8080/ping
+Accept: application/json
+
+### Create new chat
+POST http://localhost:8080/chats
+Content-Type: application/json
+X-Request-ID: {{$uuid}}
+Authorization: Bearer {{$uuid}}
+
+{
+  "name": "Test Chat",
+  "description": "This is a test chat"
+}
+
+### Get user chats
+GET http://localhost:8080/chats
+Accept: application/json
+X-Request-ID: {{$uuid}}
+Authorization: Bearer {{$uuid}}
