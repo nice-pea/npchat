@@ -14,6 +14,7 @@ type repositories struct {
 	members     domain.MembersRepository
 	users       domain.UsersRepository
 	sessions    domain.SessionsRepository
+	loginCreds  domain.LoginCredentialsRepository
 }
 
 func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error) {
@@ -22,22 +23,13 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 		return nil, func() {}, fmt.Errorf("sqlite.InitRepositoryFactory: %w", err)
 	}
 
-	rs := new(repositories)
-
-	if rs.chats, err = factory.NewChatsRepository(); err != nil {
-		return nil, func() {}, fmt.Errorf("factory.NewChatsRepository: %w", err)
-	}
-	if rs.invitations, err = factory.NewInvitationsRepository(); err != nil {
-		return nil, func() {}, fmt.Errorf("factory.NewInvitationsRepository: %w", err)
-	}
-	if rs.members, err = factory.NewMembersRepository(); err != nil {
-		return nil, func() {}, fmt.Errorf("factory.NewMembersRepository: %w", err)
-	}
-	if rs.users, err = factory.NewUsersRepository(); err != nil {
-		return nil, func() {}, fmt.Errorf("factory.NewUsersRepository: %w", err)
-	}
-	if rs.sessions, err = factory.NewSessionsRepository(); err != nil {
-		return nil, func() {}, fmt.Errorf("factory.NewSessionsRepository: %w", err)
+	rs := &repositories{
+		chats:       factory.NewChatsRepository(),
+		invitations: factory.NewInvitationsRepository(),
+		members:     factory.NewMembersRepository(),
+		users:       factory.NewUsersRepository(),
+		sessions:    factory.NewSessionsRepository(),
+		loginCreds:  factory.NewLoginCredentialsRepository(),
 	}
 
 	return rs, func() {

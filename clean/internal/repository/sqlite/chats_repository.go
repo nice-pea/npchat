@@ -40,10 +40,10 @@ func chatsToDomain(repoChats []chat) []domain.Chat {
 	return domainChats
 }
 
-func (m *RepositoryFactory) NewChatsRepository() (domain.ChatsRepository, error) {
+func (m *RepositoryFactory) NewChatsRepository() domain.ChatsRepository {
 	return &ChatsRepository{
 		DB: m.db,
-	}, nil
+	}
 }
 
 type ChatsRepository struct {

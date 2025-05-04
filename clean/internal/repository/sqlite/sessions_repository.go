@@ -42,10 +42,10 @@ func sessionsToDomain(sessions []session) []domain.Session {
 	return result
 }
 
-func (m *RepositoryFactory) NewSessionsRepository() (domain.SessionsRepository, error) {
+func (m *RepositoryFactory) NewSessionsRepository() domain.SessionsRepository {
 	return &SessionsRepository{
 		DB: m.db,
-	}, nil
+	}
 }
 
 type SessionsRepository struct {

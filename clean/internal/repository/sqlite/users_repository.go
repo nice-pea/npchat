@@ -41,10 +41,10 @@ func usersFromDomain(domainUsers []domain.User) []user {
 	return repoUsers
 }
 
-func (m *RepositoryFactory) NewUsersRepository() (domain.UsersRepository, error) {
+func (m *RepositoryFactory) NewUsersRepository() domain.UsersRepository {
 	return &UsersRepository{
 		DB: m.db,
-	}, nil
+	}
 }
 
 type UsersRepository struct {

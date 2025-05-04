@@ -45,10 +45,10 @@ func membersFromDomain(domainMembers []domain.Member) []member {
 	}
 	return repoMembers
 }
-func (m *RepositoryFactory) NewMembersRepository() (domain.MembersRepository, error) {
+func (m *RepositoryFactory) NewMembersRepository() domain.MembersRepository {
 	return &MembersRepository{
 		DB: m.db,
-	}, nil
+	}
 }
 
 type MembersRepository struct {

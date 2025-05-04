@@ -49,10 +49,10 @@ func invitationsFromDomain(domainInvitations []domain.Invitation) []invitation {
 	return repoInvitations
 }
 
-func (m *RepositoryFactory) NewInvitationsRepository() (domain.InvitationsRepository, error) {
+func (m *RepositoryFactory) NewInvitationsRepository() domain.InvitationsRepository {
 	return &InvitationsRepository{
 		DB: m.db,
-	}, nil
+	}
 }
 
 type InvitationsRepository struct {

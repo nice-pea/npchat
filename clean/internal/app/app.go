@@ -24,7 +24,7 @@ func Run(ctx context.Context) error {
 	ss := initServices(repos)
 
 	// Инициализация контроллера
-	ctrl := controller.InitController(ss.chats, ss.invitations, ss.members, ss.sessions)
+	ctrl := controller.InitController(ss.chats, ss.invitations, ss.members, ss.sessions, ss.loginCredentials)
 
 	// Запуск сервера
 	server := &http.Server{
