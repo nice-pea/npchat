@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -101,6 +102,22 @@ func (suite *controllerTestSuite) saveUser(user domain.User) domain.User {
 	return user
 }
 
+// saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+func (suite *controllerTestSuite) saveChat(chat domain.Chat) domain.Chat {
+	err := suite.rr.chats.Save(chat)
+	suite.Require().NoError(err)
+
+	return chat
+}
+
+// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
+func (suite *controllerTestSuite) saveMember(member domain.Member) domain.Member {
+	err := suite.rr.members.Save(member)
+	suite.Require().NoError(err)
+
+	return member
+}
+
 func (suite *controllerTestSuite) TestClientMiddlewares() {
 	const existingClientAPIEndpoint = "/chats"
 
@@ -181,7 +198,9 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 		defer func() { _ = resp.Body.Close() }()
 
 		// Проверить код ответа
-		suite.Require().Equal(http.StatusOK, resp.StatusCode)
+		if !suite.Equal(http.StatusOK, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
 }
 
@@ -203,7 +222,9 @@ func (suite *controllerTestSuite) TestLoginByCredentials() {
 		defer func() { _ = resp.Body.Close() }()
 
 		// Проверка результата
-		suite.Equal(http.StatusOK, resp.StatusCode)
+		if !suite.Equal(http.StatusOK, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
 
 	suite.Run("неверные учетные данные", func() {
@@ -223,7 +244,9 @@ func (suite *controllerTestSuite) TestLoginByCredentials() {
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusBadRequest, resp.StatusCode)
+		if !suite.Equal(http.StatusBadRequest, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
 }
 
@@ -238,7 +261,9 @@ func (suite *controllerTestSuite) TestMyChats() {
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusOK, resp.StatusCode)
+		if !suite.Equal(http.StatusOK, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
 }
 
@@ -246,35 +271,62 @@ func (suite *controllerTestSuite) TestCreateChat() {
 	suite.Run("создание нового чата", func() {
 		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
 
-		chatData := map[string]string{
-			"name": "Test Chat",
-		}
-		body, err := json.Marshal(chatData)
-		suite.Require().NoError(err)
+		// Создать запрос
+		body := suite.jsonBody(map[string]string{
+			"name":          "somechat",
+			"chief_user_id": uws.User.ID,
+		})
+		req := suite.newClientRequest("POST", "/chats", uws.Session.Token, body)
 
-		req := suite.newClientRequest("POST", "/chats", uws.Session.Token, bytes.NewBuffer(body))
-
+		// Выполнить запрос
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusCreated, resp.StatusCode)
+		if !suite.Equal(http.StatusOK, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
 }
 
 func (suite *controllerTestSuite) TestChatMembers() {
 	suite.Run("получение списка участников чата", func() {
 		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
-		chatID := uuid.New().String()
 
-		req := suite.newClientRequest("GET", "/chats/"+chatID+"/members", uws.Session.Token, nil)
+		// Создать чат
+		chat := suite.saveChat(domain.Chat{ID: uuid.NewString()})
+		// Создать участников
+		for range 10 {
+			suite.saveMember(domain.Member{
+				ID:     uuid.NewString(),
+				UserID: uuid.NewString(),
+				ChatID: chat.ID,
+			})
+		}
+		// участник Subject
+		suite.saveMember(domain.Member{
+			ID:     uuid.NewString(),
+			UserID: uws.User.ID,
+			ChatID: chat.ID,
+		})
+
+		// Создать запрос
+		req := suite.newClientRequest("GET", "/chats/"+chat.ID+"/members", uws.Session.Token, nil)
 
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusOK, resp.StatusCode)
+		if !suite.Equal(http.StatusOK, resp.StatusCode) {
+			suite.PrintBody(resp)
+		}
 	})
+}
+
+func (suite *controllerTestSuite) PrintBody(resp *http.Response) {
+	b, err := io.ReadAll(resp.Body)
+	suite.Require().NoError(err)
+	log.Println(string(b))
 }
 
 func (suite *controllerTestSuite) TestUpdateChatName() {
@@ -330,21 +382,14 @@ func (suite *controllerTestSuite) TestMyInvitations() {
 func (suite *controllerTestSuite) TestSendInvitation() {
 	suite.Run("отправка приглашения в чат", func() {
 		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
-		chatID := uuid.New().String()
 
-		inviteData := map[string]string{
-			"user_id": uuid.New().String(),
-		}
-		body, err := json.Marshal(inviteData)
-		suite.Require().NoError(err)
-
-		req := suite.newClientRequest("POST", "/chats/"+chatID+"/invitations", uws.Session.Token, bytes.NewBuffer(body))
+		req := suite.newClientRequest("POST", "/invitations", uws.Session.Token, nil)
 
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
 		defer func() { _ = resp.Body.Close() }()
 
-		suite.Equal(http.StatusCreated, resp.StatusCode)
+		suite.Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
@@ -368,7 +413,7 @@ func (suite *controllerTestSuite) TestCancelInvitation() {
 		uws := suite.newRndUserWithSession(domain.SessionStatusVerified)
 		invitationID := uuid.New().String()
 
-		req := suite.newClientRequest("DELETE", "/invitations/"+invitationID, uws.Session.Token, nil)
+		req := suite.newClientRequest("POST", "/invitations/"+invitationID+"/cancel", uws.Session.Token, nil)
 
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)

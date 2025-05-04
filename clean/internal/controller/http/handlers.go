@@ -41,9 +41,16 @@ func (c *Controller) MyChats(context Context) (any, error) {
 
 // CreateChat создает новый чат
 func (c *Controller) CreateChat(context Context) (any, error) {
-	var input service.CreateInput
-	if err := json.NewDecoder(context.request.Body).Decode(&input); err != nil {
+	var rb struct {
+		Name        string `json:"name"`
+		ChiefUserID string `json:"chief_user_id"`
+	}
+	if err := json.NewDecoder(context.request.Body).Decode(&rb); err != nil {
 		return nil, err
+	}
+	input := service.CreateInput{
+		Name:        rb.Name,
+		ChiefUserID: rb.ChiefUserID,
 	}
 
 	result, err := c.chats.Create(input)
@@ -63,7 +70,17 @@ func (c *Controller) LeaveChat(context Context) (any, error) {
 }
 
 func (c *Controller) ChatMembers(context Context) (any, error) {
-	return nil, nil
+	input := service.ChatMembersInput{
+		SubjectUserID: context.session.UserID,
+		ChatID:        context.request.PathValue("chatID"),
+	}
+
+	chats, err := c.members.ChatMembers(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return chats, nil
 }
 
 func (c *Controller) MyInvitations(context Context) (any, error) {
