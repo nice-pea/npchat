@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
@@ -15,8 +16,7 @@ func TestNewMembersRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo, err := repositoryFactory.NewMembersRepository()
-		assert.Nil(t, err)
+		repo := repositoryFactory.NewMembersRepository()
 		assert.NotNil(t, repo)
 	})
 }
@@ -26,9 +26,8 @@ func TestMembersRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo, err := repositoryFactory.NewMembersRepository()
-		assert.Nil(t, err)
-		assert.NotNil(t, repo)
+		repo := repositoryFactory.NewMembersRepository()
+		require.NotNil(t, repo)
 		return repo
 	})
 }

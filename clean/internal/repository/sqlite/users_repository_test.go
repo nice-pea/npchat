@@ -16,9 +16,8 @@ func TestNewUsersRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo, err := repositoryFactory.NewUsersRepository()
-		assert.NoError(t, err)
-		assert.NotZero(t, repo)
+		repo := repositoryFactory.NewUsersRepository()
+		assert.NotNil(t, repo)
 	})
 }
 
@@ -27,9 +26,8 @@ func TestUsersRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo, err := repositoryFactory.NewUsersRepository()
-		assert.NoError(t, err)
-		require.NotZero(t, repo)
+		repo := repositoryFactory.NewUsersRepository()
+		require.NotNil(t, repo)
 		return repo
 	})
 }

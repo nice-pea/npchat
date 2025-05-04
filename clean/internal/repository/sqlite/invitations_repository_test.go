@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
@@ -15,20 +16,18 @@ func TestNewInvitationsRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo, err := repositoryFactory.NewInvitationsRepository()
-		assert.Nil(t, err)
+		repo := repositoryFactory.NewInvitationsRepository()
 		assert.NotNil(t, repo)
 	})
 }
 
 func TestInvitationsRepository(t *testing.T) {
 	repository_tests.InvitationsRepositoryTests(t, func() domain.InvitationsRepository {
-		sqlim, err := InitRepositoryFactory(defaultTestConfig)
+		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
-		assert.NotNil(t, sqlim)
-		repo, err := sqlim.NewInvitationsRepository()
-		assert.Nil(t, err)
-		assert.NotNil(t, repo)
+		assert.NotNil(t, repositoryFactory)
+		repo := repositoryFactory.NewInvitationsRepository()
+		require.NotNil(t, repo)
 		return repo
 	})
 }

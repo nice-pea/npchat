@@ -45,16 +45,11 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	suite.rr.chats, err = suite.factory.NewChatsRepository()
-	require.NoError(err)
-	suite.rr.members, err = suite.factory.NewMembersRepository()
-	require.NoError(err)
-	suite.rr.invitations, err = suite.factory.NewInvitationsRepository()
-	require.NoError(err)
-	suite.rr.users, err = suite.factory.NewUsersRepository()
-	require.NoError(err)
-	suite.rr.sessions, err = suite.factory.NewSessionsRepository()
-	require.NoError(err)
+	suite.rr.chats = suite.factory.NewChatsRepository()
+	suite.rr.members = suite.factory.NewMembersRepository()
+	suite.rr.invitations = suite.factory.NewInvitationsRepository()
+	suite.rr.users = suite.factory.NewUsersRepository()
+	suite.rr.sessions = suite.factory.NewSessionsRepository()
 	suite.rr.loginCredentials = suite.factory.NewLoginCredentialsRepository()
 
 	// Создание сервисов

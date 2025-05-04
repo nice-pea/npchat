@@ -15,9 +15,8 @@ func TestNewSessionsRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo, err := repositoryFactory.NewSessionsRepository()
-		assert.NoError(t, err)
-		assert.NotZero(t, repo)
+		repo := repositoryFactory.NewSessionsRepository()
+		assert.NotNil(t, repo)
 	})
 }
 
@@ -26,9 +25,8 @@ func TestSessionsRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo, err := repositoryFactory.NewSessionsRepository()
-		assert.NoError(t, err)
-		require.NotZero(t, repo)
+		repo := repositoryFactory.NewSessionsRepository()
+		require.NotNil(t, repo)
 		return repo
 	})
 }

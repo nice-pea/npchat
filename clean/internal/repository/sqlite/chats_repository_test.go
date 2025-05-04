@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
@@ -14,8 +15,7 @@ func TestNewChatsRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo, err := repositoryFactory.NewChatsRepository()
-		assert.Nil(t, err)
+		repo := repositoryFactory.NewChatsRepository()
 		assert.NotNil(t, repo)
 	})
 }
@@ -25,9 +25,8 @@ func TestChatsRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo, err := repositoryFactory.NewChatsRepository()
-		assert.Nil(t, err)
-		assert.NotNil(t, repo)
+		repo := repositoryFactory.NewChatsRepository()
+		require.NotNil(t, repo)
 		return repo
 	})
 }

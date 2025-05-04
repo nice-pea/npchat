@@ -94,14 +94,6 @@ func (suite *controllerTestSuite) jsonBody(v any) io.Reader {
 	return bytes.NewBuffer(body)
 }
 
-// saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
-func (suite *controllerTestSuite) saveUser(user domain.User) domain.User {
-	err := suite.rr.users.Save(user)
-	suite.Require().NoError(err)
-
-	return user
-}
-
 // saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
 func (suite *controllerTestSuite) saveChat(chat domain.Chat) domain.Chat {
 	err := suite.rr.chats.Save(chat)
