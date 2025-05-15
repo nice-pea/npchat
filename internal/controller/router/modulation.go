@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
 	ErrParseRequestURL         = errors.New("parse request url")
 )
 
-func (c *Router) modulation(handle HandlerFunc) http.HandlerFunc {
+func (c *Router) modulation(handle http2.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			respData any
@@ -28,7 +30,10 @@ func (c *Router) modulation(handle HandlerFunc) http.HandlerFunc {
 		}
 
 		// Выполнить обработку запроса
-		respData, err = handle(Context{request: r})
+		respData, err = handle(&rwContext{
+			request:  r,
+			services: c.Services,
+		})
 		if err != nil {
 			// Если есть ошибка
 			w.WriteHeader(httpStatusCodeByErr(err))

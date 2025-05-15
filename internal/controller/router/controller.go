@@ -2,55 +2,31 @@ package router
 
 import (
 	"net/http"
-	"slices"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/service"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 )
-
-// Context представляет контекст HTTP-запроса
-type Context struct {
-	requestID string
-	request   *http.Request
-	session   domain.Session
-}
-
-type HandlerFunc func(Context) (any, error)
 
 // Router обрабатывает HTTP-запросы
 type Router struct {
-	//chats         *service.Chats
-	//invitations   *service.Invitations
-	//members       *service.Members
-	sessions *service.Sessions
-	//authnPassword *service.AuthnPassword
-
+	Services    http2.Services
+	Middlewares []http2.Middleware
 	http.ServeMux
 }
 
-func InitRouter(sessions *service.Sessions) *Router {
-	c := &Router{
-		sessions: sessions,
-		//chats:         chats,
-		//invitations:   invitations,
-		//members:       members,
-		//authnPassword: authnPassword,
-		ServeMux: http.ServeMux{},
-	}
-	//c.registerHandlers()
+//func InitRouter(sessions *service.Services, middlewares ...http2.Middleware) *Router {
+//	c := &Router{
+//		Services: sessions,
+//		ServeMux: http.ServeMux{},
+//
+//	}
+//
+//	return c
+//}
 
-	return c
-}
+func (c *Router) HandleFunc(pattern string, handlerFunc http2.HandlerFunc) {
+	handlerFunc = http2.Chain(handlerFunc, c.Middlewares...)
 
-func (c *Router) HandleFunc(pattern string, handlerFunc HandlerFunc, middlewares ...middleware) {
-	c.ServeMux.HandleFunc(pattern, c.modulation(chain(handlerFunc, middlewares...)))
-}
-
-type middleware func(HandlerFunc) HandlerFunc
-
-func chain(h HandlerFunc, middlewares ...middleware) HandlerFunc {
-	for _, mw := range slices.Backward(middlewares) {
-		h = mw(h)
-	}
-	return h
+	c.ServeMux.HandleFunc(pattern, c.modulation(func(context http2.Context) (any, error) {
+		return handlerFunc(context)
+	}))
 }

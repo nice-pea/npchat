@@ -10,8 +10,8 @@ import (
 var ErrUnknownRequestID = errors.New("unknown request ID. Please, use X-Request-ID header")
 
 // RequireRequestID требует наличие идентификатора запроса
-func RequireRequestID(next http2.MiddlewareFunc) http2.MiddlewareFunc {
-	return func(context http2.MutContext) (any, error) {
+func RequireRequestID(next http2.HandlerFuncRW) http2.HandlerFuncRW {
+	return func(context http2.RWContext) (any, error) {
 		context.SetRequestID(context.Request().Header.Get("X-Request-ID"))
 		if context.RequestID() == "" {
 			return nil, ErrUnknownRequestID

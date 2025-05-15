@@ -1,56 +1,43 @@
 package handler
 
 import (
-	"encoding/json"
-
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-func Ping(router http2.Router) {
-	router.HandleFunc("/ping", func(context http2.Context) (any, error) {
-		return "pong", nil
-	})
-}
-
-// Публичные эндпоинты, без аутентификации
-
-type requestBody struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
-func LoginByPassword(router http2.Router) {
-	router.HandleFunc("POST /login/password", func(context http2.Context) (any, error) {
+func CreateChat(router http2.Router) {
+	type requestBody struct {
+		Name        string `json:"name"`
+		ChiefUserID string `json:"chief_user_id"`
+	}
+	router.HandleFunc("POST /chats", func(context http2.Context) (any, error) {
 		var rb requestBody
 		if err := http2.DecodeBody(context, &rb); err != nil {
 			return nil, err
 		}
 
-		input := service.AuthnPasswordLoginInput{
-			Login:    rb.Login,
-			Password: rb.Password,
+		input := service.CreateInput{
+			Name:        rb.Name,
+			ChiefUserID: rb.ChiefUserID,
 		}
 
-		session, err := context.Services().AuthnPassword().Login(input)
+		result, err := context.Services().Chats().Create(input)
 		if err != nil {
 			return nil, err
 		}
 
-		return session, nil
+		return result, nil
 	})
 }
-
-// Эндпоинты, требующие аутентификации
 
 func MyChats(router http2.Router) {
 	router.HandleFunc("GET /chats", func(context http2.Context) (any, error) {
 		input := service.UserChatsInput{
-			SubjectUserID: context.session.UserID,
-			UserID:        context.session.UserID,
+			SubjectUserID: context.Session().UserID,
+			UserID:        context.Session().UserID,
 		}
 
-		chats, err := c.chats.UserChats(input)
+		chats, err := context.Services().Chats().UserChats(input)
 		if err != nil {
 			return nil, err
 		}
@@ -59,28 +46,56 @@ func MyChats(router http2.Router) {
 	})
 }
 
-func CreateChat(router http2.Router) {
-	router.HandleFunc("POST /chats", func(context http2.Context) (any, error) {
+func UpdateChatName(router http2.Router) {
+	router.HandleFunc("PUT /chats/{chatID}/name", func(context http2.Context) (any, error) {
 		return "pong", nil
 	})
 }
 
-func (c *Controller) registerHandlers() {
-	// Чат
-	//c.HandleFunc("GET /chats", c.MyChats, clientAuthChain...)
-	c.HandleFunc("POST /chats", c.CreateChat, clientAuthChain...)
-	c.HandleFunc("PUT /chats/{chatID}/name", c.UpdateChatName, clientAuthChain...)
+func LeaveChat(router http2.Router) {
+	router.HandleFunc("POST /chats/{chatID}/leave", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
 
-	// Участники
-	c.HandleFunc("POST /chats/{chatID}/leave", c.LeaveChat, clientAuthChain...)
-	c.HandleFunc("GET /chats/{chatID}/members", c.ChatMembers, clientAuthChain...)
-	c.HandleFunc("DELETE /chats/{chatID}/members/{memberID}", c.DeleteMember, clientAuthChain...)
+func ChatMembers(router http2.Router) {
+	router.HandleFunc("GET /chats/{chatID}/members", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
 
-	// Приглашениями
-	c.HandleFunc("GET /invitations", c.MyInvitations, clientAuthChain...)
-	c.HandleFunc("GET /chats/{chatID}/invitations", c.ChatInvitations, clientAuthChain...)
-	c.HandleFunc("POST /invitations", c.SendInvitation, clientAuthChain...)
-	c.HandleFunc("POST /invitations/{invitationID}/accept", c.AcceptInvitation, clientAuthChain...)
-	c.HandleFunc("POST /invitations/{invitationID}/cancel", c.CancelInvitation, clientAuthChain...)
+func DeleteMember(router http2.Router) {
+	router.HandleFunc("DELETE /chats/{chatID}/members/{memberID}", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
 
+func MyInvitations(router http2.Router) {
+	router.HandleFunc("GET /invitations", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
+
+func ChatInvitations(router http2.Router) {
+	router.HandleFunc("GET /chats/{chatID}/invitations", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
+
+func SendInvitation(router http2.Router) {
+	router.HandleFunc("POST /invitations", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
+
+func AcceptInvitation(router http2.Router) {
+	router.HandleFunc("POST /invitations/{invitationID}/accept", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
+}
+
+func CancelInvitation(router http2.Router) {
+	router.HandleFunc("POST /invitations/{invitationID}/cancel", func(context http2.Context) (any, error) {
+		return "pong", nil
+	})
 }
