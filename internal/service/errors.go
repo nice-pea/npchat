@@ -8,6 +8,7 @@ var (
 	ErrInvalidID                   = errors.New("некорректный ID")
 	ErrInvalidSubjectUserID        = errors.New("некорректный SubjectUserID")
 	ErrInvalidChatID               = errors.New("некорректный ChatID")
+	ErrInvalidInvitationID         = errors.New("некорректный InvitationID")
 	ErrInvalidUserID               = errors.New("некорректный UserID")
 	ErrInvalidName                 = errors.New("некорректный Name")
 	ErrInvalidChiefUserID          = errors.New("некорректный ChiefUserID")

@@ -6,30 +6,33 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Создать чат
+// CreateChat регистрирует обработчик, позволяющий создать новый чат.
+// Доступен только авторизованным пользователям.
+// Метод: POST /chats
 func CreateChat(router http2.Router) {
+	// requestBody описывает структуру тела запроса для создания чата.
 	type requestBody struct {
-		Name string `json:"name"`
+		Name string `json:"name"` // Название создаваемого чата
 	}
 	router.HandleFunc(
 		"POST /chats",
-		middleware.ClientAuthChain,
+		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
 			var rb requestBody
+			// Декодируем тело запроса в структуру requestBody.
 			if err := http2.DecodeBody(context, &rb); err != nil {
 				return nil, err
 			}
 
+			// Формируем входные данные для сервиса создания чата.
+			// ChiefUserID - ID пользователя, который создаёт чат (становится главным администратором).
+			// Name - название чата, полученное из запроса.
 			input := service.CreateInput{
 				ChiefUserID: context.Session().UserID,
 				Name:        rb.Name,
 			}
 
-			result, err := context.Services().Chats().Create(input)
-			if err != nil {
-				return nil, err
-			}
-
-			return result, nil
+			// Вызываем сервис создания чата и возвращаем результат.
+			return context.Services().Chats().Create(input)
 		})
 }
