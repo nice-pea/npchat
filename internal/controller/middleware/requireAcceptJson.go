@@ -1,0 +1,21 @@
+package middleware
+
+import (
+	"errors"
+
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
+)
+
+// ErrUnsupportedAcceptedContentType клиент не принимает JSON в качестве ответа
+var ErrUnsupportedAcceptedContentType = errors.New("unsupported Accept header value. Please, use Accept: application/json header")
+
+// RequireAcceptJson требует поддержку json как типа контента, который ожидание клиент
+func RequireAcceptJson(next http2.MiddlewareFunc) http2.MiddlewareFunc {
+	return func(context http2.MutContext) (any, error) {
+		if context.Request().Header.Get("Accept") != "application/json" {
+			return nil, ErrUnsupportedAcceptedContentType
+		}
+
+		return next(context)
+	}
+}

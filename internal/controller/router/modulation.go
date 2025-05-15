@@ -1,4 +1,4 @@
-package http
+package router
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ var (
 	ErrParseRequestURL         = errors.New("parse request url")
 )
 
-func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
+func (c *Router) modulation(handle HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			respData any

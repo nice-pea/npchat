@@ -1,4 +1,4 @@
-package http
+package router
 
 import (
 	"net/http"
@@ -7,8 +7,8 @@ import (
 )
 
 func (suite *controllerTestSuite) Test_Server() {
-	suite.Run("это http сервер", func() {
-		var _ http.Handler = new(Controller)
+	suite.Run("это http2 сервер", func() {
+		var _ http.Handler = new(Router)
 	})
 	suite.Run("context с доступом к данным", func() {
 		_ = &Context{
@@ -18,10 +18,10 @@ func (suite *controllerTestSuite) Test_Server() {
 		}
 	})
 	suite.Run("есть метод modulation", func() {
-		// Функция для преобразования controller.HandlerFunc в тип http.HandlerFunc
+		// Функция для преобразования controller.HandlerFunc в тип http2.HandlerFunc
 		var _ interface {
 			modulation(HandlerFunc) http.HandlerFunc
-		} = new(Controller)
+		} = new(Router)
 	})
 	suite.Run("наличие методов", func() {
 		// Контроллер содержит методы для обработки следующих запросов:
@@ -38,6 +38,6 @@ func (suite *controllerTestSuite) Test_Server() {
 			CancelInvitation(Context) (any, error) // Отменить приглашение в чат
 			LeaveChat(Context) (any, error)        // Покинуть чат
 			DeleteMember(Context) (any, error)     // Удалить участника из чата
-		} = new(Controller)
+		} = new(Router)
 	})
 }

@@ -1,4 +1,16 @@
-package http
+package http2
+
+import "github.com/saime-0/nice-pea-chat/internal/controller"
+
+//func (c *Controller) RegisterHandlers(handlers ...controller.Handler2) error {
+//	for i := range handlers {
+//		p := handlers[i].HandlerParams()
+//		handlerFunc := handlers[i].HandlerFunc
+//		c.HandleFunc(p.Method+" "+p.Path, handlerFunc)
+//	}
+//
+//	return nil
+//}
 
 func (c *Controller) registerHandlers() {
 	c.HandleFunc("/ping", c.Ping)
