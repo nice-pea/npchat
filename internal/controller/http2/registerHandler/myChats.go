@@ -16,12 +16,6 @@ func MyChats(router http2.Router) {
 				SubjectUserID: context.Session().UserID,
 				UserID:        context.Session().UserID,
 			}
-
-			chats, err := context.Services().Chats().UserChats(input)
-			if err != nil {
-				return nil, err
-			}
-
-			return chats, nil
+			return context.Services().Chats().UserChats(input)
 		})
 }

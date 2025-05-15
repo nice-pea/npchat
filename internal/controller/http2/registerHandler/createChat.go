@@ -25,11 +25,6 @@ func CreateChat(router http2.Router) {
 				Name:        rb.Name,
 			}
 
-			result, err := context.Services().Chats().Create(input)
-			if err != nil {
-				return nil, err
-			}
-
-			return result, nil
+			return context.Services().Chats().Create(input)
 		})
 }

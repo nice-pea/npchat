@@ -26,11 +26,6 @@ func LoginByPassword(router http2.Router) {
 				Password: rb.Password,
 			}
 
-			session, err := context.Services().AuthnPassword().Login(input)
-			if err != nil {
-				return nil, err
-			}
-
-			return session, nil
+			return context.Services().AuthnPassword().Login(input)
 		})
 }

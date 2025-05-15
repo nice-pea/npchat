@@ -3,6 +3,7 @@ package registerHandler
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
+	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
 // Получить список участников чата
@@ -11,6 +12,10 @@ func ChatMembers(router http2.Router) {
 		"GET /chats/{chatID}/members",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "not implemented", nil
+			input := service.ChatMembersInput{
+				SubjectUserID: context.Session().UserID,
+				ChatID:        http2.PathStr(context, "chatID"),
+			}
+			return context.Services().Members().ChatMembers(input)
 		})
 }
