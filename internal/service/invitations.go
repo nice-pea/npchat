@@ -208,7 +208,7 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	}
 
 	// Проверить существование приглашения
-	invitation, err := getInvitationByID(i.InvitationsRepo, in.InvitationID)
+	invitation, err := getInvitation(i.InvitationsRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 	}
 
 	// Проверить существование приглашения
-	invitation, err := getInvitationByID(i.InvitationsRepo, in.InvitationID)
+	invitation, err := getInvitation(i.InvitationsRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
@@ -306,24 +306,8 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 	return nil
 }
 
-// getInvitation возвращает приглашение в конкретный чат
-func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId string) (domain.Invitation, error) {
-	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
-		UserID: userId,
-		ChatID: chatId,
-	})
-	if err != nil {
-		return domain.Invitation{}, err
-	}
-	if len(invitations) != 1 {
-		return domain.Invitation{}, ErrInvitationNotExists
-	}
-
-	return invitations[0], nil
-}
-
-// getInvitation возвращает приглашение в конкретный чат
-func getInvitationByID(invitationsRepo domain.InvitationsRepository, id string) (domain.Invitation, error) {
+// getInvitation возвращает приглашение
+func getInvitation(invitationsRepo domain.InvitationsRepository, id string) (domain.Invitation, error) {
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		ID: id,
 	})
