@@ -58,7 +58,7 @@ func (c *Router) modulation(handle http2.HandlerFuncRW) http.HandlerFunc {
 		}
 
 		// Отправить ответ
-		w.Header().Add("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 		if _, err = w.Write(b); err != nil {
 			err = errors.Join(ErrWriteResponseBytes, err)
 			w.WriteHeader(httpStatusCodeByErr(err))
