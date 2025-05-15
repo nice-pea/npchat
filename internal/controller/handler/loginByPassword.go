@@ -7,7 +7,7 @@ import (
 )
 
 // Авторизация по логину/паролю
-func LoginByPassword(router http2.Router) {
+func RegisterLoginByPasswordHandler(router http2.Router) {
 	type requestBody struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`

@@ -28,6 +28,7 @@ func initHttpServer(ss *services) *http.Server {
 func runHttpServer(ctx context.Context, server *http.Server) error {
 	g, ctx := errgroup.WithContext(ctx)
 
+	// Запуск сервера
 	g.Go(func() error {
 		err := server.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -36,6 +37,7 @@ func runHttpServer(ctx context.Context, server *http.Server) error {
 		return nil
 	})
 
+	// Завершение сервера при завершении контекста
 	g.Go(func() error {
 		// > The first call to return a non-nil error cancels the group's context
 		<-ctx.Done()
@@ -46,7 +48,28 @@ func runHttpServer(ctx context.Context, server *http.Server) error {
 }
 
 func registerHandlers(r http2.Router) {
+	// Служебные
 	handler.RegisterPingHandler(r)
-	handler.CreateChat(r)
-	handler.LoginByPassword(r)
+
+	// Аутентификация
+	handler.RegisterLoginByPasswordHandler(r)
+
+	// Чат
+	handler.RegisterMyChatsHandler(r)
+	handler.RegisterCreateChatHandler(r)
+	handler.RegisterUpdateChatNameHandler(r)
+
+	// Участники
+	handler.RegisterLeaveChatHandler(r)
+	handler.RegisterChatMembersHandler(r)
+	handler.RegisterDeleteMemberHandler(r)
+
+	// Приглашение
+	handler.RegisterMyInvitationsHandler(r)
+	handler.RegisterChatInvitationsHandler(r)
+
+	// Управление приглашениями
+	handler.RegisterSendInvitationHandler(r)
+	handler.RegisterAcceptInvitationHandler(r)
+	handler.RegisterCancelInvitationHandler(r)
 }

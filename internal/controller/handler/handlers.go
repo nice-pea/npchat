@@ -7,7 +7,7 @@ import (
 )
 
 // Получить список чатов
-func MyChats(router http2.Router) {
+func RegisterMyChatsHandler(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats",
 		middleware.ClientAuthChain,
@@ -27,7 +27,7 @@ func MyChats(router http2.Router) {
 }
 
 // Создать чат
-func CreateChat(router http2.Router) {
+func RegisterCreateChatHandler(router http2.Router) {
 	type requestBody struct {
 		Name string `json:"name"`
 		//ChiefUserID string `json:"chief_user_id"`
@@ -56,91 +56,91 @@ func CreateChat(router http2.Router) {
 }
 
 // Обновить название чата
-func UpdateChatName(router http2.Router) {
+func RegisterUpdateChatNameHandler(router http2.Router) {
 	router.HandleFunc(
 		"PUT /chats/{chatID}/name",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Покинуть чат
-func LeaveChat(router http2.Router) {
+func RegisterLeaveChatHandler(router http2.Router) {
 	router.HandleFunc(
 		"POST /chats/{chatID}/leave",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Получить список участников чата
-func ChatMembers(router http2.Router) {
+func RegisterChatMembersHandler(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats/{chatID}/members",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Удалить участника из чата
-func DeleteMember(router http2.Router) {
+func RegisterDeleteMemberHandler(router http2.Router) {
 	router.HandleFunc(
 		"DELETE /chats/{chatID}/members/{memberID}",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Получить список моих приглашений
-func MyInvitations(router http2.Router) {
+func RegisterMyInvitationsHandler(router http2.Router) {
 	router.HandleFunc(
 		"GET /invitations",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Получить список приглашений в чат
-func ChatInvitations(router http2.Router) {
+func RegisterChatInvitationsHandler(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats/{chatID}/invitations",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Отправить приглашение в чат
-func SendInvitation(router http2.Router) {
+func RegisterSendInvitationHandler(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Принять приглашение в чат
-func AcceptInvitation(router http2.Router) {
+func RegisterAcceptInvitationHandler(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations/{invitationID}/accept",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
 
 // Отменить приглашение в чат
-func CancelInvitation(router http2.Router) {
+func RegisterCancelInvitationHandler(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations/{invitationID}/cancel",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
-			return "pong", nil
+			return "not implemented", nil
 		})
 }
