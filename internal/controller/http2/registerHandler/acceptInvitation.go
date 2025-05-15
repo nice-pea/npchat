@@ -6,16 +6,23 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// AcceptInvitation регистрирует обработчик, позволяющий принять приглашение в чат
+// AcceptInvitation регистрирует обработчик, позволяющий принять приглашение в чат.
+// Доступен только авторизованным пользователям.
+// Метод: POST /invitations/{invitationID}/accept
 func AcceptInvitation(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations/{invitationID}/accept",
-		middleware.ClientAuthChain,
+		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
+			// Формируем входные данные для принятия приглашения.
+			// SubjectUserID - ID пользователя, принимающего приглашение.
+			// InvitationID - ID приглашения, которое требуется принять.
 			input := service.AcceptInvitationInput{
 				SubjectUserID: context.Session().UserID,
 				InvitationID:  http2.PathStr(context, "invitationID"),
 			}
+
+			// Вызываем сервис принятия приглашения.
 			return nil, context.Services().Invitations().AcceptInvitation(input)
 		})
 }

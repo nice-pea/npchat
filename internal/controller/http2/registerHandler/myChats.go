@@ -6,16 +6,23 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// MyChats регистрирует обработчик, позволяющий Получить список чатов пользователя
+// MyChats регистрирует HTTP-обработчик для получения списка чатов пользователя.
+// Данный обработчик доступен только авторизованным пользователям.
+// Метод: GET /chats
 func MyChats(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats",
-		middleware.ClientAuthChain,
+		middleware.ClientAuthChain, // Цепочка middleware, проверяющая авторизацию пользователя
 		func(context http2.Context) (any, error) {
+			// Формируем входные данные для сервиса чатов.
+			// SubjectUserID - ID пользователя, чьи чаты запрашиваются (в данном случае самого себя).
+			// UserID - ID пользователя, выполняющего запрос (тоже самого себя).
 			input := service.UserChatsInput{
 				SubjectUserID: context.Session().UserID,
 				UserID:        context.Session().UserID,
 			}
+
+			// Вызываем сервис получения чатов пользователя и возвращаем результат.
 			return context.Services().Chats().UserChats(input)
 		})
 }
