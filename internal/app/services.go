@@ -10,6 +10,26 @@ type services struct {
 	authnPassword *service.AuthnPassword
 }
 
+func (s *services) Chats() *service.Chats {
+	return s.chats
+}
+
+func (s *services) Invitations() *service.Invitations {
+	return s.invitations
+}
+
+func (s *services) Members() *service.Members {
+	return s.members
+}
+
+func (s *services) Sessions() *service.Sessions {
+	return s.sessions
+}
+
+func (s *services) AuthnPassword() *service.AuthnPassword {
+	return s.authnPassword
+}
+
 func initServices(repos *repositories) *services {
 	return &services{
 		chats: &service.Chats{

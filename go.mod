@@ -8,6 +8,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/nullism/bqb v1.7.4
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/sync v0.12.0
 )
 
 require (

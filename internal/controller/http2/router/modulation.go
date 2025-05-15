@@ -1,4 +1,4 @@
-package http
+package router
 
 import (
 	"encoding/json"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
 	ErrParseRequestURL         = errors.New("parse request url")
 )
 
-func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
+func (c *Router) modulation(handle http2.HandlerFuncRW) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			respData any
@@ -28,7 +30,10 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		}
 
 		// Выполнить обработку запроса
-		respData, err = handle(Context{request: r})
+		respData, err = handle(&rwContext{
+			request:  r,
+			services: c.Services,
+		})
 		if err != nil {
 			// Если есть ошибка
 			w.WriteHeader(httpStatusCodeByErr(err))
@@ -53,7 +58,7 @@ func (c *Controller) modulation(handle HandlerFunc) http.HandlerFunc {
 		}
 
 		// Отправить ответ
-		w.Header().Add("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 		if _, err = w.Write(b); err != nil {
 			err = errors.Join(ErrWriteResponseBytes, err)
 			w.WriteHeader(httpStatusCodeByErr(err))
