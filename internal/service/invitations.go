@@ -184,12 +184,12 @@ func (i *Invitations) SendInvitation(in SendInvitationInput) (domain.Invitation,
 
 type AcceptInvitationInput struct {
 	SubjectUserID string
-	ChatID        string
+	InvitationID  string
 }
 
 func (in AcceptInvitationInput) Validate() error {
-	if err := uuid.Validate(in.ChatID); err != nil {
-		return ErrInvalidChatID
+	if err := uuid.Validate(in.InvitationID); err != nil {
+		return ErrInvalidInvitationID
 	}
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
 		return ErrInvalidSubjectUserID
@@ -207,27 +207,28 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 		return err
 	}
 
-	// Проверить, существование чата
-	if _, err = getChat(i.ChatsRepo, in.ChatID); err != nil {
-		return err
-	}
-
 	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.SubjectUserID, in.ChatID)
+	invitation, err := getInvitationByID(i.InvitationsRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
 
 	// Проверить существование пользователя
-	if _, err = getUser(i.UsersRepo, in.SubjectUserID); err != nil {
+	user, err := getUser(i.UsersRepo, in.SubjectUserID)
+	if err != nil {
 		return err
+	}
+
+	// Приглашение должно быть направлено пользователю
+	if invitation.UserID != user.ID {
+		return ErrSubjectUserCannotAcceptInvitation
 	}
 
 	// Создаем участника чата
 	member := domain.Member{
 		ID:     uuid.NewString(),
 		UserID: in.SubjectUserID,
-		ChatID: in.ChatID,
+		ChatID: invitation.ChatID,
 	}
 	err = i.MembersRepo.Save(member)
 	if err != nil {
@@ -314,6 +315,21 @@ func getInvitation(invitationsRepo domain.InvitationsRepository, userId, chatId 
 	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
 		UserID: userId,
 		ChatID: chatId,
+	})
+	if err != nil {
+		return domain.Invitation{}, err
+	}
+	if len(invitations) != 1 {
+		return domain.Invitation{}, ErrInvitationNotExists
+	}
+
+	return invitations[0], nil
+}
+
+// getInvitation возвращает приглашение в конкретный чат
+func getInvitationByID(invitationsRepo domain.InvitationsRepository, id string) (domain.Invitation, error) {
+	invitations, err := invitationsRepo.List(domain.InvitationsFilter{
+		ID: id,
 	})
 	if err != nil {
 		return domain.Invitation{}, err
