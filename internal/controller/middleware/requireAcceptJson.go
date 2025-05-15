@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 )
@@ -12,10 +13,11 @@ var ErrUnsupportedAcceptValue = errors.New("unsupported Accept header value. Ple
 // RequireAcceptJson требует поддержку json как типа контента, который ожидание клиент
 func RequireAcceptJson(next http2.HandlerFuncRW) http2.HandlerFuncRW {
 	return func(context http2.RWContext) (any, error) {
-		if context.Request().Header.Get("Accept") != "application/json" {
-			return nil, ErrUnsupportedAcceptValue
+		accept := context.Request().Header.Get("Accept")
+		if strings.Contains(accept, "application/json") || accept == "" || accept == "*/*" {
+			return next(context)
 		}
 
-		return next(context)
+		return nil, ErrUnsupportedAcceptValue
 	}
 }
