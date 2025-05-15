@@ -28,7 +28,7 @@ type RWContext interface {
 	SetRequestID(string)
 }
 
-type Middleware func(HandlerFunc) HandlerFuncRW
+type Middleware func(rw HandlerFuncRW) HandlerFuncRW
 
 type Services interface {
 	Chats() *service.Chats

@@ -23,17 +23,20 @@ func errCode(err error) string {
 		return ErrCodeUnmarshalJSONResponseData
 	case errors.Is(err, middleware.ErrUnknownRequestID):
 		return ErrCodeInvalidXRequestIDHeader
-	case errors.Is(err, middleware.ErrUnsupportedAcceptedContentType):
-		return ErrCodeUnsupportedAcceptedContentType
+	case errors.Is(err, middleware.ErrUnsupportedAcceptValue):
+		return ErrCodeUnsupportedAccept
+	case errors.Is(err, middleware.ErrUnsupportedContentTypeValue):
+		return ErrCodeUnsupportedContentType
 	}
 
 	return ErrCodeUnknown
 }
 
 const (
-	ErrCodeUnknown                        = ""
-	ErrCodeInvalidAuthorizationHeader     = "INVALID_AUTHORIZATION_HEADER"
-	ErrCodeInvalidXRequestIDHeader        = "INVALID_X_REQUEST_ID_HEADER"
-	ErrCodeUnsupportedAcceptedContentType = "UNSUPPORTED_ACCEPTED_CONTENT_TYPE"
-	ErrCodeUnmarshalJSONResponseData      = "UNMARSHAL_JSON_RESPONSE_DATA"
+	ErrCodeUnknown                    = ""
+	ErrCodeInvalidAuthorizationHeader = "INVALID_AUTHORIZATION_HEADER"
+	ErrCodeInvalidXRequestIDHeader    = "INVALID_X_REQUEST_ID_HEADER"
+	ErrCodeUnsupportedAccept          = "UNSUPPORTED_CONTENT_TYPE"
+	ErrCodeUnsupportedContentType     = "UNSUPPORTED_ACCEPTED_CONTENT_TYPE"
+	ErrCodeUnmarshalJSONResponseData  = "UNMARSHAL_JSON_RESPONSE_DATA"
 )

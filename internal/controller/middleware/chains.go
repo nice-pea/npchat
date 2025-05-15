@@ -6,6 +6,7 @@ import "github.com/saime-0/nice-pea-chat/internal/controller/http2"
 var ClientAuthChain = []http2.Middleware{
 	RequireRequestID,
 	RequireAcceptJson,
+	RequireContentTypeJson,
 	RequireAuthorizedSession,
 }
 
@@ -13,6 +14,7 @@ var ClientAuthChain = []http2.Middleware{
 var ClientPubChain = []http2.Middleware{
 	RequireRequestID,
 	RequireAcceptJson,
+	RequireContentTypeJson,
 }
 
 var EmptyChain []http2.Middleware = nil

@@ -14,7 +14,7 @@ import (
 var ErrUnauthorized = errors.New("unauthorized. Please, use token in header: Authorization: Bearer <token>")
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(next http2.HandlerFunc) http2.HandlerFuncRW {
+func RequireAuthorizedSession(next http2.HandlerFuncRW) http2.HandlerFuncRW {
 	return func(context http2.RWContext) (any, error) {
 		var err error
 		session, err := getSession(context)

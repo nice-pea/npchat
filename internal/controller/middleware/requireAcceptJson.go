@@ -6,14 +6,14 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 )
 
-// ErrUnsupportedAcceptedContentType клиент не принимает JSON в качестве ответа
-var ErrUnsupportedAcceptedContentType = errors.New("unsupported Accept header value. Please, use Accept: application/json header")
+// ErrUnsupportedAcceptValue клиент не принимает JSON в качестве ответа
+var ErrUnsupportedAcceptValue = errors.New("unsupported Accept header value. Please, use Accept: application/json header")
 
 // RequireAcceptJson требует поддержку json как типа контента, который ожидание клиент
-func RequireAcceptJson(next http2.HandlerFunc) http2.HandlerFuncRW {
+func RequireAcceptJson(next http2.HandlerFuncRW) http2.HandlerFuncRW {
 	return func(context http2.RWContext) (any, error) {
 		if context.Request().Header.Get("Accept") != "application/json" {
-			return nil, ErrUnsupportedAcceptedContentType
+			return nil, ErrUnsupportedAcceptValue
 		}
 
 		return next(context)
