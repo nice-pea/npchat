@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Отправить приглашение в чат
+// SendInvitation регистрирует обработчик, позволяющий Отправить приглашение в чат
 func SendInvitation(router http2.Router) {
 	type requestBody struct {
 		ChatID string `json:"chat_id"`

@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Получить список приглашений в чат
+// ChatInvitations регистрирует обработчик, позволяющий Получить список приглашений в чат
 func ChatInvitations(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats/{chatID}/invitations",

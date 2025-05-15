@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Создать чат
+// CreateChat регистрирует обработчик, позволяющий Создать чат
 func CreateChat(router http2.Router) {
 	type requestBody struct {
 		Name string `json:"name"`

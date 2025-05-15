@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Принять приглашение в чат
+// AcceptInvitation регистрирует обработчик, позволяющий принять приглашение в чат
 func AcceptInvitation(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations/{invitationID}/accept",

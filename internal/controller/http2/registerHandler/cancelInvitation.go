@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Отменить приглашение в чат
+// CancelInvitation регистрирует обработчик, позволяющий Отменить приглашение в чат
 func CancelInvitation(router http2.Router) {
 	router.HandleFunc(
 		"POST /invitations/{invitationID}/cancel",

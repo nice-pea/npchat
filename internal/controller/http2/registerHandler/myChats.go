@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Получить список чатов пользователя
+// MyChats регистрирует обработчик, позволяющий Получить список чатов пользователя
 func MyChats(router http2.Router) {
 	router.HandleFunc(
 		"GET /chats",

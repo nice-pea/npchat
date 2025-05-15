@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Покинуть чат
+// LeaveChat регистрирует обработчик, позволяющий Покинуть чат
 func LeaveChat(router http2.Router) {
 	router.HandleFunc(
 		"POST /chats/{chatID}/leave",

@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Обновить название чата
+// UpdateChatName регистрирует обработчик, позволяющий Обновить название чата
 func UpdateChatName(router http2.Router) {
 	type requestBody struct {
 		NewName string `json:"new_name"`

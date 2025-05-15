@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Авторизация по логину/паролю
+// LoginByPassword регистрирует обработчик, позволяющий Авторизация по логину/паролю
 func LoginByPassword(router http2.Router) {
 	type requestBody struct {
 		Login    string `json:"login"`

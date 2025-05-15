@@ -6,7 +6,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// Получить список моих приглашений
+// MyInvitations регистрирует обработчик, позволяющий Получить список моих приглашений
 func MyInvitations(router http2.Router) {
 	router.HandleFunc(
 		"GET /invitations",
