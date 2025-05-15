@@ -22,9 +22,23 @@ func QueryStr(context Context, name string) string {
 	return context.Request().URL.Query().Get(name)
 }
 
-func Chain(h HandlerFuncRW, middlewares ...Middleware) HandlerFuncRW {
+// WrapHandlerWithMiddlewares оборачивает обработчик h всеми переданными middleware.
+// Middlewares применяются в обратном порядке — от последнего к первому,
+// таким образом формируя цепочку, где первый middleware выполняется первым.
+func WrapHandlerWithMiddlewares(h HandlerFunc, middlewares ...Middleware) HandlerFuncRW {
+	hrw := AdaptToRW(h)
 	for _, mw := range slices.Backward(middlewares) {
-		h = mw(h)
+		hrw = mw(hrw)
 	}
-	return h
+
+	return hrw
+}
+
+// AdaptToRW оборачивает HandlerFunc, преобразуя его в HandlerFuncRW.
+// Позволяет использовать обработчики, принимающие простой Context,
+// в системе, где требуется RWContext.
+func AdaptToRW(handlerFunc HandlerFunc) HandlerFuncRW {
+	return func(context RWContext) (any, error) {
+		return handlerFunc(context)
+	}
 }

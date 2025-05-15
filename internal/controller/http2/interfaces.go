@@ -8,7 +8,7 @@ import (
 )
 
 type Router interface {
-	HandleFunc(pattern string, handler HandlerFunc)
+	HandleFunc(pattern string, chain []Middleware, handler HandlerFunc)
 }
 
 type HandlerFunc func(Context) (any, error)
@@ -28,7 +28,7 @@ type RWContext interface {
 	SetRequestID(string)
 }
 
-type Middleware func(HandlerFuncRW) HandlerFuncRW
+type Middleware func(HandlerFunc) HandlerFuncRW
 
 type Services interface {
 	Chats() *service.Chats

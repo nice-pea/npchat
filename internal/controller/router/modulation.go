@@ -16,7 +16,7 @@ var (
 	ErrParseRequestURL         = errors.New("parse request url")
 )
 
-func (c *Router) modulation(handle http2.HandlerFunc) http.HandlerFunc {
+func (c *Router) modulation(handle http2.HandlerFuncRW) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			respData any

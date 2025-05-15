@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/saime-0/nice-pea-chat/internal/controller/handler"
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
 	"github.com/saime-0/nice-pea-chat/internal/controller/router"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
@@ -26,33 +24,19 @@ func Run(ctx context.Context) error {
 	// Инициализация сервисов
 	ss := initServices(repos)
 
+	// Инициализация http контроллера
 	r := &router.Router{
 		Services: ss,
-		Middlewares: []http2.Middleware{
-			middleware.RequireRequestID,
-			middleware.RequireAcceptJson,
-			middleware.RequireAuthorizedSession,
-		},
 	}
-	handler.Ping(r)
+	handler.RegisterPingHandler(r)
 	handler.CreateChat(r)
-	rau := &router.Router{
-		Services: ss,
-	}
-	handler.LoginByPassword(rau)
+	handler.LoginByPassword(r)
 
-	m := http.ServeMux{}
-	m.
-
-		// Инициализация контроллера
-		//r := controller.InitController(ss.chats, ss.invitations, ss.members, ss.sessions, ss.authnPassword)
-
-		// Запуск сервера
-		server := &http.Server{
+	// Запуск http сервера
+	server := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
 	}
-
 	errChan := make(chan error, 1)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

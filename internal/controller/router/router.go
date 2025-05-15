@@ -1,1 +1,19 @@
 package router
+
+import (
+	"net/http"
+
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
+)
+
+// Router обрабатывает HTTP-запросы
+type Router struct {
+	Services http2.Services
+	http.ServeMux
+}
+
+func (c *Router) HandleFunc(pattern string, chain []http2.Middleware, handlerFunc http2.HandlerFunc) {
+	handlerFuncRW := http2.WrapHandlerWithMiddlewares(handlerFunc, chain...)
+	httpHandlerFunc := c.modulation(handlerFuncRW)
+	c.ServeMux.HandleFunc(pattern, httpHandlerFunc)
+}

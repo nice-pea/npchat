@@ -2,6 +2,8 @@ package router
 
 import (
 	"errors"
+
+	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
 )
 
 type ErrCode interface {
@@ -15,13 +17,13 @@ func errCode(err error) string {
 	}
 
 	switch {
-	case errors.Is(err, ErrUnauthorized):
+	case errors.Is(err, middleware.ErrUnauthorized):
 		return ErrCodeInvalidAuthorizationHeader
 	case errors.Is(err, ErrJsonMarshalResponseData):
 		return ErrCodeUnmarshalJSONResponseData
-	case errors.Is(err, ErrUnknownRequestID):
+	case errors.Is(err, middleware.ErrUnknownRequestID):
 		return ErrCodeInvalidXRequestIDHeader
-	case errors.Is(err, ErrUnsupportedAcceptedContentType):
+	case errors.Is(err, middleware.ErrUnsupportedAcceptedContentType):
 		return ErrCodeUnsupportedAcceptedContentType
 	}
 
