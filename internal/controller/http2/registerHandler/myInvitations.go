@@ -1,12 +1,12 @@
-package handler
+package registerHandler
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 )
 
 // Получить список моих приглашений
-func RegisterMyInvitationsHandler(router http2.Router) {
+func MyInvitations(router http2.Router) {
 	router.HandleFunc(
 		"GET /invitations",
 		middleware.ClientAuthChain,

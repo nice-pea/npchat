@@ -1,13 +1,13 @@
-package handler
+package registerHandler
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
 // Создать чат
-func RegisterCreateChatHandler(router http2.Router) {
+func CreateChat(router http2.Router) {
 	type requestBody struct {
 		Name string `json:"name"`
 	}

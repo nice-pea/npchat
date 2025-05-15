@@ -8,9 +8,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/handler"
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/router"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/registerHandler"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/router"
 )
 
 func initHttpServer(ss *services) *http.Server {
@@ -49,27 +49,27 @@ func runHttpServer(ctx context.Context, server *http.Server) error {
 
 func registerHandlers(r http2.Router) {
 	// Служебные
-	handler.RegisterPingHandler(r)
+	registerHandler.Ping(r)
 
 	// Аутентификация
-	handler.RegisterLoginByPasswordHandler(r)
+	registerHandler.LoginByPassword(r)
 
 	// Чат
-	handler.RegisterMyChatsHandler(r)
-	handler.RegisterCreateChatHandler(r)
-	handler.RegisterUpdateChatNameHandler(r)
+	registerHandler.MyChats(r)
+	registerHandler.CreateChat(r)
+	registerHandler.UpdateChatName(r)
 
 	// Участники
-	handler.RegisterLeaveChatHandler(r)
-	handler.RegisterChatMembersHandler(r)
-	handler.RegisterDeleteMemberHandler(r)
+	registerHandler.LeaveChat(r)
+	registerHandler.ChatMembers(r)
+	registerHandler.DeleteMember(r)
 
 	// Приглашение
-	handler.RegisterMyInvitationsHandler(r)
-	handler.RegisterChatInvitationsHandler(r)
+	registerHandler.MyInvitations(r)
+	registerHandler.ChatInvitations(r)
 
 	// Управление приглашениями
-	handler.RegisterSendInvitationHandler(r)
-	handler.RegisterAcceptInvitationHandler(r)
-	handler.RegisterCancelInvitationHandler(r)
+	registerHandler.SendInvitation(r)
+	registerHandler.AcceptInvitation(r)
+	registerHandler.CancelInvitation(r)
 }

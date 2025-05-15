@@ -3,7 +3,7 @@ package router
 import (
 	"errors"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 )
 
 type ErrCode interface {

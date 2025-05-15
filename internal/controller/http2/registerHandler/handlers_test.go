@@ -1,4 +1,4 @@
-package handler
+package registerHandler
 
 //
 //import (
@@ -22,7 +22,7 @@ package handler
 //	ErrCode string `json:"errcode"`
 //}
 //
-//// TestPing tests the RegisterPingHandler handler
+//// TestPing tests the Ping handler
 //func (suite *controllerTestSuite) TestPing() {
 //	suite.Run("на ping вернется pong", func() {
 //		resp, err := http.Get(suite.server.URL + "/ping")

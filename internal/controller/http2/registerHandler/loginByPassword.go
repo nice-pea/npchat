@@ -1,13 +1,13 @@
-package handler
+package registerHandler
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/middleware"
+	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
 // Авторизация по логину/паролю
-func RegisterLoginByPasswordHandler(router http2.Router) {
+func LoginByPassword(router http2.Router) {
 	type requestBody struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
