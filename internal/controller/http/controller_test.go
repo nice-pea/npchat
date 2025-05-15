@@ -26,18 +26,18 @@ func (suite *controllerTestSuite) Test_Server() {
 	suite.Run("наличие методов", func() {
 		// Контроллер содержит методы для обработки следующих запросов:
 		var _ interface {
-			LoginByCredentials(Context) (any, error) // Авторизация по логину/паролю
-			MyChats(Context) (any, error)            // Получить список чатов
-			CreateChat(Context) (any, error)         // Создать чат
-			ChatMembers(Context) (any, error)        // Получить список участников чата
-			UpdateChatName(Context) (any, error)     // Обновить название чата
-			ChatInvitations(Context) (any, error)    // Получить список приглашений в чат
-			MyInvitations(Context) (any, error)      // Получить список моих приглашений
-			SendInvitation(Context) (any, error)     // Отправить приглашение в чат
-			AcceptInvitation(Context) (any, error)   // Принять приглашение в чат
-			CancelInvitation(Context) (any, error)   // Отменить приглашение в чат
-			LeaveChat(Context) (any, error)          // Покинуть чат
-			DeleteMember(Context) (any, error)       // Удалить участника из чата
+			LoginByPassword(Context) (any, error)  // Авторизация по логину/паролю
+			MyChats(Context) (any, error)          // Получить список чатов
+			CreateChat(Context) (any, error)       // Создать чат
+			ChatMembers(Context) (any, error)      // Получить список участников чата
+			UpdateChatName(Context) (any, error)   // Обновить название чата
+			ChatInvitations(Context) (any, error)  // Получить список приглашений в чат
+			MyInvitations(Context) (any, error)    // Получить список моих приглашений
+			SendInvitation(Context) (any, error)   // Отправить приглашение в чат
+			AcceptInvitation(Context) (any, error) // Принять приглашение в чат
+			CancelInvitation(Context) (any, error) // Отменить приглашение в чат
+			LeaveChat(Context) (any, error)        // Покинуть чат
+			DeleteMember(Context) (any, error)     // Удалить участника из чата
 		} = new(Controller)
 	})
 }

@@ -17,19 +17,19 @@ type controllerTestSuite struct {
 	ctrl    *Controller
 	factory *sqlite.RepositoryFactory
 	rr      struct {
-		chats       domain.ChatsRepository
-		members     domain.MembersRepository
-		invitations domain.InvitationsRepository
-		sessions    domain.SessionsRepository
-		users       domain.UsersRepository
-		loginCreds  domain.LoginCredentialsRepository
+		chats         domain.ChatsRepository
+		members       domain.MembersRepository
+		invitations   domain.InvitationsRepository
+		sessions      domain.SessionsRepository
+		users         domain.UsersRepository
+		authnPassword domain.AuthnPasswordRepository
 	}
 	ss struct {
-		chats            *service.Chats
-		members          *service.Members
-		invitations      *service.Invitations
-		sessions         *service.Sessions
-		loginCredentials *service.LoginCredentials
+		chats         *service.Chats
+		members       *service.Members
+		invitations   *service.Invitations
+		sessions      *service.Sessions
+		authnPassword *service.AuthnPassword
 	}
 	server *httptest.Server
 }
@@ -55,7 +55,7 @@ func (suite *controllerTestSuite) SetupSubTest() {
 	suite.rr.invitations = suite.factory.NewInvitationsRepository()
 	suite.rr.users = suite.factory.NewUsersRepository()
 	suite.rr.sessions = suite.factory.NewSessionsRepository()
-	suite.rr.loginCreds = suite.factory.NewLoginCredentialsRepository()
+	suite.rr.authnPassword = suite.factory.NewAuthnPasswordRepository()
 
 	// Создание сервисов
 	suite.ss.chats = &service.Chats{
@@ -75,18 +75,18 @@ func (suite *controllerTestSuite) SetupSubTest() {
 	suite.ss.sessions = &service.Sessions{
 		SessionsRepo: suite.rr.sessions,
 	}
-	suite.ss.loginCredentials = &service.LoginCredentials{
-		LoginCredentialsRepo: suite.rr.loginCreds,
-		SessionsRepo:         suite.rr.sessions,
+	suite.ss.authnPassword = &service.AuthnPassword{
+		AuthnPasswordRepo: suite.rr.authnPassword,
+		SessionsRepo:      suite.rr.sessions,
 	}
 
 	suite.ctrl = &Controller{
-		chats:            suite.ss.chats,
-		invitations:      suite.ss.invitations,
-		members:          suite.ss.members,
-		sessions:         suite.ss.sessions,
-		loginCredentials: suite.ss.loginCredentials,
-		ServeMux:         http.ServeMux{},
+		chats:         suite.ss.chats,
+		invitations:   suite.ss.invitations,
+		members:       suite.ss.members,
+		sessions:      suite.ss.sessions,
+		authnPassword: suite.ss.authnPassword,
+		ServeMux:      http.ServeMux{},
 	}
 	suite.ctrl.registerHandlers()
 	suite.server = httptest.NewServer(suite.ctrl)

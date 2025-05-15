@@ -8,7 +8,7 @@ func (c *Controller) registerHandlers() {
 		c.requireRequestID,
 		requireAcceptJson,
 	}
-	c.HandleFunc("POST /login/credentials", c.LoginByCredentials, clientPubChain...)
+	c.HandleFunc("POST /login/password", c.LoginByPassword, clientPubChain...)
 
 	// Эндпоинты, требующие аутентификации
 	clientAuthChain := []middleware{

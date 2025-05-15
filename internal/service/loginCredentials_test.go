@@ -6,23 +6,23 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func (suite *servicesTestSuite) newRndUserWithLoginCredentials() domain.LoginCredentials {
-	credentials := domain.LoginCredentials{
+func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPassword {
+	ap := domain.AuthnPassword{
 		UserID:   uuid.NewString(),
 		Login:    uuid.NewString(),
 		Password: uuid.NewString(),
 	}
-	err := suite.rr.users.Save(domain.User{ID: credentials.UserID})
+	err := suite.rr.users.Save(domain.User{ID: ap.UserID})
 	suite.Require().NoError(err)
-	err = suite.rr.loginCredentials.Save(credentials)
+	err = suite.rr.authnPassword.Save(ap)
 	suite.Require().NoError(err)
 
-	return credentials
+	return ap
 }
 
-func (suite *servicesTestSuite) Test_LoginCredentials_Login() {
+func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	suite.Run("неверные данные", func() {
-		session, err := suite.ss.loginCredentials.Login(LoginByCredentialsInput{
+		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
 			Login:    "wronglogin",
 			Password: "wrongpassword",
 		})
@@ -30,17 +30,17 @@ func (suite *servicesTestSuite) Test_LoginCredentials_Login() {
 		suite.Zero(session)
 	})
 	suite.Run("вернется Verified сессия", func() {
-		// Создаем нового пользователя с login credentials
-		uwlc := suite.newRndUserWithLoginCredentials()
+		// Создаем нового пользователя с AuthnPassword
+		uwp := suite.newRndUserWithAuthnPassword()
 		// Входим сессию с правильными данными
-		input := LoginByCredentialsInput{
-			Login:    uwlc.Login,
-			Password: uwlc.Password,
+		input := AuthnPasswordLoginInput{
+			Login:    uwp.Login,
+			Password: uwp.Password,
 		}
-		session, err := suite.ss.loginCredentials.Login(input)
+		session, err := suite.ss.authnPassword.Login(input)
 		suite.NoError(err)
 		suite.Require().NotZero(session)
-		suite.Require().Equal(uwlc.UserID, session.UserID)
+		suite.Require().Equal(uwp.UserID, session.UserID)
 		suite.Require().Equal(domain.SessionStatusVerified, session.Status)
 
 		// Проверяем, что сессия сохранена в репозитории

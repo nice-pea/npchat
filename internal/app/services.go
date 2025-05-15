@@ -3,11 +3,11 @@ package app
 import "github.com/saime-0/nice-pea-chat/internal/service"
 
 type services struct {
-	chats            *service.Chats
-	invitations      *service.Invitations
-	members          *service.Members
-	sessions         *service.Sessions
-	loginCredentials *service.LoginCredentials
+	chats         *service.Chats
+	invitations   *service.Invitations
+	members       *service.Members
+	sessions      *service.Sessions
+	authnPassword *service.AuthnPassword
 }
 
 func initServices(repos *repositories) *services {
@@ -29,9 +29,9 @@ func initServices(repos *repositories) *services {
 		sessions: &service.Sessions{
 			SessionsRepo: repos.sessions,
 		},
-		loginCredentials: &service.LoginCredentials{
-			LoginCredentialsRepo: repos.loginCreds,
-			SessionsRepo:         repos.sessions,
+		authnPassword: &service.AuthnPassword{
+			AuthnPasswordRepo: repos.authnPassword,
+			SessionsRepo:      repos.sessions,
 		},
 	}
 }

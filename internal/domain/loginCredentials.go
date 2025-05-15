@@ -2,13 +2,13 @@ package domain
 
 import "errors"
 
-type LoginCredentials struct {
+type AuthnPassword struct {
 	UserID   string
 	Login    string
 	Password string
 }
 
-func (c LoginCredentials) ValidateLogin() error {
+func (c AuthnPassword) ValidateLogin() error {
 	if c.Login == "" {
 		return errors.New("login is empty")
 	}
@@ -16,12 +16,12 @@ func (c LoginCredentials) ValidateLogin() error {
 	return nil
 }
 
-type LoginCredentialsRepository interface {
-	Save(LoginCredentials) error
-	List(filter LoginCredentialsFilter) ([]LoginCredentials, error)
+type AuthnPasswordRepository interface {
+	Save(AuthnPassword) error
+	List(filter AuthnPasswordFilter) ([]AuthnPassword, error)
 }
 
-type LoginCredentialsFilter struct {
+type AuthnPasswordFilter struct {
 	UserID   string
 	Login    string
 	Password string

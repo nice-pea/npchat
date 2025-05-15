@@ -10,13 +10,13 @@ func (c *Controller) Ping(context Context) (any, error) {
 	return "pong", nil
 }
 
-func (c *Controller) LoginByCredentials(context Context) (any, error) {
-	var input service.LoginByCredentialsInput
+func (c *Controller) LoginByPassword(context Context) (any, error) {
+	var input service.AuthnPasswordLoginInput
 	if err := json.NewDecoder(context.request.Body).Decode(&input); err != nil {
 		return nil, err
 	}
 
-	session, err := c.loginCredentials.Login(input)
+	session, err := c.authnPassword.Login(input)
 	if err != nil {
 		return nil, err
 	}

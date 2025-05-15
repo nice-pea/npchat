@@ -10,22 +10,22 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
 )
 
-func TestNewLoginCredentialsRepository(t *testing.T) {
+func TestNewAuthnPasswordRepository(t *testing.T) {
 	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo := repositoryFactory.NewLoginCredentialsRepository()
+		repo := repositoryFactory.NewAuthnPasswordRepository()
 		assert.NotZero(t, repo)
 	})
 }
 
-func TestLoginCredentialsRepository(t *testing.T) {
-	repository_tests.LoginCredentialsRepositoryTests(t, func() domain.LoginCredentialsRepository {
+func TestAuthnPasswordRepository(t *testing.T) {
+	repository_tests.AuthnPasswordRepositoryTests(t, func() domain.AuthnPasswordRepository {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.NoError(t, err)
 		require.NotZero(t, repositoryFactory)
-		repo := repositoryFactory.NewLoginCredentialsRepository()
+		repo := repositoryFactory.NewAuthnPasswordRepository()
 		require.NotZero(t, repo)
 		return repo
 	})

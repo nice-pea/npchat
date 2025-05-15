@@ -9,12 +9,12 @@ import (
 )
 
 type repositories struct {
-	chats       domain.ChatsRepository
-	invitations domain.InvitationsRepository
-	members     domain.MembersRepository
-	users       domain.UsersRepository
-	sessions    domain.SessionsRepository
-	loginCreds  domain.LoginCredentialsRepository
+	chats         domain.ChatsRepository
+	invitations   domain.InvitationsRepository
+	members       domain.MembersRepository
+	users         domain.UsersRepository
+	sessions      domain.SessionsRepository
+	authnPassword domain.AuthnPasswordRepository
 }
 
 func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error) {
@@ -24,12 +24,12 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 	}
 
 	rs := &repositories{
-		chats:       factory.NewChatsRepository(),
-		invitations: factory.NewInvitationsRepository(),
-		members:     factory.NewMembersRepository(),
-		users:       factory.NewUsersRepository(),
-		sessions:    factory.NewSessionsRepository(),
-		loginCreds:  factory.NewLoginCredentialsRepository(),
+		chats:         factory.NewChatsRepository(),
+		invitations:   factory.NewInvitationsRepository(),
+		members:       factory.NewMembersRepository(),
+		users:         factory.NewUsersRepository(),
+		sessions:      factory.NewSessionsRepository(),
+		authnPassword: factory.NewAuthnPasswordRepository(),
 	}
 
 	return rs, func() {
