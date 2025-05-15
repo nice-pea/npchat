@@ -14,9 +14,8 @@ func CancelInvitation(router http2.Router) {
 		func(context http2.Context) (any, error) {
 			input := service.CancelInvitationInput{
 				SubjectUserID: context.Session().UserID,
-				UserID:        "",
-				ChatID:        "",
+				InvitationID:  http2.PathStr(context, "invitationID"),
 			}
-			return nil, context.Services().Invitations().CancelInvitation()
+			return nil, context.Services().Invitations().CancelInvitation(input)
 		})
 }

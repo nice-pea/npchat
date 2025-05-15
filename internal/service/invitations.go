@@ -221,7 +221,7 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 	// Приглашение должно быть направлено пользователю
 	if invitation.UserID != user.ID {
-		return ErrSubjectUserCannotAcceptInvitation
+		return ErrSubjectUserNotAllowed
 	}
 
 	// Создаем участника чата
@@ -246,19 +246,15 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 type CancelInvitationInput struct {
 	SubjectUserID string
-	UserID        string
-	ChatID        string
+	InvitationID  string
 }
 
 func (in CancelInvitationInput) Validate() error {
 	if err := uuid.Validate(in.SubjectUserID); err != nil {
 		return ErrInvalidSubjectUserID
 	}
-	if err := uuid.Validate(in.UserID); err != nil {
-		return ErrInvalidUserID
-	}
-	if err := uuid.Validate(in.ChatID); err != nil {
-		return ErrInvalidChatID
+	if err := uuid.Validate(in.InvitationID); err != nil {
+		return ErrInvalidInvitationID
 	}
 
 	return nil
@@ -271,21 +267,21 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	// Получить чат
-	chat, err := getChat(i.ChatsRepo, in.ChatID)
+	// Проверить существование приглашения
+	invitation, err := getInvitationByID(i.InvitationsRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
 
-	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.UserID, in.ChatID)
-	if err != nil {
+	// Найти чат
+	chat, err := getChat(i.ChatsRepo, invitation.ChatID)
+	if err != nil && !errors.Is(err, ErrChatNotExists) {
 		return err
 	}
 
 	if in.SubjectUserID == invitation.SubjectUserID {
 		// Проверить, существование участника чата
-		_, err := subjectUserMember(i.MembersRepo, invitation.SubjectUserID, in.ChatID)
+		_, err := subjectUserMember(i.MembersRepo, invitation.SubjectUserID, chat.ID)
 		if err != nil {
 			return err
 		}
