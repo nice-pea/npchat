@@ -13,19 +13,19 @@ type servicesTestSuite struct {
 	suite.Suite
 	factory *sqlite.RepositoryFactory
 	rr      struct {
-		chats            domain.ChatsRepository
-		members          domain.MembersRepository
-		invitations      domain.InvitationsRepository
-		sessions         domain.SessionsRepository
-		users            domain.UsersRepository
-		loginCredentials domain.LoginCredentialsRepository
+		chats         domain.ChatsRepository
+		members       domain.MembersRepository
+		invitations   domain.InvitationsRepository
+		sessions      domain.SessionsRepository
+		users         domain.UsersRepository
+		authnPassword domain.AuthnPasswordRepository
 	}
 	ss struct {
-		chats            *Chats
-		members          *Members
-		invitations      *Invitations
-		sessions         *Sessions
-		loginCredentials *LoginCredentials
+		chats         *Chats
+		members       *Members
+		invitations   *Invitations
+		sessions      *Sessions
+		authnPassword *AuthnPassword
 	}
 }
 
@@ -50,7 +50,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.rr.invitations = suite.factory.NewInvitationsRepository()
 	suite.rr.users = suite.factory.NewUsersRepository()
 	suite.rr.sessions = suite.factory.NewSessionsRepository()
-	suite.rr.loginCredentials = suite.factory.NewLoginCredentialsRepository()
+	suite.rr.authnPassword = suite.factory.NewAuthnPasswordRepository()
 
 	// Создание сервисов
 	suite.ss.chats = &Chats{
@@ -70,9 +70,9 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.ss.sessions = &Sessions{
 		SessionsRepo: suite.rr.sessions,
 	}
-	suite.ss.loginCredentials = &LoginCredentials{
-		LoginCredentialsRepo: suite.rr.loginCredentials,
-		SessionsRepo:         suite.rr.sessions,
+	suite.ss.authnPassword = &AuthnPassword{
+		AuthnPasswordRepo: suite.rr.authnPassword,
+		SessionsRepo:      suite.rr.sessions,
 	}
 }
 

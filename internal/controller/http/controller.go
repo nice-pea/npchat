@@ -19,23 +19,23 @@ type HandlerFunc func(Context) (any, error)
 
 // Controller обрабатывает HTTP-запросы
 type Controller struct {
-	chats            *service.Chats
-	invitations      *service.Invitations
-	members          *service.Members
-	sessions         *service.Sessions
-	loginCredentials *service.LoginCredentials
+	chats         *service.Chats
+	invitations   *service.Invitations
+	members       *service.Members
+	sessions      *service.Sessions
+	authnPassword *service.AuthnPassword
 
 	http.ServeMux
 }
 
-func InitController(chats *service.Chats, invitations *service.Invitations, members *service.Members, sessions *service.Sessions, loginCredentials *service.LoginCredentials) *Controller {
+func InitController(chats *service.Chats, invitations *service.Invitations, members *service.Members, sessions *service.Sessions, authnPassword *service.AuthnPassword) *Controller {
 	c := &Controller{
-		chats:            chats,
-		invitations:      invitations,
-		members:          members,
-		sessions:         sessions,
-		loginCredentials: loginCredentials,
-		ServeMux:         http.ServeMux{},
+		chats:         chats,
+		invitations:   invitations,
+		members:       members,
+		sessions:      sessions,
+		authnPassword: authnPassword,
+		ServeMux:      http.ServeMux{},
 	}
 	c.registerHandlers()
 

@@ -41,7 +41,7 @@ CREATE TABLE sessions
     FOREIGN KEY (user_id) REFERENCES users ON DELETE RESTRICT
 );
 
-CREATE TABLE login_credentials
+CREATE TABLE authn_passwords
 (
     user_id TEXT PRIMARY KEY,
     login TEXT NOT NULL,

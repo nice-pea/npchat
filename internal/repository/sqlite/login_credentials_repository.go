@@ -9,51 +9,51 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func (m *RepositoryFactory) NewLoginCredentialsRepository() domain.LoginCredentialsRepository {
-	return &LoginCredentialsRepository{
+func (m *RepositoryFactory) NewAuthnPasswordRepository() domain.AuthnPasswordRepository {
+	return &AuthnPasswordRepository{
 		DB: m.db,
 	}
 }
 
-type LoginCredentialsRepository struct {
+type AuthnPasswordRepository struct {
 	DB *sqlx.DB
 }
 
-type loginCredentials struct {
+type authnPassword struct {
 	UserID   string `db:"user_id"`
 	Login    string `db:"login"`
 	Password string `db:"password"`
 }
 
-func loginCredentialsFromDomain(c domain.LoginCredentials) loginCredentials {
-	return loginCredentials{
+func authnPasswordFromDomain(c domain.AuthnPassword) authnPassword {
+	return authnPassword{
 		UserID:   c.UserID,
 		Login:    c.Login,
 		Password: c.Password,
 	}
 }
 
-func loginCredentialsToDomain(c loginCredentials) domain.LoginCredentials {
-	return domain.LoginCredentials{
+func authnPasswordToDomain(c authnPassword) domain.AuthnPassword {
+	return domain.AuthnPassword{
 		UserID:   c.UserID,
 		Login:    c.Login,
 		Password: c.Password,
 	}
 }
 
-func loginCredsListToDomain(credentials []loginCredentials) []domain.LoginCredentials {
-	result := make([]domain.LoginCredentials, len(credentials))
-	for i, s := range credentials {
-		result[i] = loginCredentialsToDomain(s)
+func authnPasswordListToDomain(authnPasswords []authnPassword) []domain.AuthnPassword {
+	result := make([]domain.AuthnPassword, len(authnPasswords))
+	for i, s := range authnPasswords {
+		result[i] = authnPasswordToDomain(s)
 	}
 	return result
 }
 
-func (r *LoginCredentialsRepository) List(filter domain.LoginCredentialsFilter) ([]domain.LoginCredentials, error) {
-	credentials := make([]loginCredentials, 0)
-	if err := r.DB.Select(&credentials, `
+func (r *AuthnPasswordRepository) List(filter domain.AuthnPasswordFilter) ([]domain.AuthnPassword, error) {
+	aps := make([]authnPassword, 0)
+	if err := r.DB.Select(&aps, `
 			SELECT * 
-			FROM login_credentials 
+			FROM authn_passwords 
 			WHERE ($1 = '' OR $1 = user_id)
 				AND ($2 = '' OR $2 = login)
 				AND ($3 = '' OR $3 = password)
@@ -61,42 +61,42 @@ func (r *LoginCredentialsRepository) List(filter domain.LoginCredentialsFilter) 
 		return nil, fmt.Errorf("DB.Select: %w", err)
 	}
 
-	return loginCredsListToDomain(credentials), nil
+	return authnPasswordListToDomain(aps), nil
 }
 
-func (r *LoginCredentialsRepository) Save(credentials domain.LoginCredentials) error {
-	if credentials.UserID == "" {
+func (r *AuthnPasswordRepository) Save(ap domain.AuthnPassword) error {
+	if ap.UserID == "" {
 		return errors.New("invalid user id")
 	}
 	_, err := r.DB.NamedExec(`
-		INSERT OR REPLACE INTO login_credentials (user_id, login, password)
+		INSERT OR REPLACE INTO authn_passwords (user_id, login, password)
 		VALUES (:user_id, :login, :password)
-	`, loginCredentialsFromDomain(credentials))
+	`, authnPasswordFromDomain(ap))
 	if err != nil {
 		return fmt.Errorf("DB.NamedExec: %w", err)
 	}
 	return nil
 }
 
-func (r *LoginCredentialsRepository) GetByLogin(login string) (domain.LoginCredentials, error) {
+func (r *AuthnPasswordRepository) GetByLogin(login string) (domain.AuthnPassword, error) {
 	if login == "" {
-		return domain.LoginCredentials{}, errors.New("login is empty")
+		return domain.AuthnPassword{}, errors.New("login is empty")
 	}
-	var creds loginCredentials
-	err := r.DB.Get(&creds, `
-		SELECT * FROM login_credentials WHERE login = ?
+	var ap authnPassword
+	err := r.DB.Get(&ap, `
+		SELECT * FROM authn_passwords WHERE login = ?
 	`, login)
 	if err != nil {
-		return domain.LoginCredentials{}, fmt.Errorf("DB.Get: %w", err)
+		return domain.AuthnPassword{}, fmt.Errorf("DB.Get: %w", err)
 	}
-	return loginCredentialsToDomain(creds), nil
+	return authnPasswordToDomain(ap), nil
 }
 
-func (r *LoginCredentialsRepository) DeleteByUserID(userID string) error {
+func (r *AuthnPasswordRepository) DeleteByUserID(userID string) error {
 	if userID == "" {
 		return errors.New("userID is empty")
 	}
-	_, err := r.DB.Exec(`DELETE FROM login_credentials WHERE user_id = ?`, userID)
+	_, err := r.DB.Exec(`DELETE FROM authn_passwords WHERE user_id = ?`, userID)
 	if err != nil {
 		return fmt.Errorf("DB.Exec: %w", err)
 	}

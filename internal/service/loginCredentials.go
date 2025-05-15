@@ -8,18 +8,18 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-type LoginCredentials struct {
-	LoginCredentialsRepo domain.LoginCredentialsRepository
-	SessionsRepo         domain.SessionsRepository
+type AuthnPassword struct {
+	AuthnPasswordRepo domain.AuthnPasswordRepository
+	SessionsRepo      domain.SessionsRepository
 }
-type LoginByCredentialsInput struct {
+type AuthnPasswordLoginInput struct {
 	Login    string
 	Password string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in LoginByCredentialsInput) Validate() error {
-	lc := domain.LoginCredentials{
+func (in AuthnPasswordLoginInput) Validate() error {
+	lc := domain.AuthnPassword{
 		UserID:   "",
 		Login:    in.Login,
 		Password: in.Password,
@@ -37,28 +37,28 @@ func (in LoginByCredentialsInput) Validate() error {
 
 var ErrLoginOrPasswordDoesNotMatch = errors.New("не совпадает Login или Password")
 
-func (l *LoginCredentials) Login(in LoginByCredentialsInput) (domain.Session, error) {
+func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (domain.Session, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return domain.Session{}, err
 	}
 
 	// Получить пользователя по логину и паролю
-	creds, err := l.LoginCredentialsRepo.List(domain.LoginCredentialsFilter{
+	aps, err := l.AuthnPasswordRepo.List(domain.AuthnPasswordFilter{
 		Login:    in.Login,
 		Password: in.Password,
 	})
 	if err != nil {
 		return domain.Session{}, err
 	}
-	if len(creds) != 1 {
+	if len(aps) != 1 {
 		return domain.Session{}, ErrLoginOrPasswordDoesNotMatch
 	}
 
 	// Создать сессию для пользователя
 	session := domain.Session{
 		ID:     uuid.NewString(),
-		UserID: creds[0].UserID,
+		UserID: aps[0].UserID,
 		Token:  uuid.NewString(),
 		Status: domain.SessionStatusVerified,
 	}

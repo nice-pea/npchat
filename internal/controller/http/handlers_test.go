@@ -75,18 +75,18 @@ func (suite *controllerTestSuite) newRndUserWithSession(sessionStatus int) (out 
 	return
 }
 
-func (suite *controllerTestSuite) newRndUserWithLoginCredentials() domain.LoginCredentials {
-	credentials := domain.LoginCredentials{
+func (suite *controllerTestSuite) newRndUserWithAuthnPassword() domain.AuthnPassword {
+	ap := domain.AuthnPassword{
 		UserID:   uuid.NewString(),
 		Login:    uuid.NewString(),
 		Password: uuid.NewString(),
 	}
-	err := suite.rr.users.Save(domain.User{ID: credentials.UserID})
+	err := suite.rr.users.Save(domain.User{ID: ap.UserID})
 	suite.Require().NoError(err)
-	err = suite.rr.loginCreds.Save(credentials)
+	err = suite.rr.authnPassword.Save(ap)
 	suite.Require().NoError(err)
 
-	return credentials
+	return ap
 }
 func (suite *controllerTestSuite) jsonBody(v any) io.Reader {
 	body, err := json.Marshal(v)
@@ -196,17 +196,17 @@ func (suite *controllerTestSuite) TestClientMiddlewares() {
 	})
 }
 
-func (suite *controllerTestSuite) TestLoginByCredentials() {
+func (suite *controllerTestSuite) TestLoginByPassword() {
 	suite.Run("успешная авторизация", func() {
-		// Создать нового пользователя с login credentials
-		lc := suite.newRndUserWithLoginCredentials()
+		// Создать нового пользователя с AuthnPassword
+		ap := suite.newRndUserWithAuthnPassword()
 
 		// Создать запрос
 		body := suite.jsonBody(map[string]string{
-			"login":    lc.Login,
-			"password": lc.Password,
+			"login":    ap.Login,
+			"password": ap.Password,
 		})
-		req := suite.newClientRequest("POST", "/login/credentials", "", body)
+		req := suite.newClientRequest("POST", "/login/password", "", body)
 
 		// Выполнение запроса
 		resp, err := http.DefaultClient.Do(req)
@@ -220,8 +220,8 @@ func (suite *controllerTestSuite) TestLoginByCredentials() {
 	})
 
 	suite.Run("неверные учетные данные", func() {
-		// Создать нового пользователя с login credentials
-		lc := suite.newRndUserWithLoginCredentials()
+		// Создать нового пользователя с AuthnPassword
+		lc := suite.newRndUserWithAuthnPassword()
 
 		credentials := map[string]string{
 			"login":    lc.Login,
@@ -230,7 +230,7 @@ func (suite *controllerTestSuite) TestLoginByCredentials() {
 		body, err := json.Marshal(credentials)
 		suite.Require().NoError(err)
 
-		req := suite.newClientRequest("POST", "/login/credentials", "", bytes.NewBuffer(body))
+		req := suite.newClientRequest("POST", "/login/password", "", bytes.NewBuffer(body))
 
 		resp, err := http.DefaultClient.Do(req)
 		suite.Require().NoError(err)
