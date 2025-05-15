@@ -9,14 +9,14 @@ import (
 // Удалить участника из чата
 func DeleteMember(router http2.Router) {
 	router.HandleFunc(
-		"DELETE /chats/{chatID}/members/{memberID}",
+		"DELETE /chats/{chatID}/members/{userID}",
 		middleware.ClientAuthChain,
 		func(context http2.Context) (any, error) {
 			input := service.DeleteMemberInput{
 				SubjectUserID: context.Session().UserID,
 				ChatID:        http2.PathStr(context, "chatID"),
-				UserID:        "",
+				UserID:        http2.PathStr(context, "userID"),
 			}
-			return nil, context.Services().Members().DeleteMember()
+			return nil, context.Services().Members().DeleteMember(input)
 		})
 }
