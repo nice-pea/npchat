@@ -26,6 +26,7 @@ type RWContext interface {
 	Context
 	SetSession(domain.Session)
 	SetRequestID(string)
+	SetRequest(*http.Request)
 }
 
 type Middleware func(rw HandlerFuncRW) HandlerFuncRW
@@ -36,4 +37,5 @@ type Services interface {
 	Members() *service.Members
 	Sessions() *service.Sessions
 	AuthnPassword() *service.AuthnPassword
+	OAuth() *service.OAuth
 }

@@ -22,6 +22,10 @@ func QueryStr(context Context, name string) string {
 	return context.Request().URL.Query().Get(name)
 }
 
+func FormStr(context Context, name string) string {
+	return context.Request().FormValue(name)
+}
+
 // WrapHandlerWithMiddlewares оборачивает обработчик h всеми переданными middleware.
 // Middlewares применяются в обратном порядке — от последнего к первому,
 // таким образом формируя цепочку, где первый middleware выполняется первым.

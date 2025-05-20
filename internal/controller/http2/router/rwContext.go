@@ -38,3 +38,7 @@ func (r *rwContext) SetSession(session domain.Session) {
 func (r *rwContext) SetRequestID(id string) {
 	r.requestID = id
 }
+
+func (r *rwContext) SetRequest(req *http.Request) {
+	r.request = req
+}
