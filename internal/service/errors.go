@@ -27,4 +27,5 @@ var (
 	ErrUserIsAlreadyInvited        = errors.New("пользователь уже приглашен в чат")
 	ErrInvitationNotExists         = errors.New("приглашения не существует")
 	ErrSubjectUserNotAllowed       = errors.New("у пользователя нет прав на это действие")
+	ErrLoginIsAlreadyInUse         = errors.New("логин уже используется")
 )

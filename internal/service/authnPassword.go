@@ -124,6 +124,16 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.
 		return domain.User{}, err
 	}
 
+	// Проверка на существование пользователя с таким логином
+	apFilter := domain.AuthnPasswordFilter{
+		Login: in.Login,
+	}
+	if aps, err := l.AuthnPasswordRepo.List(apFilter); err != nil {
+		return domain.User{}, err
+	} else if len(aps) > 0 {
+		return domain.User{}, ErrLoginIsAlreadyInUse
+	}
+
 	// Создать пользователя
 	user := domain.User{
 		ID:   uuid.NewString(),

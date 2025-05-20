@@ -94,6 +94,30 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		suite.Zero(user)
 	})
 
+	suite.Run("нельзя создать пользователя с существующим логином", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: "Password123!",
+			Name:     "name",
+			Nick:     "nick",
+		}
+		user, err := suite.ss.authnPassword.Registration(input)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(user)
+
+		// Регистрация второй раз с существующим логином
+		input = AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: "Password123!2",
+			Name:     "name2",
+			Nick:     "nick2",
+		}
+		user, err = suite.ss.authnPassword.Registration(input)
+		suite.ErrorIs(err, ErrLoginIsAlreadyInUse)
+		suite.Zero(user)
+	})
+
 	suite.Run("пользователя и метод можно прочитать из репозитория", func() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
