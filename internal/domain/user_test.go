@@ -23,7 +23,6 @@ func Test_User_ValidateNick(t *testing.T) {
 		wantErr  bool
 	}{
 		// Invalid cases
-		{testname: "empty nick", nick: "", wantErr: true},
 		{testname: "whitespace only", nick: " ", wantErr: true},
 		{testname: "control characters", nick: "\n\t\r\a\f\v", wantErr: true},
 		{testname: "space in middle", nick: "first last", wantErr: true},
@@ -41,6 +40,7 @@ func Test_User_ValidateNick(t *testing.T) {
 		{testname: "too long name", nick: strings.Repeat("a", 35+1), wantErr: true},
 
 		// Valid cases
+		{testname: "empty nick", nick: "", wantErr: false},
 		{testname: "valid simple name", nick: "name", wantErr: false},
 		{testname: "valid name with digits", nick: "1na1me1", wantErr: false},
 		{testname: "valid underscore separated", nick: "first_last", wantErr: false},

@@ -59,7 +59,7 @@ const UserNickMaxLen = 35
 func (u User) ValidateNick() error {
 	// Проверка на пустое имя пользователя
 	if u.Nick == "" {
-		return fmt.Errorf("nick cannot be empty")
+		return nil
 	}
 
 	// Проверка на длину имени пользователя
