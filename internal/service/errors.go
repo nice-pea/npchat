@@ -11,6 +11,8 @@ var (
 	ErrInvalidInvitationID         = errors.New("некорректный InvitationID")
 	ErrInvalidUserID               = errors.New("некорректный UserID")
 	ErrInvalidName                 = errors.New("некорректный Name")
+	ErrInvalidPassword             = errors.New("некорректный Password")
+	ErrInvalidNick                 = errors.New("некорректный Nick")
 	ErrInvalidChiefUserID          = errors.New("некорректный ChiefUserID")
 	ErrUserIsNotMember             = errors.New("user не является участником чата")
 	ErrSubjectUserIsNotMember      = errors.New("subject user не является участником чата")

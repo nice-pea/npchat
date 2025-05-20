@@ -86,3 +86,63 @@ func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (AuthnPasswordLoginOut
 		User:    users[0],
 	}, nil
 }
+
+type AuthnPasswordRegistrationInput struct {
+	Login    string
+	Password string
+	Name     string
+	Nick     string
+}
+
+func (in AuthnPasswordRegistrationInput) Validate() error {
+	// Валидация полей для метода аутентификации
+	lc := domain.AuthnPassword{
+		Login:    in.Login,
+		Password: in.Password,
+	}
+	if err := lc.ValidateLogin(); err != nil {
+		return errors.Join(err, ErrInvalidLogin)
+	}
+	if err := lc.ValidatePassword(); err != nil {
+		return errors.Join(err, ErrInvalidPassword)
+	}
+	// Валидация полей для создания пользователя
+	u := domain.User{Name: in.Name, Nick: in.Nick}
+	if err := u.ValidateName(); err != nil {
+		return errors.Join(err, ErrInvalidName)
+	}
+	if err := u.ValidateNick(); err != nil {
+		return errors.Join(err, ErrInvalidNick)
+	}
+
+	return nil
+}
+
+func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.User, error) {
+	// Валидировать параметры
+	if err := in.Validate(); err != nil {
+		return domain.User{}, err
+	}
+
+	// Создать пользователя
+	user := domain.User{
+		ID:   uuid.NewString(),
+		Name: in.Name,
+		Nick: in.Nick,
+	}
+	if err := l.UsersRepo.Save(user); err != nil {
+		return domain.User{}, err
+	}
+
+	// Создать метод входа
+	ap := domain.AuthnPassword{
+		UserID:   user.ID,
+		Login:    in.Login,
+		Password: in.Password,
+	}
+	if err := l.AuthnPasswordRepo.Save(ap); err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
+}

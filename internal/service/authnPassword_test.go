@@ -29,6 +29,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 		suite.Error(err)
 		suite.Zero(session)
 	})
+
 	suite.Run("вернется Verified сессия", func() {
 		// Создаем нового пользователя с AuthnPassword
 		uwp := suite.newRndUserWithAuthnPassword()
@@ -50,5 +51,75 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
 		suite.Equal(output.Session, sessions[0])
+	})
+}
+
+func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
+	suite.Run("Login обязательное поле", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "",
+			Password: "Password123!",
+			Name:     "name",
+			Nick:     "nick",
+		}
+		user, err := suite.ss.authnPassword.Registration(input)
+		suite.ErrorIs(err, ErrInvalidLogin)
+		suite.Zero(user)
+	})
+
+	suite.Run("Password обязательное поле", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: "",
+			Name:     "name",
+			Nick:     "nick",
+		}
+		user, err := suite.ss.authnPassword.Registration(input)
+		suite.ErrorIs(err, ErrInvalidPassword)
+		suite.Zero(user)
+	})
+
+	suite.Run("Name обязательное поле", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: "Password123!",
+			Name:     "",
+			Nick:     "nick",
+		}
+		user, err := suite.ss.authnPassword.Registration(input)
+		suite.ErrorIs(err, ErrInvalidName)
+		suite.Zero(user)
+	})
+
+	suite.Run("пользователя и метод можно прочитать из репозитория", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: "Password123!",
+			Name:     "name",
+			Nick:     "nick",
+		}
+		user, err := suite.ss.authnPassword.Registration(input)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(user)
+		suite.Equal(input.Name, user.Name)
+		suite.Equal(input.Nick, user.Nick)
+
+		// Прочитать пользователя из репозитория
+		users, err := suite.rr.users.List(domain.UsersFilter{})
+		suite.Require().NoError(err)
+		suite.Require().Len(users, 1)
+		suite.Equal(user, users[0])
+
+		// Прочитать метод входа из репозитория
+		aps, err := suite.rr.authnPassword.List(domain.AuthnPasswordFilter{Login: input.Login})
+		suite.Require().NoError(err)
+		suite.Require().Len(aps, 1)
+		suite.Equal(user.ID, aps[0].UserID)
+		suite.Equal(input.Login, aps[0].Login)
+		suite.Equal(input.Password, aps[0].Password)
 	})
 }
