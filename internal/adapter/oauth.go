@@ -17,14 +17,14 @@ type OAuthGoogle interface {
 }
 
 type GoogleUser struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
-	Name          string `json:"name"`
-	GivenName     string `json:"given_name"`
-	FamilyName    string `json:"family_name"`
-	Picture       string `json:"picture"`
-	Locale        string `json:"locale"`
+	ID            string
+	Email         string
+	VerifiedEmail bool
+	Name          string
+	GivenName     string
+	FamilyName    string
+	Picture       string
+	Locale        string
 }
 
 type OAuthGoogleBase struct {
@@ -86,12 +86,21 @@ func (o *OAuthGoogleBase) User(code string) (GoogleUser, error) {
 		return GoogleUser{}, err
 	}
 
-	var googleUser GoogleUser
+	var googleUser struct {
+		ID            string `json:"id"`
+		Email         string `json:"email"`
+		VerifiedEmail bool   `json:"verified_email"`
+		Name          string `json:"name"`
+		GivenName     string `json:"given_name"`
+		FamilyName    string `json:"family_name"`
+		Picture       string `json:"picture"`
+		Locale        string `json:"locale"`
+	}
 	if err = json.Unmarshal(data, &googleUser); err != nil {
 		return GoogleUser{}, err
 	}
 
-	return googleUser, nil
+	return GoogleUser(googleUser), nil
 }
 
 func (o *OAuthGoogleBase) AuthCodeURL(state string) string {
