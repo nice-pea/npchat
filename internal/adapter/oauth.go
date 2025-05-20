@@ -80,7 +80,7 @@ func (o *OAuthGoogleBase) User(code string) (GoogleUser, error) {
 		return GoogleUser{}, err
 	}
 
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return GoogleUser{}, err

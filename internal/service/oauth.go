@@ -48,10 +48,6 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (GoogleRegistrati
 	}, nil
 }
 
-//type GoogleRegistrationInitInput struct {
-//	RedirectURL string
-//}
-
 type GoogleRegistrationInitOut struct {
 	RedirectURL string
 }
