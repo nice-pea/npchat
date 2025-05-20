@@ -6,6 +6,7 @@ import (
 	"github.com/markbates/goth/gothic"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter"
+	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 type OAuth struct {
@@ -24,8 +25,21 @@ type GoogleRegistrationInput struct {
 	Code string
 }
 
-func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (any, error) {
+type GoogleRegistrationOut struct {
+	User    domain.User
+	Session domain.Session
+}
 
+func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (GoogleRegistrationOut, error) {
+	googleUser, err := o.Google.User(in.Code)
+	if err != nil {
+		return GoogleRegistrationOut{}, err
+	}
+
+	return GoogleRegistrationOut{
+		User:    domain.User{},
+		Session: domain.Session{},
+	}, nil
 }
 
 type OAuthRegistrationInitInput struct {
@@ -33,7 +47,7 @@ type OAuthRegistrationInitInput struct {
 }
 
 type OAuthRegistrationInitOut struct {
-	Provider string
+	RedirectURL string
 }
 
 func (o *OAuth) RegistrationInit(in OAuthRegistrationInitInput) (OAuthRegistrationInitOut, error) {

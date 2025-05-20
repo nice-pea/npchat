@@ -3,6 +3,7 @@ package http2
 import (
 	"net/http"
 
+	"github.com/saime-0/nice-pea-chat/internal/adapter"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
@@ -18,6 +19,9 @@ type Context interface {
 	Session() domain.Session
 	Request() *http.Request
 	Services() Services
+	Adapters() struct {
+		OAuthGoogle adapter.OAuthGoogle
+	}
 }
 
 type HandlerFuncRW func(RWContext) (any, error)
