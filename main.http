@@ -19,3 +19,9 @@ Content-Type: application/json
 Accept: application/json
 X-Request-ID: {{$uuid}}
 Authorization: Bearer {{$uuid}}
+
+
+### Init google registration
+GET http://localhost:8080/oauth/google/registration
+Content-Type: application/json
+Accept: application/json

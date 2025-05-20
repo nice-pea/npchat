@@ -30,6 +30,8 @@ type GoogleRegistrationOut struct {
 	Session domain.Session
 }
 
+// GoogleRegistration
+// Подсмотрено в: https://github.com/oguzhantasimaz/Go-Clean-Architecture-Template/blob/main/api/controller/google.go
 func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (GoogleRegistrationOut, error) {
 	if err := validateStateOauthJWT(in.State, JWTSecret); err != nil {
 		return GoogleRegistrationOut{}, err

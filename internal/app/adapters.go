@@ -24,7 +24,9 @@ func (a *adapters) OAuthGoogle() adapter.OAuthGoogle {
 }
 
 func initAdapters() *adapters {
-	var discovery = &adapter.ServiceDiscoveryBase{}
+	var discovery = &adapter.ServiceDiscoveryBase{
+		Debug: true,
+	}
 	authGoogleBase := &adapter.OAuthGoogleBase{
 		Config: &oauth2.Config{
 			ClientID:     os.Getenv("GOOGLE_KEY"),
