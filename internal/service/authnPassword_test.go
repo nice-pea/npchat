@@ -37,18 +37,18 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 			Login:    uwp.Login,
 			Password: uwp.Password,
 		}
-		session, err := suite.ss.authnPassword.Login(input)
+		output, err := suite.ss.authnPassword.Login(input)
 		suite.NoError(err)
-		suite.Require().NotZero(session)
-		suite.Require().Equal(uwp.UserID, session.UserID)
-		suite.Require().Equal(domain.SessionStatusVerified, session.Status)
+		suite.Require().NotZero(output)
+		suite.Require().Equal(uwp.UserID, output.Session.UserID)
+		suite.Require().Equal(domain.SessionStatusVerified, output.Session.Status)
 
 		// Проверяем, что сессия сохранена в репозитории
 		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{
-			Token: session.Token,
+			Token: output.Session.Token,
 		})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(session, sessions[0])
+		suite.Equal(output.Session, sessions[0])
 	})
 }

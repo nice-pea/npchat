@@ -73,6 +73,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.ss.authnPassword = &AuthnPassword{
 		AuthnPasswordRepo: suite.rr.authnPassword,
 		SessionsRepo:      suite.rr.sessions,
+		UsersRepo:         suite.rr.users,
 	}
 }
 

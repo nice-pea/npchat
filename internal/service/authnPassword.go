@@ -11,10 +11,16 @@ import (
 type AuthnPassword struct {
 	AuthnPasswordRepo domain.AuthnPasswordRepository
 	SessionsRepo      domain.SessionsRepository
+	UsersRepo         domain.UsersRepository
 }
+
 type AuthnPasswordLoginInput struct {
 	Login    string
 	Password string
+}
+type AuthnPasswordLoginOutput struct {
+	Session domain.Session
+	User    domain.User
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -37,22 +43,31 @@ func (in AuthnPasswordLoginInput) Validate() error {
 
 var ErrLoginOrPasswordDoesNotMatch = errors.New("не совпадает Login или Password")
 
-func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (domain.Session, error) {
+func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (AuthnPasswordLoginOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return domain.Session{}, err
+		return AuthnPasswordLoginOutput{}, err
 	}
 
-	// Получить пользователя по логину и паролю
+	// Получить метод входа
 	aps, err := l.AuthnPasswordRepo.List(domain.AuthnPasswordFilter{
 		Login:    in.Login,
 		Password: in.Password,
 	})
 	if err != nil {
-		return domain.Session{}, err
+		return AuthnPasswordLoginOutput{}, err
 	}
 	if len(aps) != 1 {
-		return domain.Session{}, ErrLoginOrPasswordDoesNotMatch
+		return AuthnPasswordLoginOutput{}, ErrLoginOrPasswordDoesNotMatch
+	}
+
+	// Получить пользователя
+	users, err := l.UsersRepo.List(domain.UsersFilter{ID: aps[0].UserID})
+	if err != nil {
+		return AuthnPasswordLoginOutput{}, err
+	}
+	if len(users) != 1 {
+		return AuthnPasswordLoginOutput{}, ErrUserNotExists
 	}
 
 	// Создать сессию для пользователя
@@ -63,8 +78,11 @@ func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (domain.Session, error
 		Status: domain.SessionStatusVerified,
 	}
 	if err = l.SessionsRepo.Save(session); err != nil {
-		return domain.Session{}, err
+		return AuthnPasswordLoginOutput{}, err
 	}
 
-	return session, nil
+	return AuthnPasswordLoginOutput{
+		Session: session,
+		User:    users[0],
+	}, nil
 }
