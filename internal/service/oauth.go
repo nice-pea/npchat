@@ -1,9 +1,12 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"time"
 
-	"github.com/markbates/goth/gothic"
+	"github.com/dgrijalva/jwt-go"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -17,12 +20,9 @@ type OAuthRegistrationCallbackInput struct {
 	Provider string
 }
 
-func (o *OAuth) RegistrationCallback(in OAuthRegistrationCallbackInput) (any, error) {
-
-}
-
 type GoogleRegistrationInput struct {
-	Code string
+	Code  string
+	State string
 }
 
 type GoogleRegistrationOut struct {
@@ -31,10 +31,16 @@ type GoogleRegistrationOut struct {
 }
 
 func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (GoogleRegistrationOut, error) {
+	if err := validateStateOauthJWT(in.State, JWTSecret); err != nil {
+		return GoogleRegistrationOut{}, err
+	}
+
 	googleUser, err := o.Google.User(in.Code)
 	if err != nil {
 		return GoogleRegistrationOut{}, err
 	}
+
+	fmt.Println(googleUser)
 
 	return GoogleRegistrationOut{
 		User:    domain.User{},
@@ -42,18 +48,44 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (GoogleRegistrati
 	}, nil
 }
 
-type OAuthRegistrationInitInput struct {
-	Provider string
-}
+//type GoogleRegistrationInitInput struct {
+//	RedirectURL string
+//}
 
-type OAuthRegistrationInitOut struct {
+type GoogleRegistrationInitOut struct {
 	RedirectURL string
 }
 
-func (o *OAuth) RegistrationInit(in OAuthRegistrationInitInput) (OAuthRegistrationInitOut, error) {
-	user, err := gothic.CompleteUserAuth(res, req)
+var JWTSecret = os.Getenv("OAUTH_JWT_SECRET")
+
+func (o *OAuth) GoogleRegistrationInit() (GoogleRegistrationInitOut, error) {
+	oauthState, err := generateStateOauthJWT(JWTSecret)
 	if err != nil {
-		fmt.Fprintln(res, err)
-		return
+		return GoogleRegistrationInitOut{}, err
 	}
+
+	return GoogleRegistrationInitOut{
+		RedirectURL: o.Google.AuthCodeURL(oauthState),
+	}, nil
+}
+
+func generateStateOauthJWT(secret string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": time.Now().Add(10 * time.Minute).Unix(), // State живёт 10 минут
+	})
+	return token.SignedString([]byte(secret))
+}
+
+func validateStateOauthJWT(stateToken, secret string) error {
+	token, err := jwt.Parse(stateToken, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return err
+	}
+	if !token.Valid {
+		return errors.New("token is not valid")
+	}
+
+	return nil
 }

@@ -11,7 +11,7 @@ import (
 )
 
 type OAuthGoogle interface {
-	Exchange(code string) (*oauth2.Token, error)
+	Exchange(code string) (GoogleToken, error)
 	User(code string) (GoogleUser, error)
 	AuthCodeURL(state string) string
 }
@@ -97,19 +97,3 @@ func (o *OAuthGoogleBase) User(code string) (GoogleUser, error) {
 func (o *OAuthGoogleBase) AuthCodeURL(state string) string {
 	return o.Config.AuthCodeURL(state)
 }
-
-//type OAuthConfig struct {
-//	ClientID     string
-//	ClientSecret string
-//	RedirectURL  string
-//}
-
-//func (O *OAuthGoogleBase) Exchange(code string) (string, error) {
-//
-//	var googleUser *GoogleUser
-//	err = json.Unmarshal(data, &googleUser)
-//	if err != nil {
-//		log.Error(err)
-//		return
-//	}
-//}
