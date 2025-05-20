@@ -10,9 +10,9 @@ import (
 )
 
 type User struct {
-	ID       string
-	Name     string
-	Username string
+	ID   string
+	Name string
+	Nick string
 }
 
 var (
@@ -54,43 +54,43 @@ func (u User) ValidateName() error {
 	return nil
 }
 
-const UserUsernameMaxLen = 35
+const UserNickMaxLen = 35
 
-func (u User) ValidateUsername() error {
+func (u User) ValidateNick() error {
 	// Проверка на пустое имя пользователя
-	if u.Username == "" {
-		return fmt.Errorf("username cannot be empty")
+	if u.Nick == "" {
+		return fmt.Errorf("nick cannot be empty")
 	}
 
 	// Проверка на длину имени пользователя
-	if len([]rune(u.Username)) > UserUsernameMaxLen {
-		return fmt.Errorf("username cannot be longer than %d characters", UserUsernameMaxLen)
+	if len([]rune(u.Nick)) > UserNickMaxLen {
+		return fmt.Errorf("nick cannot be longer than %d characters", UserNickMaxLen)
 	}
 
 	// Проверка на строку, состоящую только из пробелов
-	if strings.TrimSpace(u.Username) == "" {
-		return fmt.Errorf("username cannot consist of whitespace only")
+	if strings.TrimSpace(u.Nick) == "" {
+		return fmt.Errorf("nick cannot consist of whitespace only")
 	}
 
 	// Проверка на первый символ
-	if !isAllowedLastFirstUsernameRune(rune(u.Username[0])) {
-		return fmt.Errorf("username must start with a letter or digit")
+	if !isAllowedLastFirstNickRune(rune(u.Nick[0])) {
+		return fmt.Errorf("nick must start with a letter or digit")
 	}
 	// Проверка на последний символ
-	if !isAllowedLastFirstUsernameRune(rune(u.Username[len(u.Username)-1])) {
-		return fmt.Errorf("username must trail with a letter or digit")
+	if !isAllowedLastFirstNickRune(rune(u.Nick[len(u.Nick)-1])) {
+		return fmt.Errorf("nick must trail with a letter or digit")
 	}
 
 	var hasLetters bool
 	// Проверка каждого символа в имени пользователя
-	for _, r := range u.Username {
+	for _, r := range u.Nick {
 		switch {
 		case unicode.IsControl(r):
-			return fmt.Errorf("username cannot contain control characters")
+			return fmt.Errorf("nick cannot contain control characters")
 		case unicode.IsSpace(r):
-			return fmt.Errorf("username cannot contain spaces")
-		case !isAllowedUsernameRune(r):
-			return fmt.Errorf("username contains invalid characters")
+			return fmt.Errorf("nick cannot contain spaces")
+		case !isAllowedNickRune(r):
+			return fmt.Errorf("nick contains invalid characters")
 		}
 		if unicode.IsLetter(r) {
 			hasLetters = true
@@ -98,19 +98,19 @@ func (u User) ValidateUsername() error {
 	}
 
 	if !hasLetters {
-		return fmt.Errorf("username must contain at least one letter or digit")
+		return fmt.Errorf("nick must contain at least one letter or digit")
 	}
 
 	return nil
 }
 
-// isAllowedUsernameRune проверяет, разрешен ли символ в имени пользователя
-func isAllowedUsernameRune(r rune) bool {
+// isAllowedNickRune проверяет, разрешен ли символ в имени пользователя
+func isAllowedNickRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
 }
 
-// isAllowedUsernameRune проверяет, разрешен ли символ в имени пользователя
-func isAllowedLastFirstUsernameRune(r rune) bool {
+// isAllowedNickRune проверяет, разрешен ли символ в имени пользователя
+func isAllowedLastFirstNickRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
