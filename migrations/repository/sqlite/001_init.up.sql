@@ -57,6 +57,7 @@ CREATE TABLE oauth_tokens
     refresh_token TEXT NOT NULL,
     expiry        INT  NOT NULL,
     link_id       TEXT NOT NULL,
+    provider    TEXT NOT NULL,
     FOREIGN KEY (link_id) REFERENCES oauth_links ON DELETE RESTRICT
 );
 
@@ -65,5 +66,6 @@ CREATE TABLE oauth_links
     id          TEXT PRIMARY KEY,
     user_id     TEXT NOT NULL,
     external_id TEXT NOT NULL,
+    provider    TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users ON DELETE RESTRICT
 );

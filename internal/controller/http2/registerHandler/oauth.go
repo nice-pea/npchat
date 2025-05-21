@@ -8,12 +8,15 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-func GoogleRegistration(router http2.Router) {
+func OAuthRegistration(router http2.Router) {
 	router.HandleFunc(
-		"GET /oauth/google/registration",
+		"GET /oauth/{provider}/registration",
 		middleware.EmptyChain,
 		func(context http2.Context) (any, error) {
-			out, err := context.Services().OAuth().GoogleRegistrationInit()
+			input := service.OAuthInitRegistrationInput{
+				Provider: http2.PathStr(context, "provider"),
+			}
+			out, err := context.Services().OAuth().InitRegistration(input)
 			if err != nil {
 				return nil, err
 			}
@@ -26,17 +29,18 @@ func GoogleRegistration(router http2.Router) {
 	)
 }
 
-func GoogleRegistrationCallback(router http2.Router) {
+func OAuthRegistrationCallback(router http2.Router) {
 	router.HandleFunc(
-		"GET /oauth/google/registration/callback",
+		"GET /oauth/{provider}/registration/callback",
 		middleware.EmptyChain,
 		func(context http2.Context) (any, error) {
-			input := service.GoogleRegistrationInput{
+			input := service.OAuthCompeteRegistrationInput{
 				UserCode:  http2.FormStr(context, "code"),
 				InitState: http2.FormStr(context, "state"),
+				Provider:  http2.PathStr(context, "provider"),
 			}
 
-			return context.Services().OAuth().GoogleRegistration(input)
+			return context.Services().OAuth().CompeteRegistration(input)
 		},
 	)
 }

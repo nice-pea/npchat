@@ -24,25 +24,25 @@ type OAuthToken struct {
 	Expiry time.Time
 
 	// LinkID is the ID of the link associated with the token.
+	// TODO: Required.
 	LinkID string
+
+	Provider string
 }
 
-type OAuthGoogleUser struct {
-	ID            string
-	Email         string
-	VerifiedEmail bool
-	Name          string
-	GivenName     string
-	FamilyName    string
-	Picture       string
-	Locale        string
+type OAuthUser struct {
+	ID       string
+	Email    string
+	Name     string
+	Picture  string
+	Provider string
 }
 
 type OAuthLink struct {
 	ID         string
 	UserID     string
 	ExternalID string
-	//	Provider string
+	Provider   string
 }
 
 type OAuthRepository interface {
@@ -55,5 +55,5 @@ type OAuthListLinksFilter struct {
 	ID         string
 	UserID     string
 	ExternalID string
-	//	Provider string
+	Provider   string
 }

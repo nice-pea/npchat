@@ -59,7 +59,7 @@ func initServices(repos *repositories, adaps *adapters) *services {
 			SessionsRepo:      repos.sessions,
 		},
 		oauth: &service.OAuth{
-			Google:    adaps.oauthGoogle,
+			Providers: adaps.oauthProviders,
 			OAuthRepo: repos.oauth,
 			UsersRepo: repos.users,
 		},

@@ -34,10 +34,10 @@ type servicesTestSuite struct {
 		oauth         *OAuth
 	}
 	ad struct {
-		oauth adapter.OAuthGoogle
+		oauth adapter.OAuthProvider
 	}
-	mockOauthCodes  map[string]domain.OAuthToken
-	mockGoogleUsers map[domain.OAuthToken]domain.OAuthGoogleUser
+	mockOAuthTokens map[string]domain.OAuthToken
+	mockOAuthUsers  map[domain.OAuthToken]domain.OAuthUser
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
@@ -65,28 +65,28 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.rr.oauth = suite.factory.NewOAuthRepository()
 
 	// Инициализация адаптеров
-	suite.mockGoogleUsers = generateMockUsers()
-	suite.mockOauthCodes = make(map[string]domain.OAuthToken, len(suite.mockGoogleUsers))
-	for token := range suite.mockGoogleUsers {
-		suite.mockOauthCodes[randomString(13)] = token
+	suite.mockOAuthUsers = generateMockUsers()
+	suite.mockOAuthTokens = make(map[string]domain.OAuthToken, len(suite.mockOAuthUsers))
+	for token := range suite.mockOAuthUsers {
+		suite.mockOAuthTokens[randomString(13)] = token
 	}
-	suite.ad.oauth = &adapter.OAuthGoogleMock{
+	suite.ad.oauth = &adapter.OAuthMock{
 		ExchangeFunc: func(code string) (domain.OAuthToken, error) {
-			token, ok := suite.mockOauthCodes[code]
+			token, ok := suite.mockOAuthTokens[code]
 			if !ok {
 				return domain.OAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
 		},
-		UserFunc: func(token domain.OAuthToken) (domain.OAuthGoogleUser, error) {
-			user, ok := suite.mockGoogleUsers[token]
+		UserFunc: func(token domain.OAuthToken) (domain.OAuthUser, error) {
+			user, ok := suite.mockOAuthUsers[token]
 			if !ok {
-				return domain.OAuthGoogleUser{}, errors.New("user not found")
+				return domain.OAuthUser{}, errors.New("user not found")
 			}
 			return user, nil
 		},
 		AuthCodeURLFunc: func(state string) string {
-			return "https://accounts.google.com/o/oauth2/auth?state=" + state
+			return "https://provider.com/o/oauth2/auth?state=" + state
 		},
 	}
 
@@ -114,11 +114,15 @@ func (suite *servicesTestSuite) SetupSubTest() {
 		UsersRepo:         suite.rr.users,
 	}
 	suite.ss.oauth = &OAuth{
-		Google:    suite.ad.oauth,
+		Providers: adapter.OAuthProviders{
+			testProvider: suite.ad.oauth,
+		},
 		OAuthRepo: suite.rr.oauth,
 		UsersRepo: suite.rr.users,
 	}
 }
+
+const testProvider = "provider"
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *servicesTestSuite) TearDownSubTest() {
@@ -178,31 +182,26 @@ func randomOAuthToken() domain.OAuthToken {
 	}
 }
 
-// Генерация случайного OAuthGoogleUser
-func randomOAuthGoogleUser() domain.OAuthGoogleUser {
-	return domain.OAuthGoogleUser{
-		ID:            randomString(21), // Google ID обычно длина ~21
-		Email:         randomString(8) + "@example.com",
-		VerifiedEmail: true,
-		Name:          randomString(6) + " " + randomString(7),
-		GivenName:     randomString(6),
-		FamilyName:    randomString(7),
-		Picture:       "https://example.com/avatar/" + randomString(10) + ".png",
-		Locale:        "en",
+// Генерация случайного OAuthUser
+func randomOAuthUser() domain.OAuthUser {
+	return domain.OAuthUser{
+		ID:      randomString(21), // Providers ID обычно длина ~21
+		Email:   randomString(8) + "@example.com",
+		Name:    randomString(6) + " " + randomString(7),
+		Picture: "https://example.com/avatar/" + randomString(10) + ".png",
 	}
 }
 
-// Инициализация карты tokenToGoogleUser
-func generateMockUsers() map[domain.OAuthToken]domain.OAuthGoogleUser {
-	tokenToGoogleUser := make(map[domain.OAuthToken]domain.OAuthGoogleUser)
+func generateMockUsers() map[domain.OAuthToken]domain.OAuthUser {
+	tokenToUser := make(map[domain.OAuthToken]domain.OAuthUser)
 
 	for i := 0; i < 10; i++ {
 		token := randomOAuthToken()
-		user := randomOAuthGoogleUser()
-		tokenToGoogleUser[token] = user
+		user := randomOAuthUser()
+		tokenToUser[token] = user
 	}
 
-	return tokenToGoogleUser
+	return tokenToUser
 }
 
 func randomPassword() string {

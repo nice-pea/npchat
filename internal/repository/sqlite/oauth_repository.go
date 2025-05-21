@@ -16,12 +16,14 @@ type token struct {
 	RefreshToken string    `db:"refresh_token"`
 	Expiry       time.Time `db:"expiry"`
 	LinkID       string    `db:"link_id"`
+	Provider     string    `db:"provider"`
 }
 
 type link struct {
 	ID         string `db:"id"`
 	UserID     string `db:"user_id"`
 	ExternalID string `db:"external_id"`
+	Provider   string `db:"provider"`
 }
 
 func tokenFromDomain(t domain.OAuthToken) token {
@@ -31,6 +33,7 @@ func tokenFromDomain(t domain.OAuthToken) token {
 		RefreshToken: t.RefreshToken,
 		Expiry:       t.Expiry,
 		LinkID:       t.LinkID,
+		Provider:     t.Provider,
 	}
 }
 
@@ -39,6 +42,7 @@ func linkFromDomain(l domain.OAuthLink) link {
 		ID:         l.ID,
 		UserID:     l.UserID,
 		ExternalID: l.ExternalID,
+		Provider:   l.Provider,
 	}
 }
 
@@ -49,6 +53,7 @@ func linksToDomain(links []link) []domain.OAuthLink {
 			ID:         l.ID,
 			UserID:     l.UserID,
 			ExternalID: l.ExternalID,
+			Provider:   l.Provider,
 		}
 	}
 	return result
@@ -70,8 +75,8 @@ func (r *OAuthRepository) SaveToken(token domain.OAuthToken) error {
 	}
 
 	_, err := r.DB.NamedExec(`	
-		INSERT INTO oauth_tokens (access_token, token_type, refresh_token, expiry, link_id)
-		VALUES (:access_token, :token_type, :refresh_token, :expiry, :link_id)
+		INSERT INTO oauth_tokens (access_token, token_type, refresh_token, expiry, link_id, provider)
+		VALUES (:access_token, :token_type, :refresh_token, :expiry, :link_id, :provider)
 	`, tokenFromDomain(token))
 	if err != nil {
 		return fmt.Errorf("DB.NamedExec: %w", err)
@@ -86,8 +91,8 @@ func (r *OAuthRepository) SaveLink(link domain.OAuthLink) error {
 	}
 
 	_, err := r.DB.NamedExec(`	
-		INSERT OR REPLACE INTO oauth_links (id, user_id, external_id)
-		VALUES (:id, :user_id, :external_id)
+		INSERT OR REPLACE INTO oauth_links (id, user_id, external_id, provider)
+		VALUES (:id, :user_id, :external_id, :provider)
 	`, linkFromDomain(link))
 	if err != nil {
 		return fmt.Errorf("DB.NamedExec: %w", err)
@@ -104,7 +109,8 @@ func (r *OAuthRepository) ListLinks(filter domain.OAuthListLinksFilter) ([]domai
 			WHERE ($1 = '' OR $1 = id)
 				AND ($2 = '' OR $2 = user_id)
 				AND ($3 = '' OR $3 = external_id)
-		`, filter.ID, filter.UserID, filter.ExternalID); err != nil {
+				AND ($4 = '' OR $4 = provider)
+		`, filter.ID, filter.UserID, filter.ExternalID, filter.Provider); err != nil {
 		return nil, fmt.Errorf("DB.Select: %w", err)
 	}
 

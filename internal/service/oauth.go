@@ -10,48 +10,50 @@ import (
 )
 
 type OAuth struct {
-	Google    adapter.OAuthGoogle
+	Providers adapter.OAuthProviders
 	OAuthRepo domain.OAuthRepository
 	UsersRepo domain.UsersRepository
 }
 
-type OAuthRegistrationCallbackInput struct {
-	Provider string
-}
-
-type GoogleRegistrationInput struct {
+type OAuthCompeteRegistrationInput struct {
 	UserCode  string
 	InitState string
+	Provider  string
 }
 
-//type GoogleRegistrationOut struct {
-//	User    domain.User
-//	Session domain.Session
-//}
-
 // Validate валидирует значение отдельно каждого параметры
-func (in GoogleRegistrationInput) Validate() error {
+func (in OAuthCompeteRegistrationInput) Validate() error {
 	if in.UserCode == "" {
 		return ErrInvalidUserCode
 	}
 	if in.InitState == "" {
 		return ErrInvalidInitState
 	}
+	if in.Provider == "" {
+		return ErrInvalidProvider
+	}
 
 	return nil
 }
 
-// GoogleRegistration
+// CompeteRegistration
 // Подсмотрено в: https://github.com/oguzhantasimaz/Go-Clean-Architecture-Template/blob/main/api/controller/google.go
-func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, error) {
+func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.User, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return domain.User{}, err
 	}
 
+	// Определить провайдера OAuth
+	provider, err := o.provider(in.Provider)
+	if err != nil {
+		return domain.User{}, err
+	}
+
 	// Найти ранее созданную пустую связь InitState
 	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
-		ID: in.InitState,
+		ID:       in.InitState,
+		Provider: in.Provider,
 	})
 	if err != nil {
 		return domain.User{}, err
@@ -60,46 +62,48 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 		return domain.User{}, ErrWrongInitState
 	}
 	if links[0].UserID != "" || links[0].ExternalID != "" {
-		return domain.User{}, ErrGoogleRegistrationAlreadyCompleted
+		return domain.User{}, ErrOAuthRegistrationAlreadyCompleted
 	}
 	oauthLink := links[0]
 
-	// Получить пользователя google
-	token, err := o.Google.Exchange(in.UserCode)
+	// Получить пользователя провайдера
+	token, err := provider.Exchange(in.UserCode)
 	if err != nil {
 		return domain.User{}, errors.Join(ErrWrongUserCode, err)
 	}
-	googleUser, err := o.Google.User(token)
+	pUser, err := provider.User(token)
 	if err != nil {
 		return domain.User{}, err
 	}
 
-	// Проверить, не связан ли google пользователь с другим пользователем
+	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
 	links, err = o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
-		ExternalID: googleUser.ID,
+		ExternalID: pUser.ID,
+		Provider:   in.Provider,
 	})
 	if err != nil {
 		return domain.User{}, err
 	}
 	if len(links) != 0 {
-		return domain.User{}, ErrGoogleUserIsAlreadyLinked
+		return domain.User{}, ErrProvidersUserIsAlreadyLinked
 	}
 
 	// Создать пользователя
 	user := domain.User{
 		ID:   uuid.NewString(),
-		Name: googleUser.Name,
+		Name: pUser.Name,
 		Nick: "",
 	}
 	if err = o.UsersRepo.Save(user); err != nil {
 		return domain.User{}, err
 	}
 
-	// Связать пользователя с google пользователем
+	// Сохранить связь нашего пользователя с пользователем провайдера
 	err = o.OAuthRepo.SaveLink(domain.OAuthLink{
 		ID:         oauthLink.ID,
 		UserID:     user.ID,
-		ExternalID: googleUser.ID,
+		ExternalID: pUser.ID,
+		Provider:   in.Provider,
 	})
 	if err != nil {
 		return domain.User{}, err
@@ -108,22 +112,55 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 	return user, nil
 }
 
-type GoogleRegistrationInitOut struct {
+type OAuthRegistrationInitOut struct {
 	RedirectURL string
 }
 
-func (o *OAuth) GoogleRegistrationInit() (GoogleRegistrationInitOut, error) {
+type OAuthInitRegistrationInput struct {
+	Provider string
+}
+
+func (in OAuthInitRegistrationInput) Validate() error {
+	if in.Provider == "" {
+		return ErrInvalidProvider
+	}
+
+	return nil
+}
+
+func (o *OAuth) InitRegistration(in OAuthInitRegistrationInput) (OAuthRegistrationInitOut, error) {
+	// Валидировать параметры
+	if err := in.Validate(); err != nil {
+		return OAuthRegistrationInitOut{}, err
+	}
+
+	// Определить провайдера OAuth
+	provider, err := o.provider(in.Provider)
+	if err != nil {
+		return OAuthRegistrationInitOut{}, err
+	}
+
 	// Сохранить связь
 	link := domain.OAuthLink{
 		ID:         uuid.NewString(),
 		UserID:     "",
 		ExternalID: "",
+		Provider:   in.Provider,
 	}
 	if err := o.OAuthRepo.SaveLink(link); err != nil {
-		return GoogleRegistrationInitOut{}, err
+		return OAuthRegistrationInitOut{}, err
 	}
 
-	return GoogleRegistrationInitOut{
-		RedirectURL: o.Google.AuthCodeURL(link.ID),
+	return OAuthRegistrationInitOut{
+		RedirectURL: provider.AuthCodeURL(link.ID),
 	}, nil
+}
+
+func (o *OAuth) provider(provider string) (adapter.OAuthProvider, error) {
+	p, ok := o.Providers[provider]
+	if !ok || p == nil {
+		return nil, ErrUnknownOAuthProvider
+	}
+
+	return p, nil
 }

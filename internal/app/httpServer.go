@@ -72,6 +72,6 @@ func registerHandlers(r http2.Router) {
 	registerHandler.CancelInvitation(r)
 
 	// OAuth /oauth
-	registerHandler.GoogleRegistration(r)
-	registerHandler.GoogleRegistrationCallback(r)
+	registerHandler.OAuthRegistration(r)
+	registerHandler.OAuthRegistrationCallback(r)
 }

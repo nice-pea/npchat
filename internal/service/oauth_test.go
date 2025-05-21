@@ -9,12 +9,14 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func (suite *servicesTestSuite) googleRegistrationInit() (out struct {
-	out   GoogleRegistrationInitOut
+func (suite *servicesTestSuite) oauthRegistrationInit() (out struct {
+	out   OAuthRegistrationInitOut
 	state string
 }) {
 	var err error
-	out.out, err = suite.ss.oauth.GoogleRegistrationInit()
+	out.out, err = suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
+		Provider: testProvider,
+	})
 	suite.Require().NoError(err)
 	suite.Require().NotZero(out)
 	suite.Require().NotZero(out.out.RedirectURL)
@@ -27,10 +29,20 @@ func (suite *servicesTestSuite) googleRegistrationInit() (out struct {
 	return out
 }
 
-func (suite *servicesTestSuite) Test_OAuth_GoogleRegistrationInit() {
+func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
+	suite.Run("Provider обязательное поле", func() {
+		// Инициализация регистрации
+		out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
+			Provider: "",
+		})
+		suite.ErrorIs(err, ErrInvalidProvider)
+		suite.Zero(out)
+	})
 	suite.Run("после инициализации, можно прочитать link из репозитория", func() {
 		// Инициализация регистрации
-		out, err := suite.ss.oauth.GoogleRegistrationInit()
+		out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
+			Provider: testProvider,
+		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -50,63 +62,95 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistrationInit() {
 	})
 }
 
-func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
+func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
-		input := GoogleRegistrationInput{
+		input := OAuthCompeteRegistrationInput{
 			UserCode:  "",
 			InitState: uuid.NewString(),
+			Provider:  testProvider,
 		}
-		out, err := suite.ss.oauth.GoogleRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrInvalidUserCode)
 		suite.Zero(out)
 	})
 
 	suite.Run("InitState обязательное поле", func() {
-		input := GoogleRegistrationInput{
+		input := OAuthCompeteRegistrationInput{
 			UserCode:  uuid.NewString(),
 			InitState: "",
+			Provider:  testProvider,
 		}
-		out, err := suite.ss.oauth.GoogleRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrInvalidInitState)
+		suite.Zero(out)
+	})
+
+	suite.Run("Provider обязательное поле", func() {
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  uuid.NewString(),
+			InitState: uuid.NewString(),
+			Provider:  "",
+		}
+		out, err := suite.ss.oauth.CompeteRegistration(input)
+		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("неверный UserCode", func() {
 		// Инициализация регистрации
-		glOut := suite.googleRegistrationInit()
+		glOut := suite.oauthRegistrationInit()
 
-		input := GoogleRegistrationInput{
+		input := OAuthCompeteRegistrationInput{
 			UserCode:  uuid.NewString(),
 			InitState: glOut.state,
+			Provider:  testProvider,
 		}
-		out, err := suite.ss.oauth.GoogleRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
 		suite.Zero(out)
 	})
 
 	suite.Run("неверный InitState", func() {
-		input := GoogleRegistrationInput{
-			UserCode:  maps.Keys(suite.mockOauthCodes)[0],
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  maps.Keys(suite.mockOAuthTokens)[0],
 			InitState: uuid.NewString(),
+			Provider:  testProvider,
 		}
-		out, err := suite.ss.oauth.GoogleRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrWrongInitState)
+		suite.Zero(out)
+	})
+
+	suite.Run("Provider должен быть известен в сервисе", func() {
+		// Инициализация регистрации
+		initOut := suite.oauthRegistrationInit()
+		pCode := maps.Keys(suite.mockOAuthTokens)[0]
+
+		// Завершить регистрацию
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  pCode,
+			InitState: initOut.state,
+			Provider:  "unknownProvider",
+		}
+		out, err := suite.ss.oauth.CompeteRegistration(input)
+		suite.ErrorIs(err, ErrUnknownOAuthProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("после регистрации пользователя можно прочитать", func() {
 		// Инициализация регистрации
-		glOut := suite.googleRegistrationInit()
-		glCode := maps.Keys(suite.mockOauthCodes)[0]
-		glToken := suite.mockOauthCodes[glCode]
-		glUser := suite.mockGoogleUsers[glToken]
+		initOut := suite.oauthRegistrationInit()
+		pCode := maps.Keys(suite.mockOAuthTokens)[0]
+		pToken := suite.mockOAuthTokens[pCode]
+		pUser := suite.mockOAuthUsers[pToken]
 
 		// Завершить регистрацию
-		input := GoogleRegistrationInput{
-			UserCode:  glCode,
-			InitState: glOut.state,
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  pCode,
+			InitState: initOut.state,
+			Provider:  testProvider,
 		}
-		user, err := suite.ss.oauth.GoogleRegistration(input)
+		user, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(user)
 
@@ -115,61 +159,63 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 		suite.NoError(err)
 		suite.Require().Len(users, 1)
 		suite.Equal(user, users[0])
-		// google
-		suite.Equal(glUser.Name, user.Name)
+		// Поле провайдера
+		suite.Equal(pUser.Name, user.Name)
 
 		// Проверить oauth репозиторий
 		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
 		suite.NoError(err)
 		suite.Require().Len(links, 1)
-		suite.Equal(glUser.ID, links[0].ExternalID)
+		suite.Equal(pUser.ID, links[0].ExternalID)
 		suite.Equal(user.ID, links[0].UserID)
-		suite.Equal(glOut.state, links[0].ID)
+		suite.Equal(initOut.state, links[0].ID)
 	})
 
-	suite.Run("невозможно дважды зарегистрироваться на одного google пользователя", func() {
-		glCode := maps.Keys(suite.mockOauthCodes)[0]
+	suite.Run("невозможно дважды зарегистрироваться на одного пользователя провайдера", func() {
+		pCode := maps.Keys(suite.mockOAuthTokens)[0]
 
 		// Инициализация регистрации
-		glOut1 := suite.googleRegistrationInit()
+		pOut1 := suite.oauthRegistrationInit()
 		// Завершить регистрацию
-		input := GoogleRegistrationInput{
-			UserCode:  glCode,
-			InitState: glOut1.state,
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  pCode,
+			InitState: pOut1.state,
+			Provider:  testProvider,
 		}
-		user, err := suite.ss.oauth.GoogleRegistration(input)
+		user, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.Require().NoError(err)
 		suite.NotZero(user)
 
 		// Инициализация регистрации
-		glOut2 := suite.googleRegistrationInit()
-		// Завершить регистрацию, с UserCode связанным с тем же google пользователем
-		input = GoogleRegistrationInput{
-			UserCode:  glCode,
-			InitState: glOut2.state,
+		pOut2 := suite.oauthRegistrationInit()
+		// Завершить регистрацию, с UserCode связанным с тем же пользователем провайдера
+		input = OAuthCompeteRegistrationInput{
+			UserCode:  pCode,
+			InitState: pOut2.state,
 		}
-		user, err = suite.ss.oauth.GoogleRegistration(input)
-		suite.Error(err, ErrGoogleUserIsAlreadyLinked)
+		user, err = suite.ss.oauth.CompeteRegistration(input)
+		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
 		suite.Zero(user)
 	})
 
 	suite.Run("невозможно дважды зарегистрироваться завершить инициализированную регистрацию", func() {
 		// Инициализация регистрации
-		glOut := suite.googleRegistrationInit()
-		glCode := maps.Keys(suite.mockOauthCodes)[0]
+		pOut := suite.oauthRegistrationInit()
+		pCode := maps.Keys(suite.mockOAuthTokens)[0]
 
 		// Завершить регистрацию
-		input := GoogleRegistrationInput{
-			UserCode:  glCode,
-			InitState: glOut.state,
+		input := OAuthCompeteRegistrationInput{
+			UserCode:  pCode,
+			InitState: pOut.state,
+			Provider:  testProvider,
 		}
 		// Первый раз
-		user, err := suite.ss.oauth.GoogleRegistration(input)
+		user, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.Require().NoError(err)
 		suite.NotZero(user)
 		// Второй раз
-		user, err = suite.ss.oauth.GoogleRegistration(input)
-		suite.Error(err, ErrGoogleRegistrationAlreadyCompleted)
+		user, err = suite.ss.oauth.CompeteRegistration(input)
+		suite.Error(err, ErrOAuthRegistrationAlreadyCompleted)
 		suite.Zero(user)
 	})
 }

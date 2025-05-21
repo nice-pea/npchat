@@ -28,6 +28,7 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 				RefreshToken: uuid.NewString(),
 				Expiry:       time.Now(),
 				LinkID:       uuid.NewString(),
+				Provider:     uuid.NewString(),
 			})
 			assert.NoError(t, err)
 		})
@@ -50,6 +51,7 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 				ID:         "",
 				UserID:     "userId",
 				ExternalID: "extId",
+				Provider:   "provider",
 			}
 			err := r.SaveLink(savedLink)
 			assert.Error(t, err)
@@ -136,6 +138,21 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 			require.Len(t, sessions, 1)
 			assert.Equal(t, savedLink, sessions[0])
 		})
+		t.Run("фильтр по Provider", func(t *testing.T) {
+			r := newRepository()
+			// Сохранить связь
+			savedLink := saveLink(t, r, rndLink())
+			for range 10 {
+				saveLink(t, r, rndLink())
+			}
+			// Список связей
+			sessions, err := r.ListLinks(domain.OAuthListLinksFilter{
+				Provider: savedLink.Provider,
+			})
+			assert.NoError(t, err)
+			require.Len(t, sessions, 1)
+			assert.Equal(t, savedLink, sessions[0])
+		})
 		t.Run("фильтр по всем всем полям", func(t *testing.T) {
 			r := newRepository()
 			// Сохранить связь
@@ -166,6 +183,7 @@ func rndLink() domain.OAuthLink {
 		ID:         uuid.NewString(),
 		UserID:     uuid.NewString(),
 		ExternalID: uuid.NewString(),
+		Provider:   uuid.NewString(),
 	}
 }
 
@@ -183,5 +201,6 @@ func rndToken() domain.OAuthToken {
 		RefreshToken: uuid.NewString(),
 		Expiry:       time.Now(),
 		LinkID:       uuid.NewString(),
+		Provider:     uuid.NewString(),
 	}
 }
