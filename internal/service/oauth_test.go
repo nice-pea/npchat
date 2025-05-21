@@ -126,4 +126,50 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 		suite.Equal(user.ID, links[0].UserID)
 		suite.Equal(glOut.state, links[0].ID)
 	})
+
+	suite.Run("невозможно дважды зарегистрироваться на одного google пользователя", func() {
+		glCode := maps.Keys(suite.mockOauthCodes)[0]
+
+		// Инициализация регистрации
+		glOut1 := suite.googleRegistrationInit()
+		// Завершить регистрацию
+		input := GoogleRegistrationInput{
+			UserCode:  glCode,
+			InitState: glOut1.state,
+		}
+		user, err := suite.ss.oauth.GoogleRegistration(input)
+		suite.Require().NoError(err)
+		suite.NotZero(user)
+
+		// Инициализация регистрации
+		glOut2 := suite.googleRegistrationInit()
+		// Завершить регистрацию, с UserCode связанным с тем же google пользователем
+		input = GoogleRegistrationInput{
+			UserCode:  glCode,
+			InitState: glOut2.state,
+		}
+		user, err = suite.ss.oauth.GoogleRegistration(input)
+		suite.Error(err, ErrGoogleUserIsAlreadyLinked)
+		suite.Zero(user)
+	})
+
+	suite.Run("невозможно дважды зарегистрироваться завершить инициализированную регистрацию", func() {
+		// Инициализация регистрации
+		glOut := suite.googleRegistrationInit()
+		glCode := maps.Keys(suite.mockOauthCodes)[0]
+
+		// Завершить регистрацию
+		input := GoogleRegistrationInput{
+			UserCode:  glCode,
+			InitState: glOut.state,
+		}
+		// Первый раз
+		user, err := suite.ss.oauth.GoogleRegistration(input)
+		suite.Require().NoError(err)
+		suite.NotZero(user)
+		// Второй раз
+		user, err = suite.ss.oauth.GoogleRegistration(input)
+		suite.Error(err, ErrGoogleRegistrationAlreadyCompleted)
+		suite.Zero(user)
+	})
 }

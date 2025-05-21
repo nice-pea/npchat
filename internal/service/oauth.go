@@ -49,14 +49,20 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 		return domain.User{}, err
 	}
 
-	// Проверить InitState
-	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{ID: in.InitState})
+	// Найти ранее созданную пустую связь InitState
+	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
+		ID: in.InitState,
+	})
 	if err != nil {
 		return domain.User{}, err
 	}
 	if len(links) != 1 {
 		return domain.User{}, ErrWrongInitState
 	}
+	if links[0].UserID != "" || links[0].ExternalID != "" {
+		return domain.User{}, ErrGoogleRegistrationAlreadyCompleted
+	}
+	oauthLink := links[0]
 
 	// Получить пользователя google
 	token, err := o.Google.Exchange(in.UserCode)
@@ -66,6 +72,17 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 	googleUser, err := o.Google.User(token)
 	if err != nil {
 		return domain.User{}, err
+	}
+
+	// Проверить, не связан ли google пользователь с другим пользователем
+	links, err = o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
+		ExternalID: googleUser.ID,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	if len(links) != 0 {
+		return domain.User{}, ErrGoogleUserIsAlreadyLinked
 	}
 
 	// Создать пользователя
@@ -80,7 +97,7 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 
 	// Связать пользователя с google пользователем
 	err = o.OAuthRepo.SaveLink(domain.OAuthLink{
-		ID:         links[0].ID,
+		ID:         oauthLink.ID,
 		UserID:     user.ID,
 		ExternalID: googleUser.ID,
 	})
