@@ -9,8 +9,8 @@ import (
 func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPassword {
 	ap := domain.AuthnPassword{
 		UserID:   uuid.NewString(),
-		Login:    uuid.NewString(),
-		Password: uuid.NewString(),
+		Login:    randomString(21),
+		Password: randomPassword(),
 	}
 	err := suite.rr.users.Save(domain.User{ID: ap.UserID})
 	suite.Require().NoError(err)

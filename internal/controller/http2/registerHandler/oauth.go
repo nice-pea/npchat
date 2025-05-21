@@ -32,8 +32,8 @@ func GoogleRegistrationCallback(router http2.Router) {
 		middleware.EmptyChain,
 		func(context http2.Context) (any, error) {
 			input := service.GoogleRegistrationInput{
-				Code:  http2.FormStr(context, "code"),
-				State: http2.FormStr(context, "state"),
+				UserCode:  http2.FormStr(context, "code"),
+				InitState: http2.FormStr(context, "state"),
 			}
 
 			return context.Services().OAuth().GoogleRegistration(input)
