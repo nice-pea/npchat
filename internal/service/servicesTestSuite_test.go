@@ -2,11 +2,11 @@ package service
 
 import (
 	"errors"
+	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/exp/rand"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -193,7 +193,6 @@ func randomOAuthGoogleUser() domain.OAuthGoogleUser {
 
 // Инициализация карты tokenToGoogleUser
 func generateMockUsers() map[domain.OAuthToken]domain.OAuthGoogleUser {
-	rand.Seed(uint64(time.Now().UnixNano()))
 	tokenToGoogleUser := make(map[domain.OAuthToken]domain.OAuthGoogleUser)
 
 	for i := 0; i < 10; i++ {

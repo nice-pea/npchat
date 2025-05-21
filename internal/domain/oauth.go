@@ -22,6 +22,9 @@ type OAuthToken struct {
 	// token forever and RefreshToken or equivalent
 	// mechanisms for that TokenSource will not be used.
 	Expiry time.Time
+
+	// LinkID is the ID of the link associated with the token.
+	LinkID string
 }
 
 type OAuthGoogleUser struct {
@@ -36,7 +39,7 @@ type OAuthGoogleUser struct {
 }
 
 type OAuthLink struct {
-	State      string
+	ID         string
 	UserID     string
 	ExternalID string
 	//	Provider string
@@ -45,11 +48,11 @@ type OAuthLink struct {
 type OAuthRepository interface {
 	SaveToken(OAuthToken) error
 	SaveLink(OAuthLink) error
-	Link(OAuthLinkFilter) ([]OAuthLink, error)
+	ListLinks(OAuthListLinksFilter) ([]OAuthLink, error)
 }
 
-type OAuthLinkFilter struct {
-	State      string
+type OAuthListLinksFilter struct {
+	ID         string
 	UserID     string
 	ExternalID string
 	//	Provider string

@@ -48,7 +48,7 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 	}
 
 	// Проверить InitState
-	links, err := o.OAuthRepo.Link(domain.OAuthLinkFilter{State: in.InitState})
+	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{ID: in.InitState})
 	if err != nil {
 		return domain.User{}, err
 	}

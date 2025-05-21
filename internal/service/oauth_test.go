@@ -41,10 +41,10 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistrationInit() {
 		suite.Require().NotEmpty(state)
 
 		// Прочитать из репозитория
-		links, err := suite.rr.oauth.Link(domain.OAuthLinkFilter{})
+		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
 		suite.NoError(err)
 		suite.Require().Len(links, 1)
-		suite.Equal(state, links[0].State)
+		suite.Equal(state, links[0].ID)
 		suite.Empty(links[0].UserID)
 		suite.Empty(links[0].ExternalID)
 	})
@@ -126,11 +126,11 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 		suite.Equal(regUser.Name, user.Name)
 
 		// Проверить oauth репозиторий
-		links, err := suite.rr.oauth.Link(domain.OAuthLinkFilter{})
+		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
 		suite.NoError(err)
 		suite.Require().Len(links, 1)
 		suite.Equal(regUser.ID, links[0].ExternalID)
 		suite.Equal(user.ID, links[0].UserID)
-		suite.Equal(regOut.state, links[0].State)
+		suite.Equal(regOut.state, links[0].ID)
 	})
 }
