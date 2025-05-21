@@ -70,28 +70,28 @@ func (o *OAuthGoogleBase) AuthCodeURL(state string) string {
 	return o.Config.AuthCodeURL(state)
 }
 
-// MockOAuthGoogle — мок для OAuthGoogle
-type MockOAuthGoogle struct {
+// OAuthGoogleMock — мок для OAuthGoogle
+type OAuthGoogleMock struct {
 	ExchangeFunc    func(code string) (domain.OAuthToken, error)
 	UserFunc        func(token domain.OAuthToken) (domain.OAuthGoogleUser, error)
 	AuthCodeURLFunc func(state string) string
 }
 
-func (m *MockOAuthGoogle) Exchange(code string) (domain.OAuthToken, error) {
+func (m *OAuthGoogleMock) Exchange(code string) (domain.OAuthToken, error) {
 	if m.ExchangeFunc != nil {
 		return m.ExchangeFunc(code)
 	}
 	panic("Exchange not mocked")
 }
 
-func (m *MockOAuthGoogle) User(token domain.OAuthToken) (domain.OAuthGoogleUser, error) {
+func (m *OAuthGoogleMock) User(token domain.OAuthToken) (domain.OAuthGoogleUser, error) {
 	if m.UserFunc != nil {
 		return m.UserFunc(token)
 	}
 	panic("User not mocked")
 }
 
-func (m *MockOAuthGoogle) AuthCodeURL(state string) string {
+func (m *OAuthGoogleMock) AuthCodeURL(state string) string {
 	if m.AuthCodeURLFunc != nil {
 		return m.AuthCodeURLFunc(state)
 	}

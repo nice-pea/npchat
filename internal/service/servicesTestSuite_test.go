@@ -70,7 +70,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	for token := range suite.mockGoogleUsers {
 		suite.mockOauthCodes[randomString(13)] = token
 	}
-	suite.ad.oauth = &adapter.MockOAuthGoogle{
+	suite.ad.oauth = &adapter.OAuthGoogleMock{
 		ExchangeFunc: func(code string) (domain.OAuthToken, error) {
 			token, ok := suite.mockOauthCodes[code]
 			if !ok {
@@ -116,6 +116,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.ss.oauth = &OAuth{
 		Google:    suite.ad.oauth,
 		OAuthRepo: suite.rr.oauth,
+		UsersRepo: suite.rr.users,
 	}
 }
 

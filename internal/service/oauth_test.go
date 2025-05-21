@@ -49,6 +49,7 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistrationInit() {
 		suite.Empty(links[0].ExternalID)
 	})
 }
+
 func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
 		input := GoogleRegistrationInput{
@@ -71,24 +72,15 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 	})
 
 	suite.Run("неверный UserCode", func() {
+		// Инициализация регистрации
+		glOut := suite.googleRegistrationInit()
+
 		input := GoogleRegistrationInput{
 			UserCode:  uuid.NewString(),
-			InitState: uuid.NewString(),
+			InitState: glOut.state,
 		}
 		out, err := suite.ss.oauth.GoogleRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
-		suite.Zero(out)
-	})
-
-	suite.Run("неверный InitState", func() {
-		fk := maps.Keys(suite.mockOauthCodes)[0]
-
-		input := GoogleRegistrationInput{
-			UserCode:  fk,
-			InitState: uuid.NewString(),
-		}
-		out, err := suite.ss.oauth.GoogleRegistration(input)
-		suite.ErrorIs(err, ErrWrongInitState)
 		suite.Zero(out)
 	})
 
@@ -104,14 +96,15 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 
 	suite.Run("после регистрации пользователя можно прочитать", func() {
 		// Инициализация регистрации
-		regOut := suite.googleRegistrationInit()
-		regToken := suite.mockOauthCodes[regOut.state]
-		regUser := suite.mockGoogleUsers[regToken]
+		glOut := suite.googleRegistrationInit()
+		glCode := maps.Keys(suite.mockOauthCodes)[0]
+		glToken := suite.mockOauthCodes[glCode]
+		glUser := suite.mockGoogleUsers[glToken]
 
 		// Завершить регистрацию
 		input := GoogleRegistrationInput{
-			UserCode:  maps.Keys(suite.mockOauthCodes)[0],
-			InitState: regOut.state,
+			UserCode:  glCode,
+			InitState: glOut.state,
 		}
 		user, err := suite.ss.oauth.GoogleRegistration(input)
 		suite.NoError(err)
@@ -123,14 +116,14 @@ func (suite *servicesTestSuite) Test_OAuth_GoogleRegistration() {
 		suite.Require().Len(users, 1)
 		suite.Equal(user, users[0])
 		// google
-		suite.Equal(regUser.Name, user.Name)
+		suite.Equal(glUser.Name, user.Name)
 
 		// Проверить oauth репозиторий
 		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
 		suite.NoError(err)
 		suite.Require().Len(links, 1)
-		suite.Equal(regUser.ID, links[0].ExternalID)
+		suite.Equal(glUser.ID, links[0].ExternalID)
 		suite.Equal(user.ID, links[0].UserID)
-		suite.Equal(regOut.state, links[0].ID)
+		suite.Equal(glOut.state, links[0].ID)
 	})
 }

@@ -86,7 +86,7 @@ func (r *OAuthRepository) SaveLink(link domain.OAuthLink) error {
 	}
 
 	_, err := r.DB.NamedExec(`	
-		INSERT INTO oauth_links (id, user_id, external_id)
+		INSERT OR REPLACE INTO oauth_links (id, user_id, external_id)
 		VALUES (:id, :user_id, :external_id)
 	`, linkFromDomain(link))
 	if err != nil {

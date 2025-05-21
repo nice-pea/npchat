@@ -59,7 +59,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "",
-			Password: "Password123!",
+			Password: randomPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -85,7 +85,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
-			Password: "Password123!",
+			Password: randomPassword(),
 			Name:     "",
 			Nick:     "nick",
 		}
@@ -98,7 +98,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
-			Password: "Password123!",
+			Password: randomPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -109,7 +109,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация второй раз с существующим логином
 		input = AuthnPasswordRegistrationInput{
 			Login:    "login",
-			Password: "Password123!2",
+			Password: randomPassword(),
 			Name:     "name2",
 			Nick:     "nick2",
 		}
@@ -122,7 +122,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
-			Password: "Password123!",
+			Password: randomPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}

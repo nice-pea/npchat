@@ -2,7 +2,8 @@ package service
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/google/uuid"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -11,6 +12,7 @@ import (
 type OAuth struct {
 	Google    adapter.OAuthGoogle
 	OAuthRepo domain.OAuthRepository
+	UsersRepo domain.UsersRepository
 }
 
 type OAuthRegistrationCallbackInput struct {
@@ -56,6 +58,7 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 		return domain.User{}, ErrWrongInitState
 	}
 
+	// Получить пользователя google
 	token, err := o.Google.Exchange(in.UserCode)
 	if err != nil {
 		return domain.User{}, errors.Join(ErrWrongUserCode, err)
@@ -65,45 +68,45 @@ func (o *OAuth) GoogleRegistration(in GoogleRegistrationInput) (domain.User, err
 		return domain.User{}, err
 	}
 
-	fmt.Println(googleUser)
+	// Создать пользователя
+	user := domain.User{
+		ID:   uuid.NewString(),
+		Name: googleUser.Name,
+		Nick: "",
+	}
+	if err = o.UsersRepo.Save(user); err != nil {
+		return domain.User{}, err
+	}
 
-	return domain.User{}, nil
+	// Связать пользователя с google пользователем
+	err = o.OAuthRepo.SaveLink(domain.OAuthLink{
+		ID:         links[0].ID,
+		UserID:     user.ID,
+		ExternalID: googleUser.ID,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
 }
 
 type GoogleRegistrationInitOut struct {
 	RedirectURL string
 }
 
-//var JWTSecret = os.Getenv("OAUTH_JWT_SECRET")
-
 func (o *OAuth) GoogleRegistrationInit() (GoogleRegistrationInitOut, error) {
-	//oauthState, err := generateStateOauthJWT(JWTSecret)
-	//if err != nil {
-	//	return GoogleRegistrationInitOut{}, err
-	//}
+	// Сохранить связь
+	link := domain.OAuthLink{
+		ID:         uuid.NewString(),
+		UserID:     "",
+		ExternalID: "",
+	}
+	if err := o.OAuthRepo.SaveLink(link); err != nil {
+		return GoogleRegistrationInitOut{}, err
+	}
 
 	return GoogleRegistrationInitOut{
-		RedirectURL: o.Google.AuthCodeURL(""),
+		RedirectURL: o.Google.AuthCodeURL(link.ID),
 	}, nil
 }
-
-//func generateStateOauthJWT(secret string) (string, error) {
-//	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-//		"exp": time.Now().Add(10 * time.Minute).Unix(), // InitState живёт 10 минут
-//	})
-//	return token.SignedString([]byte(secret))
-//}
-//
-//func validateStateOauthJWT(stateToken, secret string) error {
-//	token, err := jwt.Parse(stateToken, func(token *jwt.Token) (interface{}, error) {
-//		return []byte(secret), nil
-//	})
-//	if err != nil {
-//		return err
-//	}
-//	if !token.Valid {
-//		return errors.New("token is not valid")
-//	}
-//
-//	return nil
-//}

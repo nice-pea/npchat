@@ -31,6 +31,16 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 			})
 			assert.NoError(t, err)
 		})
+		t.Run("повторное сохранение будет дублировать запись", func(t *testing.T) {
+			r := newRepository()
+			// Сохранить токен
+			token := rndToken()
+			const number = 10
+			for range number {
+				saveToken(t, r, token)
+			}
+			// TODO: ListToken
+		})
 	})
 	t.Run("SaveLink", func(t *testing.T) {
 		t.Run("нельзя сохранять связь без ID", func(t *testing.T) {
@@ -47,20 +57,30 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 		t.Run("сохраненную связь можно прочитать из репозитория", func(t *testing.T) {
 			r := newRepository()
 			// Сохранить связь
-			savedLink := domain.OAuthLink{
-				ID:         uuid.NewString(),
-				UserID:     uuid.NewString(),
-				ExternalID: uuid.NewString(),
-			}
-			err := r.SaveLink(savedLink)
-			require.NoError(t, err)
+			savedLink := saveLink(t, r, rndLink())
 			// Получить связь
 			links, err := r.ListLinks(domain.OAuthListLinksFilter{})
 			require.NoError(t, err)
 			require.Len(t, links, 1)
 			assert.Equal(t, savedLink, links[0])
 		})
-
+		t.Run("повторное сохранение по одному ID будет обновлять запись", func(t *testing.T) {
+			r := newRepository()
+			// Много раз сохранить связь
+			savedLink := rndLink()
+			for range 10 {
+				saveLink(t, r, savedLink)
+			}
+			// Сохранить связь с обновленным полем
+			const lastSavedUserID = "someID"
+			savedLink.UserID = lastSavedUserID
+			saveLink(t, r, savedLink)
+			// Получить связь
+			links, err := r.ListLinks(domain.OAuthListLinksFilter{})
+			require.NoError(t, err)
+			require.Len(t, links, 1)
+			assert.Equal(t, savedLink, links[0])
+		})
 	})
 
 	t.Run("ListLinks", func(t *testing.T) {
@@ -146,5 +166,22 @@ func rndLink() domain.OAuthLink {
 		ID:         uuid.NewString(),
 		UserID:     uuid.NewString(),
 		ExternalID: uuid.NewString(),
+	}
+}
+
+func saveToken(t *testing.T, r domain.OAuthRepository, l domain.OAuthToken) domain.OAuthToken {
+	err := r.SaveToken(l)
+	require.NoError(t, err)
+
+	return l
+}
+
+func rndToken() domain.OAuthToken {
+	return domain.OAuthToken{
+		AccessToken:  uuid.NewString(),
+		TokenType:    uuid.NewString(),
+		RefreshToken: uuid.NewString(),
+		Expiry:       time.Now(),
+		LinkID:       uuid.NewString(),
 	}
 }
