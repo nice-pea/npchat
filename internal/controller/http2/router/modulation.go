@@ -32,6 +32,7 @@ func (c *Router) modulation(handle http2.HandlerFuncRW) http.HandlerFunc {
 		// Выполнить обработку запроса
 		respData, err = handle(&rwContext{
 			request:  r,
+			writer:   w,
 			services: c.Services,
 		})
 		if err != nil {
@@ -41,6 +42,12 @@ func (c *Router) modulation(handle http2.HandlerFuncRW) http.HandlerFunc {
 				Error:   err.Error(),
 				ErrCode: errCode(err),
 			}
+		}
+
+		// Если ответ это редирект, выполнить редирект
+		if redirect, ok := respData.(http2.Redirect); ok {
+			http.Redirect(w, r, redirect.URL, redirect.Code)
+			return
 		}
 
 		// Если ответ это строка, перезаписать структурой
