@@ -44,6 +44,9 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 		// Есть query-параметр state
 		state := parsedUrl.Query().Get("state")
 		suite.NotZero(state)
+		// Есть query-параметр state
+		code := parsedUrl.Query().Get("code")
+		suite.NotZero(code)
 	})
 }
 
