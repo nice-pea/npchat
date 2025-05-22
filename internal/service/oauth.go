@@ -5,15 +5,22 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/adapter"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 type OAuth struct {
-	Providers    adapter.OAuthProviders
+	Providers    OAuthProviders
 	OAuthRepo    domain.OAuthRepository
 	UsersRepo    domain.UsersRepository
 	SessionsRepo domain.SessionsRepository
+}
+
+type OAuthProviders = map[string]OAuthProvider
+
+type OAuthProvider interface {
+	Exchange(code string) (domain.OAuthToken, error)
+	User(token domain.OAuthToken) (domain.OAuthUser, error)
+	AuthCodeURL(state string) string
 }
 
 type OAuthCompeteRegistrationInput struct {
@@ -144,7 +151,7 @@ func (o *OAuth) InitRegistration(in OAuthInitRegistrationInput) (OAuthRegistrati
 	}, nil
 }
 
-func (o *OAuth) provider(provider string) (adapter.OAuthProvider, error) {
+func (o *OAuth) provider(provider string) (OAuthProvider, error) {
 	p, ok := o.Providers[provider]
 	if !ok || p == nil {
 		return nil, ErrUnknownOAuthProvider

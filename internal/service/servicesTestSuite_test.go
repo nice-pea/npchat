@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/saime-0/nice-pea-chat/internal/adapter"
+	"github.com/saime-0/nice-pea-chat/internal/adapter/oauthProvider"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
@@ -34,7 +34,7 @@ type servicesTestSuite struct {
 		oauth         *OAuth
 	}
 	ad struct {
-		oauth adapter.OAuthProvider
+		oauth OAuthProvider
 	}
 	mockOAuthTokens map[string]domain.OAuthToken
 	mockOAuthUsers  map[domain.OAuthToken]domain.OAuthUser
@@ -70,7 +70,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	for token := range suite.mockOAuthUsers {
 		suite.mockOAuthTokens[randomString(13)] = token
 	}
-	suite.ad.oauth = &adapter.OAuthMock{
+	suite.ad.oauth = &oauthProvider.Mock{
 		ExchangeFunc: func(code string) (domain.OAuthToken, error) {
 			token, ok := suite.mockOAuthTokens[code]
 			if !ok {
@@ -114,16 +114,14 @@ func (suite *servicesTestSuite) SetupSubTest() {
 		UsersRepo:         suite.rr.users,
 	}
 	suite.ss.oauth = &OAuth{
-		Providers: adapter.OAuthProviders{
-			testProvider: suite.ad.oauth,
+		Providers: OAuthProviders{
+			oauthProvider.ProviderNameMock: suite.ad.oauth,
 		},
 		OAuthRepo:    suite.rr.oauth,
 		UsersRepo:    suite.rr.users,
 		SessionsRepo: suite.rr.sessions,
 	}
 }
-
-const testProvider = "provider"
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *servicesTestSuite) TearDownSubTest() {
