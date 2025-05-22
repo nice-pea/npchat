@@ -9,19 +9,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func (suite *servicesTestSuite) oauthRegistrationInit() OAuthRegistrationInitOut {
-	out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
-		Provider: suite.ad.oauth.Name(),
-	})
-	suite.Require().NoError(err)
-	suite.Require().NotZero(out)
-
-	_, err = url.Parse(out.RedirectURL)
-	suite.Require().NoError(err)
-
-	return out
-}
-
 func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
