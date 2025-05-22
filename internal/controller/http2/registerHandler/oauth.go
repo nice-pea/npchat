@@ -8,7 +8,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-func OAuthRegistration(router http2.Router) {
+func OAuthInitRegistration(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/registration",
 		middleware.EmptyChain,
@@ -29,7 +29,7 @@ func OAuthRegistration(router http2.Router) {
 	)
 }
 
-func OAuthRegistrationCallback(router http2.Router) {
+func OAuthCompleteRegistrationCallback(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/registration/callback",
 		middleware.EmptyChain,
@@ -41,6 +41,43 @@ func OAuthRegistrationCallback(router http2.Router) {
 			}
 
 			return context.Services().OAuth().CompeteRegistration(input)
+		},
+	)
+}
+
+func OAuthInitLogin(router http2.Router) {
+	router.HandleFunc(
+		"GET /oauth/{provider}/login",
+		middleware.EmptyChain,
+		func(context http2.Context) (any, error) {
+			input := service.OAuthInitLoginInput{
+				Provider: http2.PathStr(context, "provider"),
+			}
+			out, err := context.Services().OAuth().InitLogin(input)
+			if err != nil {
+				return nil, err
+			}
+
+			return http2.Redirect{
+				URL:  out.RedirectURL,
+				Code: http.StatusTemporaryRedirect,
+			}, nil
+		},
+	)
+}
+
+func OAuthCompleteLoginCallback(router http2.Router) {
+	router.HandleFunc(
+		"GET /oauth/{provider}/login/callback",
+		middleware.EmptyChain,
+		func(context http2.Context) (any, error) {
+			input := service.OAuthCompleteLoginInput{
+				UserCode:  http2.FormStr(context, "code"),
+				InitState: http2.FormStr(context, "state"),
+				Provider:  http2.PathStr(context, "provider"),
+			}
+
+			return context.Services().OAuth().CompleteLogin(input)
 		},
 	)
 }

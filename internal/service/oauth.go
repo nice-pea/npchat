@@ -164,3 +164,29 @@ func (o *OAuth) provider(provider string) (adapter.OAuthProvider, error) {
 
 	return p, nil
 }
+
+type OAuthInitLoginInput struct {
+	Provider string
+}
+type OAuthInitLoginOut struct {
+	RedirectURL string
+}
+
+func (o *OAuth) InitLogin(in OAuthInitLoginInput) (OAuthInitLoginOut, error) {
+	return OAuthInitLoginOut{}, nil
+}
+
+type OAuthCompleteLoginInput struct {
+	UserCode  string
+	InitState string
+	Provider  string
+}
+
+type OAuthCompleteLoginOut struct {
+	Session domain.Session
+	User    domain.User
+}
+
+func (o *OAuth) CompleteLogin(in OAuthCompleteLoginInput) (OAuthCompleteLoginOut, error) {
+	return OAuthCompleteLoginOut{}, nil
+}

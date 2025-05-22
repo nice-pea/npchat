@@ -24,7 +24,7 @@ X-Request-ID: {{$uuid}}
 Authorization: Bearer {{$uuid}}
 
 ### Vars
-@oauthProvider = google
+@oauthProvider = github
 
 ### Init oauth registration
 GET {{baseUrl}}/oauth/{{oauthProvider}}/registration
