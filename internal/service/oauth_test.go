@@ -6,13 +6,12 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/exp/maps"
 
-	"github.com/saime-0/nice-pea-chat/internal/adapter/oauthProvider"
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 func (suite *servicesTestSuite) oauthRegistrationInit() OAuthRegistrationInitOut {
 	out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
-		Provider: oauthProvider.ProviderNameMock,
+		Provider: suite.ad.oauth.Name(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().NotZero(out)
@@ -46,7 +45,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
 		out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
@@ -65,7 +64,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
 		input := OAuthCompeteRegistrationInput{
 			UserCode: "",
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrInvalidUserCode)
@@ -85,7 +84,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("ошибка если у провайдера не совпадет UserCode", func() {
 		input := OAuthCompeteRegistrationInput{
 			UserCode: uuid.NewString(),
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
@@ -106,7 +105,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("после регистрации будет создан пользователь", func() { // Завершить регистрацию
 		input := OAuthCompeteRegistrationInput{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.NoError(err)
@@ -127,7 +126,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		// Завершить регистрацию
 		input := OAuthCompeteRegistrationInput{
 			UserCode: pCode,
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.NoError(err)
@@ -146,7 +145,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		// Завершить регистрацию
 		input := OAuthCompeteRegistrationInput{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.NoError(err)
@@ -166,7 +165,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		// Завершить регистрацию
 		input := OAuthCompeteRegistrationInput{
 			UserCode: pCode,
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.Require().NoError(err)
@@ -175,7 +174,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		// Завершить регистрацию, с UserCode связанным с тем же пользователем провайдера
 		input = OAuthCompeteRegistrationInput{
 			UserCode: pCode,
-			Provider: oauthProvider.ProviderNameMock,
+			Provider: suite.ad.oauth.Name(),
 		}
 		out, err = suite.ss.oauth.CompeteRegistration(input)
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)

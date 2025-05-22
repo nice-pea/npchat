@@ -115,7 +115,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	}
 	suite.ss.oauth = &OAuth{
 		Providers: OAuthProviders{
-			oauthProvider.ProviderNameMock: suite.ad.oauth,
+			suite.ad.oauth.Name(): suite.ad.oauth,
 		},
 		OAuthRepo:    suite.rr.oauth,
 		UsersRepo:    suite.rr.users,
