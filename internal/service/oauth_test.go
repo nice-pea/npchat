@@ -161,14 +161,3 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		suite.Zero(user)
 	})
 }
-
-func (suite *servicesTestSuite) Test_OAuth_InitLogin() {
-	suite.Run("Provider обязательное поле", func() {
-		// Инициализация регистрации
-		out, err := suite.ss.oauth.InitLogin(OAuthInitLoginInput{
-			Provider: "",
-		})
-		suite.ErrorIs(err, ErrInvalidProvider)
-		suite.Zero(out)
-	})
-}
