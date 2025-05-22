@@ -117,8 +117,9 @@ func (suite *servicesTestSuite) SetupSubTest() {
 		Providers: adapter.OAuthProviders{
 			testProvider: suite.ad.oauth,
 		},
-		OAuthRepo: suite.rr.oauth,
-		UsersRepo: suite.rr.users,
+		OAuthRepo:    suite.rr.oauth,
+		UsersRepo:    suite.rr.users,
+		SessionsRepo: suite.rr.sessions,
 	}
 }
 

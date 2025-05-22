@@ -59,9 +59,10 @@ func initServices(repos *repositories, adaps *adapters) *services {
 			SessionsRepo:      repos.sessions,
 		},
 		oauth: &service.OAuth{
-			Providers: adaps.oauthProviders,
-			OAuthRepo: repos.oauth,
-			UsersRepo: repos.users,
+			Providers:    adaps.oauthProviders,
+			OAuthRepo:    repos.oauth,
+			UsersRepo:    repos.users,
+			SessionsRepo: repos.sessions,
 		},
 	}
 }

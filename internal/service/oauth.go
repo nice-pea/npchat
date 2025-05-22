@@ -10,9 +10,10 @@ import (
 )
 
 type OAuth struct {
-	Providers adapter.OAuthProviders
-	OAuthRepo domain.OAuthRepository
-	UsersRepo domain.UsersRepository
+	Providers    adapter.OAuthProviders
+	OAuthRepo    domain.OAuthRepository
+	UsersRepo    domain.UsersRepository
+	SessionsRepo domain.SessionsRepository
 }
 
 type OAuthCompeteRegistrationInput struct {
@@ -32,28 +33,33 @@ func (in OAuthCompeteRegistrationInput) Validate() error {
 	return nil
 }
 
+type OAuthCompeteRegistrationOut struct {
+	Session domain.Session
+	User    domain.User
+}
+
 // CompeteRegistration
 // Подсмотрено в: https://github.com/oguzhantasimaz/Go-Clean-Architecture-Template/blob/main/api/controller/google.go
-func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.User, error) {
+func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthCompeteRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Определить провайдера OAuth
 	provider, err := o.provider(in.Provider)
 	if err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Получить пользователя провайдера
 	token, err := provider.Exchange(in.UserCode)
 	if err != nil {
-		return domain.User{}, errors.Join(ErrWrongUserCode, err)
+		return OAuthCompeteRegistrationOut{}, errors.Join(ErrWrongUserCode, err)
 	}
 	pUser, err := provider.User(token)
 	if err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
@@ -62,10 +68,10 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 		Provider:   in.Provider,
 	})
 	if err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 	if len(links) != 0 {
-		return domain.User{}, ErrProvidersUserIsAlreadyLinked
+		return OAuthCompeteRegistrationOut{}, ErrProvidersUserIsAlreadyLinked
 	}
 
 	// Создать пользователя
@@ -75,7 +81,7 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 		Nick: "",
 	}
 	if err = o.UsersRepo.Save(user); err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Сохранить связь нашего пользователя с пользователем провайдера
@@ -85,10 +91,24 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 		Provider:   in.Provider,
 	})
 	if err != nil {
-		return domain.User{}, err
+		return OAuthCompeteRegistrationOut{}, err
 	}
 
-	return user, nil
+	// Создать сессию для пользователя
+	session := domain.Session{
+		ID:     uuid.NewString(),
+		UserID: user.ID,
+		Token:  uuid.NewString(),
+		Status: domain.SessionStatusVerified,
+	}
+	if err = o.SessionsRepo.Save(session); err != nil {
+		return OAuthCompeteRegistrationOut{}, err
+	}
+
+	return OAuthCompeteRegistrationOut{
+		Session: session,
+		User:    user,
+	}, nil
 }
 
 type OAuthRegistrationInitOut struct {
@@ -136,6 +156,7 @@ func (o *OAuth) provider(provider string) (adapter.OAuthProvider, error) {
 type OAuthInitLoginInput struct {
 	Provider string
 }
+
 type OAuthInitLoginOut struct {
 	RedirectURL string
 }

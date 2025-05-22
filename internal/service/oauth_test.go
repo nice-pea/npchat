@@ -22,22 +22,6 @@ func (suite *servicesTestSuite) oauthRegistrationInit() OAuthRegistrationInitOut
 	return out
 }
 
-func (suite *servicesTestSuite) oauthFullRegistration() domain.User {
-	// Инициализация регистрации
-	suite.oauthRegistrationInit()
-	pCode := maps.Keys(suite.mockOAuthTokens)[0]
-
-	// Завершить регистрацию
-	input := OAuthCompeteRegistrationInput{
-		UserCode: pCode,
-		Provider: testProvider,
-	}
-	user, err := suite.ss.oauth.CompeteRegistration(input)
-	suite.Require().NoError(err)
-
-	return user
-}
-
 func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
@@ -108,7 +92,23 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		suite.Zero(out)
 	})
 
-	suite.Run("после регистрации пользователя можно прочитать", func() {
+	suite.Run("после регистрации будет создан пользователь", func() { // Завершить регистрацию
+		input := OAuthCompeteRegistrationInput{
+			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
+			Provider: testProvider,
+		}
+		out, err := suite.ss.oauth.CompeteRegistration(input)
+		suite.NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить users репозиторий
+		users, err := suite.rr.users.List(domain.UsersFilter{})
+		suite.NoError(err)
+		suite.Require().Len(users, 1)
+		suite.Equal(out.User, users[0])
+	})
+
+	suite.Run("после регистрации будет создан метод авторизации", func() {
 		pCode := maps.Keys(suite.mockOAuthTokens)[0]
 		pToken := suite.mockOAuthTokens[pCode]
 		pUser := suite.mockOAuthUsers[pToken]
@@ -118,25 +118,35 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: testProvider,
 		}
-		user, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.NoError(err)
-		suite.Require().NotZero(user)
-
-		// Проверить users репозиторий
-		users, err := suite.rr.users.List(domain.UsersFilter{})
-		suite.NoError(err)
-		suite.Require().Len(users, 1)
-		suite.Equal(user, users[0])
-		// Поле провайдера
-		suite.Equal(pUser.Name, user.Name)
+		suite.Require().NotZero(out)
 
 		// Проверить oauth репозиторий
 		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
 		suite.NoError(err)
 		suite.Require().Len(links, 1)
 		suite.Equal(pUser.ID, links[0].ExternalID)
-		suite.Equal(user.ID, links[0].UserID)
-		suite.Equal(testProvider, links[0].Provider)
+		suite.Equal(out.User.ID, links[0].UserID)
+		suite.Equal(input.Provider, links[0].Provider)
+	})
+
+	suite.Run("после регистрации будет создана сессия", func() {
+		// Завершить регистрацию
+		input := OAuthCompeteRegistrationInput{
+			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
+			Provider: testProvider,
+		}
+		out, err := suite.ss.oauth.CompeteRegistration(input)
+		suite.NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить сессию
+		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{})
+		suite.NoError(err)
+		suite.Require().Len(sessions, 1)
+		suite.Equal(out.Session, sessions[0])
+		suite.Equal(domain.SessionStatusVerified, sessions[0].Status)
 	})
 
 	suite.Run("невозможно дважды зарегистрироваться на одного пользователя провайдера", func() {
@@ -147,17 +157,17 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: testProvider,
 		}
-		user, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.oauth.CompeteRegistration(input)
 		suite.Require().NoError(err)
-		suite.NotZero(user)
+		suite.NotZero(out)
 
 		// Завершить регистрацию, с UserCode связанным с тем же пользователем провайдера
 		input = OAuthCompeteRegistrationInput{
 			UserCode: pCode,
 			Provider: testProvider,
 		}
-		user, err = suite.ss.oauth.CompeteRegistration(input)
+		out, err = suite.ss.oauth.CompeteRegistration(input)
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
-		suite.Zero(user)
+		suite.Zero(out)
 	})
 }
