@@ -120,7 +120,7 @@ func setOAuthCookie(context http2.Context, redirectURL string) error {
 var errWrongState = errors.New("неправильный state")
 
 func validateOAuthCookie(context http2.Context) error {
-	oauthState, err := context.Request().Cookie(oauthCookieName) // игнорировать ErrNoCookie
+	oauthState, err := context.Request().Cookie(oauthCookieName)
 	if errors.Is(err, http.ErrNoCookie) {
 		return errWrongState
 	} else if err != nil {
