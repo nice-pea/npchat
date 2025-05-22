@@ -2,13 +2,15 @@ package oauthProvider
 
 import "github.com/saime-0/nice-pea-chat/internal/domain"
 
-const ProviderNameMock = "mock"
-
 // Mock мок для OAuthProvider
 type Mock struct {
 	ExchangeFunc    func(code string) (domain.OAuthToken, error)
 	UserFunc        func(token domain.OAuthToken) (domain.OAuthUser, error)
 	AuthCodeURLFunc func(state string) string
+}
+
+func (m *Mock) Name() string {
+	return "mock"
 }
 
 func (m *Mock) Exchange(code string) (domain.OAuthToken, error) {

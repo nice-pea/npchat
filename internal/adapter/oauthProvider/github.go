@@ -11,12 +11,14 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-const ProviderNameGitHub = "github"
-
 type GitHub struct {
 	ClientID     string
 	ClientSecret string
 	RedirectURL  string
+}
+
+func (o *GitHub) Name() string {
+	return "github"
 }
 
 func (o *GitHub) config() *oauth2.Config {
@@ -41,7 +43,7 @@ func (o *GitHub) Exchange(code string) (domain.OAuthToken, error) {
 		RefreshToken: token.RefreshToken,
 		Expiry:       token.Expiry,
 		LinkID:       "",
-		Provider:     ProviderNameGitHub,
+		Provider:     o.Name(),
 	}, nil
 }
 
@@ -77,7 +79,7 @@ func (o *GitHub) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 		Email:    githubUser.Email,
 		Name:     githubUser.Name,
 		Picture:  githubUser.AvatarURL,
-		Provider: ProviderNameGitHub,
+		Provider: o.Name(),
 	}, nil
 }
 

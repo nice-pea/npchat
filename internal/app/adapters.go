@@ -22,22 +22,24 @@ func (a *adapters) OAuthProviders() service.OAuthProviders {
 }
 
 func initAdapters() *adapters {
-	var discovery = &adapter.ServiceDiscoveryBase{
+	discovery := &adapter.ServiceDiscoveryBase{
 		Debug: true,
+	}
+	oapGoogle := &oauthProvider.Google{
+		ClientID:     os.Getenv("GOOGLE_KEY"),
+		ClientSecret: os.Getenv("GOOGLE_SECRET"),
+		RedirectURL:  discovery.NpcApiPubUrl() + "/oauth/google/registration/callback",
+	}
+	oapGithub := &oauthProvider.GitHub{
+		ClientID:     os.Getenv("GITHUB_KEY"),
+		ClientSecret: os.Getenv("GITHUB_SECRET"),
+		RedirectURL:  discovery.NpcApiPubUrl() + "/oauth/github/registration/callback",
 	}
 
 	return &adapters{
 		oauthProviders: service.OAuthProviders{
-			oauthProvider.ProviderNameGoogle: &oauthProvider.Google{
-				ClientID:     os.Getenv("GOOGLE_KEY"),
-				ClientSecret: os.Getenv("GOOGLE_SECRET"),
-				RedirectURL:  discovery.NpcApiPubUrl() + "/oauth/google/registration/callback",
-			},
-			oauthProvider.ProviderNameGitHub: &oauthProvider.GitHub{
-				ClientID:     os.Getenv("GITHUB_KEY"),
-				ClientSecret: os.Getenv("GITHUB_SECRET"),
-				RedirectURL:  discovery.NpcApiPubUrl() + "/oauth/github/registration/callback",
-			},
+			oapGoogle.Name(): oapGoogle,
+			oapGithub.Name(): oapGithub,
 		},
 		discovery: discovery,
 	}

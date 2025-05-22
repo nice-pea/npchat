@@ -12,12 +12,14 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-const ProviderNameGoogle = "google"
-
 type Google struct {
 	ClientID     string
 	ClientSecret string
 	RedirectURL  string
+}
+
+func (o *Google) Name() string {
+	return "google"
 }
 
 func (o *Google) config() *oauth2.Config {
@@ -45,7 +47,7 @@ func (o *Google) Exchange(code string) (domain.OAuthToken, error) {
 		RefreshToken: token.RefreshToken,
 		Expiry:       token.Expiry,
 		LinkID:       "",
-		Provider:     "",
+		Provider:     o.Name(),
 	}, nil
 }
 
@@ -77,7 +79,7 @@ func (o *Google) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 		Email:    googleUser.Email,
 		Name:     googleUser.Name,
 		Picture:  googleUser.Picture,
-		Provider: ProviderNameGoogle,
+		Provider: o.Name(),
 	}, nil
 }
 

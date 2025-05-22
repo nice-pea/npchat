@@ -21,6 +21,7 @@ type OAuthProvider interface {
 	Exchange(code string) (domain.OAuthToken, error)
 	User(token domain.OAuthToken) (domain.OAuthUser, error)
 	AuthCodeURL(state string) string
+	Name() string
 }
 
 type OAuthCompeteRegistrationInput struct {
