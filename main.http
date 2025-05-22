@@ -1,8 +1,11 @@
+### Variables
+@baseUrl = http://localhost:8080
+
 ### Check server availability
-GET http://localhost:8080/ping
+GET {{baseUrl}}/ping
 
 ### Create new chat
-POST http://localhost:8080/chats
+POST {{baseUrl}}/chats
 Content-Type: application/json
 Accept: application/json
 X-Request-ID: {{$uuid}}
@@ -14,14 +17,23 @@ Authorization: Bearer {{$uuid}}
 }
 
 ### Get user chats
-GET http://localhost:8080/chats
+GET {{baseUrl}}/chats
 Content-Type: application/json
 Accept: application/json
 X-Request-ID: {{$uuid}}
 Authorization: Bearer {{$uuid}}
 
+### Vars
+@oauthProvider = google
 
-### Init google registration
-GET http://localhost:8080/oauth/google/registration
+### Init oauth registration
+GET {{baseUrl}}/oauth/{{oauthProvider}}/registration
+Content-Type: application/json
+Accept: application/json
+
+### Complete oauth registration
+@oauthState = variable value
+@oauthCode = variable value
+GET {{baseUrl}}/oauth/{{oauthProvider}}/callback?code={{oauthCode}}&state={{oauthState}}
 Content-Type: application/json
 Accept: application/json

@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
+	githubOAuth "golang.org/x/oauth2/github"
 	googleOAuth "golang.org/x/oauth2/google"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -20,7 +20,7 @@ const (
 
 const (
 	oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-	oauthGitHubUrlAPI = "https://api.github.com/user "
+	oauthGitHubUrlAPI = "https://api.github.com/user"
 )
 
 type OAuthProviders = map[string]OAuthProvider
@@ -77,14 +77,10 @@ func (o *OAuthGoogle) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 	}
 
 	var googleUser struct {
-		ID            string `json:"id"`
-		Email         string `json:"email"`
-		VerifiedEmail bool   `json:"verified_email"`
-		Name          string `json:"name"`
-		GivenName     string `json:"given_name"`
-		FamilyName    string `json:"family_name"`
-		Picture       string `json:"picture"`
-		Locale        string `json:"locale"`
+		ID      string `json:"id"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
 	}
 	if err = json.Unmarshal(data, &googleUser); err != nil {
 		return domain.OAuthUser{}, err
@@ -113,7 +109,7 @@ func (o *OAuthGitHub) config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     o.ClientID,
 		ClientSecret: o.ClientSecret,
-		Endpoint:     github.Endpoint,
+		Endpoint:     githubOAuth.Endpoint,
 		RedirectURL:  o.RedirectURL,
 		Scopes:       []string{"user:email"},
 	}
