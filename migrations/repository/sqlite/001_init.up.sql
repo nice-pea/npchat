@@ -63,7 +63,6 @@ CREATE TABLE oauth_tokens
 
 CREATE TABLE oauth_links
 (
-    id          TEXT PRIMARY KEY,
     user_id     TEXT NOT NULL,
     external_id TEXT NOT NULL,
     provider    TEXT NOT NULL,

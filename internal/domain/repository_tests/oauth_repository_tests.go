@@ -44,15 +44,10 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 		})
 	})
 	t.Run("SaveLink", func(t *testing.T) {
-		t.Run("нельзя сохранять связь без ID", func(t *testing.T) {
+		t.Run("нельзя сохранять пустую связь", func(t *testing.T) {
 			r := newRepository()
 			// Сохранить связь
-			savedLink := domain.OAuthLink{
-				ID:         "",
-				UserID:     "userId",
-				ExternalID: "extId",
-				Provider:   "provider",
-			}
+			savedLink := domain.OAuthLink{}
 			err := r.SaveLink(savedLink)
 			assert.Error(t, err)
 		})
@@ -66,22 +61,21 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 			require.Len(t, links, 1)
 			assert.Equal(t, savedLink, links[0])
 		})
-		t.Run("повторное сохранение по одному ID будет обновлять запись", func(t *testing.T) {
+		t.Run("повторное сохранение будет дублировать запись", func(t *testing.T) {
 			r := newRepository()
+			const number = 10
 			// Много раз сохранить связь
 			savedLink := rndLink()
-			for range 10 {
+			for range number {
 				saveLink(t, r, savedLink)
 			}
-			// Сохранить связь с обновленным полем
-			const lastSavedUserID = "someID"
-			savedLink.UserID = lastSavedUserID
-			saveLink(t, r, savedLink)
 			// Получить связь
 			links, err := r.ListLinks(domain.OAuthListLinksFilter{})
 			require.NoError(t, err)
-			require.Len(t, links, 1)
-			assert.Equal(t, savedLink, links[0])
+			require.Len(t, links, number)
+			for _, link := range links {
+				require.Equal(t, savedLink, link)
+			}
 		})
 	})
 
@@ -92,21 +86,6 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 			sessions, err := r.ListLinks(domain.OAuthListLinksFilter{})
 			assert.NoError(t, err)
 			assert.Empty(t, sessions)
-		})
-		t.Run("фильтр по ID", func(t *testing.T) {
-			r := newRepository()
-			// Сохранить связь
-			savedLink := saveLink(t, r, rndLink())
-			for range 10 {
-				saveLink(t, r, rndLink())
-			}
-			// Список связей
-			sessions, err := r.ListLinks(domain.OAuthListLinksFilter{
-				ID: savedLink.ID,
-			})
-			assert.NoError(t, err)
-			require.Len(t, sessions, 1)
-			assert.Equal(t, savedLink, sessions[0])
 		})
 		t.Run("фильтр по UserID", func(t *testing.T) {
 			r := newRepository()
@@ -180,7 +159,6 @@ func saveLink(t *testing.T, r domain.OAuthRepository, l domain.OAuthLink) domain
 
 func rndLink() domain.OAuthLink {
 	return domain.OAuthLink{
-		ID:         uuid.NewString(),
 		UserID:     uuid.NewString(),
 		ExternalID: uuid.NewString(),
 		Provider:   uuid.NewString(),

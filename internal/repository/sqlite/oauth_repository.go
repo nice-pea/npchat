@@ -39,7 +39,6 @@ func tokenFromDomain(t domain.OAuthToken) token {
 
 func linkFromDomain(l domain.OAuthLink) link {
 	return link{
-		ID:         l.ID,
 		UserID:     l.UserID,
 		ExternalID: l.ExternalID,
 		Provider:   l.Provider,
@@ -50,7 +49,6 @@ func linksToDomain(links []link) []domain.OAuthLink {
 	result := make([]domain.OAuthLink, len(links))
 	for i, l := range links {
 		result[i] = domain.OAuthLink{
-			ID:         l.ID,
 			UserID:     l.UserID,
 			ExternalID: l.ExternalID,
 			Provider:   l.Provider,
@@ -86,13 +84,13 @@ func (r *OAuthRepository) SaveToken(token domain.OAuthToken) error {
 }
 
 func (r *OAuthRepository) SaveLink(link domain.OAuthLink) error {
-	if link.ID == "" {
-		return errors.New("invalid id")
+	if link == (domain.OAuthLink{}) {
+		return errors.New("link  must not be empty")
 	}
 
 	_, err := r.DB.NamedExec(`	
-		INSERT OR REPLACE INTO oauth_links (id, user_id, external_id, provider)
-		VALUES (:id, :user_id, :external_id, :provider)
+		INSERT OR REPLACE INTO oauth_links (user_id, external_id, provider)
+		VALUES (:user_id, :external_id, :provider)
 	`, linkFromDomain(link))
 	if err != nil {
 		return fmt.Errorf("DB.NamedExec: %w", err)
@@ -106,11 +104,10 @@ func (r *OAuthRepository) ListLinks(filter domain.OAuthListLinksFilter) ([]domai
 	if err := r.DB.Select(&links, `
 			SELECT * 
 			FROM oauth_links 
-			WHERE ($1 = '' OR $1 = id)
-				AND ($2 = '' OR $2 = user_id)
-				AND ($3 = '' OR $3 = external_id)
-				AND ($4 = '' OR $4 = provider)
-		`, filter.ID, filter.UserID, filter.ExternalID, filter.Provider); err != nil {
+			WHERE ($1 = '' OR $1 = user_id)
+				AND ($2 = '' OR $2 = external_id)
+				AND ($3 = '' OR $3 = provider)
+		`, filter.UserID, filter.ExternalID, filter.Provider); err != nil {
 		return nil, fmt.Errorf("DB.Select: %w", err)
 	}
 

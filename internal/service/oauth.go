@@ -16,18 +16,14 @@ type OAuth struct {
 }
 
 type OAuthCompeteRegistrationInput struct {
-	UserCode  string
-	InitState string
-	Provider  string
+	UserCode string
+	Provider string
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in OAuthCompeteRegistrationInput) Validate() error {
 	if in.UserCode == "" {
 		return ErrInvalidUserCode
-	}
-	if in.InitState == "" {
-		return ErrInvalidInitState
 	}
 	if in.Provider == "" {
 		return ErrInvalidProvider
@@ -50,22 +46,6 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 		return domain.User{}, err
 	}
 
-	// Найти ранее созданную пустую связь InitState
-	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
-		ID:       in.InitState,
-		Provider: in.Provider,
-	})
-	if err != nil {
-		return domain.User{}, err
-	}
-	if len(links) != 1 {
-		return domain.User{}, ErrWrongInitState
-	}
-	if links[0].UserID != "" || links[0].ExternalID != "" {
-		return domain.User{}, ErrOAuthRegistrationAlreadyCompleted
-	}
-	oauthLink := links[0]
-
 	// Получить пользователя провайдера
 	token, err := provider.Exchange(in.UserCode)
 	if err != nil {
@@ -77,7 +57,7 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 	}
 
 	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
-	links, err = o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
+	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
 		ExternalID: pUser.ID,
 		Provider:   in.Provider,
 	})
@@ -100,7 +80,6 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (domain.Us
 
 	// Сохранить связь нашего пользователя с пользователем провайдера
 	err = o.OAuthRepo.SaveLink(domain.OAuthLink{
-		ID:         oauthLink.ID,
 		UserID:     user.ID,
 		ExternalID: pUser.ID,
 		Provider:   in.Provider,
@@ -140,19 +119,8 @@ func (o *OAuth) InitRegistration(in OAuthInitRegistrationInput) (OAuthRegistrati
 		return OAuthRegistrationInitOut{}, err
 	}
 
-	// Сохранить связь
-	link := domain.OAuthLink{
-		ID:         uuid.NewString(),
-		UserID:     "",
-		ExternalID: "",
-		Provider:   in.Provider,
-	}
-	if err := o.OAuthRepo.SaveLink(link); err != nil {
-		return OAuthRegistrationInitOut{}, err
-	}
-
 	return OAuthRegistrationInitOut{
-		RedirectURL: provider.AuthCodeURL(link.ID),
+		RedirectURL: provider.AuthCodeURL(uuid.NewString()),
 	}, nil
 }
 

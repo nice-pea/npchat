@@ -7,12 +7,17 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// Context представляет контекст HTTP-запроса
+// rwContext представляет контекст HTTP-запроса
 type rwContext struct {
 	requestID string
 	request   *http.Request
+	writer    http.ResponseWriter
 	session   domain.Session
 	services  http2.Services
+}
+
+func (r *rwContext) Writer() http.ResponseWriter {
+	return r.writer
 }
 
 func (r *rwContext) RequestID() string {

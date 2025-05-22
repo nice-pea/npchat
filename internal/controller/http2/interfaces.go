@@ -17,6 +17,7 @@ type Context interface {
 	RequestID() string
 	Session() domain.Session
 	Request() *http.Request
+	Writer() http.ResponseWriter
 	Services() Services
 }
 
