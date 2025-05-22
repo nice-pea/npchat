@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"golang.org/x/oauth2"
-	githubOAuth "golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/github"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
@@ -25,7 +25,7 @@ func (o *GitHub) config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     o.ClientID,
 		ClientSecret: o.ClientSecret,
-		Endpoint:     githubOAuth.Endpoint,
+		Endpoint:     github.Endpoint,
 		RedirectURL:  o.RedirectURL,
 		Scopes:       []string{"user:email"},
 	}

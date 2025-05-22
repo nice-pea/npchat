@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"golang.org/x/oauth2"
-	googleOAuth "golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/google"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
@@ -26,7 +26,7 @@ func (o *Google) config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     o.ClientID,
 		ClientSecret: o.ClientSecret,
-		Endpoint:     googleOAuth.Endpoint,
+		Endpoint:     google.Endpoint,
 		RedirectURL:  o.RedirectURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
