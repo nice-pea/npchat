@@ -20,7 +20,6 @@ var (
 
 var (
 	ErrWrongUserCode = errors.New("неправильный UserCode")
-	//ErrWrongInitState = errors.New("неправильный InitState")
 )
 
 var (
@@ -39,6 +38,5 @@ var (
 	ErrSubjectUserNotAllowed        = errors.New("у пользователя нет прав на это действие")
 	ErrLoginIsAlreadyInUse          = errors.New("логин уже используется")
 	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
-	//ErrOAuthRegistrationAlreadyCompleted = errors.New("oauth регистрация уже завершена")
-	ErrUnknownOAuthProvider = errors.New("неизвестный OAuth провайдер")
+	ErrUnknownOAuthProvider         = errors.New("неизвестный OAuth провайдер")
 )

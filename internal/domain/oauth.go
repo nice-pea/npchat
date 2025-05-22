@@ -39,7 +39,6 @@ type OAuthUser struct {
 }
 
 type OAuthLink struct {
-	//ID         string
 	UserID     string
 	ExternalID string
 	Provider   string
@@ -52,7 +51,6 @@ type OAuthRepository interface {
 }
 
 type OAuthListLinksFilter struct {
-	//ID         string
 	UserID     string
 	ExternalID string
 	Provider   string
