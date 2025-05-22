@@ -87,7 +87,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		suite.Zero(out)
 	})
 
-	suite.Run("неверный UserCode", func() {
+	suite.Run("ошибка если у провайдера не совпадет UserCode", func() {
 		input := OAuthCompeteRegistrationInput{
 			UserCode: uuid.NewString(),
 			Provider: testProvider,
