@@ -81,7 +81,6 @@ func OAuthInitLogin(router http2.Router) {
 		"GET /oauth/{provider}/login",
 		middleware.EmptyChain, // Нет аутентификации на этом этапе
 		func(context http2.Context) (any, error) {
-			// Формируем входные данные для инициализации OAuth-входа
 			input := service.OAuthInitLoginInput{
 				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
 			}
@@ -121,13 +120,11 @@ func OAuthCompleteLoginCallback(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для завершения OAuth-входа
 			input := service.OAuthCompleteLoginInput{
-				UserCode: http2.FormStr(context, "code"),     // Код, переданный провайдером
-				Provider: http2.PathStr(context, "provider"), // Имя провайдера из URL
+				UserCode: http2.FormStr(context, "code"),
+				Provider: http2.PathStr(context, "provider"),
 			}
 
-			// Завершаем вход через OAuth-сервис
 			return context.Services().OAuth().CompleteLogin(input)
 		},
 	)

@@ -6,6 +6,7 @@ import (
 	"slices"
 )
 
+// DecodeBody декодирует тело запроса в структуру dst.
 func DecodeBody(context Context, dst any) error {
 	if err := json.NewDecoder(context.Request().Body).Decode(dst); err != nil {
 		return fmt.Errorf("json Decoder Decode: %w", err)
@@ -14,14 +15,12 @@ func DecodeBody(context Context, dst any) error {
 	return nil
 }
 
+// PathStr возвращает значение из пути запроса
 func PathStr(context Context, name string) string {
 	return context.Request().PathValue(name)
 }
 
-func QueryStr(context Context, name string) string {
-	return context.Request().URL.Query().Get(name)
-}
-
+// FormStr возвращает значение query-параметра или form-data запроса
 func FormStr(context Context, name string) string {
 	return context.Request().FormValue(name)
 }
