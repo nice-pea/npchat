@@ -15,15 +15,11 @@ func CancelInvitation(router http2.Router) {
 		"POST /invitations/{invitationID}/cancel",
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
-			// Формируем входные данные для отмены приглашения.
-			// SubjectUserID - ID пользователя, выполняющего отмену.
-			// InvitationID - ID приглашения, которое требуется отменить.
 			input := service.CancelInvitationInput{
 				SubjectUserID: context.Session().UserID,
 				InvitationID:  http2.PathStr(context, "invitationID"),
 			}
 
-			// Вызываем сервис отмены приглашения.
 			return nil, context.Services().Invitations().CancelInvitation(input)
 		})
 }

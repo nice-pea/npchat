@@ -61,13 +61,11 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для завершения регистрации
 			input := service.OAuthCompeteRegistrationInput{
-				UserCode: http2.FormStr(context, "code"),     // Код, переданный провайдером
-				Provider: http2.PathStr(context, "provider"), // Имя провайдера из URL
+				UserCode: http2.FormStr(context, "code"),
+				Provider: http2.PathStr(context, "provider"),
 			}
 
-			// Завершаем регистрацию через OAuth-сервис
 			return context.Services().OAuth().CompeteRegistration(input)
 		},
 	)
