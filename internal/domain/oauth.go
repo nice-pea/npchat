@@ -8,7 +8,6 @@ type OAuthToken struct {
 	AccessToken string
 
 	// TokenType это тип токена.
-	// Метод Type возвращает либо это значение, либо "Bearer", по умолчанию.
 	TokenType string
 
 	// RefreshToken это токен, который используется приложением
@@ -18,9 +17,8 @@ type OAuthToken struct {
 
 	// Expiry это необязательное время истечения токена доступа.
 	//
-	// Если равно нулю, реализации TokenSource будут повторно использовать тот же
-	// токен навсегда, и RefreshToken или эквивалентные
-	// механизмы для этого TokenSource не будут использоваться.
+	// Если равно нулю, AccessToken будет валидным навсегда,
+	// и механизм обновления с помощью RefreshToken не будет использоваться.
 	Expiry time.Time
 
 	// LinkID это идентификатор ссылки, связанной с токеном.
@@ -49,7 +47,8 @@ type OAuthLink struct {
 
 // OAuthRepository интерфейс для работы с репозиторием OAuth.
 type OAuthRepository interface {
-	// SaveToken сохраняет запись
+	// SaveToken сохраняет запись.
+	// TODO: Сейчас не используется; Понадобится для внедрения автообновления токена.
 	SaveToken(OAuthToken) error
 
 	// SaveLink сохраняет запись

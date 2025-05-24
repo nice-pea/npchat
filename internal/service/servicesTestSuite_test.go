@@ -85,7 +85,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 			}
 			return user, nil
 		},
-		AuthCodeURLFunc: func(state string) string {
+		AuthorizationURLFunc: func(state string) string {
 			return "https://provider.com/o/oauth2/auth?code=somecode&state=" + state
 		},
 	}

@@ -125,9 +125,8 @@ func OAuthCompleteLoginCallback(router http2.Router) {
 
 			// Формируем входные данные для завершения OAuth-входа
 			input := service.OAuthCompleteLoginInput{
-				UserCode:  http2.FormStr(context, "code"),     // Код, переданный провайдером
-				InitState: http2.FormStr(context, "state"),    // State из запроса
-				Provider:  http2.PathStr(context, "provider"), // Имя провайдера из URL
+				UserCode: http2.FormStr(context, "code"),     // Код, переданный провайдером
+				Provider: http2.PathStr(context, "provider"), // Имя провайдера из URL
 			}
 
 			// Завершаем вход через OAuth-сервис
