@@ -8,11 +8,12 @@ import (
 
 // DeleteMember регистрирует обработчик, позволяющий удалить участника из чата.
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
+//
 // Метод: DELETE /chats/{chatID}/members
 func DeleteMember(router http2.Router) {
-	// requestBody описывает структуру тела запроса для удаления участника из чата.
+	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
-		UserID string `json:"user_id"` // ID пользователя, которого требуется удалить из чата
+		UserID string `json:"user_id"`
 	}
 	router.HandleFunc(
 		"DELETE /chats/{chatID}/members",
@@ -24,17 +25,12 @@ func DeleteMember(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для сервиса удаления участника.
-			// SubjectUserID - ID пользователя, выполняющего удаление (должен быть главным администратором).
-			// ChatID - ID чата, из которого удаляется участник (берётся из параметра пути).
-			// UserID - ID пользователя, которого требуется удалить (берётся из тела запроса)
 			input := service.DeleteMemberInput{
 				SubjectUserID: context.Session().UserID,
 				ChatID:        http2.PathStr(context, "chatID"),
 				UserID:        rb.UserID,
 			}
 
-			// Вызываем сервис удаления участника из чата.
 			return nil, context.Services().Members().DeleteMember(input)
 		})
 }

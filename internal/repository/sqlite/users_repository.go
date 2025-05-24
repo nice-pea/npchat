@@ -10,18 +10,24 @@ import (
 )
 
 type user struct {
-	ID string `db:"id"`
+	ID   string `db:"id"`
+	Name string `db:"name"`
+	Nick string `db:"nick"`
 }
 
 func userToDomain(repoUser user) domain.User {
 	return domain.User{
-		ID: repoUser.ID,
+		ID:   repoUser.ID,
+		Name: repoUser.Name,
+		Nick: repoUser.Nick,
 	}
 }
 
 func userFromDomain(domainUser domain.User) user {
 	return user{
-		ID: domainUser.ID,
+		ID:   domainUser.ID,
+		Name: domainUser.Name,
+		Nick: domainUser.Nick,
 	}
 }
 
@@ -69,8 +75,8 @@ func (r *UsersRepository) Save(user domain.User) error {
 		return errors.New("invalid user id")
 	}
 	_, err := r.DB.NamedExec(`
-		INSERT OR REPLACE INTO users(id)
-		VALUES (:id)
+		INSERT OR REPLACE INTO users(id, name, nick)
+		VALUES (:id, :name, :nick)
 	`, user)
 	if err != nil {
 		return fmt.Errorf("DB.NamedExec: %w", err)

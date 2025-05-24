@@ -8,12 +8,13 @@ import (
 
 // LoginByPassword регистрирует обработчик, позволяющий авторизоваться по логину и паролю.
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
+//
 // Метод: POST /login/password
 func LoginByPassword(router http2.Router) {
-	// requestBody описывает структуру тела запроса для авторизации по логину и паролю.
+	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
-		Login    string `json:"login"`    // Логин пользователя
-		Password string `json:"password"` // Пароль пользователя
+		Login    string `json:"login"`
+		Password string `json:"password"`
 	}
 	router.HandleFunc(
 		"POST /login/password",
@@ -25,13 +26,11 @@ func LoginByPassword(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для сервиса авторизации.
 			input := service.AuthnPasswordLoginInput{
 				Login:    rb.Login,
 				Password: rb.Password,
 			}
 
-			// Вызываем сервис авторизации по логину и паролю и возвращаем результат.
 			return context.Services().AuthnPassword().Login(input)
 		})
 }

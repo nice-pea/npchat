@@ -8,12 +8,13 @@ import (
 
 // SendInvitation регистрирует обработчик, позволяющий отправить приглашение в чат.
 // Доступен только авторизованным пользователям.
+//
 // Метод: POST /invitations
 func SendInvitation(router http2.Router) {
-	// requestBody описывает структуру тела запроса для отправки приглашения.
+	// Тело запроса для отправки приглашения.
 	type requestBody struct {
-		ChatID string `json:"chat_id"` // ID чата, в который отправляется приглашение
-		UserID string `json:"user_id"` // ID пользователя, которого приглашают в чат
+		ChatID string `json:"chat_id"`
+		UserID string `json:"user_id"`
 	}
 	router.HandleFunc(
 		"POST /invitations",
@@ -25,17 +26,12 @@ func SendInvitation(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для сервиса отправки приглашения.
-			// SubjectUserID - ID пользователя, отправляющего приглашение (берётся из сессии)
-			// ChatID - ID чата, в который отправляется приглашение.
-			// UserID - ID пользователя, которого приглашают.
 			input := service.SendInvitationInput{
 				SubjectUserID: context.Session().UserID,
 				ChatID:        rb.ChatID,
 				UserID:        rb.UserID,
 			}
 
-			// Вызываем сервис отправки приглашения и возвращаем результат.
 			return context.Services().Invitations().SendInvitation(input)
 		})
 }
