@@ -8,6 +8,7 @@ import (
 
 // ChatMembers регистрирует обработчик, позволяющий получить список участников чата.
 // Доступен только авторизованным пользователям.
+//
 // Метод: GET /chats/{chatID}/members
 func ChatMembers(router http2.Router) {
 	router.HandleFunc(

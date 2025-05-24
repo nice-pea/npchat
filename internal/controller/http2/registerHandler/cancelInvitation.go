@@ -8,6 +8,7 @@ import (
 
 // CancelInvitation регистрирует обработчик, позволяющий отменить приглашение в чат.
 // Доступен только авторизованным пользователям.
+//
 // Метод: POST /invitations/{invitationID}/cancel
 func CancelInvitation(router http2.Router) {
 	router.HandleFunc(

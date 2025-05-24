@@ -8,6 +8,7 @@ import (
 
 // ChatInvitations регистрирует обработчик, позволяющий получить список приглашений в определённый чат.
 // Доступен только авторизованным пользователям.
+//
 // Метод: GET /chats/{chatID}/invitations
 func ChatInvitations(router http2.Router) {
 	router.HandleFunc(

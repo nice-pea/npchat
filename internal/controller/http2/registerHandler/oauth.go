@@ -13,6 +13,7 @@ import (
 
 // OAuthInitRegistration регистрирует обработчик, инициирующий процесс регистрации через OAuth.
 // Редиректит пользователя на страницу авторизации провайдера.
+// Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration
 func OAuthInitRegistration(router http2.Router) {
@@ -47,6 +48,7 @@ func OAuthInitRegistration(router http2.Router) {
 
 // OAuthCompleteRegistrationCallback регистрирует обработчик, завершающий регистрацию через OAuth.
 // Обрабатывает callback от провайдера после успешной авторизации.
+// Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration/callback
 func OAuthCompleteRegistrationCallback(router http2.Router) {
@@ -73,6 +75,7 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 
 // OAuthInitLogin регистрирует обработчик, инициирующий процесс входа через OAuth.
 // Редиректит пользователя на страницу авторизации провайдера.
+// Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login
 func OAuthInitLogin(router http2.Router) {
@@ -107,6 +110,7 @@ func OAuthInitLogin(router http2.Router) {
 
 // OAuthCompleteLoginCallback регистрирует обработчик, завершающий процесс входа через OAuth.
 // Обрабатывает callback от провайдера после успешной авторизации.
+// Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login/callback
 func OAuthCompleteLoginCallback(router http2.Router) {

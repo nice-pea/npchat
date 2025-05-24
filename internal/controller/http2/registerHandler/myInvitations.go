@@ -8,6 +8,7 @@ import (
 
 // MyInvitations регистрирует обработчик, позволяющий получить список приглашений пользователя.
 // Доступен только авторизованным пользователям.
+//
 // Метод: GET /invitations
 func MyInvitations(router http2.Router) {
 	router.HandleFunc(

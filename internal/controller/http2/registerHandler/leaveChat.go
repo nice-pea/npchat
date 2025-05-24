@@ -8,6 +8,7 @@ import (
 
 // LeaveChat регистрирует обработчик, позволяющий пользователю покинуть чат.
 // Доступен только авторизованным пользователям.
+//
 // Метод: POST /chats/{chatID}/leave
 func LeaveChat(router http2.Router) {
 	router.HandleFunc(

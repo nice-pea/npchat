@@ -8,6 +8,7 @@ import (
 
 // MyChats регистрирует HTTP-обработчик для получения списка чатов пользователя.
 // Данный обработчик доступен только авторизованным пользователям.
+//
 // Метод: GET /chats
 func MyChats(router http2.Router) {
 	router.HandleFunc(
