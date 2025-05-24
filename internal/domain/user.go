@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// User представляет собой пользователя.
 type User struct {
 	ID   string
 	Name string
@@ -19,15 +20,18 @@ var (
 	ErrUserIDValidate = errors.New("некорректный UUID")
 )
 
+// ValidateID проверяет корректность идентификатора пользователя.
 func (u User) ValidateID() error {
 	if err := uuid.Validate(u.ID); err != nil {
 		return errors.Join(err, ErrUserIDValidate)
 	}
-	return nil
+	return nil // Идентификатор валиден
 }
 
+// UserNameMaxLen максимальная длина имени пользователя.
 const UserNameMaxLen = 35
 
+// ValidateName проверяет корректность идентификатора пользователя.
 func (u User) ValidateName() error {
 	// Check if name is empty or contains only whitespace
 	if strings.TrimSpace(u.Name) == "" {
@@ -54,8 +58,10 @@ func (u User) ValidateName() error {
 	return nil
 }
 
+// UserNickMaxLen максимальная длина ника пользователя.
 const UserNickMaxLen = 35
 
+// ValidateNick проверяет корректность идентификатора пользователя.
 func (u User) ValidateNick() error {
 	// Проверка на пустое имя пользователя
 	if u.Nick == "" {
@@ -101,7 +107,7 @@ func (u User) ValidateNick() error {
 		return fmt.Errorf("nick must contain at least one letter or digit")
 	}
 
-	return nil
+	return nil // Ник валиден
 }
 
 // isAllowedNickRune проверяет, разрешен ли символ в имени пользователя
@@ -115,11 +121,17 @@ func isAllowedLastFirstNickRune(r rune) bool {
 }
 
 type UsersRepository interface {
+	// List возвращает список с учетом фильтрации
 	List(filter UsersFilter) ([]User, error)
+
+	// Save сохраняет запись
 	Save(user User) error
+
+	// Delete удаляет запись
 	Delete(id string) error
 }
 
+// UsersFilter представляет собой фильтр по пользователям.
 type UsersFilter struct {
-	ID string
+	ID string // Идентификатор пользователя для фильтрации
 }
