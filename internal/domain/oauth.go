@@ -2,56 +2,66 @@ package domain
 
 import "time"
 
+// OAuthToken представляет собой OAuth2 токен.
 type OAuthToken struct {
-	// AccessToken is the token that authorizes and authenticates
-	// the requests.
+	// AccessToken это токен, который авторизует и аутентифицирует запросы.
 	AccessToken string
 
-	// TokenType is the type of token.
-	// The Type method returns either this or "Bearer", the default.
+	// TokenType это тип токена.
+	// Метод Type возвращает либо это значение, либо "Bearer", по умолчанию.
 	TokenType string
 
-	// RefreshToken is a token that's used by the application
-	// (as opposed to the user) to refresh the access token
-	// if it expires.
+	// RefreshToken это токен, который используется приложением
+	// (в отличие от пользователя) для обновления токена доступа
+	// в случае его истечения.
 	RefreshToken string
 
-	// Expiry is the optional expiration time of the access token.
+	// Expiry это необязательное время истечения токена доступа.
 	//
-	// If zero, TokenSource implementations will reuse the same
-	// token forever and RefreshToken or equivalent
-	// mechanisms for that TokenSource will not be used.
+	// Если равно нулю, реализации TokenSource будут повторно использовать тот же
+	// токен навсегда, и RefreshToken или эквивалентные
+	// механизмы для этого TokenSource не будут использоваться.
 	Expiry time.Time
 
-	// LinkID is the ID of the link associated with the token.
-	// TODO: Required.
+	// LinkID это идентификатор ссылки, связанной с токеном.
+	// TODO: Обязательное поле.
 	LinkID string
 
+	// Provider это провайдер, выдавший токен.
 	Provider string
 }
 
+// OAuthUser представляет собой пользователя OAuth2.
 type OAuthUser struct {
-	ID       string
-	Email    string
-	Name     string
-	Picture  string
-	Provider string
+	ID       string // ID пользователя в провайдере
+	Email    string // Электронная почта
+	Name     string // Имя пользователя
+	Picture  string // URL изображения профиля
+	Provider string // Провайдер, которому принадлежит пользователь
 }
 
+// OAuthLink представляет собой структуру для хранения информации о связи между пользователем и внешним идентификатором.
 type OAuthLink struct {
-	UserID     string
-	ExternalID string
-	Provider   string
+	UserID     string // ID нашего пользователя
+	ExternalID string // ID пользователя провайдером
+	Provider   string // Провайдер, которому принадлежит пользователь
 }
 
+// OAuthRepository интерфейс для работы с репозиторием OAuth.
 type OAuthRepository interface {
+	// SaveToken сохраняет запись
 	SaveToken(OAuthToken) error
+
+	// SaveLink сохраняет запись
 	SaveLink(OAuthLink) error
-	ListLinks(OAuthListLinksFilter) ([]OAuthLink, error)
+
+	// ListLinks возвращает список с учетом фильтрации
+	ListLinks(filter OAuthListLinksFilter) ([]OAuthLink, error)
 }
 
+// OAuthListLinksFilter представляет собой фильтр по связям пользователей с провайдерами.
 type OAuthListLinksFilter struct {
-	UserID     string
-	ExternalID string
-	Provider   string
+	UserID     string // Фильтрация по ID пользователя
+	ExternalID string // Фильтрация по ID пользователя провайдера
+	Provider   string // Фильтрация по провайдеру
 }
