@@ -11,9 +11,9 @@ import (
 
 // User представляет собой пользователя.
 type User struct {
-	ID   string
-	Name string
-	Nick string
+	ID   string // ID пользователя
+	Name string // Имя пользователя
+	Nick string // Ник пользователя
 }
 
 var (
@@ -31,27 +31,27 @@ func (u User) ValidateID() error {
 // UserNameMaxLen максимальная длина имени пользователя.
 const UserNameMaxLen = 35
 
-// ValidateName проверяет корректность идентификатора пользователя.
+// ValidateName проверяет корректность имени пользователя.
 func (u User) ValidateName() error {
-	// Check if name is empty or contains only whitespace
+	// Проверить, не является ли имя пустым или содержит только пробелы
 	if strings.TrimSpace(u.Name) == "" {
-		return errors.New("name cannot be empty")
+		return errors.New("имя не может быть пустым")
 	}
 
 	// Проверка на длину имени пользователя
 	if len([]rune(u.Name)) > UserNameMaxLen {
-		return fmt.Errorf("name cannot be longer than %d characters", UserNameMaxLen)
+		return fmt.Errorf("длина имени не может превышать %d символов", UserNameMaxLen)
 	}
 
 	// Check for leading or trailing spaces
 	if u.Name != strings.TrimSpace(u.Name) {
-		return errors.New("name cannot have leading or trailing spaces")
+		return errors.New("имя не может содержать начальных или конечных пробелов")
 	}
 
 	// Проверка на управляющие символы (кроме обычного пробела)
 	for _, r := range u.Name {
 		if unicode.IsControl(r) && r != ' ' { // \n, \t, \r и т.д.
-			return fmt.Errorf("name cannot contain control characters")
+			return fmt.Errorf("имя не может содержать управляющих символов")
 		}
 	}
 
@@ -61,7 +61,7 @@ func (u User) ValidateName() error {
 // UserNickMaxLen максимальная длина ника пользователя.
 const UserNickMaxLen = 35
 
-// ValidateNick проверяет корректность идентификатора пользователя.
+// ValidateNick проверяет корректность ника пользователя.
 func (u User) ValidateNick() error {
 	// Проверка на пустое имя пользователя
 	if u.Nick == "" {
@@ -70,21 +70,21 @@ func (u User) ValidateNick() error {
 
 	// Проверка на длину имени пользователя
 	if len([]rune(u.Nick)) > UserNickMaxLen {
-		return fmt.Errorf("nick cannot be longer than %d characters", UserNickMaxLen)
+		return fmt.Errorf("ник не может быть длиннее %d символов", UserNickMaxLen)
 	}
 
 	// Проверка на строку, состоящую только из пробелов
 	if strings.TrimSpace(u.Nick) == "" {
-		return fmt.Errorf("nick cannot consist of whitespace only")
+		return fmt.Errorf("ник не может состоять только из пробелов")
 	}
 
 	// Проверка на первый символ
 	if !isAllowedLastFirstNickRune(rune(u.Nick[0])) {
-		return fmt.Errorf("nick must start with a letter or digit")
+		return fmt.Errorf("ник должен начинаться с буквы или цифры")
 	}
 	// Проверка на последний символ
 	if !isAllowedLastFirstNickRune(rune(u.Nick[len(u.Nick)-1])) {
-		return fmt.Errorf("nick must trail with a letter or digit")
+		return fmt.Errorf("ник должен заканчиваться буквой или цифрой")
 	}
 
 	var hasLetters bool
@@ -92,11 +92,11 @@ func (u User) ValidateNick() error {
 	for _, r := range u.Nick {
 		switch {
 		case unicode.IsControl(r):
-			return fmt.Errorf("nick cannot contain control characters")
+			return fmt.Errorf("ник не может содержать управляющие символы")
 		case unicode.IsSpace(r):
-			return fmt.Errorf("nick cannot contain spaces")
+			return fmt.Errorf("ник не может содержать пробелы")
 		case !isAllowedNickRune(r):
-			return fmt.Errorf("nick contains invalid characters")
+			return fmt.Errorf("ник содержит недопустимые символы")
 		}
 		if unicode.IsLetter(r) {
 			hasLetters = true
@@ -104,7 +104,7 @@ func (u User) ValidateNick() error {
 	}
 
 	if !hasLetters {
-		return fmt.Errorf("nick must contain at least one letter or digit")
+		return fmt.Errorf("ник должен содержать хотя бы одну букву или цифру")
 	}
 
 	return nil // Ник валиден
@@ -115,11 +115,12 @@ func isAllowedNickRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
 }
 
-// isAllowedNickRune проверяет, разрешен ли символ в имени пользователя
+// isAllowedLastFirstNickRune проверяет, разрешен ли символ в качестве первого или последнего символа ника
 func isAllowedLastFirstNickRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
+// UsersRepository интерфейс для работы с репозиторием пользователей.
 type UsersRepository interface {
 	// List возвращает список с учетом фильтрации
 	List(filter UsersFilter) ([]User, error)
@@ -133,5 +134,5 @@ type UsersRepository interface {
 
 // UsersFilter представляет собой фильтр по пользователям.
 type UsersFilter struct {
-	ID string // Идентификатор пользователя для фильтрации
+	ID string // ID пользователя для фильтрации
 }
