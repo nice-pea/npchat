@@ -31,12 +31,12 @@ func (in AuthnPasswordLoginInput) Validate() error {
 		Password: in.Password,
 	}
 	if err := lc.ValidateLogin(); err != nil {
-		return errors.Join(err, ErrInvalidLogin)
+		return errors.Join(ErrInvalidLogin, err)
 	}
 
-	//if err := lc.ValidatePassword(); err != nil {
-	//	return errors.Join(err, ErrInvalidPassword)
-	//}
+	if err := lc.ValidatePassword(); err != nil {
+		return errors.Join(ErrInvalidPassword, err)
+	}
 
 	return nil
 }

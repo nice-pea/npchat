@@ -21,12 +21,30 @@ func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPasswo
 }
 
 func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
+	suite.Run("Login должен быть валидным", func() {
+		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
+			Login:    " inv ald login",
+			Password: "somePassword123!",
+		})
+		suite.ErrorIs(err, ErrInvalidLogin)
+		suite.Zero(session)
+	})
+
+	suite.Run("Password должен быть валидным", func() {
+		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
+			Login:    "someLogin",
+			Password: "invalidpassword",
+		})
+		suite.ErrorIs(err, ErrInvalidPassword)
+		suite.Zero(session)
+	})
+
 	suite.Run("неверные данные", func() {
 		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
-			Login:    "wronglogin",
-			Password: "wrongpassword",
+			Login:    "wrongLogin",
+			Password: "wrongPassword123!",
 		})
-		suite.Error(err)
+		suite.ErrorIs(err, ErrLoginOrPasswordDoesNotMatch)
 		suite.Zero(session)
 	})
 
