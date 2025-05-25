@@ -72,7 +72,9 @@ func UsersRepositoryTests(t *testing.T, newRepository func() domain.UsersReposit
 		t.Run("сохраненного пользователя можно прочитать из репозитория", func(t *testing.T) {
 			r := newRepository()
 			user := domain.User{
-				ID: uuid.NewString(),
+				ID:   uuid.NewString(),
+				Name: "name",
+				Nick: "nick",
 			}
 			err := r.Save(user)
 			assert.NoError(t, err)

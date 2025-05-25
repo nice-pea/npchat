@@ -51,8 +51,13 @@ func registerHandlers(r http2.Router) {
 	// Служебные
 	registerHandler.Ping(r)
 
-	// Аутентификация /login
+	// OAuth /oauth
+	registerHandler.OAuthInitRegistration(r)
+	registerHandler.OAuthCompleteRegistrationCallback(r)
+
+	// Аутентификация /auth
 	registerHandler.LoginByPassword(r)
+	registerHandler.RegistrationByPassword(r)
 
 	// Чат /chats
 	registerHandler.MyChats(r)

@@ -119,7 +119,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 
 	//OAuth{
 	//	StateUnq
-	//	Code
+	//	UserCode
 	//	Token
 	//	ExpiresAt
 	//	RefreshToken

@@ -10,6 +10,7 @@ type ErrCode interface {
 	ErrCode() string
 }
 
+// errCode по ошибке определяет код
 func errCode(err error) string {
 	var errWithCode ErrCode
 	if errors.As(err, &errWithCode) {

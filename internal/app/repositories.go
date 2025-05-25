@@ -15,6 +15,7 @@ type repositories struct {
 	users         domain.UsersRepository
 	sessions      domain.SessionsRepository
 	authnPassword domain.AuthnPasswordRepository
+	oauth         domain.OAuthRepository
 }
 
 func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error) {
@@ -30,6 +31,7 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 		users:         factory.NewUsersRepository(),
 		sessions:      factory.NewSessionsRepository(),
 		authnPassword: factory.NewAuthnPasswordRepository(),
+		oauth:         factory.NewOAuthRepository(),
 	}
 
 	return rs, func() {

@@ -8,11 +8,12 @@ import (
 
 // CreateChat регистрирует обработчик, позволяющий создать новый чат.
 // Доступен только авторизованным пользователям.
+//
 // Метод: POST /chats
 func CreateChat(router http2.Router) {
-	// requestBody описывает структуру тела запроса для создания чата.
+	// Тело запроса для создания чата.
 	type requestBody struct {
-		Name string `json:"name"` // Название создаваемого чата
+		Name string `json:"name"`
 	}
 	router.HandleFunc(
 		"POST /chats",
@@ -24,15 +25,11 @@ func CreateChat(router http2.Router) {
 				return nil, err
 			}
 
-			// Формируем входные данные для сервиса создания чата.
-			// ChiefUserID - ID пользователя, который создаёт чат (становится главным администратором).
-			// Name - название чата, полученное из запроса.
 			input := service.CreateInput{
 				ChiefUserID: context.Session().UserID,
 				Name:        rb.Name,
 			}
 
-			// Вызываем сервис создания чата и возвращаем результат.
 			return context.Services().Chats().Create(input)
 		})
 }

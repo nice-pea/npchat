@@ -8,6 +8,11 @@ type services struct {
 	members       *service.Members
 	sessions      *service.Sessions
 	authnPassword *service.AuthnPassword
+	oauth         *service.OAuth
+}
+
+func (s *services) OAuth() *service.OAuth {
+	return s.oauth
 }
 
 func (s *services) Chats() *service.Chats {
@@ -30,7 +35,7 @@ func (s *services) AuthnPassword() *service.AuthnPassword {
 	return s.authnPassword
 }
 
-func initServices(repos *repositories) *services {
+func initServices(repos *repositories, adaps *adapters) *services {
 	return &services{
 		chats: &service.Chats{
 			ChatsRepo:   repos.chats,
@@ -52,6 +57,13 @@ func initServices(repos *repositories) *services {
 		authnPassword: &service.AuthnPassword{
 			AuthnPasswordRepo: repos.authnPassword,
 			SessionsRepo:      repos.sessions,
+			UsersRepo:         repos.users,
+		},
+		oauth: &service.OAuth{
+			Providers:    adaps.oauthProviders,
+			OAuthRepo:    repos.oauth,
+			UsersRepo:    repos.users,
+			SessionsRepo: repos.sessions,
 		},
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 // Ping регистрирует обработчик для проверки работоспособности сервера.
 // Данный обработчик не требует авторизации и может использоваться для health-check'а.
+//
 // Метод: GET /ping
 func Ping(router http2.Router) {
 	router.HandleFunc(

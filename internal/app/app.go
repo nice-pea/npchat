@@ -20,8 +20,11 @@ func Run(ctx context.Context) error {
 	}
 	defer closeSqliteRepos()
 
+	// Инициализация адаптеров
+	adaps := initAdapters()
+
 	// Инициализация сервисов
-	ss := initServices(repos)
+	ss := initServices(repos, adaps)
 
 	// Инициализация и Запуск http контроллера
 	server := initHttpServer(ss)
