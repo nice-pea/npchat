@@ -19,10 +19,7 @@ var (
 )
 
 var (
-	ErrWrongUserCode = errors.New("неправильный UserCode")
-)
-
-var (
+	ErrWrongUserCode                = errors.New("неправильный UserCode")
 	ErrUserIsNotMember              = errors.New("user не является участником чата")
 	ErrSubjectUserIsNotMember       = errors.New("subject user не является участником чата")
 	ErrChatNotExists                = errors.New("чата с таким ID не существует")
@@ -39,4 +36,5 @@ var (
 	ErrLoginIsAlreadyInUse          = errors.New("логин уже используется")
 	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
 	ErrUnknownOAuthProvider         = errors.New("неизвестный OAuth провайдер")
+	ErrLoginOrPasswordDoesNotMatch  = errors.New("не совпадает Login или Password")
 )

@@ -41,8 +41,6 @@ func (in AuthnPasswordLoginInput) Validate() error {
 	return nil
 }
 
-var ErrLoginOrPasswordDoesNotMatch = errors.New("не совпадает Login или Password")
-
 func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (AuthnPasswordLoginOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
