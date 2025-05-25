@@ -62,7 +62,7 @@ func (c AuthnPassword) ValidateLogin() error {
 	}
 
 	if !hasLetters {
-		return fmt.Errorf("логин должен содержать хотя бы одну букву или цифру")
+		return fmt.Errorf("логин должен содержать хотя бы одну букву")
 	}
 
 	return nil // Логин валиден
