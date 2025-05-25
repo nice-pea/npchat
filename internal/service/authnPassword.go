@@ -116,10 +116,15 @@ func (in AuthnPasswordRegistrationInput) Validate() error {
 	return nil
 }
 
-func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.User, error) {
+type AuthnPasswordRegistrationOutput struct {
+	Session domain.Session
+	User    domain.User
+}
+
+func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (AuthnPasswordRegistrationOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return domain.User{}, err
+		return AuthnPasswordRegistrationOutput{}, err
 	}
 
 	// Проверка на существование пользователя с таким логином
@@ -127,9 +132,9 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.
 		Login: in.Login,
 	}
 	if aps, err := l.AuthnPasswordRepo.List(apFilter); err != nil {
-		return domain.User{}, err
+		return AuthnPasswordRegistrationOutput{}, err
 	} else if len(aps) > 0 {
-		return domain.User{}, ErrLoginIsAlreadyInUse
+		return AuthnPasswordRegistrationOutput{}, ErrLoginIsAlreadyInUse
 	}
 
 	// Создать пользователя
@@ -139,7 +144,7 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.
 		Nick: in.Nick,
 	}
 	if err := l.UsersRepo.Save(user); err != nil {
-		return domain.User{}, err
+		return AuthnPasswordRegistrationOutput{}, err
 	}
 
 	// Создать метод входа
@@ -149,8 +154,22 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (domain.
 		Password: in.Password,
 	}
 	if err := l.AuthnPasswordRepo.Save(ap); err != nil {
-		return domain.User{}, err
+		return AuthnPasswordRegistrationOutput{}, err
 	}
 
-	return user, nil
+	// Создать сессию для пользователя
+	session := domain.Session{
+		ID:     uuid.NewString(),
+		UserID: user.ID,
+		Token:  uuid.NewString(),
+		Status: domain.SessionStatusVerified, // Подтвержденная сессия
+	}
+	if err := l.SessionsRepo.Save(session); err != nil {
+		return AuthnPasswordRegistrationOutput{}, err
+	}
+
+	return AuthnPasswordRegistrationOutput{
+		Session: session,
+		User:    user,
+	}, nil
 }

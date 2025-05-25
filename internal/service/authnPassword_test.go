@@ -22,30 +22,30 @@ func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPasswo
 
 func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	suite.Run("Login должен быть валидным", func() {
-		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
+		out, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
 			Login:    " inv ald login",
 			Password: "somePassword123!",
 		})
 		suite.ErrorIs(err, ErrInvalidLogin)
-		suite.Zero(session)
+		suite.Zero(out)
 	})
 
 	suite.Run("Password должен быть валидным", func() {
-		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
+		out, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
 			Login:    "someLogin",
 			Password: "invalidpassword",
 		})
 		suite.ErrorIs(err, ErrInvalidPassword)
-		suite.Zero(session)
+		suite.Zero(out)
 	})
 
 	suite.Run("неверные данные", func() {
-		session, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
+		out, err := suite.ss.authnPassword.Login(AuthnPasswordLoginInput{
 			Login:    "wrongLogin",
 			Password: "wrongPassword123!",
 		})
 		suite.ErrorIs(err, ErrLoginOrPasswordDoesNotMatch)
-		suite.Zero(session)
+		suite.Zero(out)
 	})
 
 	suite.Run("вернется Verified сессия", func() {
@@ -73,7 +73,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 }
 
 func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
-	suite.Run("Login обязательное поле", func() {
+	suite.Run("Login должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "",
@@ -81,12 +81,12 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		user, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.authnPassword.Registration(input)
 		suite.ErrorIs(err, ErrInvalidLogin)
-		suite.Zero(user)
+		suite.Zero(out)
 	})
 
-	suite.Run("Password обязательное поле", func() {
+	suite.Run("Password должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
@@ -94,22 +94,23 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		user, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.authnPassword.Registration(input)
 		suite.ErrorIs(err, ErrInvalidPassword)
-		suite.Zero(user)
+		suite.Zero(out)
 	})
 
-	suite.Run("Name обязательное поле", func() {
+	suite.Run("Name должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "",
-			Nick:     "nick",
+
+			Nick: "nick",
 		}
-		user, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.authnPassword.Registration(input)
 		suite.ErrorIs(err, ErrInvalidName)
-		suite.Zero(user)
+		suite.Zero(out)
 	})
 
 	suite.Run("нельзя создать пользователя с существующим логином", func() {
@@ -120,9 +121,9 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		user, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.authnPassword.Registration(input)
 		suite.Require().NoError(err)
-		suite.Require().NotZero(user)
+		suite.Require().NotZero(out)
 
 		// Регистрация второй раз с существующим логином
 		input = AuthnPasswordRegistrationInput{
@@ -131,12 +132,12 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name2",
 			Nick:     "nick2",
 		}
-		user, err = suite.ss.authnPassword.Registration(input)
+		out, err = suite.ss.authnPassword.Registration(input)
 		suite.ErrorIs(err, ErrLoginIsAlreadyInUse)
-		suite.Zero(user)
+		suite.Zero(out)
 	})
 
-	suite.Run("пользователя и метод можно прочитать из репозитория", func() {
+	suite.Run("после регистрации будет создан пользователь", func() {
 		// Регистрация по логину паролю
 		input := AuthnPasswordRegistrationInput{
 			Login:    "login",
@@ -144,23 +145,56 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		user, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.authnPassword.Registration(input)
 		suite.Require().NoError(err)
-		suite.Require().NotZero(user)
-		suite.Equal(input.Name, user.Name)
-		suite.Equal(input.Nick, user.Nick)
+		suite.Require().NotZero(out)
+		suite.Equal(input.Name, out.User.Name)
+		suite.Equal(input.Nick, out.User.Nick)
 
 		// Прочитать пользователя из репозитория
 		users, err := suite.rr.users.List(domain.UsersFilter{})
 		suite.Require().NoError(err)
 		suite.Require().Len(users, 1)
-		suite.Equal(user, users[0])
+		suite.Equal(out.User, users[0])
+	})
+
+	suite.Run("после регистрации будет создана сессия", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: randomPassword(),
+			Name:     "name",
+			Nick:     "nick",
+		}
+		out, err := suite.ss.authnPassword.Registration(input)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить сессию
+		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{})
+		suite.NoError(err)
+		suite.Require().Len(sessions, 1)
+		suite.Equal(out.Session, sessions[0])
+		suite.Equal(domain.SessionStatusVerified, sessions[0].Status)
+	})
+
+	suite.Run("после регистрации будет создан метод входа", func() {
+		// Регистрация по логину паролю
+		input := AuthnPasswordRegistrationInput{
+			Login:    "login",
+			Password: randomPassword(),
+			Name:     "name",
+			Nick:     "nick",
+		}
+		out, err := suite.ss.authnPassword.Registration(input)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(out)
 
 		// Прочитать метод входа из репозитория
 		aps, err := suite.rr.authnPassword.List(domain.AuthnPasswordFilter{Login: input.Login})
 		suite.Require().NoError(err)
 		suite.Require().Len(aps, 1)
-		suite.Equal(user.ID, aps[0].UserID)
+		suite.Equal(out.User.ID, aps[0].UserID)
 		suite.Equal(input.Login, aps[0].Login)
 		suite.Equal(input.Password, aps[0].Password)
 	})
