@@ -1,1 +1,1 @@
-- [Перейти на mdbook](/mdbook)
+- [Перейти на mdbook](https://nice-pea.github.io/npchat/mdbook)
