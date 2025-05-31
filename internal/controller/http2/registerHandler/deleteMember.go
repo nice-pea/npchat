@@ -26,9 +26,9 @@ func DeleteMember(router http2.Router) {
 			}
 
 			input := service.DeleteMemberInput{
-				SubjectUserID: context.Session().UserID,
-				ChatID:        http2.PathStr(context, "chatID"),
-				UserID:        rb.UserID,
+				SubjectID: context.Session().UserID,
+				ChatID:    http2.PathStr(context, "chatID"),
+				UserID:    rb.UserID,
 			}
 
 			return nil, context.Services().Members().DeleteMember(input)

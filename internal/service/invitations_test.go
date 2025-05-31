@@ -524,8 +524,8 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 func Test_CancelInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := CancelInvitationInput{
-			SubjectUserID: id,
-			InvitationID:  id,
+			SubjectID:    id,
+			InvitationID: id,
 		}
 		return input.Validate()
 	})
@@ -536,8 +536,8 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
 		input := CancelInvitationInput{
-			SubjectUserID: uuid.NewString(),
-			InvitationID:  uuid.NewString(),
+			SubjectID:    uuid.NewString(),
+			InvitationID: uuid.NewString(),
 		}
 		err := suite.ss.invitations.CancelInvitation(input)
 		// Вернется ошибка, потому что приглашения не существует
@@ -576,8 +576,8 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			})
 			// Отменить приглашение
 			input := CancelInvitationInput{
-				SubjectUserID: subjectUserID,
-				InvitationID:  invitation.ID,
+				SubjectID:    subjectUserID,
+				InvitationID: invitation.ID,
 			}
 			err := suite.ss.invitations.CancelInvitation(input)
 			suite.NoError(err)
@@ -600,8 +600,8 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		})
 		// Отменить приглашение
 		input := CancelInvitationInput{
-			SubjectUserID: member.UserID,
-			InvitationID:  invitation.ID,
+			SubjectID:    member.UserID,
+			InvitationID: invitation.ID,
 		}
 		err := suite.ss.invitations.CancelInvitation(input)
 		// Вернется ошибка, потому что случайный участник не может отменять приглашение
@@ -622,8 +622,8 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		})
 		// Отменить приглашение
 		input := CancelInvitationInput{
-			SubjectUserID: invitation.SubjectUserID,
-			InvitationID:  invitation.ID,
+			SubjectID:    invitation.SubjectUserID,
+			InvitationID: invitation.ID,
 		}
 		err := suite.ss.invitations.CancelInvitation(input)
 		suite.Require().NoError(err)

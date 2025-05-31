@@ -14,13 +14,13 @@ type Chats struct {
 
 // WhichParticipateInput входящие параметры
 type WhichParticipateInput struct {
-	SubjectUserID string
-	UserID        string
+	SubjectID string
+	UserID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in WhichParticipateInput) Validate() error {
-	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
 	if err := domain.ValidateID(in.UserID); err != nil {
@@ -44,7 +44,7 @@ func (c *Chats) WhichParticipate(in WhichParticipateInput) (WhichParticipateOutp
 	}
 
 	// Пользователь может запрашивать только свой список чатов
-	if in.UserID != in.SubjectUserID {
+	if in.UserID != in.SubjectID {
 		return WhichParticipateOutput{}, ErrUnauthorizedChatsView
 	}
 

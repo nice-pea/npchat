@@ -5,7 +5,6 @@ import "errors"
 var (
 	ErrInvalidLogin        = errors.New("некорректное значение Login")
 	ErrInvalidToken        = errors.New("некорректное значение Token")
-	ErrInvalidID           = errors.New("некорректное значение ID")
 	ErrInvalidSubjectID    = errors.New("некорректное значение SubjectID")
 	ErrInvalidChatID       = errors.New("некорректное значение ChatID")
 	ErrInvalidInvitationID = errors.New("некорректное значение InvitationID")
@@ -13,7 +12,6 @@ var (
 	ErrInvalidName         = errors.New("некорректное значение Name")
 	ErrInvalidPassword     = errors.New("некорректное значение Password")
 	ErrInvalidNick         = errors.New("некорректное значение Nick")
-	ErrInvalidChiefUserID  = errors.New("некорректное значение ChiefUserID")
 	ErrInvalidUserCode     = errors.New("некорректное значение UserCode")
 	ErrInvalidProvider     = errors.New("некорректное значение Provider")
 )

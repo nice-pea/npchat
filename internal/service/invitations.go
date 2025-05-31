@@ -227,12 +227,12 @@ func (c *Chats) AcceptInvitation(in AcceptInvitationInput) error {
 }
 
 type CancelInvitationInput struct {
-	SubjectUserID string
-	InvitationID  string
+	SubjectID    string
+	InvitationID string
 }
 
 func (in CancelInvitationInput) Validate() error {
-	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return ErrInvalidSubjectID
 	}
 	if err := domain.ValidateID(in.InvitationID); err != nil {
@@ -263,7 +263,7 @@ func (c *Chats) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	if in.SubjectUserID == invitation.SubjectID {
+	if in.SubjectID == invitation.SubjectID {
 		// Проверить, существование участника чата
 		if !chat.HasParticipant(invitation.SubjectID) {
 			return ErrSubjectIsNotMember
@@ -277,7 +277,7 @@ func (c *Chats) CancelInvitation(in CancelInvitationInput) error {
 		invitation.RecipientID, // Приглашаемый
 	}
 	// Проверить, может ли пользователь отменить приглашение
-	if !slices.Contains(allowedSubjects, in.SubjectUserID) {
+	if !slices.Contains(allowedSubjects, in.SubjectID) {
 		return ErrSubjectUserNotAllowed
 	}
 

@@ -99,14 +99,14 @@ func (c *Chats) LeaveChat(in LeaveChatInput) error {
 
 // DeleteMemberInput входящие параметры
 type DeleteMemberInput struct {
-	SubjectUserID string
-	ChatID        string
-	UserID        string
+	SubjectID string
+	ChatID    string
+	UserID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in DeleteMemberInput) Validate() error {
-	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
 	if err := domain.ValidateID(in.ChatID); err != nil {
@@ -127,7 +127,7 @@ func (c *Chats) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Проверить попытку удалить самого себя
-	if in.UserID == in.SubjectUserID {
+	if in.UserID == in.SubjectID {
 		return ErrMemberCannotDeleteHimself
 	}
 
@@ -138,7 +138,7 @@ func (c *Chats) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Subject должен быть главным администратором
-	if chat.ChiefID != in.SubjectUserID {
+	if chat.ChiefID != in.SubjectID {
 		return ErrSubjectUserIsNotChief
 	}
 

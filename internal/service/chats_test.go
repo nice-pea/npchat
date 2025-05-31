@@ -15,8 +15,8 @@ import (
 
 func (suite *servicesTestSuite) newUserChatsInput(userID string) WhichParticipateInput {
 	return WhichParticipateInput{
-		SubjectUserID: userID,
-		UserID:        userID,
+		SubjectID: userID,
+		UserID:    userID,
 	}
 }
 
@@ -36,8 +36,8 @@ func (suite *servicesTestSuite) newCreateInputRandom() CreateInput {
 func Test_UserChatsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := WhichParticipateInput{
-			SubjectUserID: id,
-			UserID:        id,
+			SubjectID: id,
+			UserID:    id,
 		}
 		return in.Validate()
 	})
@@ -47,8 +47,8 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Chats_UserChats() {
 	suite.Run("пользователь может запрашивать только свой чат", func() {
 		input := WhichParticipateInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			UserID:    uuid.NewString(),
 		}
 		chats, err := suite.ss.chats.UserChats(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
