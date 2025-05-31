@@ -1,36 +1,28 @@
 package chatt
 
+// Repository представляет собой интерфейс для работы с репозиторием чатов.
 type Repository interface {
-	ByChatFilter(ChatsFilter) ([]Chat, error)
-	ByParticipantsFilter(MembersFilter) ([]Chat, error)
-	ByInvitationsFilter(InvitationsFilter) ([]Chat, error)
+	List(Filter) ([]Chat, error)
 	Upsert(Chat) error
 }
 
-// ChatsFilter представляет собой фильтр по чатам.
-type ChatsFilter struct {
-	IDs []string // Список идентификаторов чатов для фильтрации
+// Filter представляет собой фильтр для выборки чатов.
+type Filter struct {
+	ID                    string // Фильтрация по ID чата
+	InvitationID          string // Фильтрация по ID приглашений в чате
+	InvitationRecipientID string // Фильтрация по ID получателей приглашения в чат
+	ParticipantID         string // Фильтрация по ID участников в чате
 }
 
-// MembersFilter представляет собой фильтр по членам чата.
-type MembersFilter struct {
-	ID     string // Фильтрация по ID
-	UserID string // Фильтрация по пользователю
-	ChatID string // Фильтрация по чату
-}
+// Find возвращает чат либо ошибку ErrChatNotExists
+func Find(repo Repository, filter Filter) (Chat, error) {
+	chats, err := repo.List(filter)
+	if err != nil {
+		return Chat{}, err
+	}
+	if len(chats) != 1 {
+		return Chat{}, ErrChatNotExists
+	}
 
-// InvitationsFilter представляет собой фильтр по приглашениям.
-type InvitationsFilter struct {
-	ID            string // Фильтрация по ID приглашения
-	ChatID        string // Фильтрация по чату
-	UserID        string // Фильтрация по приглашаемому пользователю
-	SubjectUserID string // Фильтрация по пригласившему пользователю
+	return chats[0], nil
 }
-
-//type CAFilter struct {
-//	IDs                 []string
-//	InvolvedUsers       []string
-//	HasInvitations      []string // Фильтрация по ID приглашения
-//	InvitedUsers        []string // Фильтрация по приглашаемому пользователю
-//	SentInvitationUsers []string // Фильтрация по пригласившему пользователю
-//}

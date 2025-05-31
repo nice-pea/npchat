@@ -159,8 +159,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 func Test_UserInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := ReceivedInvitationsInput{
-			SubjectUserID: id,
-			UserID:        id,
+			SubjectID: id,
+			UserID:    id,
 		}
 		return input.Validate()
 	})
@@ -172,8 +172,8 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 		id := uuid.NewString()
 		// Получить список приглашений
 		input := ReceivedInvitationsInput{
-			SubjectUserID: id,
-			UserID:        id,
+			SubjectID: id,
+			UserID:    id,
 		}
 		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		// Вернется ошибка, потому что пользователя не существует
@@ -184,8 +184,8 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 	suite.Run("пользователь может просматривать только свои приглашения", func() {
 		// Получить список приглашений
 		input := ReceivedInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			UserID:    uuid.NewString(),
 		}
 		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		// Вернется ошибка, потому что пользователь пытается просмотреть чужие приглашения
@@ -200,8 +200,8 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 		})
 		// Получить список приглашений
 		input := ReceivedInvitationsInput{
-			SubjectUserID: user.ID,
-			UserID:        user.ID,
+			SubjectID: user.ID,
+			UserID:    user.ID,
 		}
 		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		suite.NoError(err)
@@ -232,8 +232,8 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 		}
 		// Получить список приглашений
 		input := ReceivedInvitationsInput{
-			SubjectUserID: user.ID,
-			UserID:        user.ID,
+			SubjectID: user.ID,
+			UserID:    user.ID,
 		}
 		invitationsFromRepo, err := suite.ss.invitations.ReceivedInvitations(input)
 		suite.NoError(err)

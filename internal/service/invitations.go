@@ -40,8 +40,8 @@ func (c *Chats) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput,
 		return ChatInvitationsOutput{}, err
 	}
 
-	// Проверить существование чата
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return ChatInvitationsOutput{}, err
 	}
@@ -51,14 +51,13 @@ func (c *Chats) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput,
 		return ChatInvitationsOutput{}, ErrSubjectIsNotMember
 	}
 
-	var invitations []chatt.Invitation
+	// Сохранить сначала все приглашения
+	invitations := chat.Invitations
 
 	// Если пользователь не является администратором,
 	// то оставить только те приглашения, которые отправил именно пользователь.
 	if chat.ChiefID != in.SubjectID {
-		invitations = slices.DeleteFunc(chat.Invitations, func(i chatt.Invitation) bool {
-			return i.RecipientID != in.SubjectID
-		})
+		invitations = chat.SubjectInvitations(in.SubjectID)
 	}
 
 	return ChatInvitationsOutput{
@@ -67,11 +66,11 @@ func (c *Chats) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput,
 }
 
 type ReceivedInvitationsInput struct {
-	SubjectUserID string
+	SubjectID string
 }
 
 func (in ReceivedInvitationsInput) Validate() error {
-	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
 
@@ -80,7 +79,8 @@ func (in ReceivedInvitationsInput) Validate() error {
 
 // ReceivedInvitationsOutput входящие параметры
 type ReceivedInvitationsOutput struct {
-	Invitations []domain.Invitation
+	// ChatsInvitations карта приглашений, где ключ - chatID, значение - приглашение
+	ChatsInvitations map[string]chatt.Invitation
 }
 
 // ReceivedInvitations возвращает список приглашений конкретного пользователя в чаты
@@ -90,11 +90,10 @@ func (c *Chats) ReceivedInvitations(in ReceivedInvitationsInput) (ReceivedInvita
 		return ReceivedInvitationsOutput{}, err
 	}
 
-	// Проверить существование чата
-	invitationsFilter := domain.InvitationsFilter{
-		UserID: in.SubjectUserID,
-	}
-	chats, err := c.Repo.ByInvitationsFilter(invitationsFilter)
+	// Найти чат
+	chats, err := c.Repo.List(chatt.Filter{
+		InvitationRecipientID: in.SubjectID,
+	})
 	if err != nil {
 		return ReceivedInvitationsOutput{}, err
 	}
@@ -104,22 +103,14 @@ func (c *Chats) ReceivedInvitations(in ReceivedInvitationsInput) (ReceivedInvita
 		return ReceivedInvitationsOutput{}, nil
 	}
 
-	// Получить список полученных пользователем приглашений
-	var invitations []domain.Invitation
+	// Собрать приглашения, полученные пользователем
+	invitations := make(map[string]chatt.Invitation, len(chats))
 	for _, chat := range chats {
-		for _, invitation := range chat.Invitations {
-			if invitation.RecipientID == in.SubjectUserID {
-				invitations = append(invitations, domain.Invitation{
-					SubjectUserID: invitation.SubjectID,
-					UserID:        invitation.RecipientID,
-					ChatID:        chat.ID,
-				})
-			}
-		}
+		invitations[chat.ID], _ = chat.RecipientInvitation(in.SubjectID)
 	}
 
 	return ReceivedInvitationsOutput{
-		Invitations: invitations,
+		ChatsInvitations: invitations,
 	}, err
 }
 
@@ -144,7 +135,7 @@ func (in SendInvitationInput) Validate() error {
 }
 
 type SendInvitationOutput struct {
-	Invitation domain.Invitation
+	Invitation chatt.Invitation
 }
 
 // SendInvitation отправляет приглашения пользователю от участника чата
@@ -153,8 +144,8 @@ func (c *Chats) SendInvitation(in SendInvitationInput) (SendInvitationOutput, er
 		return SendInvitationOutput{}, err
 	}
 
-	// Проверить существование чата
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return SendInvitationOutput{}, err
 	}
@@ -176,11 +167,7 @@ func (c *Chats) SendInvitation(in SendInvitationInput) (SendInvitationOutput, er
 	}
 
 	return SendInvitationOutput{
-		Invitation: domain.Invitation{
-			SubjectUserID: inv.SubjectID,
-			UserID:        inv.RecipientID,
-			ChatID:        chat.ID,
-		},
+		Invitation: inv,
 	}, nil
 }
 
@@ -207,8 +194,10 @@ func (c *Chats) AcceptInvitation(in AcceptInvitationInput) error {
 		return err
 	}
 
-	// Проверить существование чата
-	chat, err := getChatByInvitation(c.Repo, in.InvitationID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{
+		InvitationID: in.InvitationID,
+	})
 	if err != nil {
 		return err
 	}
@@ -260,8 +249,10 @@ func (c *Chats) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	// Проверить существование чата
-	chat, err := getChatByInvitation(c.Repo, in.InvitationID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{
+		InvitationID: in.InvitationID,
+	})
 	if err != nil {
 		return err
 	}

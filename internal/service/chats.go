@@ -49,10 +49,9 @@ func (c *Chats) WhichParticipate(in WhichParticipateInput) (WhichParticipateOutp
 	}
 
 	// Получить список участников с фильтром по пользователю
-	membersFilter := domain.MembersFilter{
-		UserID: in.UserID,
-	}
-	chats, err := c.Repo.ByParticipantsFilter(membersFilter)
+	chats, err := c.Repo.List(chatt.Filter{
+		ParticipantID: in.UserID,
+	})
 	if err != nil {
 		return WhichParticipateOutput{}, err
 	}
@@ -100,7 +99,7 @@ func (in UpdateNameInput) Validate() error {
 	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
-	if err := domain.ValidateChatName(in.NewName); err != nil {
+	if err := chatt.ValidateChatName(in.NewName); err != nil {
 		return errors.Join(err, ErrInvalidName)
 	}
 	if err := domain.ValidateID(in.SubjectID); err != nil {
@@ -123,8 +122,8 @@ func (c *Chats) UpdateName(in UpdateNameInput) (UpdateNameOutput, error) {
 		return UpdateNameOutput{}, err
 	}
 
-	// Найти чат для обновления
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return UpdateNameOutput{}, err
 	}

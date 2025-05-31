@@ -12,4 +12,5 @@ var (
 	ErrInvitationNotExists                = errors.New("приглашения не существует")
 	ErrSubjectAndRecipientMustBeDifferent = errors.New("subject и recipient не могут быть одним лицом")
 	ErrChatNameValidate                   = errors.New("некорректный Name")
+	ErrChatNotExists                      = errors.New("чата с таким ID не существует")
 )

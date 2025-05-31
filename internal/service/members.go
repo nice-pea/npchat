@@ -37,8 +37,8 @@ func (c *Chats) ChatMembers(in ChatMembersInput) (ChatMembersOutput, error) {
 		return ChatMembersOutput{}, err
 	}
 
-	// Проверить существование чата
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return ChatMembersOutput{}, err
 	}
@@ -78,8 +78,8 @@ func (c *Chats) LeaveChat(in LeaveChatInput) error {
 		return err
 	}
 
-	// Проверить существование чата
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return err
 	}
@@ -131,8 +131,8 @@ func (c *Chats) DeleteMember(in DeleteMemberInput) error {
 		return ErrMemberCannotDeleteHimself
 	}
 
-	// Проверить существование чата
-	chat, err := getChat(c.Repo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
 		return err
 	}

@@ -101,3 +101,21 @@ func (c *Chat) HasInvitationWithRecipient(recipientID string) bool {
 
 	return false
 }
+
+// SubjectInvitations возвращает список приглашений, отправленных пользователем с указанным ID
+func (c *Chat) SubjectInvitations(subjectID string) []Invitation {
+	return slices.DeleteFunc(c.Invitations, func(i Invitation) bool {
+		return i.SubjectID != subjectID
+	})
+}
+
+// RecipientInvitation возвращает приглашение, направленное пользователю с указанным ID
+func (c *Chat) RecipientInvitation(recipientID string) (Invitation, error) {
+	for _, inv := range c.Invitations {
+		if inv.RecipientID == recipientID {
+			return inv, nil
+		}
+	}
+
+	return Invitation{}, ErrInvitationNotExists
+}

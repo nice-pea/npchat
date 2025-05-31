@@ -16,8 +16,8 @@ func MyInvitations(router http2.Router) {
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
 			input := service.ReceivedInvitationsInput{
-				SubjectUserID: context.Session().UserID,
-				UserID:        context.Session().UserID,
+				SubjectID: context.Session().UserID,
+				UserID:    context.Session().UserID,
 			}
 
 			return context.Services().Invitations().ReceivedInvitations(input)
