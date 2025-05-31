@@ -1,4 +1,4 @@
-.PHONY: test vet lint check run mdbook
+.PHONY: test vet lint check run mdbook mdbook-build
 
 # Get number of CPU cores minus 1 for parallel execution
 CORES := $(shell echo $$(( $$(nproc) - 1 )))
@@ -24,4 +24,7 @@ run:
 	go run ./cmd/npc/main.go
 
 mdbook:
-	mdbook watch docs --open
+	mdbook watch --open
+
+mdbook-build:
+	mdbook watch build
