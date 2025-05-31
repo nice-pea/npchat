@@ -8,15 +8,17 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
+// Chat представляет собой агрегат чата.
 type Chat struct {
 	ID      string // Уникальный ID чата
 	Name    string // Название чата
 	ChiefID string // ID главного пользователя чата
 
-	Participants []Participant
-	Invitations  []Invitation
+	Participants []Participant // Список участников чата
+	Invitations  []Invitation  // Список приглашений в чате
 }
 
+// NewChat создает новый чат.
 func NewChat(name string, chiefID string) (Chat, error) {
 	if err := ValidateChatName(name); err != nil {
 		return Chat{}, err
@@ -36,18 +38,7 @@ func NewChat(name string, chiefID string) (Chat, error) {
 	}, nil
 }
 
-//func (c *Chat) RemoveInvitationByRecipient(recipientID string) error {
-//	if !c.HasInvitationWithRecipient(recipientID) {
-//		return ErrInvitationNotExists
-//	}
-//
-//	c.Invitations = slices.DeleteFunc(c.Invitations, func(i Invitation) bool {
-//		return i.RecipientID == recipientID
-//	})
-//
-//	return nil
-//}
-
+// UpdateName изменяет название чата.
 func (c *Chat) UpdateName(name string) error {
 	if err := ValidateChatName(name); err != nil {
 		return err
