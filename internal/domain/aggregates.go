@@ -16,6 +16,7 @@ type Participant struct {
 }
 
 type Invitation2 struct {
+	ID          string
 	RecipientID string
 	SubjectID   string
 }
@@ -60,6 +61,16 @@ func (c *ChatAggregate) HasInvitationWithRecipient(recipientID string) bool {
 	return false
 }
 
+func (c *ChatAggregate) HasInvitation(id string) bool {
+	for _, i := range c.Invitations {
+		if i.ID == id {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *ChatAggregate) RemoveInvitationByRecipient(recipientID string) error {
 	if !c.HasInvitationWithRecipient(recipientID) {
 		return ErrInvitationNotExists
@@ -70,6 +81,28 @@ func (c *ChatAggregate) RemoveInvitationByRecipient(recipientID string) error {
 	})
 
 	return nil
+}
+
+func (c *ChatAggregate) RemoveInvitation(id string) error {
+	if !c.HasInvitation(id) {
+		return ErrInvitationNotExists
+	}
+
+	c.Invitations = slices.DeleteFunc(c.Invitations, func(i Invitation2) bool {
+		return i.ID == id
+	})
+
+	return nil
+}
+
+func (c *ChatAggregate) Invitation(id string) (Invitation2, error) {
+	for _, i := range c.Invitations {
+		if i.ID == id {
+			return i, nil
+		}
+	}
+
+	return Invitation2{}, ErrInvitationNotExists
 }
 
 func (c *ChatAggregate) RemoveParticipant(userID string) error {
@@ -117,6 +150,7 @@ func NewInvitation(subjectID, recipientID string) (Invitation2, error) {
 	}
 
 	return Invitation2{
+		ID:          uuid.NewString(),
 		RecipientID: recipientID,
 		SubjectID:   subjectID,
 	}, nil

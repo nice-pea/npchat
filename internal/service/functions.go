@@ -36,6 +36,22 @@ func getChatAggregate(repo domain.ChatAggregateRepository, chatID string) (domai
 	return chats[0], nil
 }
 
+// getChatAggregateByInvitationID возвращает чат либо ошибку ErrChatNotExists
+func getChatAggregateByInvitationID(repo domain.ChatAggregateRepository, invitationID string) (domain.ChatAggregate, error) {
+	invitationsFilter := domain.InvitationsFilter{
+		ID: invitationID,
+	}
+	chats, err := repo.ByInvitationsFilter(invitationsFilter)
+	if err != nil {
+		return domain.ChatAggregate{}, err
+	}
+	if len(chats) != 1 {
+		return domain.ChatAggregate{}, ErrChatNotExists
+	}
+
+	return chats[0], nil
+}
+
 // chatMembers возвращает список участников
 func chatMembers(membersRepo domain.MembersRepository, chatID string) ([]domain.Member, error) {
 	membersFilter := domain.MembersFilter{
