@@ -4,3 +4,6 @@ language = "ru"
 multilingual = false
 src = "src"
 title = "Документация к проекту nice-pea-chat"
+
+[build]
+build-dir = "../book"
