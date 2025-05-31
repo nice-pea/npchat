@@ -1,0 +1,1 @@
+[Открыть mdbook](https://nice-pea.github.io/npchat/mdbook)
