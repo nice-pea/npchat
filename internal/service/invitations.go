@@ -7,11 +7,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// Invitations сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
-type Invitations struct {
-	ChatAggregateRepo domain.ChatAggregateRepository
-}
-
 // ChatInvitationsInput параметры для запроса приглашений конкретного чата
 type ChatInvitationsInput struct {
 	SubjectID string
@@ -38,14 +33,14 @@ type ChatInvitationsOutput struct {
 // ChatInvitations возвращает список приглашений в конкретный чат.
 // Если SubjectID является администратором, то возвращается все приглашения в данный чат,
 // иначе только те приглашения, которые отправил именно пользователь.
-func (i *Invitations) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput, error) {
+func (c *Chats) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return ChatInvitationsOutput{}, err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
+	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return ChatInvitationsOutput{}, err
 	}
@@ -88,7 +83,7 @@ type ReceivedInvitationsOutput struct {
 }
 
 // ReceivedInvitations возвращает список приглашений конкретного пользователя в чаты
-func (i *Invitations) ReceivedInvitations(in ReceivedInvitationsInput) (ReceivedInvitationsOutput, error) {
+func (c *Chats) ReceivedInvitations(in ReceivedInvitationsInput) (ReceivedInvitationsOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return ReceivedInvitationsOutput{}, err
@@ -98,7 +93,7 @@ func (i *Invitations) ReceivedInvitations(in ReceivedInvitationsInput) (Received
 	invitationsFilter := domain.InvitationsFilter{
 		UserID: in.SubjectUserID,
 	}
-	chats, err := i.ChatAggregateRepo.ByInvitationsFilter(invitationsFilter)
+	chats, err := c.ChatAggregateRepo.ByInvitationsFilter(invitationsFilter)
 	if err != nil {
 		return ReceivedInvitationsOutput{}, err
 	}
@@ -152,13 +147,13 @@ type SendInvitationOutput struct {
 }
 
 // SendInvitation отправляет приглашения пользователю от участника чата
-func (i *Invitations) SendInvitation(in SendInvitationInput) (SendInvitationOutput, error) {
+func (c *Chats) SendInvitation(in SendInvitationInput) (SendInvitationOutput, error) {
 	if err := in.Validate(); err != nil {
 		return SendInvitationOutput{}, err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
+	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return SendInvitationOutput{}, err
 	}
@@ -175,7 +170,7 @@ func (i *Invitations) SendInvitation(in SendInvitationInput) (SendInvitationOutp
 	}
 
 	// Сохранить чат в репозиторий
-	if err = i.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err = c.ChatAggregateRepo.Upsert(chat); err != nil {
 		return SendInvitationOutput{}, err
 	}
 
@@ -205,14 +200,14 @@ func (in AcceptInvitationInput) Validate() error {
 }
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
-func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
+func (c *Chats) AcceptInvitation(in AcceptInvitationInput) error {
 	// Валидировать входные данные
 	if err := in.Validate(); err != nil {
 		return err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregateByInvitationID(i.ChatAggregateRepo, in.InvitationID)
+	chat, err := getChatAggregateByInvitationID(c.ChatAggregateRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
@@ -234,7 +229,7 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 	}
 
 	// Сохранить чат в репозиторий
-	if err := i.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err := c.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 
@@ -258,14 +253,14 @@ func (in CancelInvitationInput) Validate() error {
 }
 
 // CancelInvitation отменяет приглашение
-func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
+func (c *Chats) CancelInvitation(in CancelInvitationInput) error {
 	// Валидировать входные данные
 	if err := in.Validate(); err != nil {
 		return err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregateByInvitationID(i.ChatAggregateRepo, in.InvitationID)
+	chat, err := getChatAggregateByInvitationID(c.ChatAggregateRepo, in.InvitationID)
 	if err != nil {
 		return err
 	}
@@ -300,7 +295,7 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 	}
 
 	// Сохранить чат в репозиторий
-	if err := i.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err := c.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 

@@ -6,10 +6,8 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
+// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата чатов
 type Chats struct {
-	//ChatsRepo         domain.ChatsRepository
-	//MembersRepo       domain.MembersRepository
 	ChatAggregateRepo domain.ChatAggregateRepository
 }
 

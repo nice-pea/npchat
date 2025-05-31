@@ -6,12 +6,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-type Members struct {
-	//MembersRepo domain.MembersRepository
-	//ChatsRepo   domain.ChatsRepository
-	ChatAggregateRepo domain.ChatAggregateRepository
-}
-
 // ChatMembersInput входящие параметры
 type ChatMembersInput struct {
 	SubjectID string
@@ -36,14 +30,14 @@ type ChatMembersOutput struct {
 }
 
 // ChatMembers возвращает список участников чата
-func (m *Members) ChatMembers(in ChatMembersInput) (ChatMembersOutput, error) {
+func (c *Chats) ChatMembers(in ChatMembersInput) (ChatMembersOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return ChatMembersOutput{}, err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
+	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return ChatMembersOutput{}, err
 	}
@@ -77,14 +71,14 @@ func (in LeaveChatInput) Validate() error {
 }
 
 // LeaveChat удаляет участника из чата
-func (m *Members) LeaveChat(in LeaveChatInput) error {
+func (c *Chats) LeaveChat(in LeaveChatInput) error {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return err
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
+	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return err
 	}
@@ -95,7 +89,7 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 	}
 
 	// Сохранить чат в репозиторий
-	if err = m.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err = c.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 
@@ -125,7 +119,7 @@ func (in DeleteMemberInput) Validate() error {
 }
 
 // DeleteMember удаляет участника чата
-func (m *Members) DeleteMember(in DeleteMemberInput) error {
+func (c *Chats) DeleteMember(in DeleteMemberInput) error {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return err
@@ -137,7 +131,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Проверить существование чата
-	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
+	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return err
 	}
@@ -153,7 +147,7 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Сохранить чат в репозиторий
-	if err = m.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err = c.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 
