@@ -41,15 +41,6 @@ func ValidateChatName(name string) error {
 	return nil // Название валидно
 }
 
-// ValidateChiefID проверяет корректность идентификатора главного пользователя чата.
-func ValidateChiefID(chiefID string) error {
-	if err := uuid.Validate(chiefID); err != nil {
-		return errors.Join(err, ErrChatChiefUserIDValidate)
-	}
-
-	return nil // Идентификатор главного пользователя валиден
-}
-
 // ChatsRepository интерфейс для работы с репозиторием чатов.
 type ChatsRepository interface {
 	// List возвращает список с учетом фильтрации

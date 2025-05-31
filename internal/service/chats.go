@@ -4,11 +4,12 @@ import (
 	"errors"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
 
 // Chats сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата чатов
 type Chats struct {
-	ChatAggregateRepo domain.ChatAggregateRepository
+	Repo chatt.Repository
 }
 
 // WhichParticipateInput входящие параметры
@@ -31,7 +32,7 @@ func (in WhichParticipateInput) Validate() error {
 
 // WhichParticipateOutput результат запроса чатов
 type WhichParticipateOutput struct {
-	Chats []domain.ChatAggregate
+	Chats []chatt.Chat
 }
 
 // WhichParticipate возвращает список чатов, в которых участвует пользователь
@@ -51,7 +52,7 @@ func (c *Chats) WhichParticipate(in WhichParticipateInput) (WhichParticipateOutp
 	membersFilter := domain.MembersFilter{
 		UserID: in.UserID,
 	}
-	chats, err := c.ChatAggregateRepo.ByParticipantsFilter(membersFilter)
+	chats, err := c.Repo.ByParticipantsFilter(membersFilter)
 	if err != nil {
 		return WhichParticipateOutput{}, err
 	}
@@ -67,18 +68,18 @@ type CreateInput struct {
 
 // CreateOutput результат создания чата
 type CreateOutput struct {
-	Chat domain.ChatAggregate
+	Chat chatt.Chat
 }
 
 // Create создает новый чат и участника для главного администратора - пользователя, который создал этот чат
 func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
-	chat, err := domain.NewChat(in.Name, in.ChiefUserID)
+	chat, err := chatt.NewChat(in.Name, in.ChiefUserID)
 	if err != nil {
 		return CreateOutput{}, err
 	}
 
 	// Сохранить чат в репозиторий
-	if err := c.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err := c.Repo.Upsert(chat); err != nil {
 		return CreateOutput{}, err
 	}
 
@@ -111,7 +112,7 @@ func (in UpdateNameInput) Validate() error {
 
 // UpdateNameOutput результат обновления названия чата
 type UpdateNameOutput struct {
-	Chat domain.ChatAggregate
+	Chat chatt.Chat
 }
 
 // UpdateName обновляет название чата.
@@ -123,7 +124,7 @@ func (c *Chats) UpdateName(in UpdateNameInput) (UpdateNameOutput, error) {
 	}
 
 	// Найти чат для обновления
-	chat, err := getChatAggregate(c.ChatAggregateRepo, in.ChatID)
+	chat, err := getChat(c.Repo, in.ChatID)
 	if err != nil {
 		return UpdateNameOutput{}, err
 	}
@@ -137,7 +138,7 @@ func (c *Chats) UpdateName(in UpdateNameInput) (UpdateNameOutput, error) {
 	if err = chat.UpdateName(in.NewName); err != nil {
 		return UpdateNameOutput{}, err
 	}
-	if err = c.ChatAggregateRepo.Upsert(chat); err != nil {
+	if err = c.Repo.Upsert(chat); err != nil {
 		return UpdateNameOutput{}, err
 	}
 
