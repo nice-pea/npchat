@@ -1,0 +1,1021 @@
+<!DOCTYPE HTML>
+<html lang="ru" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Дизайн(устарело) - Документация к проекту nice-pea-chat</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Документация к проекту nice-pea-chat</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="1-Дизайн-системы"><a class="header" href="#1-Дизайн-системы">1. Дизайн системы</a></h1>
+<hr />
+<h1 id="11-Функционал"><a class="header" href="#11-Функционал">1.1 Функционал</a></h1>
+<hr />
+<h1 id="111-Клиент---мобильное-приложение-android"><a class="header" href="#111-Клиент---мобильное-приложение-android">1.1.1 Клиент - мобильное приложение (android)</a></h1>
+<p><em>a.k.a mobile app</em></p>
+<h3 id="Приложение--"><a class="header" href="#Приложение--">Приложение -</a></h3>
+<ul>
+<li>Если запрос прошел с ошибкой (не 500), то текст из ответа надо вывести на экрана</li>
+<li>Для проверки поддержки апи, приложение отправляет на сервер запрос, в случае неудачи которого, открывается экран с ошибкой версии api</li>
+<li>Если сервер вернет ошибку авторизации, приложение должно очистить кэш (кроме логина и адреса) и перейти на экран логина</li>
+</ul>
+<h1 id="112-Чат"><a class="header" href="#112-Чат">1.1.2 Чат</a></h1>
+<p><em>a.k.a <del>conversation</del>chat/беседа</em></p>
+<p>Структура чата:</p>
+<ul>
+<li>Идентификатор</li>
+<li>идентификатор создателя</li>
+<li>Название чата</li>
+<li>Список участников</li>
+</ul>
+<p>Профиль чата (редактируемые поля):</p>
+<ul>
+<li>Название чата</li>
+</ul>
+<p>Приглашение в чат (invite/создать участника):</p>
+<ul>
+<li>Приглашать в чат могут только уполномоченные пользователи</li>
+<li>Новый участник чата не получает <strong>уведомлений</strong>, до тех пор пока не прочтет хотя бы одно сообщение</li>
+<li>Приглашение пользователя в чат, принудительно добавляет его, т.е отказать от приглашения невозможно</li>
+</ul>
+<p>Чат -</p>
+<ul>
+<li>В чат можно попасть по приглашению, либо создав новый чат, т.е все чаты являются приватными</li>
+<li>Создатель чата не может покинуть свой чат</li>
+<li>Количество чатов у пользователя не ограничено</li>
+<li>Количество созданных чатов ограничено, лимит равен 100</li>
+<li>Управление чатом и его сообщениями опирается на <strong>permissions</strong></li>
+<li>У пользователя должна быть возможность закреплять свои чаты вверху списка чатов в которых он состоит</li>
+</ul>
+<h1 id="113-Разрешения"><a class="header" href="#113-Разрешения">1.1.3 Разрешения</a></h1>
+<p><em>a.k.a разрешения</em></p>
+<p>Разрешения (permissions) -</p>
+<ul>
+<li>Разрешения дают доступ на какое-либо действие</li>
+<li>Некоторые (не все) требуют передачи параметра target, в этом случае помимо наличия права, будет выполнена проверка определенная проверка, которая где-то описана</li>
+<li>Набор разешений "по умолчанию" настраивается в system configuration, это те права которыми будут обладать пользователи пришедшие в чат</li>
+</ul>
+<p>Пример разрешений:</p>
+<ol>
+<li>Administrator // разрешают все, а снять это  разрешение нельзя - некая защита от дурака</li>
+<li>ManageMemberPermissions</li>
+<li>AddMembers</li>
+<li>DeleteMembers</li>
+<li>DeleteMemberMessages</li>
+<li>EditChatInfo</li>
+<li><del>DeleteOwnMessage</del></li>
+<li><del>EditOwnMessage</del></li>
+<li>SendMessages</li>
+</ol>
+<h1 id="114-Системные-настройки"><a class="header" href="#114-Системные-настройки">1.1.4 Системные настройки</a></h1>
+<p>a.k.a System configuration</p>
+<h1 id="115-Участник-чата"><a class="header" href="#115-Участник-чата">1.1.5 Участник чата</a></h1>
+<p><em>a.k.a member</em></p>
+<p>Структура участника:</p>
+<ul>
+<li>Идентификатор</li>
+<li>Идентификатор пользователя</li>
+<li>Идентификатор чата</li>
+<li><strong>permission set</strong></li>
+</ul>
+<p>Участник -</p>
+<ul>
+<li>Факт отношения пользователя к определенному чату</li>
+</ul>
+<h1 id="116-Сообщение"><a class="header" href="#116-Сообщение">1.1.6 Сообщение</a></h1>
+<p><em>a.k.a message</em></p>
+<p>Типы событий, в результате которых приходит анонимное сообщение в чат:</p>
+<ul>
+<li>Изменение профиля чата</li>
+<li>Создание нового участника</li>
+<li>Удаление участника</li>
+<li>Самостоятельный выход участника</li>
+<li>Создание чата</li>
+</ul>
+<p>Структура сообщения:</p>
+<ul>
+<li>идентификатор</li>
+<li>идентификатор чата</li>
+<li>идентификатор пользователя, т.е автора сообщения (необязательно)</li>
+<li>идентификатор сообщения, на которое это сообщение отвечает</li>
+<li>текст (отсутствует если оно было удалено)</li>
+<li>дата создания</li>
+<li>дата редактирования (необязательно)</li>
+<li>дата удаления (необязательно)</li>
+<li>список пользователей, прочитавших сообщение (исключая создателя)</li>
+</ul>
+<p>Сообщение (message) -</p>
+<ul>
+<li>Может быть создано пользователем, являющимися участником чата, либо в результате события в чате</li>
+<li>Текст может быть множество раз отредактирован автором, если не сообщение является удаленным</li>
+<li>Может быть единожды удалено автором</li>
+<li>На текст сообщения есть ограничение в 4096 символов</li>
+<li>На существующее (даже если удалено) сообщение можно отвечать другим сообщением</li>
+<li>Полная история сообщений в чате доступна каждому участнику</li>
+</ul>
+<h1 id="117-push-уведомление"><a class="header" href="#117-push-уведомление">1.1.7 Push-уведомление</a></h1>
+<p><em>a.k.a notification/push-notification</em></p>
+<p>Структура пуша:</p>
+<ul>
+<li>Название чата</li>
+<li>Текст сообщения (необязательно)</li>
+<li>Текст события (необязательно)</li>
+</ul>
+<p>В каких случаях пользователь получает пуш:</p>
+<ul>
+<li>В любой чат в котором он состоит пришло новое сообщение</li>
+<li>Приглашение пользователя (только тому кого пригласили)</li>
+<li>Удаление пользователя (только тому кого удалили)</li>
+</ul>
+<p>Когда пользователь не получает уведомления о новых сообщениях:</p>
+<ul>
+<li>Если его только пригласили в чат (является новым участником), и он ни одного сообщения не прочел</li>
+<li>Если пользователь уже находится в этом чате, т.е он открыт на клиенте</li>
+<li>Если этот чат находится в муте у пользователя открывает</li>
+</ul>
+<p>Уведомления -</p>
+<ul>
+<li>Уведомления создают push-уведомления на клиенте, даже если сейчас он закрыт</li>
+</ul>
+<h1 id="118-Пользователь"><a class="header" href="#118-Пользователь">1.1.8 Пользователь</a></h1>
+<p><em>a.k.a user</em></p>
+<p>Структура пользователя:</p>
+<ul>
+<li>Идентификатор</li>
+<li>Юзернейм</li>
+<li>Логин</li>
+</ul>
+<p>Профиль пользователя (редактируемые поля):</p>
+<ul>
+<li>Юзернейм</li>
+</ul>
+<p>Пользователь -</p>
+<ul>
+<li>Пользователя можно создать пройдя регистрацию</li>
+<li>"Вход в профиль" осуществляется по логину</li>
+<li>Профиль можно редактировать</li>
+</ul>
+<h1 id="12-Интерфейс-uiux"><a class="header" href="#12-Интерфейс-uiux">1.2 Интерфейс ui/ux</a></h1>
+<hr />
+<h1 id="121-Мобильное-приложение"><a class="header" href="#121-Мобильное-приложение">1.2.1 Мобильное приложение</a></h1>
+<p>Вход в приложение</p>
+<p><img src="image.png" alt="" />{width=603px}</p>
+<h3 id="Макет"><a class="header" href="#Макет">Макет</a></h3>
+<p><a href="https://www.figma.com/design/dQBEQWBNuffsOYNU54XZsX/CuteChatMobileApp?node-id=0%3A1&amp;t=E96rjGdjCDQxyFKX-1">https://www.figma.com/design/dQBEQWBNuffsOYNU54XZsX/CuteChatMobileApp?node-id=0%3A1&amp;t=E96rjGdjCDQxyFKX-1</a></p>
+<h3 id="Экран-выбора-сервера-и-ввода-логина---"><a class="header" href="#Экран-выбора-сервера-и-ввода-логина---">Экран выбора сервера и ввода логина  -</a></h3>
+<ul>
+<li>Открывается при первом входе в приложение</li>
+<li>Выбранный сервер сохраняется в кэш</li>
+<li>Компоненты:
+<ul>
+<li>Инпут для адреса</li>
+<li>Кнопка "пинг сервера"
+<ul>
+<li>По нажатию производится проверка доступности сервера и совместимости версии апи</li>
+</ul>
+</li>
+<li>Инпут логина</li>
+<li>Кнопка "вход"
+<ul>
+<li>По нажатию происходит получение токена</li>
+<li>После открывается <strong>экран чатов</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Главный-экран-со-списком-чатов--"><a class="header" href="#Главный-экран-со-списком-чатов--">Главный экран со списком чатов -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>Кнопка "посмотреть профиль"
+<ul>
+<li>Открывает диалог <strong>профиля пользователя</strong></li>
+</ul>
+</li>
+<li>Кнопка "Создать чат*
+<ul>
+<li>Открывает диалог <strong>создания чата</strong></li>
+</ul>
+</li>
+<li>Список чатов
+<ul>
+<li>По нажатию на чат, откроется его экран сообщений</li>
+<li>Отсортирован по времени сообщений, последний сверх, а также по закрепленным, закрепленные сверху</li>
+<li>Каждый элемент состоит из:
+<ul>
+<li>Названия</li>
+<li>Индикатора количества новых сообщений</li>
+<li>Автора (если есть) и текста сообщения</li>
+<li>По длительному нажатию открывается диалог <strong>действий с чатом</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Диалог-действий-с-чатом--"><a class="header" href="#Диалог-действий-с-чатом--">Диалог действий с чатом -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>Кнопка "открепить\закрепить"
+<ul>
+<li>при закрепить - чат перемещается на первое место в списке закрепленных</li>
+<li>при открепить - из закрепленных перемещается на первое место в списке чатов</li>
+</ul>
+</li>
+<li>Кнопка "покинуть"
+<ul>
+<li>по нажатию запрашивается подтверждение</li>
+<li>после подтверждения выхода, чат удаляется из списка чатов пользователя</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Диалог-создания-чата--"><a class="header" href="#Диалог-создания-чата--">Диалог создания чата -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>инпут с названием чата</li>
+<li>кнопка подтверждения
+<ul>
+<li>по нажатию кнопка переходит в состояние загрузки</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>после создания чата, он добавляется в список и открывается экран с этим чатом</li>
+</ul>
+<h3 id="Диалог-профиля-пользователя--"><a class="header" href="#Диалог-профиля-пользователя--">Диалог профиля пользователя -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>Идентификатор</li>
+<li>подсказка о том что ИД нужно передать модератору чата чтобы он мог пригласить</li>
+<li>Юзернейм</li>
+<li>Логин</li>
+<li>подсказка о том что Логин используется для входа в профиль</li>
+<li>кнопка Редактировать
+<ul>
+<li>открывает диалог <strong>Редактирования профиля пользователя</strong></li>
+</ul>
+</li>
+<li>Кнопка выхода
+<ul>
+<li>по нажатию открывается диалог подтверждения</li>
+<li>после подтверждения - Выбрасывает на экран логина</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Диалог-Редактирования-профиля-пользователя--"><a class="header" href="#Диалог-Редактирования-профиля-пользователя--"><strong>Диалог Редактирования профиля пользователя -</strong></a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>инпут с юзернеймом</li>
+<li>кнопка подтверждения
+<ul>
+<li>по нажатию кнопка переходит в состояние загрузки</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>после успешного редактирования, данные пользователя обновляются и диалог закрывается</li>
+</ul>
+<h3 id="Диалог-профиль-чата--"><a class="header" href="#Диалог-профиль-чата--">Диалог профиль чата -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>юзернейм создателя,</li>
+<li>название чата</li>
+<li>Кнопка Изменить профиль чата
+<ul>
+<li>открывает диалог редактирования данных профиля чата</li>
+</ul>
+</li>
+<li>Кнопка покинуть чат (необязательно)</li>
+<li>Кнопка добавить участника
+<ul>
+<li>Открывает диалог</li>
+<li>Компоненты
+<ul>
+<li>Инпут ид пользователя</li>
+<li>кнопка пригласить</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Диалог-профиль-чата---1"><a class="header" href="#Диалог-профиль-чата---1">Диалог профиль чата -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>Список участников
+<ul>
+<li>Каждый элемент состоит из:
+<ul>
+<li>юзернейм</li>
+<li>permission set</li>
+</ul>
+</li>
+<li>По нажатию на пользователя открывается диалог <strong>Участник чата</strong> (только если нажал не на себя)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Диалог-участника-чата--"><a class="header" href="#Диалог-участника-чата--">Диалог участника чата -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>ид профиля</li>
+<li>юзернейм</li>
+<li>кнопка удалить (необязательно)
+<ul>
+<li>открывает диалог с подтверждением удаления</li>
+</ul>
+</li>
+<li>кнопка "назначит набор разрешений" (необязательно)
+<ul>
+<li>открывает диалог со списков наборов и их описания/списка возможностей</li>
+<li>каждый элемент это radio button</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="Экран-сообщений-чата--"><a class="header" href="#Экран-сообщений-чата--">Экран сообщений чата -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>Инпут бар сообщения
+<ul>
+<li>Компоненты:
+<ul>
+<li>Выбранное сообщение для ответа (необязательно)</li>
+<li>Введенные текст (необязательно)</li>
+<li>Кнопка снизу, варианты:
+<ul>
+<li>"Применить изменения" - если происходить изменение сообщения
+<ul>
+<li>По нажатию применяется изменение, текст сообщения изменяется</li>
+</ul>
+</li>
+<li>Кнопка "Отправить" - если введен текст нового сообщения
+<ul>
+<li>По нажатию отправляется новое сообщение, оно появляется позже в чате</li>
+</ul>
+</li>
+<li>Кнопка "Начать ввод"  - если сообщение пустое и клавиатура скрыта
+<ul>
+<li>По нажатию открывается клава</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Тайтл бар
+<ul>
+<li>Компоненты:
+<ul>
+<li>Кнопка "вернуться"</li>
+<li>название чата</li>
+<li>Кнопка "меню"
+<ul>
+<li>Открывает диалог <strong>профиль чата</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Список сообщений:
+<ul>
+<li>Каждый элемент состоит из:
+<ul>
+<li>Имени отправителя (необязательно)</li>
+<li>Части сообщения на которое был сделан ответ (необязательно)</li>
+<li>Текста сообщения</li>
+<li>Даты отправки</li>
+<li>Пометки "отредактировано" (необязательно)</li>
+<li>Пометки "удалено" (необязательно)</li>
+</ul>
+</li>
+<li>По нажатию открывается меню
+<ul>
+<li>Компоненты:
+<ul>
+<li>Кнопка скопировать сообщение</li>
+<li>Кнопка ответить на сообщение
+<ul>
+<li>помещает часть сообщения в <strong>Инпут бар сообщения</strong></li>
+</ul>
+</li>
+<li>Кнопки удалить и изменить сообщение (необязательно)
+<ul>
+<li>По нажатию, появится диалог с подтверждением</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="диалог-ошибки-версии-api--"><a class="header" href="#диалог-ошибки-версии-api--">диалог ошибки версии api -</a></h3>
+<ul>
+<li>Компоненты:
+<ul>
+<li>текст с руководством о том почему возникла эта ошибки и способы ее исправления</li>
+<li>версия апи приложения</li>
+<li>версия апи с сервера</li>
+</ul>
+</li>
+</ul>
+<h1 id="13-Техническая-часть"><a class="header" href="#13-Техническая-часть">1.3 Техническая часть</a></h1>
+<hr />
+<h1 id="131-api-для-приложения"><a class="header" href="#131-api-для-приложения">1.3.1 API для приложения</a></h1>
+<p>Эндпоинты</p>
+<pre><code>// Запросить информацию о сервере и сверить  версию клиента
+GET {host}/healthcheck
+response data:
+  api_support {
+    min_code int
+    min string
+    max_code int
+    max string
+  }
+
+
+// Запросить токен для дальнейшей работы
+POST {host}/auth
+request body:
+  login string
+response data:
+  access string
+
+
+
+// Запросить пользователя по токену
+GET {host}/users
+headers:
+  x-token-header string
+response data:
+  user User
+  credentials {
+    login string
+  }
+
+
+// Запросить пользователя по ID
+GET {host}/users/{id}
+path param:
+  id int
+response data:
+  user User
+
+// Изменить данные пользователя
+PATH {host}/users
+request body:
+  username string?
+
+
+// Запросить полный список чатов в которых пользователь является участником
+GET {host}/chats
+response data:
+  chats []Chat
+
+
+// Изменить данные чата
+PATH {host}/chats/{id}
+path param:
+  id int
+request body:
+  name string?
+
+
+// Список закрепленных чатов
+GET {host}/chats/pins
+response data:
+  chat_ids []int32
+
+
+// Изменить список закрепленных чатов
+POST {host}/chats/pins
+request body:
+  chat_ids []int32
+
+
+// Запросить полный список участников чата
+GET {host}/chats/{id}/members
+path param:
+  id int
+response data:
+  members []User
+
+
+// Удалить пользователя из чата
+DELETE {host}/chats/{chat_id}/members/{id}
+path param:
+  chat_id int32
+  id int32
+
+
+// Добавить пользователя в чат
+POST {host}/chats/{id}/members
+path param:
+  id int
+request body:
+  user_id int
+
+
+// Назначить permissions  участнику
+PATH {host}/chats/{chat_id}/members/{id}
+path param:
+  chat_id int32
+  id int
+request body:
+  permissions []Permission
+
+
+// Запросить часть истории сообщений в чате
+GET {host}/chats/{chat_id}/messages
+path param:
+  chat_id int32
+query param:
+  limit int
+  oneOf( 
+    around_id int32
+    before_id int32
+    after_id int32
+  )
+response data:
+  messages []Message
+
+
+// Удалить сообщение
+DELETE {host}/messages/{id}
+path param:
+  id int
+
+
+// Изменить сообщение
+PATH {host}/chats/{chat_id}/messages/{id}
+path param:
+  chat_id int32
+  id int
+request body:
+  text string?
+
+
+// Cоздать сообщение
+POST {host}/chats/{chat_id}/messages
+path param:
+  chat_id int32
+request body:
+  text string
+  reply_id int32?
+  
+  
+// Пометить сообщение как прочитанное
+POST {host}/chats/{chat_id}/messages/{id}/read
+path param:
+  chat_id int32
+  id int32
+</code></pre>
+<p>Модели</p>
+<pre><code>User:
+  id int
+  username string
+
+Permission:
+  name string
+  desc string
+
+PermissionId:
+  | Administrator
+  | ManageMemberPermissions
+  | AddMembers
+  | DeleteMembers
+  | DeleteMemberMessages
+  | EditChatInfo
+  | SendMessages
+  
+
+ReplyedMessage:
+  id int32
+  date int64
+  text string?
+  user User?
+  edit_date int64?
+  delete_date int64?
+ 
+Message:
+  id int32
+  chat_id int32
+  date int64
+  text string?
+  user User?
+  reply ReplyedMessage?
+  edit_date int64?
+  delete_date int64?
+
+Chat:
+  id int32
+  name string
+  last_msg Message?
+  last_read_msg int32?
+  unread_count int
+  permissions []PermissionId
+  
+</code></pre>
+<p>Ответ с данными</p>
+<pre><code>// код 2**
+response:
+{
+  "data": &lt;Данные&gt;,
+}
+</code></pre>
+<p>Ответ с ошибкой</p>
+<pre><code>// код 4** или 5**
+response:
+{
+  "error": "&lt;Текст ошибки&gt;",
+}
+</code></pre>
+<h1 id="132-Авторизация"><a class="header" href="#132-Авторизация">1.3.2 Авторизация</a></h1>
+<ol>
+<li>Administrator
+<ul>
+<li>Можно выполнять любые действия</li>
+<li>Запрещено выдавать/забирать разрешение <strong>Administrator</strong></li>
+</ul>
+</li>
+<li>ManageMemberPermissions
+<ul>
+<li>Устанавливать разрешения участникам</li>
+<li>Список разрешений ограничен сверху максимальным разрешением  пользователя (не включая его в список)</li>
+<li>Применять в отношение пользователей чьи разрешения ниже уровня <strong>ManageMemberPermissions</strong></li>
+</ul>
+</li>
+<li>DeleteMembers
+<ul>
+<li>Удалять (кикать\исключать) участников</li>
+<li>Применять в отношение пользователей чьи разрешения ниже уровня <strong>DeleteMembers</strong></li>
+</ul>
+</li>
+<li>AddMembers
+<ul>
+<li>Добавлять пользователей в чат</li>
+</ul>
+</li>
+<li>DeleteMemberMessages
+<ul>
+<li>Удалять сообщения участников</li>
+<li>Применять в отношение пользователей чьи разрешения ниже уровня <strong>DeleteMemberMessages</strong></li>
+</ul>
+</li>
+<li>EditChatInfo
+<ul>
+<li>Редактировать данные чата</li>
+</ul>
+</li>
+<li><del>DeleteOwnMessage</del>
+<ul>
+<li><del>Удалять свои сообщения</del></li>
+</ul>
+</li>
+<li><del>EditOwnMessage</del>
+<ul>
+<li><del>Редактировать свои сообщения</del></li>
+</ul>
+</li>
+<li>SendMessages
+<ul>
+<li>Писать сообщения</li>
+</ul>
+</li>
+</ol>
+<h1 id="133-Аутентификация"><a class="header" href="#133-Аутентификация">1.3.3 Аутентификация</a></h1>
+<ul>
+<li>хранимые данных в jwt
+<ul>
+<li>ид пользователя</li>
+</ul>
+</li>
+<li>время жизни токена
+<ul>
+<li>15 минут</li>
+</ul>
+</li>
+<li>способ получения токена
+<ul>
+<li>в обмен на креды (логин)</li>
+</ul>
+</li>
+<li>способ обновления токена
+<ul>
+<li>отсутствует</li>
+</ul>
+</li>
+</ul>
+<h1 id="134-Пользовательская-БД-Субд-Схема-Бд"><a class="header" href="#134-Пользовательская-БД-Субд-Схема-Бд">1.3.4 Пользовательская БД. Субд. Схема Бд</a></h1>
+<h1 id="135--Логирование"><a class="header" href="#135--Логирование">1.3.5  Логирование</a></h1>
+<h1 id="137--Тестирование"><a class="header" href="#137--Тестирование">1.3.7  Тестирование</a></h1>
+<h1 id="138---gatewayБалансировщик"><a class="header" href="#138---gatewayБалансировщик">1.3.8   Gateway/Балансировщик</a></h1>
+<h1 id="138--Очередь"><a class="header" href="#138--Очередь">1.3.8  Очередь</a></h1>
+<h1 id="139--Деплой"><a class="header" href="#139--Деплой">1.3.9  Деплой</a></h1>
+<h1 id="1310-Версионирование"><a class="header" href="#1310-Версионирование">1.3.10 Версионирование</a></h1>
+<h1 id="2-Сбор-требований"><a class="header" href="#2-Сбор-требований">2. Сбор требований</a></h1>
+<hr />
+<h1 id="21-Технические-вопросы"><a class="header" href="#21-Технические-вопросы">2.1 Технические вопросы</a></h1>
+<ul>
+<li>На чем основана аутентификация? jwt или другие варианты? Если jwt то какая нагрузка у токенов будет?</li>
+<li>Один инстанс сервера будет использоваться для всех чатов, т.е. 1:n либо 1:1, если таковые будут.</li>
+<li>Будет ли поддержка горизонтального масштабирования? Если да, то что будет шлюзом?</li>
+<li>Какой api будет между сервером, http, grpc, gql?</li>
+<li>Будет ли использоваться долгоживущее соединение - websocket, long polling, etc?</li>
+<li>Сервер будет stateless или statefull?</li>
+<li>Будет ли сервер писать логи, как их можно будет читать?</li>
+<li>Что будет использоваться для хранения данных - сообщения, данные чатов, пользователей?</li>
+</ul>
+<h3 id="Сообщения"><a class="header" href="#Сообщения">Сообщения</a></h3>
+<ul>
+<li>Как будет происходить пагинация при запросе сообщений?</li>
+</ul>
+<h1 id="22-Анализ-требуемого-функционала"><a class="header" href="#22-Анализ-требуемого-функционала">2.2 Анализ требуемого функционала</a></h1>
+<ul>
+<li>Какой клиент будет у "Cute-chat", web, mobile, desktop?</li>
+<li>"Cute-chat" это о одном чате, т.е. все сообщения будут сваливаться в одну кучу или будет возможность отправлять сообщение в разные чаты?</li>
+</ul>
+<h3 id="Несколько-чатов"><a class="header" href="#Несколько-чатов">Несколько чатов</a></h3>
+<ul>
+<li>Если чатов несколько, то вероятно их кто то должен создавать, кто это будет делать, или у кого такая возможность будет?</li>
+<li>Как пользователи будут попадать в чаты? По приглашению, присоединяться самостоятельно, присоединяться принудительно?</li>
+<li>Ограничения на вход будут? Т.е. приватые/публичные чаты?</li>
+<li>Если возможность создавать чаты будет у пользователя, то вероятно должны быть ограничения на количество созданных чатов?</li>
+<li>Как выглядит профиль чата? В профиле будут название, картинка, описание, список участников?</li>
+<li>Будут ли у создателя чата особые права? Например он может изменять профиль чата, удалять чат, добавлять\исключать участников, модерировать?</li>
+<li>Может ли создатель чата выходить из чата? Что будет если создатель выйдет из чата?</li>
+<li>Будет возможность передавать права создателя?</li>
+<li>Возможность удалить чат будет? Что произойдет с участниками? Если в этот момент пользователь перейдет по приглашению в чат, что он увидит?</li>
+<li>Есть ли возможность просматривать список участников чата? Кому эта возможность доступна?</li>
+<li>В чате есть ограничения по количеству участников?</li>
+<li>Можно ли пересылать сообщения между чатами?</li>
+</ul>
+<h3 id="Сообщения-1"><a class="header" href="#Сообщения-1">Сообщения</a></h3>
+<ul>
+<li>Что в чат можно отправлять пользователям? Медиа/стикеры/ссылки/текст/файлы?</li>
+<li>Сообщение может содержать несколько типов контента? Будет ли применяться разбиение на несколько сообщений при превышении лимита медиа или символов в тексте?</li>
+<li>Есть ли ограничения на отправку сообщений?</li>
+<li>Какие действия можно совершать с сообщениями? Удалять/изменять/пересылать/отвечать/копировать/отправлять повторно?</li>
+<li>Как будет выглядеть пересланное сообщение если его оригинал будет изменен/удален?</li>
+<li>Сохраняется ли история сообщений? Новые участники видят всю историю или только ее часть?</li>
+<li>Какого типа сообщения в чате будут появляться? Пользовательские/системные?</li>
+<li>Возможность отправлять анонимные сообщения в чат будет?</li>
+<li>Возможность отправлять сообщения со спойлером будет?</li>
+<li>Возможность отправлять сообщения с автоматическим удалением будет? Что произойдет если это сообщение будет переслано?</li>
+<li>Сообщения будут обладать статусом "прочитано"?</li>
+<li>Какой порядок сообщений в истории, последние помещаются снизу или сверху?</li>
+<li>Как выглядит профиль сообщения? В профиле сообщения будут дата создания, флаг о том что его прочитали, дата изменения/удаления, автор сообщения, чат?</li>
+<li>Поиск по сообщениям в конкретном чате будет? К поиску будет возможность добавлять фильтры, автор, даты, статус, тип (медиа\текст)?</li>
+<li>В текстовых сообщениях можно будет упоминать пользователей?</li>
+</ul>
+<h3 id="Новое-сообщение"><a class="header" href="#Новое-сообщение">Новое сообщение</a></h3>
+<ul>
+<li>Новое сообщение будет сопровождаться индикатором на чате, меткой "новое" в истории?</li>
+<li>Новое сообщение будет рассылать push уведомления всем участникам? Возможность отключать push уведомления будет?</li>
+</ul>
+<h3 id="Пользователь"><a class="header" href="#Пользователь">Пользователь</a></h3>
+<ul>
+<li>Откуда берется пользователь? Он создается исключительно для "cute-chat", т.е. проходит регистрацию или база пользователей уже существует?</li>
+<li>Как выглядит профиль пользователя? Имя, почта, ид, фото, описание, список чатов? Какие данные пользователь может редактировать?</li>
+<li>Будут ли существовать пользователи с дополнительными возможностями? Например с возможностью редактировать/просматривать/удалять то что обычные не могут</li>
+</ul>
+<h3 id="Клиент-webmobiledesktop"><a class="header" href="#Клиент-webmobiledesktop">Клиент web/mobile/desktop</a></h3>
+<ul>
+<li>Как будет происходить связывание клиента и сервера, в клиенте будет статически прописан адрес или пользователям надо вручную указывать адрес сервера?</li>
+<li>Будет ли ограничения при использовании клиента не последней версии либо отчающейс я от поддерживаемой  сервером?</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="conventional_commit_messages.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="design_additional.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="conventional_commit_messages.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="design_additional.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
