@@ -160,7 +160,7 @@ func isAllowedLetter(c rune) bool {
 // ValidateUserID проверяет корректность идентификатора пользователя.
 func (c AuthnPassword) ValidateUserID() error {
 	if err := uuid.Validate(c.UserID); err != nil {
-		return errors.Join(err, ErrInvitationUserIDValidate) // Возвращаем ошибку, если идентификатор недействителен
+		return errors.Join(err, ErrInvalidUserID) // Возвращаем ошибку, если идентификатор недействителен
 	}
 	return nil // Идентификатор валиден
 }

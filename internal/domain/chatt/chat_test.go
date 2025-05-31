@@ -4,105 +4,146 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestChat_ValidateID(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(ID string) error {
-		c := Chat{ID: ID}
-		return c.ValidateID()
+func TestNewChat(t *testing.T) {
+	t.Run("параметр name не должен быть пустым", func(t *testing.T) {
+		chat, err := NewChat("", uuid.NewString())
+		assert.Zero(t, chat)
+		assert.ErrorIs(t, err, ErrInvalidChatName)
 	})
+
+	t.Run("параметр name должен быть валидными и не пустыми", func(t *testing.T) {
+		chat, err := NewChat("\ninvalid\t", uuid.NewString())
+		assert.Zero(t, chat)
+		assert.ErrorIs(t, err, ErrInvalidChatName)
+	})
+
+	t.Run("параметр chiefID не должен быть пустым", func(t *testing.T) {
+		chat, err := NewChat("name", "")
+		assert.Zero(t, chat)
+		assert.ErrorIs(t, err, ErrInvalidChiefID)
+	})
+
+	t.Run("параметр chiefID должен быть валидным", func(t *testing.T) {
+		chat, err := NewChat("name", "invalid")
+		assert.Zero(t, chat)
+		assert.ErrorIs(t, err, ErrInvalidChiefID)
+	})
+
+	t.Run("новому чату присваивается id, другие свойства равны переданным", func(t *testing.T) {
+		chiefID := uuid.NewString()
+		name := "name"
+		chat, err := NewChat(name, chiefID)
+		assert.NotZero(t, chat)
+		assert.NoError(t, err)
+
+		// В id устанавливается случайное значение ID
+		assert.NotZero(t, chat.ID)
+		// Главный администратор из параметров
+		assert.Equal(t, chiefID, chat.ChiefID)
+		// Название чата из параметров
+		assert.Equal(t, name, chat.Name)
+	})
+
+	t.Run("в новом чате создается главный администратор", func(t *testing.T) {
+		chiefID := uuid.NewString()
+		chat, err := NewChat("name", chiefID)
+		assert.NotZero(t, chat)
+		assert.NoError(t, err)
+
+		// Главный администратор в свойствах чата и участниках
+		assert.Len(t, chat.Participants, 1)
+		assert.Equal(t, chiefID, chat.Participants[0].UserID)
+	})
+
+	t.Run("в новом чате нет приглашений", func(t *testing.T) {
+		chat, err := NewChat("name", uuid.NewString())
+		assert.NotZero(t, chat)
+		assert.NoError(t, err)
+
+		// Приглашений нет
+		assert.Empty(t, chat.Invitations)
+	})
+
 }
 
 func TestChat_ValidateName(t *testing.T) {
-	type fields struct {
-		ID   string
-		Name string
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
+		name     string
+		chatName string
+		wantErr  bool
 	}{
 		{
-			name:    "пустая строка",
-			fields:  fields{Name: ""},
-			wantErr: true,
+			name:     "пустая строка",
+			chatName: "",
+			wantErr:  true,
 		},
 		{
-			name:    "превышает лимит в 50 символов",
-			fields:  fields{Name: strings.Repeat("a", 51)},
-			wantErr: true,
+			name:     "превышает лимит в 50 символов",
+			chatName: strings.Repeat("a", 51),
+			wantErr:  true,
 		},
 		{
-			name:    "содержит пробел в начале",
-			fields:  fields{Name: " name"},
-			wantErr: true,
+			name:     "содержит пробел в начале",
+			chatName: " name",
+			wantErr:  true,
 		},
 		{
-			name:    "содержит пробел в конце",
-			fields:  fields{Name: "name "},
-			wantErr: true,
+			name:     "содержит пробел в конце",
+			chatName: "name ",
+			wantErr:  true,
 		},
 		{
-			name:    "содержит таб",
-			fields:  fields{Name: "na\tme"},
-			wantErr: true,
+			name:     "содержит таб",
+			chatName: "na\tme",
+			wantErr:  true,
 		},
 		{
-			name:    "содержит новую строку",
-			fields:  fields{Name: "na\nme"},
-			wantErr: true,
+			name:     "содержит новую строку",
+			chatName: "na\nme",
+			wantErr:  true,
 		},
 		{
-			name:    "содержит цифры",
-			fields:  fields{Name: "1na13me4"},
-			wantErr: false,
+			name:     "содержит только пробелы",
+			chatName: " ",
+			wantErr:  true,
 		},
 		{
-			name:    "содержит пробел в середине",
-			fields:  fields{Name: "na me"},
-			wantErr: false,
+			name:     "содержит цифры",
+			chatName: "1na13me4",
+			wantErr:  false,
 		},
 		{
-			name:    "содержит пробелы в середине",
-			fields:  fields{Name: "na  me"},
-			wantErr: false,
+			name:     "содержит пробел в середине",
+			chatName: "na me",
+			wantErr:  false,
 		},
 		{
-			name:    "содержит знаки",
-			fields:  fields{Name: "??na??me.#1432&^$(@"},
-			wantErr: false,
+			name:     "содержит пробелы в середине",
+			chatName: "na  me",
+			wantErr:  false,
 		},
 		{
-			name:    "содержит только знаки",
-			fields:  fields{Name: "?>><#(*@$&"},
-			wantErr: false,
+			name:     "содержит знаки",
+			chatName: "??na??me.#1432&^$(@",
+			wantErr:  false,
 		},
 		{
-			name:    "содержит только пробелы",
-			fields:  fields{Name: " "},
-			wantErr: true,
+			name:     "содержит только знаки",
+			chatName: "?>><#(*@$&",
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Chat{
-				ID:   tt.fields.ID,
-				Name: tt.fields.Name,
-			}
-			if err := c.ValidateName(); (err != nil) != tt.wantErr {
-				t.Errorf("ValidateName() error = %v, wantErr %v", err, tt.wantErr)
+			if err := ValidateChatName(tt.name); tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
-}
-
-func TestChat_ValidateChiefUserID(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(ChiefUserID string) error {
-		c := Chat{
-			ChiefUserID: ChiefUserID,
-		}
-		return c.ValidateChiefUserID()
-	})
 }
