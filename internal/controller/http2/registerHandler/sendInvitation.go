@@ -27,9 +27,9 @@ func SendInvitation(router http2.Router) {
 			}
 
 			input := service.SendInvitationInput{
-				SubjectUserID: context.Session().UserID,
-				ChatID:        rb.ChatID,
-				UserID:        rb.UserID,
+				SubjectID: context.Session().UserID,
+				ChatID:    rb.ChatID,
+				UserID:    rb.UserID,
 			}
 
 			return context.Services().Invitations().SendInvitation(input)

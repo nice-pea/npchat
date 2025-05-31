@@ -13,8 +13,8 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
 
-func (suite *servicesTestSuite) newUserChatsInput(userID string) UserChatsInput {
-	return UserChatsInput{
+func (suite *servicesTestSuite) newUserChatsInput(userID string) WhichParticipateInput {
+	return WhichParticipateInput{
 		SubjectUserID: userID,
 		UserID:        userID,
 	}
@@ -35,7 +35,7 @@ func (suite *servicesTestSuite) newCreateInputRandom() CreateInput {
 // Test_UserChatsInput_Validate тестирует валидацию входящих параметров запроса списка чатов в которых участвует пользователь
 func Test_UserChatsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := UserChatsInput{
+		in := WhichParticipateInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
@@ -46,7 +46,7 @@ func Test_UserChatsInput_Validate(t *testing.T) {
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
 func (suite *servicesTestSuite) Test_Chats_UserChats() {
 	suite.Run("пользователь может запрашивать только свой чат", func() {
-		input := UserChatsInput{
+		input := WhichParticipateInput{
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
@@ -271,9 +271,9 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				input := UpdateNameInput{
-					SubjectUserID: uuid.NewString(),
-					ChatID:        uuid.NewString(),
-					NewName:       tt.newName,
+					SubjectID: uuid.NewString(),
+					ChatID:    uuid.NewString(),
+					NewName:   tt.newName,
 				}
 				if err := input.Validate(); tt.wantErr {
 					assert.Error(t, err)
@@ -285,9 +285,9 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 	})
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := UpdateNameInput{
-			SubjectUserID: id,
-			ChatID:        id,
-			NewName:       "NewName",
+			SubjectID: id,
+			ChatID:    id,
+			NewName:   "NewName",
 		}
 		return input.Validate()
 	})
@@ -297,9 +297,9 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 	suite.Run("только существующий чат можно обновить", func() {
 		input := UpdateNameInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        uuid.NewString(),
-			NewName:       "newName",
+			SubjectID: uuid.NewString(),
+			ChatID:    uuid.NewString(),
+			NewName:   "newName",
 		}
 		// Обновить название чата
 		chat, err := suite.ss.chats.UpdateName(input)
@@ -316,9 +316,9 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 		suite.Require().NotZero(createdOut)
 		// Попытаться изменить название от имени случайного пользователя
 		input := UpdateNameInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        createdOut.Chat.ID,
-			NewName:       "newName",
+			SubjectID: uuid.NewString(),
+			ChatID:    createdOut.Chat.ID,
+			NewName:   "newName",
 		}
 		updatedChat, err := suite.ss.chats.UpdateName(input)
 		// Вернется ошибка, потому что пользователь не главный администратор чата
@@ -334,9 +334,9 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 		suite.Require().NotZero(createdOut)
 		// Попытаться изменить название от имени случайного пользователя
 		input := UpdateNameInput{
-			SubjectUserID: createdOut.Chat.ChiefUserID,
-			ChatID:        createdOut.Chat.ID,
-			NewName:       "newName",
+			SubjectID: createdOut.Chat.ChiefUserID,
+			ChatID:    createdOut.Chat.ID,
+			NewName:   "newName",
 		}
 		updatedChat, err := suite.ss.chats.UpdateName(input)
 		suite.Require().NoError(err)

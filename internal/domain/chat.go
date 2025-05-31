@@ -26,23 +26,24 @@ func (c Chat) ValidateID() error {
 	if err := uuid.Validate(c.ID); err != nil {
 		return errors.Join(err, ErrChatIDValidate) // Возвращает ошибку, если идентификатор некорректен
 	}
+
 	return nil // Идентификатор валиден
 }
 
-// ValidateName проверяет корректность названия чата.
-func (c Chat) ValidateName() error {
+// ValidateChatName проверяет корректность названия чата.
+func ValidateChatName(name string) error {
 	// Регулярное выражение для проверки названия чата
 	var chatNameRegexp = regexp.MustCompile(`^[^\s\n\t][^\n\t]{0,48}[^\s\n\t]$`)
-	if !chatNameRegexp.MatchString(c.Name) {
+	if !chatNameRegexp.MatchString(name) {
 		return ErrChatNameValidate // Возвращает ошибку, если название некорректно
 	}
 
 	return nil // Название валидно
 }
 
-// ValidateChiefUserID проверяет корректность идентификатора главного пользователя чата.
-func (c Chat) ValidateChiefUserID() error {
-	if err := uuid.Validate(c.ChiefUserID); err != nil {
+// ValidateChiefID проверяет корректность идентификатора главного пользователя чата.
+func ValidateChiefID(chiefID string) error {
+	if err := uuid.Validate(chiefID); err != nil {
 		return errors.Join(err, ErrChatChiefUserIDValidate)
 	}
 

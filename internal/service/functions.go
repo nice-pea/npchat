@@ -20,6 +20,22 @@ func getChat(chatsRepo domain.ChatsRepository, chatID string) (domain.Chat, erro
 	return chats[0], nil
 }
 
+// getChat возвращает чат либо ошибку ErrChatNotExists
+func getChatAggregate(repo domain.ChatAggregateRepository, chatID string) (domain.ChatAggregate, error) {
+	chatsFilter := domain.ChatsFilter{
+		IDs: []string{chatID},
+	}
+	chats, err := repo.ByChatFilter(chatsFilter)
+	if err != nil {
+		return domain.ChatAggregate{}, err
+	}
+	if len(chats) != 1 {
+		return domain.ChatAggregate{}, ErrChatNotExists
+	}
+
+	return chats[0], nil
+}
+
 // chatMembers возвращает список участников
 func chatMembers(membersRepo domain.MembersRepository, chatID string) ([]domain.Member, error) {
 	membersFilter := domain.MembersFilter{
@@ -38,9 +54,9 @@ func userMember(membersRepo domain.MembersRepository, userID, chatID string) (do
 	return memberOrErr(membersRepo, userID, chatID, ErrUserIsNotMember)
 }
 
-// subjectUserMember вернет участника либо ошибку ErrSubjectUserIsNotMember
-func subjectUserMember(membersRepo domain.MembersRepository, subjectUserID, chatID string) (domain.Member, error) {
-	return memberOrErr(membersRepo, subjectUserID, chatID, ErrSubjectUserIsNotMember)
+// subjectUserMember вернет участника либо ошибку ErrSubjectIsNotMember
+func subjectUserMember(membersRepo domain.MembersRepository, subjectID, chatID string) (domain.Member, error) {
+	return memberOrErr(membersRepo, subjectID, chatID, ErrSubjectIsNotMember)
 }
 
 // memberOrErr возвращает участника чата по userID, chatID.

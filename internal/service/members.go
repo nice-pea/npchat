@@ -3,72 +3,73 @@ package service
 import (
 	"errors"
 
-	"github.com/google/uuid"
-
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 type Members struct {
-	MembersRepo domain.MembersRepository
-	ChatsRepo   domain.ChatsRepository
+	//MembersRepo domain.MembersRepository
+	//ChatsRepo   domain.ChatsRepository
+	ChatAggregateRepo domain.ChatAggregateRepository
 }
 
 // ChatMembersInput входящие параметры
 type ChatMembersInput struct {
-	SubjectUserID string
-	ChatID        string
+	SubjectID string
+	ChatID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in ChatMembersInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidUserID)
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
-	if err := uuid.Validate(in.ChatID); err != nil {
+	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
 
 	return nil
 }
 
+// ChatMembersOutput результат запроса чатов
+type ChatMembersOutput struct {
+	Participants []domain.Participant
+}
+
 // ChatMembers возвращает список участников чата
-func (m *Members) ChatMembers(in ChatMembersInput) ([]domain.Member, error) {
+func (m *Members) ChatMembers(in ChatMembersInput) (ChatMembersOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return nil, err
+		return ChatMembersOutput{}, err
 	}
 
 	// Проверить существование чата
-	if _, err := getChat(m.ChatsRepo, in.ChatID); err != nil {
-		return nil, err
+	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
+	if err != nil {
+		return ChatMembersOutput{}, err
 	}
 
 	// Пользователь должен быть участником чата
-	if _, err := subjectUserMember(m.MembersRepo, in.SubjectUserID, in.ChatID); err != nil {
-		return nil, err
+	if !chat.HasParticipant(in.SubjectID) {
+		return ChatMembersOutput{}, ErrSubjectIsNotMember
 	}
 
-	// Получить список участников
-	members, err := chatMembers(m.MembersRepo, in.ChatID)
-	if err != nil {
-		return nil, err
-	}
-
-	return members, nil
+	return ChatMembersOutput{
+		Participants: chat.Participants,
+	}, nil
 }
 
 // LeaveChatInput входящие параметры
 type LeaveChatInput struct {
-	SubjectUserID string
-	ChatID        string
+	SubjectID string
+	ChatID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in LeaveChatInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectUserID)
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
-	if err := uuid.Validate(in.ChatID); err != nil {
+	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
 
@@ -83,24 +84,18 @@ func (m *Members) LeaveChat(in LeaveChatInput) error {
 	}
 
 	// Проверить существование чата
-	chat, err := getChat(m.ChatsRepo, in.ChatID)
+	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return err
-	}
-
-	// Пользователь должен быть участником чата
-	subjectMember, err := subjectUserMember(m.MembersRepo, in.SubjectUserID, chat.ID)
-	if err != nil {
-		return err
-	}
-
-	// Пользователь не должен быть главным администратором
-	if in.SubjectUserID == chat.ChiefUserID {
-		return ErrSubjectUserShouldNotBeChief
 	}
 
 	// Удалить пользователя из чата
-	if err = m.MembersRepo.Delete(subjectMember.ID); err != nil {
+	if err = chat.RemoveParticipant(in.SubjectID); err != nil {
+		return err
+	}
+
+	// Сохранить чат в репозиторий
+	if err = m.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 
@@ -116,13 +111,13 @@ type DeleteMemberInput struct {
 
 // Validate валидирует значение отдельно каждого параметры
 func (in DeleteMemberInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectUserID)
+	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
-	if err := uuid.Validate(in.ChatID); err != nil {
+	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
-	if err := uuid.Validate(in.UserID); err != nil {
+	if err := domain.ValidateID(in.UserID); err != nil {
 		return errors.Join(err, ErrInvalidUserID)
 	}
 
@@ -142,29 +137,23 @@ func (m *Members) DeleteMember(in DeleteMemberInput) error {
 	}
 
 	// Проверить существование чата
-	chat, err := getChat(m.ChatsRepo, in.ChatID)
+	chat, err := getChatAggregate(m.ChatAggregateRepo, in.ChatID)
 	if err != nil {
 		return err
 	}
 
-	// Пользователь должен быть участником чата
-	if _, err = subjectUserMember(m.MembersRepo, in.SubjectUserID, in.ChatID); err != nil {
-		return err
-	}
-
-	// Пользователь должен быть главным администратором
-	if chat.ChiefUserID != in.SubjectUserID {
+	// Subject должен быть главным администратором
+	if chat.ChiefID != in.SubjectUserID {
 		return ErrSubjectUserIsNotChief
 	}
 
-	// Удаляемый участник должен существовать
-	member, err := userMember(m.MembersRepo, in.UserID, in.ChatID)
-	if err != nil {
+	// Удалить пользователя из чата
+	if err = chat.RemoveParticipant(in.UserID); err != nil {
 		return err
 	}
 
-	// Удалить участника
-	if err = m.MembersRepo.Delete(member.ID); err != nil {
+	// Сохранить чат в репозиторий
+	if err = m.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 

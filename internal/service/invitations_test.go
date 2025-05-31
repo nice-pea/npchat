@@ -13,8 +13,8 @@ import (
 func Test_ChatInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := ChatInvitationsInput{
-			SubjectUserID: id,
-			ChatID:        id,
+			SubjectID: id,
+			ChatID:    id,
 		}
 		return input.Validate()
 	})
@@ -25,8 +25,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 	suite.Run("чат должен существовать", func() {
 		// Получить список приглашений
 		input := ChatInvitationsInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			ChatID:    uuid.NewString(),
 		}
 		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
@@ -42,12 +42,12 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		})
 		// Получить список приглашений
 		input := ChatInvitationsInput{
-			ChatID:        chat.ID,
-			SubjectUserID: uuid.NewString(),
+			ChatID:    chat.ID,
+			SubjectID: uuid.NewString(),
 		}
 		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
-		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectIsNotMember)
 		suite.Empty(invitations)
 	})
 
@@ -64,8 +64,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		})
 		// Получить список приглашений
 		input := ChatInvitationsInput{
-			SubjectUserID: member.UserID,
-			ChatID:        chat.ID,
+			SubjectID: member.UserID,
+			ChatID:    chat.ID,
 		}
 		invitations, err := suite.ss.invitations.ChatInvitations(input)
 		suite.NoError(err)
@@ -105,8 +105,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		}
 		// Получить список приглашений
 		input := ChatInvitationsInput{
-			ChatID:        chat.ID,
-			SubjectUserID: member.UserID,
+			ChatID:    chat.ID,
+			SubjectID: member.UserID,
 		}
 		invitationsFromService, err := suite.ss.invitations.ChatInvitations(input)
 		suite.Require().NoError(err)
@@ -141,8 +141,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		}
 		// Получить список приглашений
 		input := ChatInvitationsInput{
-			SubjectUserID: member.UserID,
-			ChatID:        chat.ID,
+			SubjectID: member.UserID,
+			ChatID:    chat.ID,
 		}
 		invitationFromService, err := suite.ss.invitations.ChatInvitations(input)
 		suite.Require().NoError(err)
@@ -158,7 +158,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 // Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_UserInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := UserInvitationsInput{
+		input := ReceivedInvitationsInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
@@ -171,11 +171,11 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 	suite.Run("пользователь должен существовать", func() {
 		id := uuid.NewString()
 		// Получить список приглашений
-		input := UserInvitationsInput{
+		input := ReceivedInvitationsInput{
 			SubjectUserID: id,
 			UserID:        id,
 		}
-		invitations, err := suite.ss.invitations.UserInvitations(input)
+		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		// Вернется ошибка, потому что пользователя не существует
 		suite.ErrorIs(err, ErrUserNotExists)
 		suite.Empty(invitations)
@@ -183,11 +183,11 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 
 	suite.Run("пользователь может просматривать только свои приглашения", func() {
 		// Получить список приглашений
-		input := UserInvitationsInput{
+		input := ReceivedInvitationsInput{
 			SubjectUserID: uuid.NewString(),
 			UserID:        uuid.NewString(),
 		}
-		invitations, err := suite.ss.invitations.UserInvitations(input)
+		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		// Вернется ошибка, потому что пользователь пытается просмотреть чужие приглашения
 		suite.ErrorIs(err, ErrUnauthorizedInvitationsView)
 		suite.Empty(invitations)
@@ -199,11 +199,11 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			ID: uuid.NewString(),
 		})
 		// Получить список приглашений
-		input := UserInvitationsInput{
+		input := ReceivedInvitationsInput{
 			SubjectUserID: user.ID,
 			UserID:        user.ID,
 		}
-		invitations, err := suite.ss.invitations.UserInvitations(input)
+		invitations, err := suite.ss.invitations.ReceivedInvitations(input)
 		suite.NoError(err)
 		suite.Empty(invitations)
 	})
@@ -231,11 +231,11 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			})
 		}
 		// Получить список приглашений
-		input := UserInvitationsInput{
+		input := ReceivedInvitationsInput{
 			SubjectUserID: user.ID,
 			UserID:        user.ID,
 		}
-		invitationsFromRepo, err := suite.ss.invitations.UserInvitations(input)
+		invitationsFromRepo, err := suite.ss.invitations.ReceivedInvitations(input)
 		suite.NoError(err)
 		// В списке будут только приглашения направленные пользователю
 		if suite.Len(invitationsFromRepo, len(invitationsOfUser)) {
@@ -252,9 +252,9 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		input := SendInvitationInput{
-			SubjectUserID: id,
-			ChatID:        id,
-			UserID:        id,
+			SubjectID: id,
+			ChatID:    id,
+			UserID:    id,
 		}
 		return input.Validate()
 	})
@@ -265,9 +265,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("чат должен существовать", func() {
 		// Отправить приглашение
 		input := SendInvitationInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        uuid.NewString(),
-			UserID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			ChatID:    uuid.NewString(),
+			UserID:    uuid.NewString(),
 		}
 		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что чата не существует
@@ -283,13 +283,13 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		})
 		// Отправить приглашение
 		input := SendInvitationInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        chat.ID,
-			UserID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			ChatID:    chat.ID,
+			UserID:    uuid.NewString(),
 		}
 		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что субъект не является участником чата
-		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectIsNotMember)
 		suite.Zero(invitation)
 	})
 
@@ -306,9 +306,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		})
 		// Отправить приглашение
 		input := SendInvitationInput{
-			ChatID:        chat.ID,
-			SubjectUserID: member.UserID,
-			UserID:        uuid.NewString(),
+			ChatID:    chat.ID,
+			SubjectID: member.UserID,
+			UserID:    uuid.NewString(),
 		}
 		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемого пользователя не существует
@@ -339,9 +339,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		})
 		// Отправить приглашение
 		input := SendInvitationInput{
-			ChatID:        chat.ID,
-			SubjectUserID: subjectMember.UserID,
-			UserID:        targetUser.ID,
+			ChatID:    chat.ID,
+			SubjectID: subjectMember.UserID,
+			UserID:    targetUser.ID,
 		}
 		invitation, err := suite.ss.invitations.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемый пользователь уже является участником этого чата
@@ -366,9 +366,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		})
 		// Отправить приглашение
 		input := SendInvitationInput{
-			ChatID:        chat.ID,
-			SubjectUserID: subjectMember.UserID,
-			UserID:        targetUser.ID,
+			ChatID:    chat.ID,
+			SubjectID: subjectMember.UserID,
+			UserID:    targetUser.ID,
 		}
 		invitation, err := suite.ss.invitations.SendInvitation(input)
 		suite.NoError(err)
@@ -401,9 +401,9 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 				})
 				// Отправить приглашение
 				input := SendInvitationInput{
-					ChatID:        chat.ID,
-					SubjectUserID: subjectMember.UserID,
-					UserID:        targetUser.ID,
+					ChatID:    chat.ID,
+					SubjectID: subjectMember.UserID,
+					UserID:    targetUser.ID,
 				}
 				invitation, err := suite.ss.invitations.SendInvitation(input)
 				suite.NoError(err)
@@ -428,8 +428,8 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 func Test_AcceptInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		inp := AcceptInvitationInput{
-			SubjectUserID: id,
-			InvitationID:  id,
+			SubjectID:    id,
+			InvitationID: id,
 		}
 		return inp.Validate()
 	})
@@ -440,8 +440,8 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Принять приглашение
 		input := AcceptInvitationInput{
-			SubjectUserID: uuid.NewString(),
-			InvitationID:  uuid.NewString(),
+			SubjectID:    uuid.NewString(),
+			InvitationID: uuid.NewString(),
 		}
 		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
@@ -461,8 +461,8 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		})
 		// Принять приглашение
 		input := AcceptInvitationInput{
-			SubjectUserID: invitation.UserID,
-			InvitationID:  invitation.ID,
+			SubjectID:    invitation.UserID,
+			InvitationID: invitation.ID,
 		}
 		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrUserNotExists)
@@ -481,8 +481,8 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		})
 		// Принять приглашение
 		input := AcceptInvitationInput{
-			SubjectUserID: user.ID,
-			InvitationID:  invitation.ID,
+			SubjectID:    user.ID,
+			InvitationID: invitation.ID,
 		}
 		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
@@ -505,8 +505,8 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		})
 		// Принять приглашение
 		input := AcceptInvitationInput{
-			SubjectUserID: user.ID,
-			InvitationID:  invitation.ID,
+			SubjectID:    user.ID,
+			InvitationID: invitation.ID,
 		}
 		err := suite.ss.invitations.AcceptInvitation(input)
 		suite.Require().NoError(err)

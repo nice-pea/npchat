@@ -19,7 +19,7 @@ var (
 	ErrInvitationIDValidate            = errors.New("некорректный UUID")
 	ErrInvitationChatIDValidate        = errors.New("некорректный ChatID")
 	ErrInvitationUserIDValidate        = errors.New("некорректный UserID")
-	ErrInvitationSubjectUserIDValidate = errors.New("некорректный SubjectUserID")
+	ErrInvitationSubjectUserIDValidate = errors.New("некорректный SubjectID")
 )
 
 // ValidateID проверяет корректность идентификатора приглашения.

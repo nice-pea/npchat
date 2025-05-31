@@ -20,8 +20,8 @@ func (suite *servicesTestSuite) assertEqualMembers(expected, actual domain.Membe
 func Test_ChatMembersInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := ChatMembersInput{
-			ChatID:        id,
-			SubjectUserID: id,
+			ChatID:    id,
+			SubjectID: id,
 		}
 		return in.Validate()
 	})
@@ -31,8 +31,8 @@ func Test_ChatMembersInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 	suite.Run("чат должен существовать", func() {
 		input := ChatMembersInput{
-			ChatID:        uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
+			ChatID:    uuid.NewString(),
+			SubjectID: uuid.NewString(),
 		}
 		members, err := suite.ss.members.ChatMembers(input)
 		suite.ErrorIs(err, ErrChatNotExists)
@@ -52,12 +52,12 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		})
 		// Запросить список участников чата
 		input := ChatMembersInput{
-			ChatID:        chat.ID,
-			SubjectUserID: member.UserID,
+			ChatID:    chat.ID,
+			SubjectID: member.UserID,
 		}
 		members, err := suite.ss.members.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
-		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectIsNotMember)
 		suite.Empty(members)
 	})
 
@@ -81,8 +81,8 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		subjectMember := membersSaved[0]
 		// Получить список участников в чате
 		input := ChatMembersInput{
-			ChatID:        subjectMember.ChatID,
-			SubjectUserID: subjectMember.UserID,
+			ChatID:    subjectMember.ChatID,
+			SubjectID: subjectMember.UserID,
 		}
 		membersFromRepo, err := suite.ss.members.ChatMembers(input)
 		suite.NoError(err)
@@ -99,8 +99,8 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 func Test_LeaveInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
 		in := LeaveChatInput{
-			SubjectUserID: id,
-			ChatID:        id,
+			SubjectID: id,
+			ChatID:    id,
 		}
 		return in.Validate()
 	})
@@ -111,8 +111,8 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
 		input := LeaveChatInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        uuid.NewString(),
+			SubjectID: uuid.NewString(),
+			ChatID:    uuid.NewString(),
 		}
 		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
@@ -126,12 +126,12 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 		})
 		// Покинуть чат
 		input := LeaveChatInput{
-			SubjectUserID: uuid.NewString(),
-			ChatID:        chat.ID,
+			SubjectID: uuid.NewString(),
+			ChatID:    chat.ID,
 		}
 		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь не участник чата
-		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectIsNotMember)
 	})
 
 	suite.Run("пользователь не должен быть главным администратором чата", func() {
@@ -148,8 +148,8 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 		})
 		// Покинуть чат
 		input := LeaveChatInput{
-			SubjectUserID: member.UserID,
-			ChatID:        chat.ID,
+			SubjectID: member.UserID,
+			ChatID:    chat.ID,
 		}
 		err := suite.ss.members.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь главный администратор чата
@@ -169,8 +169,8 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 		})
 		// Покинуть чат
 		input := LeaveChatInput{
-			SubjectUserID: member.UserID,
-			ChatID:        chat.ID,
+			SubjectID: member.UserID,
+			ChatID:    chat.ID,
 		}
 		err := suite.ss.members.LeaveChat(input)
 		suite.Require().NoError(err)
@@ -235,7 +235,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 		}
 		err := suite.ss.members.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь не участник чата
-		suite.ErrorIs(err, ErrSubjectUserIsNotMember)
+		suite.ErrorIs(err, ErrSubjectIsNotMember)
 	})
 
 	suite.Run("subject должен быть главным администратором чата", func() {

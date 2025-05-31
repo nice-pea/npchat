@@ -4,195 +4,210 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/google/uuid"
-
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
 // Invitations сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
 type Invitations struct {
-	ChatsRepo       domain.ChatsRepository
-	MembersRepo     domain.MembersRepository
-	InvitationsRepo domain.InvitationsRepository
-	UsersRepo       domain.UsersRepository
+	//ChatsRepo       domain.ChatsRepository
+	//MembersRepo     domain.MembersRepository
+	//InvitationsRepo domain.InvitationsRepository
+	UsersRepo         domain.UsersRepository
+	ChatAggregateRepo domain.ChatAggregateRepository
 }
 
 // ChatInvitationsInput параметры для запроса приглашений конкретного чата
 type ChatInvitationsInput struct {
-	SubjectUserID string
-	ChatID        string
+	SubjectID string
+	ChatID    string
 }
 
 // Validate валидирует параметры для запроса приглашений конкретного чата
 func (in ChatInvitationsInput) Validate() error {
-	if err := uuid.Validate(in.ChatID); err != nil {
+	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectUserID)
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
+
 	return nil
+}
+
+// ChatInvitationsOutput результат запроса приглашений конкретного чата
+type ChatInvitationsOutput struct {
+	Invitations []domain.Invitation2
 }
 
 // ChatInvitations возвращает список приглашений в конкретный чат.
-// Если SubjectUserID является администратором, то возвращается все приглашения в данный чат,
+// Если SubjectID является администратором, то возвращается все приглашения в данный чат,
 // иначе только те приглашения, которые отправил именно пользователь.
-func (i *Invitations) ChatInvitations(in ChatInvitationsInput) ([]domain.Invitation, error) {
+func (i *Invitations) ChatInvitations(in ChatInvitationsInput) (ChatInvitationsOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return nil, err
+		return ChatInvitationsOutput{}, err
 	}
 
 	// Проверить существование чата
-	chat, err := getChat(i.ChatsRepo, in.ChatID)
+	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
 	if err != nil {
-		return nil, err
+		return ChatInvitationsOutput{}, err
 	}
 
 	// Проверить является ли пользователь участником чата
-	_, err = subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID)
-	if err != nil {
-		return nil, err
+	if !chat.HasParticipant(in.SubjectID) {
+		return ChatInvitationsOutput{}, ErrSubjectIsNotMember
 	}
 
-	// Проверить, что пользователь является администратором чата
-	if chat.ChiefUserID == in.SubjectUserID {
-		// Получить все приглашения в этот чат
-		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
-			ChatID: in.ChatID,
-		})
+	var invitations []domain.Invitation2
 
-		return invitations, err
-	} else {
-		// Получить список приглашений конкретного пользователя
-		invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
-			SubjectUserID: in.SubjectUserID,
-			ChatID:        in.ChatID,
+	// Если пользователь не является администратором,
+	// то оставить только те приглашения, которые отправил именно пользователь.
+	if chat.ChiefID != in.SubjectID {
+		invitations = slices.DeleteFunc(chat.Invitations, func(i domain.Invitation2) bool {
+			return i.RecipientID != in.SubjectID
 		})
-
-		return invitations, err
 	}
+
+	return ChatInvitationsOutput{
+		Invitations: invitations,
+	}, err
 }
 
-type UserInvitationsInput struct {
+type ReceivedInvitationsInput struct {
 	SubjectUserID string
-	UserID        string
 }
 
-func (in UserInvitationsInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectUserID)
-	}
-	if err := uuid.Validate(in.UserID); err != nil {
-		return errors.Join(err, ErrInvalidUserID)
+func (in ReceivedInvitationsInput) Validate() error {
+	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
 
 	return nil
 }
 
-// UserInvitations возвращает список приглашений конкретного пользователя в чаты
-func (i *Invitations) UserInvitations(in UserInvitationsInput) ([]domain.Invitation, error) {
+// ReceivedInvitationsOutput входящие параметры
+type ReceivedInvitationsOutput struct {
+	Invitations []domain.Invitation
+}
+
+// ReceivedInvitations возвращает список приглашений конкретного пользователя в чаты
+func (i *Invitations) ReceivedInvitations(in ReceivedInvitationsInput) (ReceivedInvitationsOutput, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return nil, err
+		return ReceivedInvitationsOutput{}, err
 	}
 
-	// Пользователь должен видеть только свои приглашения
-	if in.UserID != in.SubjectUserID {
-		return nil, ErrUnauthorizedInvitationsView
+	// Проверить существование чата
+	invitationsFilter := domain.InvitationsFilter{
+		UserID: in.SubjectUserID,
 	}
-
-	// Пользователь должен существовать
-	_, err := getUser(i.UsersRepo, in.UserID)
+	chats, err := i.ChatAggregateRepo.ByInvitationsFilter(invitationsFilter)
 	if err != nil {
-		return nil, err
+		return ReceivedInvitationsOutput{}, err
+	}
+
+	// Если нет чатов, вернут пустой список
+	if len(chats) == 0 {
+		return ReceivedInvitationsOutput{}, nil
 	}
 
 	// Получить список полученных пользователем приглашений
-	invitations, err := i.InvitationsRepo.List(domain.InvitationsFilter{
-		UserID: in.UserID,
-	})
+	var invitations []domain.Invitation
+	for _, chat := range chats {
+		for _, invitation := range chat.Invitations {
+			if invitation.RecipientID == in.SubjectUserID {
+				invitations = append(invitations, domain.Invitation{
+					SubjectUserID: invitation.SubjectID,
+					UserID:        invitation.RecipientID,
+					ChatID:        chat.ID,
+				})
+			}
+		}
+	}
 
-	return invitations, err
+	return ReceivedInvitationsOutput{
+		Invitations: invitations,
+	}, err
 }
 
 type SendInvitationInput struct {
-	SubjectUserID string
-	ChatID        string
-	UserID        string
+	SubjectID string
+	ChatID    string
+	UserID    string
 }
 
 func (in SendInvitationInput) Validate() error {
-	if err := uuid.Validate(in.ChatID); err != nil {
+	if err := domain.ValidateID(in.ChatID); err != nil {
 		return ErrInvalidChatID
 	}
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return ErrInvalidSubjectUserID
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return ErrInvalidSubjectID
 	}
-	if err := uuid.Validate(in.UserID); err != nil {
+	if err := domain.ValidateID(in.UserID); err != nil {
 		return ErrInvalidUserID
 	}
 
 	return nil
 }
 
+type SendInvitationOutput struct {
+	Invitation domain.Invitation
+}
+
 // SendInvitation отправляет приглашения пользователю от участника чата
-func (i *Invitations) SendInvitation(in SendInvitationInput) (domain.Invitation, error) {
+func (i *Invitations) SendInvitation(in SendInvitationInput) (SendInvitationOutput, error) {
 	if err := in.Validate(); err != nil {
-		return domain.Invitation{}, err
-	}
-
-	// Проверить существование чата
-	if _, err := getChat(i.ChatsRepo, in.ChatID); err != nil {
-		return domain.Invitation{}, err
-	}
-
-	// Проверить, состоит ли SubjectUserID в чате
-	if _, err := subjectUserMember(i.MembersRepo, in.SubjectUserID, in.ChatID); err != nil {
-		return domain.Invitation{}, err
-	}
-
-	// Проверить, не состоит ли UserID в чате
-	if _, err := userMember(i.MembersRepo, in.UserID, in.ChatID); err == nil {
-		return domain.Invitation{}, ErrUserIsAlreadyInChat
+		return SendInvitationOutput{}, err
 	}
 
 	// Проверить, существует ли UserID
 	if _, err := getUser(i.UsersRepo, in.UserID); err != nil {
-		return domain.Invitation{}, err
+		return SendInvitationOutput{}, err
 	}
 
-	// Проверить, не существует ли приглашение для этого пользователя в этот чат
-	if err := invitationMustNotExist(i.InvitationsRepo, in.UserID, in.ChatID); err != nil {
-		return domain.Invitation{}, ErrUserIsAlreadyInvited
-	}
-
-	// Отправить приглашение
-	invitation := domain.Invitation{
-		ID:            uuid.NewString(),
-		SubjectUserID: in.SubjectUserID,
-		UserID:        in.UserID,
-		ChatID:        in.ChatID,
-	}
-	err := i.InvitationsRepo.Save(invitation)
+	// Проверить существование чата
+	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
 	if err != nil {
-		return domain.Invitation{}, err
+		return SendInvitationOutput{}, err
 	}
 
-	return invitation, nil
+	// Создать приглашение
+	inv, err := domain.NewInvitation(in.SubjectID, in.UserID)
+	if err != nil {
+		return SendInvitationOutput{}, err
+	}
+
+	// Добавить приглашение в чат
+	if err = chat.AddInvitation(inv); err != nil {
+		return SendInvitationOutput{}, err
+	}
+
+	// Сохранить чат в репозиторий
+	if err = i.ChatAggregateRepo.Upsert(chat); err != nil {
+		return SendInvitationOutput{}, err
+	}
+
+	return SendInvitationOutput{
+		Invitation: domain.Invitation{
+			SubjectUserID: inv.SubjectID,
+			UserID:        inv.RecipientID,
+			ChatID:        chat.ID,
+		},
+	}, nil
 }
 
 type AcceptInvitationInput struct {
-	SubjectUserID string
-	InvitationID  string
+	SubjectID string
+	ChatID    string
 }
 
 func (in AcceptInvitationInput) Validate() error {
-	if err := uuid.Validate(in.InvitationID); err != nil {
-		return ErrInvalidInvitationID
+	if err := domain.ValidateID(in.ChatID); err != nil {
+		return ErrInvalidChatID
 	}
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return ErrInvalidSubjectUserID
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return ErrInvalidSubjectID
 	}
 
 	return nil
@@ -200,44 +215,35 @@ func (in AcceptInvitationInput) Validate() error {
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
 func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
-	var err error
-
 	// Валидировать входные данные
-	if err = in.Validate(); err != nil {
+	if err := in.Validate(); err != nil {
+		return err
+	}
+
+	// Проверить существование чата
+	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
+	if err != nil {
 		return err
 	}
 
 	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.InvitationID)
-	if err != nil {
+	if err := chat.RemoveInvitationByRecipient(in.SubjectID); err != nil {
 		return err
-	}
-
-	// Проверить существование пользователя
-	user, err := getUser(i.UsersRepo, in.SubjectUserID)
-	if err != nil {
-		return err
-	}
-
-	// Приглашение должно быть направлено пользователю
-	if invitation.UserID != user.ID {
-		return ErrSubjectUserNotAllowed
 	}
 
 	// Создаем участника чата
-	member := domain.Member{
-		ID:     uuid.NewString(),
-		UserID: in.SubjectUserID,
-		ChatID: invitation.ChatID,
-	}
-	err = i.MembersRepo.Save(member)
+	participant, err := domain.NewParticipant(in.SubjectID)
 	if err != nil {
 		return err
 	}
 
-	// Удаляем приглашение
-	err = i.InvitationsRepo.Delete(invitation.ID)
-	if err != nil {
+	// Добавить участника в чат
+	if err := chat.AddParticipant(participant); err != nil {
+		return err
+	}
+
+	// Сохранить чат в репозиторий
+	if err := i.ChatAggregateRepo.Upsert(chat); err != nil {
 		return err
 	}
 
@@ -246,15 +252,15 @@ func (i *Invitations) AcceptInvitation(in AcceptInvitationInput) error {
 
 type CancelInvitationInput struct {
 	SubjectUserID string
-	InvitationID  string
+	ChatID        string
 }
 
 func (in CancelInvitationInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return ErrInvalidSubjectUserID
+	if err := domain.ValidateID(in.SubjectUserID); err != nil {
+		return ErrInvalidSubjectID
 	}
-	if err := uuid.Validate(in.InvitationID); err != nil {
-		return ErrInvalidInvitationID
+	if err := domain.ValidateID(in.ChatID); err != nil {
+		return ErrInvalidChatID
 	}
 
 	return nil
@@ -267,15 +273,9 @@ func (i *Invitations) CancelInvitation(in CancelInvitationInput) error {
 		return err
 	}
 
-	// Проверить существование приглашения
-	invitation, err := getInvitation(i.InvitationsRepo, in.InvitationID)
+	// Проверить существование чата
+	chat, err := getChatAggregate(i.ChatAggregateRepo, in.ChatID)
 	if err != nil {
-		return err
-	}
-
-	// Найти чат
-	chat, err := getChat(i.ChatsRepo, invitation.ChatID)
-	if err != nil && !errors.Is(err, ErrChatNotExists) {
 		return err
 	}
 

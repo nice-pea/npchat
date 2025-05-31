@@ -16,8 +16,8 @@ func ChatMembers(router http2.Router) {
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
 			input := service.ChatMembersInput{
-				SubjectUserID: context.Session().UserID,
-				ChatID:        http2.PathStr(context, "chatID"),
+				SubjectID: context.Session().UserID,
+				ChatID:    http2.PathStr(context, "chatID"),
 			}
 
 			return context.Services().Members().ChatMembers(input)

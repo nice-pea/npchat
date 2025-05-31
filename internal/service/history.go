@@ -17,7 +17,7 @@ type History interface {
 	// Write добавляет запись на страницу истории.
 	// Параметры:
 	//	typ - уникальный идентификатор типа записи, примеры: "inviteCreate", "inviteDelete", "inviteUpdate"
-	//	props - структура или карта с параметрами произошедшего события, пример*: SubjectUserID, ObjectUserID
+	//	props - структура или карта с параметрами произошедшего события, пример*: SubjectID, ObjectUserID
 	// 	*В примере subject - действующее лицо, object - дополнение, в отношение кого применялось действие;
 	Write(typ string, props any)
 }
