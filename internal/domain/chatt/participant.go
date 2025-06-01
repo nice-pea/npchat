@@ -1,6 +1,8 @@
 package chatt
 
 import (
+	"errors"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -14,7 +16,7 @@ type Participant struct {
 // NewParticipant создает новый участник чата.
 func NewParticipant(userID string) (Participant, error) {
 	if err := domain.ValidateID(userID); err != nil {
-		return Participant{}, err
+		return Participant{}, errors.Join(err, ErrInvalidUserID)
 	}
 
 	return Participant{
@@ -37,12 +39,12 @@ func (c *Chat) HasParticipant(userID string) bool {
 func (c *Chat) RemoveParticipant(userID string) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
-		return ErrSubjectUserShouldNotBeChief
+		return ErrCannotRemoveChief
 	}
 
 	// Убедиться, что участник существует
 	if !c.HasParticipant(userID) {
-		return ErrUserIsNotMember
+		return ErrParticipantNotExists
 	}
 
 	// Удалить участника из списка
@@ -57,7 +59,7 @@ func (c *Chat) RemoveParticipant(userID string) error {
 func (c *Chat) AddParticipant(p Participant) error {
 	// Проверить является ли subject участником чата
 	if c.HasParticipant(p.UserID) {
-		return ErrUserIsAlreadyInChat
+		return ErrParticipantExists
 	}
 
 	// Проверить, не существует ли приглашение для этого пользователя в этот чат

@@ -44,7 +44,7 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 
 	// Проверить является ли user участником чата
 	if c.HasParticipant(invitation.RecipientID) {
-		return ErrUserIsAlreadyInChat
+		return ErrParticipantExists
 	}
 
 	// Проверить, не существует ли приглашение для этого пользователя в этот чат

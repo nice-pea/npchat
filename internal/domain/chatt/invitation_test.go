@@ -79,7 +79,7 @@ func TestChat_AddInvitation(t *testing.T) {
 		inv, err := NewInvitation(chief, p.UserID)
 		require.NoError(t, err)
 		err = chat.AddInvitation(inv)
-		assert.ErrorIs(t, err, ErrUserIsAlreadyInChat)
+		assert.ErrorIs(t, err, ErrParticipantExists)
 	})
 
 	t.Run("нельзя пригласить уже приглашенного пользователя", func(t *testing.T) {
