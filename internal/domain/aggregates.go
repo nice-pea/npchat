@@ -33,16 +33,13 @@ type UserAggregate struct {
 	Nick string // Ник пользователя
 
 	BasicAuth     BasicAuth
-	OpenAuthLinks OpenAuthLink
-	//OpenAuthLinks map[string]OpenAuthLink
-	Sessions []Session2
+	OpenAuthLinks []OpenAuthLink
+	Sessions      []Session2
 }
 
 type Session2 struct {
-	ID string // ID сессии
-	//UserID string // ID пользователя, к которому относится сессия
-	//Token  string // Токен сессии для аутентификации
-	Status int // Статус сессии
+	ID     string // ID сессии
+	Status int    // Статус сессии
 }
 
 // Сообщение
