@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
 // Google представляет собой структуру для работы с OAuth2 аутентификацией через Google.
@@ -39,36 +39,34 @@ func (o *Google) config() *oauth2.Config {
 }
 
 // Exchange обменивает код авторизации на токен OAuth.
-func (o *Google) Exchange(code string) (domain.OAuthToken, error) {
+func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 	// Обменять код авторизации на токен OAuth
 	token, err := o.config().Exchange(context.Background(), code)
 	if err != nil {
-		return domain.OAuthToken{}, err
+		return userr.OpenAuthToken{}, err
 	}
 
-	return domain.OAuthToken{
+	return userr.OpenAuthToken{
 		AccessToken:  token.AccessToken,  // Токен доступа
 		TokenType:    token.Type(),       // Тип токена
 		RefreshToken: token.RefreshToken, // Токен обновления
 		Expiry:       token.Expiry,       // Время истечения токена
-		LinkID:       "",                 // Пустой ID, так как здесь неизвестно с каким пользователем будет связан токен
-		Provider:     o.Name(),           // Имя провайдера
 	}, nil
 }
 
 // User получает информацию о пользователе Google, используя токен OAuth.
-func (o *Google) User(token domain.OAuthToken) (domain.OAuthUser, error) {
+func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	const getUser = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 	// Выполняет GET-запрос для получения информации о пользователе
 	response, err := http.Get(getUser + token.AccessToken)
 	if err != nil {
-		return domain.OAuthUser{}, err // Возвращает ошибку, если запрос не удался
+		return userr.OpenAuthUser{}, err // Возвращает ошибку, если запрос не удался
 	}
 
 	defer func() { _ = response.Body.Close() }() // Закрывает тело ответа после завершения работы с ним
 	data, err := io.ReadAll(response.Body)       // Читает данные из тела ответа
 	if err != nil {
-		return domain.OAuthUser{}, err // Возвращает ошибку, если чтение не удалось
+		return userr.OpenAuthUser{}, err // Возвращает ошибку, если чтение не удалось
 	}
 
 	// Сложить данные в структуру ответа
@@ -79,15 +77,16 @@ func (o *Google) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 		Picture string `json:"picture"` // URL изображения профиля пользователя
 	}
 	if err = json.Unmarshal(data, &googleUser); err != nil {
-		return domain.OAuthUser{}, err // Возвращает ошибку, если разбор JSON не удался
+		return userr.OpenAuthUser{}, err // Возвращает ошибку, если разбор JSON не удался
 	}
 
-	return domain.OAuthUser{
+	return userr.OpenAuthUser{
 		ID:       googleUser.ID,      // Идентификатор пользователя
+		Provider: o.Name(),           // Имя провайдера
 		Email:    googleUser.Email,   // Электронная почта пользователя
 		Name:     googleUser.Name,    // Имя пользователя
 		Picture:  googleUser.Picture, // URL изображения профиля
-		Provider: o.Name(),           // Имя провайдера
+		Token:    token,
 	}, nil
 }
 

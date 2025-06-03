@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
 // GitHub представляет собой структуру для работы с OAuth2 аутентификацией через GitHub.
@@ -35,25 +35,23 @@ func (o *GitHub) config() *oauth2.Config {
 }
 
 // Exchange обменивает код авторизации на токен OAuth.
-func (o *GitHub) Exchange(code string) (domain.OAuthToken, error) {
+func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
 	// Обменять кода авторизации на токен OAuth
 	token, err := o.config().Exchange(context.Background(), code)
 	if err != nil {
-		return domain.OAuthToken{}, err // Возвращает ошибку, если обмен не удался
+		return userr.OpenAuthToken{}, err // Возвращает ошибку, если обмен не удался
 	}
 
-	return domain.OAuthToken{
+	return userr.OpenAuthToken{
 		AccessToken:  token.AccessToken,  // Токен доступа
 		TokenType:    token.Type(),       // Тип токена
 		RefreshToken: token.RefreshToken, // Токен обновления
 		Expiry:       token.Expiry,       // Время истечения токена
-		LinkID:       "",                 // Пустой ID, так как здесь неизвестно с каким пользователем будет связан токен
-		Provider:     o.Name(),           // Имя провайдера
 	}, nil
 }
 
 // User получает информацию о пользователе GitHub, используя токен OAuth.
-func (o *GitHub) User(token domain.OAuthToken) (domain.OAuthUser, error) {
+func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token.AccessToken}, // Создает HTTP-клиент с токеном доступа
 	))
@@ -62,14 +60,14 @@ func (o *GitHub) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 	const getUser = "https://api.github.com/user"
 	response, err := client.Get(getUser)
 	if err != nil {
-		return domain.OAuthUser{}, err
+		return userr.OpenAuthUser{}, err
 	}
 	defer func() { _ = response.Body.Close() }()
 
 	// Прочитать данные из тела ответа
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return domain.OAuthUser{}, err
+		return userr.OpenAuthUser{}, err
 	}
 
 	// Сложить данные в структуру ответа
@@ -81,15 +79,16 @@ func (o *GitHub) User(token domain.OAuthToken) (domain.OAuthUser, error) {
 		AvatarURL string `json:"avatar_url"` // URL изображения профиля пользователя
 	}
 	if err := json.Unmarshal(data, &githubUser); err != nil {
-		return domain.OAuthUser{}, err
+		return userr.OpenAuthUser{}, err
 	}
 
-	return domain.OAuthUser{
+	return userr.OpenAuthUser{
 		ID:       string(rune(githubUser.ID)),
+		Provider: o.Name(),
 		Email:    githubUser.Email,
 		Name:     githubUser.Name,
 		Picture:  githubUser.AvatarURL,
-		Provider: o.Name(),
+		Token:    token,
 	}, nil
 }
 

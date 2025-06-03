@@ -1,12 +1,14 @@
 package oauthProvider
 
-import "github.com/saime-0/nice-pea-chat/internal/domain"
+import (
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+)
 
 // Mock представляет собой мок для OAuthProvider, используемый для тестирования.
 type Mock struct {
-	ExchangeFunc         func(code string) (domain.OAuthToken, error)            // Функция для обмена кода на токен
-	UserFunc             func(token domain.OAuthToken) (domain.OAuthUser, error) // Функция для получения информации о пользователе
-	AuthorizationURLFunc func(state string) string                               // Функция для генерации URL авторизации
+	ExchangeFunc         func(code string) (userr.OpenAuthToken, error)              // Функция для обмена кода на токен
+	UserFunc             func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) // Функция для получения информации о пользователе
+	AuthorizationURLFunc func(state string) string                                   // Функция для генерации URL авторизации
 }
 
 // Name возвращает имя провайдера OAuth.
@@ -15,7 +17,7 @@ func (m *Mock) Name() string {
 }
 
 // Exchange обменивает код авторизации на токен OAuth.
-func (m *Mock) Exchange(code string) (domain.OAuthToken, error) {
+func (m *Mock) Exchange(code string) (userr.OpenAuthToken, error) {
 	// Вызвать мок-функцию, если она определена
 	if m.ExchangeFunc != nil {
 		return m.ExchangeFunc(code)
@@ -26,7 +28,7 @@ func (m *Mock) Exchange(code string) (domain.OAuthToken, error) {
 }
 
 // User получает информацию о пользователе, используя токен OAuth.
-func (m *Mock) User(token domain.OAuthToken) (domain.OAuthUser, error) {
+func (m *Mock) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	// Вызвать мок-функцию, если она определена
 	if m.UserFunc != nil {
 		return m.UserFunc(token)
