@@ -1,5 +1,7 @@
 package userr
 
+import "github.com/google/uuid"
+
 // User представляет собой агрегат пользователя.
 type User struct {
 	ID   string // ID пользователя
@@ -20,7 +22,10 @@ func NewUser(name string, nick string) (User, error) {
 	}
 
 	return User{
-		Name: name,
-		Nick: nick,
+		ID:            uuid.NewString(),
+		Name:          name,
+		Nick:          nick,
+		BasicAuth:     BasicAuth{},
+		OpenAuthLinks: nil,
 	}, nil
 }
