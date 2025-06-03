@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
 type AuthnPassword struct {
-	AuthnPasswordRepo domain.AuthnPasswordRepository
-	SessionsRepo      domain.SessionsRepository
-	UsersRepo         domain.UsersRepository
+	Repo         userr.Repository
+	SessionsRepo domain.SessionsRepository
 }
 
 type AuthnPasswordLoginInput struct {
@@ -20,22 +20,16 @@ type AuthnPasswordLoginInput struct {
 }
 type AuthnPasswordLoginOutput struct {
 	Session domain.Session
-	User    domain.User
+	User    userr.User
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in AuthnPasswordLoginInput) Validate() error {
-	lc := domain.AuthnPassword{
-		UserID:   "",
-		Login:    in.Login,
-		Password: in.Password,
+	if in.Login == "" {
+		return errors.New("login is required")
 	}
-	if err := lc.ValidateLogin(); err != nil {
-		return errors.Join(ErrInvalidLogin, err)
-	}
-
-	if err := lc.ValidatePassword(); err != nil {
-		return errors.Join(ErrInvalidPassword, err)
+	if in.Password == "" {
+		return errors.New("password is required")
 	}
 
 	return nil
@@ -48,30 +42,22 @@ func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (AuthnPasswordLoginOut
 	}
 
 	// Получить метод входа
-	aps, err := l.AuthnPasswordRepo.List(domain.AuthnPasswordFilter{
-		Login:    in.Login,
-		Password: in.Password,
+	matchUsers, err := l.Repo.List(userr.Filter{
+		BasicAuthLogin:    in.Login,
+		BasicAuthPassword: in.Password,
 	})
 	if err != nil {
 		return AuthnPasswordLoginOutput{}, err
 	}
-	if len(aps) != 1 {
+	if len(matchUsers) != 1 {
 		return AuthnPasswordLoginOutput{}, ErrLoginOrPasswordDoesNotMatch
 	}
-
-	// Получить пользователя
-	users, err := l.UsersRepo.List(domain.UsersFilter{ID: aps[0].UserID})
-	if err != nil {
-		return AuthnPasswordLoginOutput{}, err
-	}
-	if len(users) != 1 {
-		return AuthnPasswordLoginOutput{}, ErrUserNotExists
-	}
+	user := matchUsers[0]
 
 	// Создать сессию для пользователя
 	session := domain.Session{
 		ID:     uuid.NewString(),
-		UserID: aps[0].UserID,
+		UserID: user.ID,
 		Token:  uuid.NewString(),
 		Status: domain.SessionStatusVerified,
 	}
@@ -81,7 +67,7 @@ func (l *AuthnPassword) Login(in AuthnPasswordLoginInput) (AuthnPasswordLoginOut
 
 	return AuthnPasswordLoginOutput{
 		Session: session,
-		User:    users[0],
+		User:    user,
 	}, nil
 }
 
@@ -93,24 +79,14 @@ type AuthnPasswordRegistrationInput struct {
 }
 
 func (in AuthnPasswordRegistrationInput) Validate() error {
-	// Валидация полей для метода аутентификации
-	lc := domain.AuthnPassword{
-		Login:    in.Login,
-		Password: in.Password,
+	if in.Login == "" {
+		return errors.New("login is required")
 	}
-	if err := lc.ValidateLogin(); err != nil {
-		return errors.Join(err, ErrInvalidLogin)
+	if in.Password == "" {
+		return errors.New("password is required")
 	}
-	if err := lc.ValidatePassword(); err != nil {
-		return errors.Join(err, ErrInvalidPassword)
-	}
-	// Валидация полей для создания пользователя
-	u := domain.User{Name: in.Name, Nick: in.Nick}
-	if err := u.ValidateName(); err != nil {
-		return errors.Join(err, ErrInvalidName)
-	}
-	if err := u.ValidateNick(); err != nil {
-		return errors.Join(err, ErrInvalidNick)
+	if in.Name == "" {
+		return errors.New("name is required")
 	}
 
 	return nil
@@ -118,7 +94,7 @@ func (in AuthnPasswordRegistrationInput) Validate() error {
 
 type AuthnPasswordRegistrationOutput struct {
 	Session domain.Session
-	User    domain.User
+	User    userr.User
 }
 
 func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (AuthnPasswordRegistrationOutput, error) {
@@ -127,33 +103,33 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (AuthnPa
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 
-	// Проверка на существование пользователя с таким логином
-	apFilter := domain.AuthnPasswordFilter{
-		Login: in.Login,
-	}
-	if aps, err := l.AuthnPasswordRepo.List(apFilter); err != nil {
+	// Создать метод аутентификации по логину и паролю
+	basicAuth, err := userr.NewBasicAuth(in.Login, in.Password)
+	if err != nil {
 		return AuthnPasswordRegistrationOutput{}, err
-	} else if len(aps) > 0 {
+	}
+
+	// Проверка на существование пользователя с таким логином
+	if conflictUsers, err := l.Repo.List(userr.Filter{
+		BasicAuthLogin: in.Login,
+	}); err != nil {
+		return AuthnPasswordRegistrationOutput{}, err
+	} else if len(conflictUsers) > 0 {
 		return AuthnPasswordRegistrationOutput{}, ErrLoginIsAlreadyInUse
 	}
 
 	// Создать пользователя
-	user := domain.User{
-		ID:   uuid.NewString(),
-		Name: in.Name,
-		Nick: in.Nick,
+	user, err := userr.NewUser(in.Name, in.Nick)
+	if err != nil {
+		return AuthnPasswordRegistrationOutput{}, err
 	}
-	if err := l.UsersRepo.Save(user); err != nil {
+	// Добавить метод аутентификации по логину и паролю
+	if err := user.AddBasicAuth(basicAuth); err != nil {
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 
-	// Создать метод входа
-	ap := domain.AuthnPassword{
-		UserID:   user.ID,
-		Login:    in.Login,
-		Password: in.Password,
-	}
-	if err := l.AuthnPasswordRepo.Save(ap); err != nil {
+	// Сохранить пользователя в репозиторий
+	if err := l.Repo.Upsert(user); err != nil {
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 

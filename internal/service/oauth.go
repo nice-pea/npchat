@@ -6,13 +6,13 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
 // OAuth сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
 type OAuth struct {
-	Providers    OAuthProviders            // Карта провайдеров OAuth
-	OAuthRepo    domain.OAuthRepository    // Репозиторий для OAuth токенов
-	UsersRepo    domain.UsersRepository    // Репозиторий пользователей
+	Providers    OAuthProviders // Карта провайдеров OAuth
+	Repo         userr.Repository
 	SessionsRepo domain.SessionsRepository // Репозиторий сессий пользователей
 }
 
@@ -22,10 +22,10 @@ type OAuthProviders = map[string]OAuthProvider
 // OAuthProvider определяет интерфейс для работы с провайдерами OAuth.
 type OAuthProvider interface {
 	// Exchange обменивает код авторизации на токен OAuth
-	Exchange(code string) (domain.OAuthToken, error)
+	Exchange(code string) (userr.OpenAuthToken, error)
 
 	// User возвращает информацию о пользователе провайдера, используя токен OAuth
-	User(token domain.OAuthToken) (domain.OAuthUser, error)
+	User(token userr.OpenAuthToken) (userr.OpenAuthUser, error)
 
 	// AuthorizationURL возвращает URL для авторизации.
 	// Параметр state используется для предотвращения CSRF-атаки, Должен быть уникальной случайной строкой
@@ -56,7 +56,7 @@ func (in OAuthCompeteRegistrationInput) Validate() error {
 // OAuthCompeteRegistrationOut представляет собой результат завершения регистрации OAuth.
 type OAuthCompeteRegistrationOut struct {
 	Session domain.Session // Сессия пользователя
-	User    domain.User    // Пользователь
+	User    userr.User     // Пользователь
 }
 
 // CompeteRegistration завершает процесс регистрации пользователя через OAuth.
@@ -71,46 +71,38 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthComp
 	if err != nil {
 		return OAuthCompeteRegistrationOut{}, err
 	}
-
 	// Получить пользователя провайдера
 	token, err := provider.Exchange(in.UserCode)
 	if err != nil {
 		return OAuthCompeteRegistrationOut{}, errors.Join(ErrWrongUserCode, err)
 	}
-	pUser, err := provider.User(token)
+	openAuthUser, err := provider.User(token)
 	if err != nil {
 		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
-	links, err := o.OAuthRepo.ListLinks(domain.OAuthListLinksFilter{
-		ExternalID: pUser.ID,
-		Provider:   in.Provider,
-	})
-	if err != nil {
+	if conflictUsers, err := o.Repo.List(userr.Filter{
+		OAuthUserID:   openAuthUser.ID,
+		OAuthProvider: in.Provider,
+	}); err != nil {
 		return OAuthCompeteRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
-	}
-	if len(links) != 0 {
+	} else if len(conflictUsers) != 0 {
 		return OAuthCompeteRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
 	}
 
 	// Создать пользователя
-	user := domain.User{
-		ID:   uuid.NewString(),
-		Name: pUser.Name,
-		Nick: "",
+	user, err := userr.NewUser(openAuthUser.Name, "")
+	if err != nil {
+		return OAuthCompeteRegistrationOut{}, err
 	}
-	if err = o.UsersRepo.Save(user); err != nil {
+	// Добавить пользователя в список связей для аутентификации по OAuth
+	if err = user.AddOpenAuthUser(openAuthUser); err != nil {
 		return OAuthCompeteRegistrationOut{}, err
 	}
 
-	// Сохранить связь нашего пользователя с пользователем провайдера
-	err = o.OAuthRepo.SaveLink(domain.OAuthLink{
-		UserID:     user.ID,
-		ExternalID: pUser.ID,
-		Provider:   in.Provider, // Имя провайдера
-	})
-	if err != nil {
+	// Сохранить пользователя в репозиторий
+	if err = o.Repo.Upsert(user); err != nil {
 		return OAuthCompeteRegistrationOut{}, err
 	}
 

@@ -2,36 +2,50 @@ package userr
 
 import (
 	"errors"
+	"fmt"
+	"net/url"
 	"time"
-
-	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-// OpenAuthLink представляет собой связь между нашим пользователем и пользователем OAuth провайдера.
-type OpenAuthLink struct {
-	ExternalID string // ID пользователя провайдером
-	Provider   string // Провайдер, которому принадлежит пользователь
-	UserID     string // ID нашего пользователя
-	Token      OpenAuthToken
+// OpenAuthUser представляет собой пользователем OAuth провайдера.
+type OpenAuthUser struct {
+	ID       string        // ID пользователя провайдером
+	Provider string        // Провайдер, которому принадлежит пользователь
+	Email    string        // Электронная почта пользователя
+	Name     string        // Имя пользователя
+	Picture  string        // URL изображения профиля
+	Token    OpenAuthToken // Токен для аутентификации
 }
 
-// NewOpenAuthLink создает новую связь между нашим пользователем и пользователем OAuth провайдера.
-func NewOpenAuthLink(externalID string, provider string, userID string, token OpenAuthToken) (OpenAuthLink, error) {
-	if externalID == "" {
-		return OpenAuthLink{}, errors.New("externalID is required")
+// NewOpenAuthUser создает нового пользователем OAuth провайдера.
+func NewOpenAuthUser(id string, provider string, email string, name string, picture string, token OpenAuthToken) (OpenAuthUser, error) {
+	if id == "" {
+		return OpenAuthUser{}, errors.New("id is required")
 	}
 	if provider == "" {
-		return OpenAuthLink{}, errors.New("provider is required")
+		return OpenAuthUser{}, errors.New("provider is required")
 	}
-	if err := domain.ValidateID(userID); err != nil {
-		return OpenAuthLink{}, err
+	if email != "" {
+		if err := ValidateEmail(email); err != nil {
+			return OpenAuthUser{}, errors.New("email is required")
+		}
+	}
+	if name == "" {
+		return OpenAuthUser{}, errors.New("name is required")
+	}
+	if picture != "" {
+		if _, err := url.Parse(picture); err != nil {
+			return OpenAuthUser{}, fmt.Errorf("invalid picture url: %w", err)
+		}
 	}
 
-	return OpenAuthLink{
-		ExternalID: externalID,
-		Provider:   provider,
-		UserID:     userID,
-		Token:      token,
+	return OpenAuthUser{
+		ID:       id,
+		Provider: provider,
+		Email:    email,
+		Name:     name,
+		Picture:  picture,
+		Token:    token,
 	}, nil
 }
 
