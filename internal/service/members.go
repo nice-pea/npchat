@@ -7,14 +7,14 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
 
-// ChatMembersInput входящие параметры
-type ChatMembersInput struct {
+// ChatMembersIn входящие параметры
+type ChatMembersIn struct {
 	SubjectID string
 	ChatID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in ChatMembersInput) Validate() error {
+func (in ChatMembersIn) Validate() error {
 	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
@@ -25,42 +25,42 @@ func (in ChatMembersInput) Validate() error {
 	return nil
 }
 
-// ChatMembersOutput результат запроса чатов
-type ChatMembersOutput struct {
+// ChatMembersOut результат запроса чатов
+type ChatMembersOut struct {
 	Participants []chatt.Participant
 }
 
 // ChatMembers возвращает список участников чата
-func (c *Chats) ChatMembers(in ChatMembersInput) (ChatMembersOutput, error) {
+func (c *Chats) ChatMembers(in ChatMembersIn) (ChatMembersOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return ChatMembersOutput{}, err
+		return ChatMembersOut{}, err
 	}
 
 	// Найти чат
 	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
-		return ChatMembersOutput{}, err
+		return ChatMembersOut{}, err
 	}
 
 	// Пользователь должен быть участником чата
 	if !chat.HasParticipant(in.SubjectID) {
-		return ChatMembersOutput{}, ErrSubjectIsNotMember
+		return ChatMembersOut{}, ErrSubjectIsNotMember
 	}
 
-	return ChatMembersOutput{
+	return ChatMembersOut{
 		Participants: chat.Participants,
 	}, nil
 }
 
-// LeaveChatInput входящие параметры
-type LeaveChatInput struct {
+// LeaveChatIn входящие параметры
+type LeaveChatIn struct {
 	SubjectID string
 	ChatID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in LeaveChatInput) Validate() error {
+func (in LeaveChatIn) Validate() error {
 	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
@@ -72,7 +72,7 @@ func (in LeaveChatInput) Validate() error {
 }
 
 // LeaveChat удаляет участника из чата
-func (c *Chats) LeaveChat(in LeaveChatInput) error {
+func (c *Chats) LeaveChat(in LeaveChatIn) error {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return err
@@ -97,15 +97,15 @@ func (c *Chats) LeaveChat(in LeaveChatInput) error {
 	return nil
 }
 
-// DeleteMemberInput входящие параметры
-type DeleteMemberInput struct {
+// DeleteMemberIn входящие параметры
+type DeleteMemberIn struct {
 	SubjectID string
 	ChatID    string
 	UserID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in DeleteMemberInput) Validate() error {
+func (in DeleteMemberIn) Validate() error {
 	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
@@ -120,7 +120,7 @@ func (in DeleteMemberInput) Validate() error {
 }
 
 // DeleteMember удаляет участника чата
-func (c *Chats) DeleteMember(in DeleteMemberInput) error {
+func (c *Chats) DeleteMember(in DeleteMemberIn) error {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return err

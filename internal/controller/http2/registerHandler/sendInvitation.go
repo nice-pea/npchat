@@ -26,7 +26,7 @@ func SendInvitation(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.SendInvitationInput{
+			input := service.SendInvitationIn{
 				SubjectID: context.Session().UserID,
 				ChatID:    rb.ChatID,
 				UserID:    rb.UserID,

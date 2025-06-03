@@ -37,7 +37,7 @@ func getSession(ctx http2.Context) (domain.Session, error) {
 		return domain.Session{}, nil
 	}
 
-	sessions, err := ctx.Services().Sessions().Find(service.SessionsFindInput{
+	sessions, err := ctx.Services().Sessions().Find(service.SessionsFindIn{
 		Token: token,
 	})
 	if err != nil {

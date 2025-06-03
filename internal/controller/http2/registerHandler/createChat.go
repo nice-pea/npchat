@@ -25,7 +25,7 @@ func CreateChat(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.CreateInput{
+			input := service.CreateIn{
 				ChiefUserID: context.Session().UserID,
 				Name:        rb.Name,
 			}

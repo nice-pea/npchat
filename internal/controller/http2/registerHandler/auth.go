@@ -26,7 +26,7 @@ func LoginByPassword(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.BasicAuthLoginInput{
+			input := service.BasicAuthLoginIn{
 				Login:    rb.Login,
 				Password: rb.Password,
 			}
@@ -57,7 +57,7 @@ func RegistrationByPassword(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.BasicAuthRegistrationInput{
+			input := service.BasicAuthRegistrationIn{
 				Login:    rb.Login,
 				Password: rb.Password,
 				Name:     rb.Name,

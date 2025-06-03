@@ -12,7 +12,7 @@ import (
 // Test_ChatInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_ChatInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			SubjectID: id,
 			ChatID:    id,
 		}
@@ -24,7 +24,7 @@ func Test_ChatInvitationsInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 	suite.Run("чат должен существовать", func() {
 		// Получить список приглашений
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    uuid.NewString(),
 		}
@@ -41,7 +41,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			ChiefUserID: uuid.NewString(),
 		})
 		// Получить список приглашений
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			ChatID:    chat.ID,
 			SubjectID: uuid.NewString(),
 		}
@@ -63,7 +63,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			ChatID: chat.ID,
 		})
 		// Получить список приглашений
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			SubjectID: member.UserID,
 			ChatID:    chat.ID,
 		}
@@ -104,7 +104,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			})
 		}
 		// Получить список приглашений
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			ChatID:    chat.ID,
 			SubjectID: member.UserID,
 		}
@@ -140,7 +140,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			})
 		}
 		// Получить список приглашений
-		input := ChatInvitationsInput{
+		input := ChatInvitationsIn{
 			SubjectID: member.UserID,
 			ChatID:    chat.ID,
 		}
@@ -158,7 +158,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 // Test_UserInvitationsInput_Validate тестирует валидацию входящих параметров
 func Test_UserInvitationsInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := ReceivedInvitationsInput{
+		input := ReceivedInvitationsIn{
 			SubjectID: id,
 			UserID:    id,
 		}
@@ -171,7 +171,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 	suite.Run("пользователь должен существовать", func() {
 		id := uuid.NewString()
 		// Получить список приглашений
-		input := ReceivedInvitationsInput{
+		input := ReceivedInvitationsIn{
 			SubjectID: id,
 			UserID:    id,
 		}
@@ -183,7 +183,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 
 	suite.Run("пользователь может просматривать только свои приглашения", func() {
 		// Получить список приглашений
-		input := ReceivedInvitationsInput{
+		input := ReceivedInvitationsIn{
 			SubjectID: uuid.NewString(),
 			UserID:    uuid.NewString(),
 		}
@@ -199,7 +199,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			ID: uuid.NewString(),
 		})
 		// Получить список приглашений
-		input := ReceivedInvitationsInput{
+		input := ReceivedInvitationsIn{
 			SubjectID: user.ID,
 			UserID:    user.ID,
 		}
@@ -231,7 +231,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 			})
 		}
 		// Получить список приглашений
-		input := ReceivedInvitationsInput{
+		input := ReceivedInvitationsIn{
 			SubjectID: user.ID,
 			UserID:    user.ID,
 		}
@@ -251,7 +251,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 // Test_SendChatInvitationInput_Validate тестирует валидацию входящих параметров
 func Test_SendChatInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			SubjectID: id,
 			ChatID:    id,
 			UserID:    id,
@@ -264,7 +264,7 @@ func Test_SendChatInvitationInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("чат должен существовать", func() {
 		// Отправить приглашение
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    uuid.NewString(),
 			UserID:    uuid.NewString(),
@@ -282,7 +282,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChiefUserID: uuid.NewString(),
 		})
 		// Отправить приглашение
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    chat.ID,
 			UserID:    uuid.NewString(),
@@ -305,7 +305,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChatID: chat.ID,
 		})
 		// Отправить приглашение
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			ChatID:    chat.ID,
 			SubjectID: member.UserID,
 			UserID:    uuid.NewString(),
@@ -338,7 +338,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChatID: chat.ID,
 		})
 		// Отправить приглашение
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			ChatID:    chat.ID,
 			SubjectID: subjectMember.UserID,
 			UserID:    targetUser.ID,
@@ -365,7 +365,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ID: uuid.NewString(),
 		})
 		// Отправить приглашение
-		input := SendInvitationInput{
+		input := SendInvitationIn{
 			ChatID:    chat.ID,
 			SubjectID: subjectMember.UserID,
 			UserID:    targetUser.ID,
@@ -400,7 +400,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 					ID: uuid.NewString(),
 				})
 				// Отправить приглашение
-				input := SendInvitationInput{
+				input := SendInvitationIn{
 					ChatID:    chat.ID,
 					SubjectID: subjectMember.UserID,
 					UserID:    targetUser.ID,
@@ -427,7 +427,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 // Test_AcceptInvitationInput_Validate тестирует валидацию входящих параметров
 func Test_AcceptInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		inp := AcceptInvitationInput{
+		inp := AcceptInvitationIn{
 			SubjectID:    id,
 			InvitationID: id,
 		}
@@ -439,7 +439,7 @@ func Test_AcceptInvitationInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Принять приглашение
-		input := AcceptInvitationInput{
+		input := AcceptInvitationIn{
 			SubjectID:    uuid.NewString(),
 			InvitationID: uuid.NewString(),
 		}
@@ -460,7 +460,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			ChatID:        chat.ID,
 		})
 		// Принять приглашение
-		input := AcceptInvitationInput{
+		input := AcceptInvitationIn{
 			SubjectID:    invitation.UserID,
 			InvitationID: invitation.ID,
 		}
@@ -480,7 +480,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			UserID:        uuid.NewString(),
 		})
 		// Принять приглашение
-		input := AcceptInvitationInput{
+		input := AcceptInvitationIn{
 			SubjectID:    user.ID,
 			InvitationID: invitation.ID,
 		}
@@ -504,7 +504,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 			ChatID:        chat.ID,
 		})
 		// Принять приглашение
-		input := AcceptInvitationInput{
+		input := AcceptInvitationIn{
 			SubjectID:    user.ID,
 			InvitationID: invitation.ID,
 		}
@@ -523,7 +523,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 // Test_CancelInvitationInput_Validate тестирует валидацию входящих параметров
 func Test_CancelInvitationInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := CancelInvitationInput{
+		input := CancelInvitationIn{
 			SubjectID:    id,
 			InvitationID: id,
 		}
@@ -535,7 +535,7 @@ func Test_CancelInvitationInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
-		input := CancelInvitationInput{
+		input := CancelInvitationIn{
 			SubjectID:    uuid.NewString(),
 			InvitationID: uuid.NewString(),
 		}
@@ -575,7 +575,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 				ChatID:        chat.ID,
 			})
 			// Отменить приглашение
-			input := CancelInvitationInput{
+			input := CancelInvitationIn{
 				SubjectID:    subjectUserID,
 				InvitationID: invitation.ID,
 			}
@@ -599,7 +599,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			ChatID:        member.ChatID,
 		})
 		// Отменить приглашение
-		input := CancelInvitationInput{
+		input := CancelInvitationIn{
 			SubjectID:    member.UserID,
 			InvitationID: invitation.ID,
 		}
@@ -621,7 +621,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			UserID:        uuid.NewString(),
 		})
 		// Отменить приглашение
-		input := CancelInvitationInput{
+		input := CancelInvitationIn{
 			SubjectID:    invitation.SubjectUserID,
 			InvitationID: invitation.ID,
 		}

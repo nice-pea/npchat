@@ -15,7 +15,7 @@ func ChatInvitations(router http2.Router) {
 		"GET /chats/{chatID}/invitations",
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
-			input := service.ChatInvitationsInput{
+			input := service.ChatInvitationsIn{
 				SubjectID: context.Session().UserID,
 				ChatID:    http2.PathStr(context, "chatID"),
 			}

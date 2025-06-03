@@ -9,11 +9,11 @@ type Sessions struct {
 	SessionsRepo domain.SessionsRepository
 }
 
-type SessionsFindInput struct {
+type SessionsFindIn struct {
 	Token string
 }
 
-func (s *Sessions) Find(in SessionsFindInput) ([]domain.Session, error) {
+func (s *Sessions) Find(in SessionsFindIn) ([]domain.Session, error) {
 	if in.Token == "" {
 		return nil, ErrInvalidToken
 	}

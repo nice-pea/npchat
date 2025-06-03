@@ -22,7 +22,7 @@ func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPasswo
 
 func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	suite.Run("BasicAuthLogin должен быть валидным", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginInput{
+		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
 			Login:    " inv ald login",
 			Password: "somePassword123!",
 		})
@@ -31,7 +31,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	})
 
 	suite.Run("Password должен быть валидным", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginInput{
+		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
 			Login:    "someLogin",
 			Password: "invalidpassword",
 		})
@@ -40,7 +40,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	})
 
 	suite.Run("неверные данные", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginInput{
+		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
 			Login:    "wrongLogin",
 			Password: "wrongPassword123!",
 		})
@@ -52,7 +52,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 		// Создаем нового пользователя с AuthnPassword
 		uwp := suite.newRndUserWithAuthnPassword()
 		// Входим сессию с правильными данными
-		input := BasicAuthLoginInput{
+		input := BasicAuthLoginIn{
 			Login:    uwp.Login,
 			Password: uwp.Password,
 		}
@@ -75,7 +75,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 	suite.Run("BasicAuthLogin должен быть валидным", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "",
 			Password: randomPassword(),
 			Name:     "name",
@@ -88,7 +88,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("Password должен быть валидным", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: "",
 			Name:     "name",
@@ -101,7 +101,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("Name должен быть валидным", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "",
@@ -115,7 +115,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("нельзя создать пользователя с существующим логином", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "name",
@@ -126,7 +126,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		suite.Require().NotZero(out)
 
 		// Регистрация второй раз с существующим логином
-		input = BasicAuthRegistrationInput{
+		input = BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "name2",
@@ -139,7 +139,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("после регистрации будет создан пользователь", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "name",
@@ -160,7 +160,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("после регистрации будет создана сессия", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "name",
@@ -180,7 +180,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 	suite.Run("после регистрации будет создан метод входа", func() {
 		// Регистрация по логину паролю
-		input := BasicAuthRegistrationInput{
+		input := BasicAuthRegistrationIn{
 			Login:    "login",
 			Password: randomPassword(),
 			Name:     "name",

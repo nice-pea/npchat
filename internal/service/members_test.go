@@ -19,7 +19,7 @@ func (suite *servicesTestSuite) assertEqualMembers(expected, actual domain.Membe
 // Test_ChatMembersInput_Validate тестирует валидацию входящих параметров
 func Test_ChatMembersInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := ChatMembersInput{
+		in := ChatMembersIn{
 			ChatID:    id,
 			SubjectID: id,
 		}
@@ -30,7 +30,7 @@ func Test_ChatMembersInput_Validate(t *testing.T) {
 // Test_Members_ChatMembers тестирует получение списка участников чата
 func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 	suite.Run("чат должен существовать", func() {
-		input := ChatMembersInput{
+		input := ChatMembersIn{
 			ChatID:    uuid.NewString(),
 			SubjectID: uuid.NewString(),
 		}
@@ -51,7 +51,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 			ChatID: uuid.NewString(),
 		})
 		// Запросить список участников чата
-		input := ChatMembersInput{
+		input := ChatMembersIn{
 			ChatID:    chat.ID,
 			SubjectID: member.UserID,
 		}
@@ -80,7 +80,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		// Запрашивать список будет первый участник
 		subjectMember := membersSaved[0]
 		// Получить список участников в чате
-		input := ChatMembersInput{
+		input := ChatMembersIn{
 			ChatID:    subjectMember.ChatID,
 			SubjectID: subjectMember.UserID,
 		}
@@ -98,7 +98,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 // Test_LeaveInput_Validate тестирует валидацию входящих параметров
 func Test_LeaveInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := LeaveChatInput{
+		in := LeaveChatIn{
 			SubjectID: id,
 			ChatID:    id,
 		}
@@ -110,7 +110,7 @@ func Test_LeaveInput_Validate(t *testing.T) {
 func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
-		input := LeaveChatInput{
+		input := LeaveChatIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    uuid.NewString(),
 		}
@@ -125,7 +125,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			ID: uuid.NewString(),
 		})
 		// Покинуть чат
-		input := LeaveChatInput{
+		input := LeaveChatIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    chat.ID,
 		}
@@ -147,7 +147,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			ChatID: chat.ID,
 		})
 		// Покинуть чат
-		input := LeaveChatInput{
+		input := LeaveChatIn{
 			SubjectID: member.UserID,
 			ChatID:    chat.ID,
 		}
@@ -168,7 +168,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 			ChatID: chat.ID,
 		})
 		// Покинуть чат
-		input := LeaveChatInput{
+		input := LeaveChatIn{
 			SubjectID: member.UserID,
 			ChatID:    chat.ID,
 		}
@@ -186,7 +186,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 // Test_DeleteMemberInput_Validate тестирует валидацию входящих параметров
 func Test_DeleteMemberInput_Validate(t *testing.T) {
 	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: id,
 			ChatID:    id,
 			UserID:    id,
@@ -200,7 +200,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
 		userID := uuid.NewString()
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: userID,
 			ChatID:    uuid.NewString(),
 			UserID:    userID,
@@ -212,7 +212,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 
 	suite.Run("чат должен существовать", func() {
 		// Удалить участника
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    uuid.NewString(),
 			UserID:    uuid.NewString(),
@@ -228,7 +228,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ID: uuid.NewString(),
 		})
 		// Удалить участника
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    chat.ID,
 			UserID:    uuid.NewString(),
@@ -250,7 +250,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID: chat.ID,
 		})
 		// Удалить участника
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: subjectMember.UserID,
 			ChatID:    chat.ID,
 			UserID:    uuid.NewString(),
@@ -273,7 +273,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID: chat.ID,
 		})
 		// Удалить участника
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: member.UserID,
 			ChatID:    chat.ID,
 			UserID:    uuid.NewString(),
@@ -302,7 +302,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 			ChatID: chat.ID,
 		})
 		// Удалить участника
-		input := DeleteMemberInput{
+		input := DeleteMemberIn{
 			SubjectID: subjectMember.UserID,
 			ChatID:    chat.ID,
 			UserID:    memberForDelete.UserID,

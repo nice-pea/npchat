@@ -12,14 +12,14 @@ type Chats struct {
 	Repo chatt.Repository
 }
 
-// WhichParticipateInput входящие параметры
-type WhichParticipateInput struct {
+// WhichParticipateIn входящие параметры
+type WhichParticipateIn struct {
 	SubjectID string
 	UserID    string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in WhichParticipateInput) Validate() error {
+func (in WhichParticipateIn) Validate() error {
 	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
@@ -30,22 +30,22 @@ func (in WhichParticipateInput) Validate() error {
 	return nil
 }
 
-// WhichParticipateOutput результат запроса чатов
-type WhichParticipateOutput struct {
+// WhichParticipateOut результат запроса чатов
+type WhichParticipateOut struct {
 	Chats []chatt.Chat
 }
 
 // WhichParticipate возвращает список чатов, в которых участвует пользователь
-func (c *Chats) WhichParticipate(in WhichParticipateInput) (WhichParticipateOutput, error) {
+func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, error) {
 	// Валидировать параметры
 	var err error
 	if err = in.Validate(); err != nil {
-		return WhichParticipateOutput{}, err
+		return WhichParticipateOut{}, err
 	}
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectID {
-		return WhichParticipateOutput{}, ErrUnauthorizedChatsView
+		return WhichParticipateOut{}, ErrUnauthorizedChatsView
 	}
 
 	// Получить список участников с фильтром по пользователю
@@ -53,49 +53,49 @@ func (c *Chats) WhichParticipate(in WhichParticipateInput) (WhichParticipateOutp
 		ParticipantID: in.UserID,
 	})
 	if err != nil {
-		return WhichParticipateOutput{}, err
+		return WhichParticipateOut{}, err
 	}
 
-	return WhichParticipateOutput{Chats: chats}, err
+	return WhichParticipateOut{Chats: chats}, err
 }
 
-// CreateInput входящие параметры
-type CreateInput struct {
+// CreateIn входящие параметры
+type CreateIn struct {
 	Name        string
 	ChiefUserID string
 }
 
-// CreateOutput результат создания чата
-type CreateOutput struct {
+// CreateOut результат создания чата
+type CreateOut struct {
 	Chat chatt.Chat
 }
 
 // Create создает новый чат и участника для главного администратора - пользователя, который создал этот чат
-func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
+func (c *Chats) Create(in CreateIn) (CreateOut, error) {
 	chat, err := chatt.NewChat(in.Name, in.ChiefUserID)
 	if err != nil {
-		return CreateOutput{}, err
+		return CreateOut{}, err
 	}
 
 	// Сохранить чат в репозиторий
 	if err := c.Repo.Upsert(chat); err != nil {
-		return CreateOutput{}, err
+		return CreateOut{}, err
 	}
 
-	return CreateOutput{
+	return CreateOut{
 		Chat: chat,
 	}, nil
 }
 
-// UpdateNameInput входящие параметры
-type UpdateNameInput struct {
+// UpdateNameIn входящие параметры
+type UpdateNameIn struct {
 	SubjectID string
 	ChatID    string
 	NewName   string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in UpdateNameInput) Validate() error {
+func (in UpdateNameIn) Validate() error {
 	if err := domain.ValidateID(in.ChatID); err != nil {
 		return errors.Join(err, ErrInvalidChatID)
 	}
@@ -109,39 +109,39 @@ func (in UpdateNameInput) Validate() error {
 	return nil
 }
 
-// UpdateNameOutput результат обновления названия чата
-type UpdateNameOutput struct {
+// UpdateNameOut результат обновления названия чата
+type UpdateNameOut struct {
 	Chat chatt.Chat
 }
 
 // UpdateName обновляет название чата.
 // Доступно только для главного администратора этого чата
-func (c *Chats) UpdateName(in UpdateNameInput) (UpdateNameOutput, error) {
+func (c *Chats) UpdateName(in UpdateNameIn) (UpdateNameOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return UpdateNameOutput{}, err
+		return UpdateNameOut{}, err
 	}
 
 	// Найти чат
 	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
-		return UpdateNameOutput{}, err
+		return UpdateNameOut{}, err
 	}
 
 	// Проверить доступ пользователя к этому действию
 	if in.SubjectID != chat.ChiefID {
-		return UpdateNameOutput{}, ErrSubjectUserIsNotChief
+		return UpdateNameOut{}, ErrSubjectUserIsNotChief
 	}
 
 	// Перезаписать с новым значением
 	if err = chat.UpdateName(in.NewName); err != nil {
-		return UpdateNameOutput{}, err
+		return UpdateNameOut{}, err
 	}
 	if err = c.Repo.Upsert(chat); err != nil {
-		return UpdateNameOutput{}, err
+		return UpdateNameOut{}, err
 	}
 
-	return UpdateNameOutput{
+	return UpdateNameOut{
 		Chat: chat,
 	}, nil
 }

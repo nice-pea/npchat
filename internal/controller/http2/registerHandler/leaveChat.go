@@ -15,7 +15,7 @@ func LeaveChat(router http2.Router) {
 		"POST /chats/{chatID}/leave",
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
-			input := service.LeaveChatInput{
+			input := service.LeaveChatIn{
 				SubjectID: context.Session().UserID,
 				ChatID:    http2.PathStr(context, "chatID"),
 			}

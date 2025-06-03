@@ -10,7 +10,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
-type BasicAuthLoginInput struct {
+type BasicAuthLoginIn struct {
 	Login    string
 	Password string
 }
@@ -20,7 +20,7 @@ type BasicAuthLoginOut struct {
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in BasicAuthLoginInput) Validate() error {
+func (in BasicAuthLoginIn) Validate() error {
 	if in.Login == "" {
 		return errors.New("login is required")
 	}
@@ -31,7 +31,7 @@ func (in BasicAuthLoginInput) Validate() error {
 	return nil
 }
 
-func (u *Users) BasicAuthLogin(in BasicAuthLoginInput) (BasicAuthLoginOut, error) {
+func (u *Users) BasicAuthLogin(in BasicAuthLoginIn) (BasicAuthLoginOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return BasicAuthLoginOut{}, err
@@ -67,14 +67,14 @@ func (u *Users) BasicAuthLogin(in BasicAuthLoginInput) (BasicAuthLoginOut, error
 	}, nil
 }
 
-type BasicAuthRegistrationInput struct {
+type BasicAuthRegistrationIn struct {
 	Login    string
 	Password string
 	Name     string
 	Nick     string
 }
 
-func (in BasicAuthRegistrationInput) Validate() error {
+func (in BasicAuthRegistrationIn) Validate() error {
 	if in.Login == "" {
 		return errors.New("login is required")
 	}
@@ -93,7 +93,7 @@ type BasicAuthRegistrationOut struct {
 	User    userr.User
 }
 
-func (u *Users) BasicAuthRegistration(in BasicAuthRegistrationInput) (BasicAuthRegistrationOut, error) {
+func (u *Users) BasicAuthRegistration(in BasicAuthRegistrationIn) (BasicAuthRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return BasicAuthRegistrationOut{}, err

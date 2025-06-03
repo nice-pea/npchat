@@ -29,14 +29,14 @@ type OAuthProvider interface {
 	Name() string
 }
 
-// CompeteOAuthRegistrationInput представляет собой структуру для входных данных завершения регистрации OAuth.
-type CompeteOAuthRegistrationInput struct {
+// CompeteOAuthRegistrationIn представляет собой структуру для входных данных завершения регистрации OAuth.
+type CompeteOAuthRegistrationIn struct {
 	UserCode string // Код пользователя, полученный от провайдера
 	Provider string // Имя провайдера OAuth
 }
 
 // Validate валидирует значение каждого параметра.
-func (in CompeteOAuthRegistrationInput) Validate() error {
+func (in CompeteOAuthRegistrationIn) Validate() error {
 	if in.UserCode == "" {
 		return ErrInvalidUserCode
 	}
@@ -54,7 +54,7 @@ type CompeteOAuthRegistrationOut struct {
 }
 
 // CompeteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
-func (u *Users) CompeteOAuthRegistration(in CompeteOAuthRegistrationInput) (CompeteOAuthRegistrationOut, error) {
+func (u *Users) CompeteOAuthRegistration(in CompeteOAuthRegistrationIn) (CompeteOAuthRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return CompeteOAuthRegistrationOut{}, err
@@ -129,13 +129,13 @@ type InitOAuthRegistrationOut struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-// InitOAuthRegistrationInput представляет собой параметры инициализации регистрации OAuth.
-type InitOAuthRegistrationInput struct {
+// InitOAuthRegistrationIn представляет собой параметры инициализации регистрации OAuth.
+type InitOAuthRegistrationIn struct {
 	Provider string // Имя провайдера OAuth
 }
 
 // Validate валидирует значение параметра провайдера.
-func (in InitOAuthRegistrationInput) Validate() error {
+func (in InitOAuthRegistrationIn) Validate() error {
 	if in.Provider == "" {
 		return ErrInvalidProvider
 	}
@@ -144,7 +144,7 @@ func (in InitOAuthRegistrationInput) Validate() error {
 }
 
 // InitOAuthRegistration инициализирует процесс регистрации пользователя через OAuth.
-func (u *Users) InitOAuthRegistration(in InitOAuthRegistrationInput) (InitOAuthRegistrationOut, error) {
+func (u *Users) InitOAuthRegistration(in InitOAuthRegistrationIn) (InitOAuthRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return InitOAuthRegistrationOut{}, err
@@ -173,8 +173,8 @@ func (u *Users) provider(provider string) (OAuthProvider, error) {
 	return p, nil
 }
 
-// InitOAuthLoginInput представляет собой параметры инициализации входа через OAuth.
-type InitOAuthLoginInput struct {
+// InitOAuthLoginIn представляет собой параметры инициализации входа через OAuth.
+type InitOAuthLoginIn struct {
 	Provider string // Имя провайдера OAuth
 }
 
@@ -184,13 +184,13 @@ type InitOAuthLoginOut struct {
 }
 
 // InitOAuthLogin инициализирует процесс входа пользователя через OAuth.
-func (u *Users) InitOAuthLogin(in InitOAuthLoginInput) (InitOAuthLoginOut, error) {
+func (u *Users) InitOAuthLogin(in InitOAuthLoginIn) (InitOAuthLoginOut, error) {
 	// TODO
 	return InitOAuthLoginOut{}, nil
 }
 
-// CompleteOAuthLoginInput представляет собой параметры завершения входа через OAuth.
-type CompleteOAuthLoginInput struct {
+// CompleteOAuthLoginIn представляет собой параметры завершения входа через OAuth.
+type CompleteOAuthLoginIn struct {
 	UserCode string // Код пользователя, полученный от провайдера
 	Provider string // Имя провайдера OAuth
 }
@@ -202,7 +202,7 @@ type CompleteOAuthLoginOut struct {
 }
 
 // CompleteOAuthLogin завершает процесс входа пользователя через OAuth.
-func (u *Users) CompleteOAuthLogin(in CompleteOAuthLoginInput) (CompleteOAuthLoginOut, error) {
+func (u *Users) CompleteOAuthLogin(in CompleteOAuthLoginIn) (CompleteOAuthLoginOut, error) {
 	// TODO
 	return CompleteOAuthLoginOut{}, nil
 }

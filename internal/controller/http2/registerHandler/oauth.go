@@ -22,7 +22,7 @@ func OAuthInitRegistration(router http2.Router) {
 		middleware.EmptyChain, // Нет аутентификации на этом этапе
 		func(context http2.Context) (any, error) {
 			// Формируем входные данные для инициализации OAuth-регистрации
-			input := service.InitOAuthRegistrationInput{
+			input := service.InitOAuthRegistrationIn{
 				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
 			}
 
@@ -61,7 +61,7 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.CompeteOAuthRegistrationInput{
+			input := service.CompeteOAuthRegistrationIn{
 				UserCode: http2.FormStr(context, "code"),
 				Provider: http2.PathStr(context, "provider"),
 			}
@@ -81,7 +81,7 @@ func OAuthInitLogin(router http2.Router) {
 		"GET /oauth/{provider}/login",
 		middleware.EmptyChain, // Нет аутентификации на этом этапе
 		func(context http2.Context) (any, error) {
-			input := service.InitOAuthLoginInput{
+			input := service.InitOAuthLoginIn{
 				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
 			}
 
@@ -120,7 +120,7 @@ func OAuthCompleteLoginCallback(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.CompleteOAuthLoginInput{
+			input := service.CompleteOAuthLoginIn{
 				UserCode: http2.FormStr(context, "code"),
 				Provider: http2.PathStr(context, "provider"),
 			}

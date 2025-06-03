@@ -35,7 +35,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 		for range 10 {
 			suite.newRndUserWithSession(rand.Int() % 6)
 		}
-		input := SessionsFindInput{
+		input := SessionsFindIn{
 			Token: "",
 		}
 		sessions, err := suite.ss.sessions.Find(input)
@@ -46,7 +46,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 		for range 10 {
 			suite.newRndUserWithSession(rand.Int() % 6)
 		}
-		input := SessionsFindInput{
+		input := SessionsFindIn{
 			Token: uuid.NewString(),
 		}
 		sessions, err := suite.ss.sessions.Find(input)
@@ -55,7 +55,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	})
 	suite.Run("вернется существующая сессия", func() {
 		uws := suite.newRndUserWithSession(rand.Int() % 6)
-		input := SessionsFindInput{
+		input := SessionsFindIn{
 			Token: uws.Session.Token,
 		}
 		sessions, err := suite.ss.sessions.Find(input)
@@ -98,7 +98,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 
 	//suite.Run("токен должен соответствовать пользователю", func() {
 	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
-	//	input := SessionsFindInput{
+	//	input := SessionsFindIn{
 	//		Token: uws.Session.Token,
 	//	}
 	//	sessions, err := suite.ss.sessions.Find(input)
@@ -138,7 +138,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	//}
 	//suite.Run("вернется существующая сессия", func() {
 	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
-	//	input := SessionsFindInput{
+	//	input := SessionsFindIn{
 	//		Token: uws.Session.Token,
 	//	}
 	//	sessions, err := suite.ss.sessions.Find(input)
