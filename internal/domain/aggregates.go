@@ -4,36 +4,6 @@ import (
 	"time"
 )
 
-// Пользователь
-
-type UserAggregate struct {
-	ID   string // ID пользователя
-	Name string // Имя пользователя
-	Nick string // Ник пользователя
-
-	BasicAuth     BasicAuth
-	OpenAuthLinks []OpenAuthLink
-}
-
-type BasicAuth struct {
-	Login    string // Логин пользователя
-	Password string // Пароль пользователя
-}
-
-type OpenAuthLink struct {
-	ExternalID string // ID пользователя провайдером
-	Provider   string // Провайдер, которому принадлежит пользователь
-	UserID     string
-	Token      OpenAuthToken
-}
-
-type OpenAuthToken struct {
-	AccessToken  string
-	TokenType    string
-	RefreshToken string
-	Expiry       time.Time
-}
-
 // Сессия
 
 type Session2 struct {
