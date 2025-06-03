@@ -1,7 +1,6 @@
 package userr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"unicode"
@@ -11,10 +10,10 @@ import (
 func ValidateBasicAuthPassword(password string) error {
 	// Проверка длины пароля
 	if len(password) < UserPasswordMinLen {
-		return fmt.Errorf("пароль должен быть не короче %d символов", UserPasswordMinLen)
+		return ErrPasswordTooShort
 	}
 	if len(password) > UserPasswordMaxLen {
-		return fmt.Errorf("пароль не может быть длиннее %d символов", UserPasswordMaxLen)
+		return ErrPasswordTooLong
 	}
 
 	var (
@@ -37,7 +36,7 @@ func ValidateBasicAuthPassword(password string) error {
 		case unicode.IsDigit(r):
 			// Проверка на арабские цифры (0-9)
 			if r < '0' || r > '9' {
-				return fmt.Errorf("разрешены только арабские цифры (0-9)")
+				return ErrOnlyArabicDigits
 			}
 			hasDigit = true // Устанавливаем флаг, если найдена цифра
 		case unicode.IsSpace(r):
@@ -54,19 +53,19 @@ func ValidateBasicAuthPassword(password string) error {
 
 	// Проверка на наличие недопустимых символов
 	if hasInvalid {
-		return fmt.Errorf("пароль содержит недопустимые символы")
+		return ErrPasswordInvalidChars
 	}
 	// Проверка на наличие заглавной буквы
 	if !hasUpper {
-		return fmt.Errorf("пароль должен содержать хотя бы одну заглавную букву")
+		return ErrPasswordNoUppercase
 	}
 	// Проверка на наличие строчной буквы
 	if !hasLower {
-		return fmt.Errorf("пароль должен содержать хотя бы одну строчную букву")
+		return ErrPasswordNoLowercase
 	}
 	// Проверка на наличие цифры
 	if !hasDigit {
-		return fmt.Errorf("пароль должен содержать хотя бы одну цифру (0-9)")
+		return ErrPasswordNoDigit
 	}
 
 	return nil // Пароль валиден
@@ -96,23 +95,23 @@ const UserLoginMinLen = 5
 func ValidateBasicAuthLogin(login string) error {
 	// Проверка на длину логина
 	if len([]rune(login)) > UserLoginMaxLen {
-		return fmt.Errorf("логин не может быть длиннее %d символов", UserLoginMaxLen)
+		return ErrLoginTooLong
 	}
 	if len([]rune(login)) < UserLoginMinLen {
-		return fmt.Errorf("логин не может быть короче %d символов", UserLoginMinLen)
+		return ErrLoginTooShort
 	}
 
 	// Проверка на строку, состоящую только из пробелов
 	if strings.TrimSpace(login) == "" {
-		return fmt.Errorf("логин не может состоять только из пробелов")
+		return ErrLoginOnlySpaces
 	}
 	// Проверка на первый символ
 	if !isAllowedLastFirstLoginRune(rune(login[0])) {
-		return fmt.Errorf("логин должен начинаться с буквы или цифры")
+		return ErrLoginStartChar
 	}
 	// Проверка на последний символ
 	if !isAllowedLastFirstLoginRune(rune(login[len(login)-1])) {
-		return fmt.Errorf("логин должен заканчиваться буквой или цифрой")
+		return ErrLoginEndChar
 	}
 
 	var hasLetters bool // Флаг для проверки наличия букв в логине
@@ -120,11 +119,11 @@ func ValidateBasicAuthLogin(login string) error {
 	for _, r := range login {
 		switch {
 		case unicode.IsControl(r):
-			return fmt.Errorf("логин не может содержать управляющие символы")
+			return ErrLoginControlChars
 		case unicode.IsSpace(r):
-			return fmt.Errorf("логин не может содержать пробелы")
+			return ErrLoginSpaces
 		case !isAllowedLoginRune(r):
-			return fmt.Errorf("логин содержит недопустимые символы")
+			return ErrLoginInvalidChars
 		}
 		if unicode.IsLetter(r) {
 			hasLetters = true // Устанавливаем флаг, если найдена буква
@@ -132,7 +131,7 @@ func ValidateBasicAuthLogin(login string) error {
 	}
 
 	if !hasLetters {
-		return fmt.Errorf("логин должен содержать хотя бы одну букву")
+		return ErrLoginNoLetters
 	}
 
 	return nil // Логин валиден
@@ -155,23 +154,23 @@ const UserNameMaxLen = 35
 func ValidateUserName(name string) error {
 	// Проверить, не является ли имя пустым или содержит только пробелы
 	if strings.TrimSpace(name) == "" {
-		return errors.New("имя не может быть пустым")
+		return ErrNameEmpty
 	}
 
 	// Проверка на длину имени пользователя
 	if len([]rune(name)) > UserNameMaxLen {
-		return fmt.Errorf("длина имени не может превышать %d символов", UserNameMaxLen)
+		return ErrNameTooLong
 	}
 
 	// Check for leading or trailing spaces
 	if name != strings.TrimSpace(name) {
-		return errors.New("имя не может содержать начальных или конечных пробелов")
+		return ErrNameSpaces
 	}
 
 	// Проверка на управляющие символы (кроме обычного пробела)
 	for _, r := range name {
 		if unicode.IsControl(r) && r != ' ' { // \n, \t, \r и т.д.
-			return fmt.Errorf("имя не может содержать управляющих символов")
+			return ErrNameControlChars
 		}
 	}
 
@@ -190,21 +189,21 @@ func ValidateUserNick(nick string) error {
 
 	// Проверка на длину имени пользователя
 	if len([]rune(nick)) > UserNickMaxLen {
-		return fmt.Errorf("ник не может быть длиннее %d символов", UserNickMaxLen)
+		return ErrNickTooLong
 	}
 
 	// Проверка на строку, состоящую только из пробелов
 	if strings.TrimSpace(nick) == "" {
-		return fmt.Errorf("ник не может состоять только из пробелов")
+		return ErrNickOnlySpaces
 	}
 
 	// Проверка на первый символ
 	if !isAllowedLastFirstNickRune(rune(nick[0])) {
-		return fmt.Errorf("ник должен начинаться с буквы или цифры")
+		return ErrNickStartChar
 	}
 	// Проверка на последний символ
 	if !isAllowedLastFirstNickRune(rune(nick[len(nick)-1])) {
-		return fmt.Errorf("ник должен заканчиваться буквой или цифрой")
+		return ErrNickEndChar
 	}
 
 	var hasLetters bool
@@ -212,11 +211,11 @@ func ValidateUserNick(nick string) error {
 	for _, r := range nick {
 		switch {
 		case unicode.IsControl(r):
-			return fmt.Errorf("ник не может содержать управляющие символы")
+			return ErrNickControlChars
 		case unicode.IsSpace(r):
-			return fmt.Errorf("ник не может содержать пробелы")
+			return ErrNickSpaces
 		case !isAllowedNickRune(r):
-			return fmt.Errorf("ник содержит недопустимые символы")
+			return ErrNickInvalidChars
 		}
 		if unicode.IsLetter(r) {
 			hasLetters = true
@@ -224,7 +223,7 @@ func ValidateUserNick(nick string) error {
 	}
 
 	if !hasLetters {
-		return fmt.Errorf("ник должен содержать хотя бы одну букву или цифру")
+		return ErrNickNoLetters
 	}
 
 	return nil // Ник валиден
