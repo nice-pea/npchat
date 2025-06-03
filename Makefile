@@ -27,4 +27,4 @@ mdbook:
 	mdbook watch --open
 
 mdbook-build:
-	mdbook watch build
+	mdbook build
