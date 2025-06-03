@@ -3,7 +3,7 @@ package service
 import "errors"
 
 var (
-	ErrInvalidLogin        = errors.New("некорректное значение Login")
+	ErrInvalidLogin        = errors.New("некорректное значение BasicAuthLogin")
 	ErrInvalidToken        = errors.New("некорректное значение Token")
 	ErrInvalidSubjectID    = errors.New("некорректное значение SubjectID")
 	ErrInvalidChatID       = errors.New("некорректное значение ChatID")
@@ -34,5 +34,5 @@ var (
 	ErrLoginIsAlreadyInUse          = errors.New("логин уже используется")
 	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
 	ErrUnknownOAuthProvider         = errors.New("неизвестный OAuth провайдер")
-	ErrLoginOrPasswordDoesNotMatch  = errors.New("не совпадает Login или Password")
+	ErrLoginOrPasswordDoesNotMatch  = errors.New("не совпадает BasicAuthLogin или Password")
 )

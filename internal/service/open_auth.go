@@ -10,13 +10,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
-// OAuth сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
-type OAuth struct {
-	Providers    OAuthProviders // Карта провайдеров OAuth
-	Repo         userr.Repository
-	SessionsRepo domain.SessionsRepository // Репозиторий сессий пользователей
-}
-
 // OAuthProviders представляет собой карту провайдеров OAuth, где ключом является имя провайдера.
 type OAuthProviders = map[string]OAuthProvider
 
@@ -36,14 +29,14 @@ type OAuthProvider interface {
 	Name() string
 }
 
-// OAuthCompeteRegistrationInput представляет собой структуру для входных данных завершения регистрации OAuth.
-type OAuthCompeteRegistrationInput struct {
+// CompeteOAuthRegistrationInput представляет собой структуру для входных данных завершения регистрации OAuth.
+type CompeteOAuthRegistrationInput struct {
 	UserCode string // Код пользователя, полученный от провайдера
 	Provider string // Имя провайдера OAuth
 }
 
 // Validate валидирует значение каждого параметра.
-func (in OAuthCompeteRegistrationInput) Validate() error {
+func (in CompeteOAuthRegistrationInput) Validate() error {
 	if in.UserCode == "" {
 		return ErrInvalidUserCode
 	}
@@ -54,57 +47,57 @@ func (in OAuthCompeteRegistrationInput) Validate() error {
 	return nil // Возвращает nil, если все параметры валидны
 }
 
-// OAuthCompeteRegistrationOut представляет собой результат завершения регистрации OAuth.
-type OAuthCompeteRegistrationOut struct {
+// CompeteOAuthRegistrationOut представляет собой результат завершения регистрации OAuth.
+type CompeteOAuthRegistrationOut struct {
 	Session domain.Session // Сессия пользователя
 	User    userr.User     // Пользователь
 }
 
-// CompeteRegistration завершает процесс регистрации пользователя через OAuth.
-func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthCompeteRegistrationOut, error) {
+// CompeteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
+func (u *Users) CompeteOAuthRegistration(in CompeteOAuthRegistrationInput) (CompeteOAuthRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+		return CompeteOAuthRegistrationOut{}, err
 	}
 
 	// Определить провайдера OAuth
-	provider, err := o.provider(in.Provider)
+	provider, err := u.provider(in.Provider)
 	if err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+		return CompeteOAuthRegistrationOut{}, err
 	}
 	// Получить пользователя провайдера
 	token, err := provider.Exchange(in.UserCode)
 	if err != nil {
-		return OAuthCompeteRegistrationOut{}, errors.Join(ErrWrongUserCode, err)
+		return CompeteOAuthRegistrationOut{}, errors.Join(ErrWrongUserCode, err)
 	}
 	openAuthUser, err := provider.User(token)
 	if err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+		return CompeteOAuthRegistrationOut{}, err
 	}
 
 	// Создать пользователя
 	user, err := userr.NewUser(openAuthUser.Name, "")
 	if err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+		return CompeteOAuthRegistrationOut{}, err
 	}
 	// Добавить пользователя в список связей для аутентификации по OAuth
 	if err = user.AddOpenAuthUser(openAuthUser); err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+		return CompeteOAuthRegistrationOut{}, err
 	}
 
 	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
-	if conflictUsers, err := o.Repo.List(userr.Filter{
+	if conflictUsers, err := u.Repo.List(userr.Filter{
 		OAuthUserID:   openAuthUser.ID,
 		OAuthProvider: in.Provider,
 	}); err != nil {
-		return OAuthCompeteRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
+		return CompeteOAuthRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
 	} else if len(conflictUsers) != 0 {
-		return OAuthCompeteRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
+		return CompeteOAuthRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
 	}
 
 	// Сохранить пользователя в репозиторий
-	if err = o.Repo.Upsert(user); err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+	if err = u.Repo.Upsert(user); err != nil {
+		return CompeteOAuthRegistrationOut{}, err
 	}
 
 	// Создать сессию для пользователя
@@ -121,28 +114,28 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthComp
 			Expiry: time.Now().Add(time.Hour * 24 * 60),
 		},
 	}
-	if err = o.SessionsRepo.Save(session); err != nil {
-		return OAuthCompeteRegistrationOut{}, err
+	if err = u.SessionsRepo.Save(session); err != nil {
+		return CompeteOAuthRegistrationOut{}, err
 	}
 
-	return OAuthCompeteRegistrationOut{
+	return CompeteOAuthRegistrationOut{
 		Session: session,
 		User:    user,
 	}, nil
 }
 
-// OAuthRegistrationInitOut представляет собой результат инициализации регистрации OAuth.
-type OAuthRegistrationInitOut struct {
+// InitOAuthRegistrationOut представляет собой результат инициализации регистрации OAuth.
+type InitOAuthRegistrationOut struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-// OAuthInitRegistrationInput представляет собой параметры инициализации регистрации OAuth.
-type OAuthInitRegistrationInput struct {
+// InitOAuthRegistrationInput представляет собой параметры инициализации регистрации OAuth.
+type InitOAuthRegistrationInput struct {
 	Provider string // Имя провайдера OAuth
 }
 
 // Validate валидирует значение параметра провайдера.
-func (in OAuthInitRegistrationInput) Validate() error {
+func (in InitOAuthRegistrationInput) Validate() error {
 	if in.Provider == "" {
 		return ErrInvalidProvider
 	}
@@ -150,28 +143,28 @@ func (in OAuthInitRegistrationInput) Validate() error {
 	return nil // Возвращает nil, если параметры валидны
 }
 
-// InitRegistration инициализирует процесс регистрации пользователя через OAuth.
-func (o *OAuth) InitRegistration(in OAuthInitRegistrationInput) (OAuthRegistrationInitOut, error) {
+// InitOAuthRegistration инициализирует процесс регистрации пользователя через OAuth.
+func (u *Users) InitOAuthRegistration(in InitOAuthRegistrationInput) (InitOAuthRegistrationOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return OAuthRegistrationInitOut{}, err
+		return InitOAuthRegistrationOut{}, err
 	}
 
 	// Определить провайдера OAuth
-	provider, err := o.provider(in.Provider)
+	provider, err := u.provider(in.Provider)
 	if err != nil {
-		return OAuthRegistrationInitOut{}, err
+		return InitOAuthRegistrationOut{}, err
 	}
 
 	// Генерирует URL для перенаправления на страницу авторизации провайдера
-	return OAuthRegistrationInitOut{
+	return InitOAuthRegistrationOut{
 		RedirectURL: provider.AuthorizationURL(uuid.NewString()),
 	}, nil
 }
 
 // provider возвращает провайдера OAuth по его имени.
-func (o *OAuth) provider(provider string) (OAuthProvider, error) {
-	p, ok := o.Providers[provider]
+func (u *Users) provider(provider string) (OAuthProvider, error) {
+	p, ok := u.Providers[provider]
 	// Проверить, существует ли провайдер в карте
 	if !ok || p == nil {
 		return nil, ErrUnknownOAuthProvider
@@ -180,36 +173,36 @@ func (o *OAuth) provider(provider string) (OAuthProvider, error) {
 	return p, nil
 }
 
-// OAuthInitLoginInput представляет собой параметры инициализации входа через OAuth.
-type OAuthInitLoginInput struct {
+// InitOAuthLoginInput представляет собой параметры инициализации входа через OAuth.
+type InitOAuthLoginInput struct {
 	Provider string // Имя провайдера OAuth
 }
 
-// OAuthInitLoginOut представляет собой результат инициализации входа через OAuth.
-type OAuthInitLoginOut struct {
+// InitOAuthLoginOut представляет собой результат инициализации входа через OAuth.
+type InitOAuthLoginOut struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-// InitLogin инициализирует процесс входа пользователя через OAuth.
-func (o *OAuth) InitLogin(in OAuthInitLoginInput) (OAuthInitLoginOut, error) {
+// InitOAuthLogin инициализирует процесс входа пользователя через OAuth.
+func (u *Users) InitOAuthLogin(in InitOAuthLoginInput) (InitOAuthLoginOut, error) {
 	// TODO
-	return OAuthInitLoginOut{}, nil
+	return InitOAuthLoginOut{}, nil
 }
 
-// OAuthCompleteLoginInput представляет собой параметры завершения входа через OAuth.
-type OAuthCompleteLoginInput struct {
+// CompleteOAuthLoginInput представляет собой параметры завершения входа через OAuth.
+type CompleteOAuthLoginInput struct {
 	UserCode string // Код пользователя, полученный от провайдера
 	Provider string // Имя провайдера OAuth
 }
 
-// OAuthCompleteLoginOut представляет собой результат завершения входа через OAuth.
-type OAuthCompleteLoginOut struct {
+// CompleteOAuthLoginOut представляет собой результат завершения входа через OAuth.
+type CompleteOAuthLoginOut struct {
 	Session domain.Session // Сессия пользователя
 	User    userr.User     // Пользователь
 }
 
-// CompleteLogin завершает процесс входа пользователя через OAuth.
-func (o *OAuth) CompleteLogin(in OAuthCompleteLoginInput) (OAuthCompleteLoginOut, error) {
+// CompleteOAuthLogin завершает процесс входа пользователя через OAuth.
+func (u *Users) CompleteOAuthLogin(in CompleteOAuthLoginInput) (CompleteOAuthLoginOut, error) {
 	// TODO
-	return OAuthCompleteLoginOut{}, nil
+	return CompleteOAuthLoginOut{}, nil
 }

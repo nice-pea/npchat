@@ -12,7 +12,7 @@ import (
 func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
-		out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
+		out, err := suite.ss.oauth.InitRegistration(InitOAuthRegistrationInput{
 			Provider: "",
 		})
 		suite.ErrorIs(err, ErrInvalidProvider)
@@ -21,7 +21,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 
 	suite.Run("Provider должен быть известен в сервисе", func() {
 		// Инициализация регистрации
-		input := OAuthInitRegistrationInput{
+		input := InitOAuthRegistrationInput{
 			Provider: "unknownProvider",
 		}
 		out, err := suite.ss.oauth.InitRegistration(input)
@@ -31,7 +31,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
-		out, err := suite.ss.oauth.InitRegistration(OAuthInitRegistrationInput{
+		out, err := suite.ss.oauth.InitRegistration(InitOAuthRegistrationInput{
 			Provider: suite.ad.oauth.Name(),
 		})
 		suite.NoError(err)
@@ -52,7 +52,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 
 func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: "",
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -62,7 +62,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	})
 
 	suite.Run("Provider обязательное поле", func() {
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: uuid.NewString(),
 			Provider: "",
 		}
@@ -72,7 +72,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	})
 
 	suite.Run("ошибка если у провайдера не совпадет UserCode", func() {
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: uuid.NewString(),
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -83,7 +83,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 
 	suite.Run("Provider должен быть известен в сервисе", func() {
 		// Завершить регистрацию
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: "unknownProvider",
 		}
@@ -93,7 +93,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 	})
 
 	suite.Run("после регистрации будет создан пользователь", func() { // Завершить регистрацию
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -114,7 +114,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		pUser := suite.mockOAuthUsers[pToken]
 
 		// Завершить регистрацию
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -133,7 +133,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 
 	suite.Run("после регистрации будет создана сессия", func() {
 		// Завершить регистрацию
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -153,7 +153,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		pCode := maps.Keys(suite.mockOAuthTokens)[0]
 
 		// Завершить регистрацию
-		input := OAuthCompeteRegistrationInput{
+		input := CompeteOAuthRegistrationInput{
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}
@@ -162,7 +162,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		suite.NotZero(out)
 
 		// Завершить регистрацию, с UserCode связанным с тем же пользователем провайдера
-		input = OAuthCompeteRegistrationInput{
+		input = CompeteOAuthRegistrationInput{
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}

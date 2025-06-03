@@ -3,7 +3,7 @@ package domain
 import "errors"
 
 var (
-	ErrInvalidLogin         = errors.New("некорректное значение Login")
+	ErrInvalidLogin         = errors.New("некорректное значение BasicAuthLogin")
 	ErrInvalidToken         = errors.New("некорректное значение Token")
 	ErrInvalidID            = errors.New("некорректное значение ID")
 	ErrInvalidSubjectUserID = errors.New("некорректное значение SubjectID")
@@ -36,6 +36,6 @@ var (
 	ErrLoginIsAlreadyInUse                = errors.New("логин уже используется")
 	ErrProvidersUserIsAlreadyLinked       = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
 	ErrUnknownOAuthProvider               = errors.New("неизвестный OAuth провайдер")
-	ErrLoginOrPasswordDoesNotMatch        = errors.New("не совпадает Login или Password")
+	ErrLoginOrPasswordDoesNotMatch        = errors.New("не совпадает BasicAuthLogin или Password")
 	ErrSubjectAndRecipientMustBeDifferent = errors.New("subject и recipient не могут быть одним лицом")
 )
