@@ -7,7 +7,7 @@ import (
 // Сессия
 
 type Session2 struct {
-	ID           string // ID сессии
+	//ID           string // ID сессии
 	UserID       string
 	Name         string
 	Status       int // Статус сессии

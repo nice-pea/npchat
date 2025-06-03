@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -81,16 +82,6 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthComp
 		return OAuthCompeteRegistrationOut{}, err
 	}
 
-	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
-	if conflictUsers, err := o.Repo.List(userr.Filter{
-		OAuthUserID:   openAuthUser.ID,
-		OAuthProvider: in.Provider,
-	}); err != nil {
-		return OAuthCompeteRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
-	} else if len(conflictUsers) != 0 {
-		return OAuthCompeteRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
-	}
-
 	// Создать пользователя
 	user, err := userr.NewUser(openAuthUser.Name, "")
 	if err != nil {
@@ -101,17 +92,34 @@ func (o *OAuth) CompeteRegistration(in OAuthCompeteRegistrationInput) (OAuthComp
 		return OAuthCompeteRegistrationOut{}, err
 	}
 
+	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
+	if conflictUsers, err := o.Repo.List(userr.Filter{
+		OAuthUserID:   openAuthUser.ID,
+		OAuthProvider: in.Provider,
+	}); err != nil {
+		return OAuthCompeteRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
+	} else if len(conflictUsers) != 0 {
+		return OAuthCompeteRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
+	}
+
 	// Сохранить пользователя в репозиторий
 	if err = o.Repo.Upsert(user); err != nil {
 		return OAuthCompeteRegistrationOut{}, err
 	}
 
 	// Создать сессию для пользователя
-	session := domain.Session{
-		ID:     uuid.NewString(),
+	session := domain.Session2{
 		UserID: user.ID,
-		Token:  uuid.NewString(),
+		Name:   "todo: [название модели телефона / название браузера]",
 		Status: domain.SessionStatusVerified, // Подтвержденная сессия
+		AccessToken: domain.SessionToken{
+			Token:  uuid.NewString(),
+			Expiry: time.Now().Add(time.Minute * 10),
+		},
+		RefreshToken: domain.SessionToken{
+			Token:  uuid.NewString(),
+			Expiry: time.Now().Add(time.Hour * 24 * 60),
+		},
 	}
 	if err = o.SessionsRepo.Save(session); err != nil {
 		return OAuthCompeteRegistrationOut{}, err
@@ -197,7 +205,7 @@ type OAuthCompleteLoginInput struct {
 // OAuthCompleteLoginOut представляет собой результат завершения входа через OAuth.
 type OAuthCompleteLoginOut struct {
 	Session domain.Session // Сессия пользователя
-	User    domain.User    // Пользователь
+	User    userr.User     // Пользователь
 }
 
 // CompleteLogin завершает процесс входа пользователя через OAuth.

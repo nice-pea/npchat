@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -109,15 +110,6 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (AuthnPa
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 
-	// Проверка на существование пользователя с таким логином
-	if conflictUsers, err := l.Repo.List(userr.Filter{
-		BasicAuthLogin: in.Login,
-	}); err != nil {
-		return AuthnPasswordRegistrationOutput{}, err
-	} else if len(conflictUsers) > 0 {
-		return AuthnPasswordRegistrationOutput{}, ErrLoginIsAlreadyInUse
-	}
-
 	// Создать пользователя
 	user, err := userr.NewUser(in.Name, in.Nick)
 	if err != nil {
@@ -128,17 +120,33 @@ func (l *AuthnPassword) Registration(in AuthnPasswordRegistrationInput) (AuthnPa
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 
+	// Проверка на существование пользователя с таким логином
+	if conflictUsers, err := l.Repo.List(userr.Filter{
+		BasicAuthLogin: in.Login,
+	}); err != nil {
+		return AuthnPasswordRegistrationOutput{}, err
+	} else if len(conflictUsers) > 0 {
+		return AuthnPasswordRegistrationOutput{}, ErrLoginIsAlreadyInUse
+	}
+
 	// Сохранить пользователя в репозиторий
 	if err := l.Repo.Upsert(user); err != nil {
 		return AuthnPasswordRegistrationOutput{}, err
 	}
 
 	// Создать сессию для пользователя
-	session := domain.Session{
-		ID:     uuid.NewString(),
+	session := domain.Session2{
 		UserID: user.ID,
-		Token:  uuid.NewString(),
+		Name:   "todo: [название модели телефона / название браузера]",
 		Status: domain.SessionStatusVerified, // Подтвержденная сессия
+		AccessToken: domain.SessionToken{
+			Token:  uuid.NewString(),
+			Expiry: time.Now().Add(time.Minute * 10),
+		},
+		RefreshToken: domain.SessionToken{
+			Token:  uuid.NewString(),
+			Expiry: time.Now().Add(time.Hour * 24 * 60),
+		},
 	}
 	if err := l.SessionsRepo.Save(session); err != nil {
 		return AuthnPasswordRegistrationOutput{}, err
