@@ -2,11 +2,8 @@ package service
 
 import (
 	"errors"
-	"time"
 
-	"github.com/google/uuid"
-
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
@@ -15,17 +12,17 @@ type BasicAuthLoginIn struct {
 	Password string
 }
 type BasicAuthLoginOut struct {
-	Session domain.Session
+	Session sessionn.Session
 	User    userr.User
 }
 
 // Validate валидирует значение отдельно каждого параметры
 func (in BasicAuthLoginIn) Validate() error {
-	if in.Login == "" {
-		return errors.New("login is required")
+	if err := userr.ValidateBasicAuthLogin(in.Login); err != nil {
+		return err
 	}
-	if in.Password == "" {
-		return errors.New("password is required")
+	if err := userr.ValidateBasicAuthPassword(in.Password); err != nil {
+		return err
 	}
 
 	return nil
@@ -51,13 +48,8 @@ func (u *Users) BasicAuthLogin(in BasicAuthLoginIn) (BasicAuthLoginOut, error) {
 	user := matchUsers[0]
 
 	// Создать сессию для пользователя
-	session := domain.Session{
-		ID:     uuid.NewString(),
-		UserID: user.ID,
-		Token:  uuid.NewString(),
-		Status: domain.SessionStatusVerified,
-	}
-	if err = u.SessionsRepo.Save(session); err != nil {
+	session, err := sessionn.NewSession(user.ID, "", sessionn.StatusVerified)
+	if err != nil {
 		return BasicAuthLoginOut{}, err
 	}
 
@@ -89,7 +81,7 @@ func (in BasicAuthRegistrationIn) Validate() error {
 }
 
 type BasicAuthRegistrationOut struct {
-	Session domain.Session
+	Session sessionn.Session
 	User    userr.User
 }
 
@@ -130,20 +122,8 @@ func (u *Users) BasicAuthRegistration(in BasicAuthRegistrationIn) (BasicAuthRegi
 	}
 
 	// Создать сессию для пользователя
-	session := domain.Session2{
-		UserID: user.ID,
-		Name:   "todo: [название модели телефона / название браузера]",
-		Status: domain.SessionStatusVerified, // Подтвержденная сессия
-		AccessToken: domain.SessionToken{
-			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(time.Minute * 10),
-		},
-		RefreshToken: domain.SessionToken{
-			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(time.Hour * 24 * 60),
-		},
-	}
-	if err := u.SessionsRepo.Save(session); err != nil {
+	session, err := sessionn.NewSession(user.ID, "", sessionn.StatusVerified)
+	if err != nil {
 		return BasicAuthRegistrationOut{}, err
 	}
 

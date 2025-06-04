@@ -14,6 +14,7 @@ var (
 	ErrInvalidNick         = errors.New("некорректное значение Nick")
 	ErrInvalidUserCode     = errors.New("некорректное значение UserCode")
 	ErrInvalidProvider     = errors.New("некорректное значение Provider")
+	ErrInvalidChiefID      = errors.New("некорректное значение ChiefID")
 )
 
 var (

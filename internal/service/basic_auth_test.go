@@ -1,28 +1,25 @@
 package service
 
 import (
-	"github.com/google/uuid"
+	"github.com/brianvoe/gofakeit/v7"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) newRndUserWithAuthnPassword() domain.AuthnPassword {
-	ap := domain.AuthnPassword{
-		UserID:   uuid.NewString(),
-		Login:    randomString(21),
-		Password: randomPassword(),
-	}
-	err := suite.rr.users.Save(domain.User{ID: ap.UserID})
+func (suite *servicesTestSuite) newRndUserWithBasicAuth() userr.User {
+	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
 	suite.Require().NoError(err)
-	err = suite.rr.authnPassword.Save(ap)
+	ba, err := userr.NewBasicAuth(gofakeit.Noun(), randomPassword())
 	suite.Require().NoError(err)
-
-	return ap
+	err = user.AddBasicAuth(ba)
+	suite.Require().NoError(err)
+	return user
 }
 
-func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
-	suite.Run("BasicAuthLogin должен быть валидным", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
+func (suite *servicesTestSuite) Test_BasicAuthLogin() {
+	suite.Run("Login должен быть валидным", func() {
+		out, err := suite.ss.users.BasicAuthLogin(BasicAuthLoginIn{
 			Login:    " inv ald login",
 			Password: "somePassword123!",
 		})
@@ -31,7 +28,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	})
 
 	suite.Run("Password должен быть валидным", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
+		out, err := suite.ss.users.BasicAuthLogin(BasicAuthLoginIn{
 			Login:    "someLogin",
 			Password: "invalidpassword",
 		})
@@ -40,7 +37,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 	})
 
 	suite.Run("неверные данные", func() {
-		out, err := suite.ss.authnPassword.Login(BasicAuthLoginIn{
+		out, err := suite.ss.users.BasicAuthLogin(BasicAuthLoginIn{
 			Login:    "wrongLogin",
 			Password: "wrongPassword123!",
 		})
@@ -50,21 +47,21 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Login() {
 
 	suite.Run("вернется Verified сессия", func() {
 		// Создаем нового пользователя с AuthnPassword
-		uwp := suite.newRndUserWithAuthnPassword()
+		user := suite.newRndUserWithBasicAuth()
 		// Входим сессию с правильными данными
 		input := BasicAuthLoginIn{
-			Login:    uwp.Login,
-			Password: uwp.Password,
+			Login:    user.BasicAuth.Login,
+			Password: user.BasicAuth.Password,
 		}
-		output, err := suite.ss.authnPassword.Login(input)
+		output, err := suite.ss.users.BasicAuthLogin(input)
 		suite.NoError(err)
 		suite.Require().NotZero(output)
-		suite.Require().Equal(uwp.UserID, output.Session.UserID)
-		suite.Require().Equal(domain.SessionStatusVerified, output.Session.Status)
+		suite.Require().Equal(user.ID, output.Session.UserID)
+		suite.Require().Equal(sessionn.StatusVerified, output.Session.Status)
 
 		// Проверяем, что сессия сохранена в репозитории
-		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{
-			Token: output.Session.Token,
+		sessions, err := suite.rr.sessions.List(sessionn.Filter{
+			AccessToken: output.Session.AccessToken.Token,
 		})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
@@ -81,7 +78,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidLogin)
 		suite.Zero(out)
 	})
@@ -94,7 +91,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidPassword)
 		suite.Zero(out)
 	})
@@ -108,7 +105,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 
 			Nick: "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidName)
 		suite.Zero(out)
 	})
@@ -121,7 +118,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 
@@ -132,7 +129,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name2",
 			Nick:     "nick2",
 		}
-		out, err = suite.ss.authnPassword.Registration(input)
+		out, err = suite.ss.users.BasicAuthRegistration(input)
 		suite.ErrorIs(err, ErrLoginIsAlreadyInUse)
 		suite.Zero(out)
 	})
@@ -145,14 +142,14 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 		suite.Equal(input.Name, out.User.Name)
 		suite.Equal(input.Nick, out.User.Nick)
 
 		// Прочитать пользователя из репозитория
-		users, err := suite.rr.users.List(domain.UsersFilter{})
+		users, err := suite.rr.users.List(userr.Filter{})
 		suite.Require().NoError(err)
 		suite.Require().Len(users, 1)
 		suite.Equal(out.User, users[0])
@@ -166,16 +163,16 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 
 		// Проверить сессию
-		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{})
+		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
 		suite.Equal(out.Session, sessions[0])
-		suite.Equal(domain.SessionStatusVerified, sessions[0].Status)
+		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
 	suite.Run("после регистрации будет создан метод входа", func() {
@@ -186,16 +183,18 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
-		out, err := suite.ss.authnPassword.Registration(input)
+		out, err := suite.ss.users.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 
 		// Прочитать метод входа из репозитория
-		aps, err := suite.rr.authnPassword.List(domain.AuthnPasswordFilter{Login: input.Login})
+		users, err := suite.rr.users.List(userr.Filter{
+			BasicAuthLogin: input.Login,
+		})
 		suite.Require().NoError(err)
-		suite.Require().Len(aps, 1)
-		suite.Equal(out.User.ID, aps[0].UserID)
-		suite.Equal(input.Login, aps[0].Login)
-		suite.Equal(input.Password, aps[0].Password)
+		suite.Require().Len(users, 1)
+		suite.Equal(out.User.ID, users[0].ID)
+		suite.Equal(input.Login, users[0].BasicAuth.Login)
+		suite.Equal(input.Password, users[0].BasicAuth.Password)
 	})
 }

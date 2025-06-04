@@ -6,10 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter/oauthProvider"
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
 
@@ -17,27 +21,20 @@ type servicesTestSuite struct {
 	suite.Suite
 	factory *sqlite.RepositoryFactory
 	rr      struct {
-		chats         domain.ChatsRepository
-		members       domain.MembersRepository
-		invitations   domain.InvitationsRepository
-		sessions      domain.SessionsRepository
-		users         domain.UsersRepository
-		authnPassword domain.AuthnPasswordRepository
-		oauth         domain.OAuthRepository
+		chats    chatt.Repository
+		sessions sessionn.Repository
+		users    userr.Repository
 	}
 	ss struct {
-		chats         *Chats
-		members       *Members
-		invitations   *Invitations
-		sessions      *Sessions
-		authnPassword *AuthnPassword
-		oauth         *OAuth
+		chats    *Chats
+		sessions *Sessions
+		users    *Users
 	}
 	ad struct {
 		oauth OAuthProvider
 	}
-	mockOAuthTokens map[string]domain.OAuthToken
-	mockOAuthUsers  map[domain.OAuthToken]domain.OAuthUser
+	mockOAuthTokens map[string]userr.OpenAuthToken
+	mockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
 func Test_ServicesTestSuite(t *testing.T) {
@@ -57,31 +54,27 @@ func (suite *servicesTestSuite) SetupSubTest() {
 
 	// Инициализация репозиториев
 	suite.rr.chats = suite.factory.NewChatsRepository()
-	suite.rr.members = suite.factory.NewMembersRepository()
-	suite.rr.invitations = suite.factory.NewInvitationsRepository()
 	suite.rr.users = suite.factory.NewUsersRepository()
 	suite.rr.sessions = suite.factory.NewSessionsRepository()
-	suite.rr.authnPassword = suite.factory.NewAuthnPasswordRepository()
-	suite.rr.oauth = suite.factory.NewOAuthRepository()
 
 	// Инициализация адаптеров
 	suite.mockOAuthUsers = generateMockUsers()
-	suite.mockOAuthTokens = make(map[string]domain.OAuthToken, len(suite.mockOAuthUsers))
+	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
 	for token := range suite.mockOAuthUsers {
 		suite.mockOAuthTokens[randomString(13)] = token
 	}
 	suite.ad.oauth = &oauthProvider.Mock{
-		ExchangeFunc: func(code string) (domain.OAuthToken, error) {
+		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
 			token, ok := suite.mockOAuthTokens[code]
 			if !ok {
-				return domain.OAuthToken{}, errors.New("token not found")
+				return userr.OpenAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
 		},
-		UserFunc: func(token domain.OAuthToken) (domain.OAuthUser, error) {
+		UserFunc: func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 			user, ok := suite.mockOAuthUsers[token]
 			if !ok {
-				return domain.OAuthUser{}, errors.New("user not found")
+				return userr.OpenAuthUser{}, errors.New("user not found")
 			}
 			return user, nil
 		},
@@ -92,33 +85,14 @@ func (suite *servicesTestSuite) SetupSubTest() {
 
 	// Создание сервисов
 	suite.ss.chats = &Chats{
-		ChatsRepo:   suite.rr.chats,
-		MembersRepo: suite.rr.members,
-	}
-	suite.ss.members = &Members{
-		ChatsRepo:   suite.rr.chats,
-		MembersRepo: suite.rr.members,
-	}
-	suite.ss.invitations = &Invitations{
-		ChatsRepo:       suite.rr.chats,
-		MembersRepo:     suite.rr.members,
-		InvitationsRepo: suite.rr.invitations,
-		UsersRepo:       suite.rr.users,
+		Repo: suite.rr.chats,
 	}
 	suite.ss.sessions = &Sessions{
 		SessionsRepo: suite.rr.sessions,
 	}
-	suite.ss.authnPassword = &AuthnPassword{
-		AuthnPasswordRepo: suite.rr.authnPassword,
-		SessionsRepo:      suite.rr.sessions,
-		UsersRepo:         suite.rr.users,
-	}
-	suite.ss.oauth = &OAuth{
-		Providers: OAuthProviders{
-			suite.ad.oauth.Name(): suite.ad.oauth,
-		},
-		OAuthRepo:    suite.rr.oauth,
-		UsersRepo:    suite.rr.users,
+	suite.ss.users = &Users{
+		Providers:    OAuthProviders{suite.ad.oauth.Name(): suite.ad.oauth},
+		Repo:         suite.rr.users,
 		SessionsRepo: suite.rr.sessions,
 	}
 }
@@ -129,33 +103,68 @@ func (suite *servicesTestSuite) TearDownSubTest() {
 	suite.Require().NoError(err)
 }
 
-// saveChat сохраняет чат в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveChat(chat domain.Chat) domain.Chat {
-	err := suite.rr.chats.Save(chat)
+// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+func (suite *servicesTestSuite) upsertChat(chat chatt.Chat) chatt.Chat {
+	err := suite.rr.chats.Upsert(chat)
 	suite.Require().NoError(err)
 
 	return chat
 }
 
-// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveMember(member domain.Member) domain.Member {
-	err := suite.rr.members.Save(member)
+// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+func (suite *servicesTestSuite) rndChat() chatt.Chat {
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.NewString())
 	suite.Require().NoError(err)
 
-	return member
+	return chat
 }
 
-// saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
-	err := suite.rr.invitations.Save(invitation)
+// rndParticipant создает случайного участника
+func (suite *servicesTestSuite) rndParticipant() chatt.Participant {
+	p, err := chatt.NewParticipant(uuid.NewString())
 	suite.Require().NoError(err)
-
-	return invitation
+	return p
 }
+
+// rndParticipant создает случайного участника
+func (suite *servicesTestSuite) newParticipant(userID string) chatt.Participant {
+	p, err := chatt.NewParticipant(userID)
+	suite.Require().NoError(err)
+	return p
+}
+
+func (suite *servicesTestSuite) addRndParticipant(chat *chatt.Chat) chatt.Participant {
+	p, err := chatt.NewParticipant(uuid.NewString())
+	suite.Require().NoError(err)
+	suite.Require().NoError(chat.AddParticipant(p))
+
+	return p
+}
+
+func (suite *servicesTestSuite) addParticipant(chat *chatt.Chat, p chatt.Participant) {
+	suite.Require().NoError(chat.AddParticipant(p))
+}
+
+//
+//// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
+//func (suite *servicesTestSuite) saveMember(participant chatt.Participant) chatt.Participant {
+//	err := suite.rr..Save(participant)
+//	suite.Require().NoError(err)
+//
+//	return participant
+//}
+
+//// saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
+//func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
+//	err := suite.rr.invitations.Save(invitation)
+//	suite.Require().NoError(err)
+//
+//	return invitation
+//}
 
 // saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveUser(user domain.User) domain.User {
-	err := suite.rr.users.Save(user)
+func (suite *servicesTestSuite) saveUser(user userr.User) userr.User {
+	err := suite.rr.users.Upsert(user)
 	suite.Require().NoError(err)
 
 	return user
@@ -172,8 +181,8 @@ func randomString(n int) string {
 }
 
 // Генерация случайного OAuthToken
-func randomOAuthToken() domain.OAuthToken {
-	return domain.OAuthToken{
+func randomOAuthToken() userr.OpenAuthToken {
+	return userr.OpenAuthToken{
 		AccessToken:  randomString(32),
 		TokenType:    "Bearer",
 		RefreshToken: randomString(32),
@@ -182,8 +191,8 @@ func randomOAuthToken() domain.OAuthToken {
 }
 
 // Генерация случайного OAuthUser
-func randomOAuthUser() domain.OAuthUser {
-	return domain.OAuthUser{
+func randomOAuthUser() userr.OpenAuthUser {
+	return userr.OpenAuthUser{
 		ID:      randomString(21), // Providers ID обычно длина ~21
 		Email:   randomString(8) + "@example.com",
 		Name:    randomString(6) + " " + randomString(7),
@@ -191,8 +200,8 @@ func randomOAuthUser() domain.OAuthUser {
 	}
 }
 
-func generateMockUsers() map[domain.OAuthToken]domain.OAuthUser {
-	tokenToUser := make(map[domain.OAuthToken]domain.OAuthUser)
+func generateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
+	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
 	for i := 0; i < 10; i++ {
 		token := randomOAuthToken()

@@ -28,7 +28,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			SubjectID: uuid.NewString(),
 			ChatID:    uuid.NewString(),
 		}
-		invitations, err := suite.ss.invitations.ChatInvitations(input)
+		invitations, err := suite.ss.chats.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Empty(invitations)
@@ -36,16 +36,13 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 
 	suite.Run("субъект должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID:          uuid.NewString(),
-			ChiefUserID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Получить список приглашений
 		input := ChatInvitationsIn{
 			ChatID:    chat.ID,
 			SubjectID: uuid.NewString(),
 		}
-		invitations, err := suite.ss.invitations.ChatInvitations(input)
+		invitations, err := suite.ss.chats.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
 		suite.Empty(invitations)
@@ -53,37 +50,20 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 
 	suite.Run("пустой список из чата без приглашений", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
-		// Создать чат
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Получить список приглашений
 		input := ChatInvitationsIn{
-			SubjectID: member.UserID,
+			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
-		invitations, err := suite.ss.invitations.ChatInvitations(input)
+		invitations, err := suite.ss.chats.ChatInvitations(input)
 		suite.NoError(err)
 		suite.Empty(invitations)
 	})
 
 	suite.Run("субъект не администратор чата и видит только отправленные им приглашения", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID:          uuid.NewString(),
-			ChiefUserID: uuid.NewString(),
-		})
-		// Создать участника в чате
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать приглашения отправленные участником
 		subjectInvitations := make([]domain.Invitation, 3)
 		for i := range subjectInvitations {
@@ -119,17 +99,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 	})
 
 	suite.Run("субъект является администратором чата и видит все отправленные приглашения в чат", func() {
-		// Создать чат с указанием главного администратора
-		chat := suite.saveChat(domain.Chat{
-			ID:          uuid.NewString(),
-			ChiefUserID: uuid.NewString(),
-		})
-		// Создать участника для главного администратора в чате
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: chat.ChiefUserID,
-			ChatID: chat.ID,
-		})
+		// Создать чат
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать приглашения отправленные какими-то пользователями
 		invitationsSaved := make([]domain.Invitation, 4)
 		for i := range invitationsSaved {
@@ -277,7 +248,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("субъект должен быть участником", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
@@ -295,9 +266,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("приглашаемый пользователь должен существовать", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
 		member := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
@@ -318,9 +287,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("приглашаемый пользователь не должен состоять в этом чате", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
 		subjectMember := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
@@ -351,9 +318,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("одновременно не может существовать несколько приглашений одного пользователя в этот чат", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
 		subjectMember := suite.saveMember(domain.Member{
 			ID:     uuid.NewString(),
@@ -382,9 +347,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("любой участник может приглашать много пользователей", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать много приглашений от разных участников
 		var createdInvitations []domain.Invitation
 		for range 5 {
@@ -449,9 +412,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("пользователь должен существовать", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать приглашение
 		invitation := suite.saveInvitation(domain.Invitation{
 			ID:            uuid.NewString(),
@@ -490,9 +451,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		user := suite.saveUser(domain.User{
 			ID: uuid.NewString(),
 		})
@@ -546,7 +505,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})

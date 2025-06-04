@@ -41,7 +41,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника в другом чате
@@ -63,7 +63,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 
 	suite.Run("возвращается список участников чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать несколько участников в чате
@@ -121,7 +121,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Покинуть чат
@@ -136,7 +136,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь не должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
@@ -158,7 +158,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 
 	suite.Run("после выхода пользователь перестает быть участником", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника в этом чате
@@ -224,7 +224,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 
 	suite.Run("subject должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Удалить участника
@@ -240,7 +240,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 
 	suite.Run("subject должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID: uuid.NewString(),
 		})
 		// Создать участника
@@ -262,7 +262,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 
 	suite.Run("user должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})
@@ -285,7 +285,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 
 	suite.Run("после удаления участник перестает быть участником", func() {
 		// Создать чат
-		chat := suite.saveChat(domain.Chat{
+		chat := suite.upsertChat(domain.Chat{
 			ID:          uuid.NewString(),
 			ChiefUserID: uuid.NewString(),
 		})

@@ -99,7 +99,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	//suite.Run("токен должен соответствовать пользователю", func() {
 	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
 	//	input := SessionsFindIn{
-	//		Token: uws.Session.Token,
+	//		AccessToken: uws.Session.AccessToken,
 	//	}
 	//	sessions, err := suite.ss.sessions.Find(input)
 	//	suite.NoError(err)
@@ -120,7 +120,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	//OAuth{
 	//	StateUnq
 	//	UserCode
-	//	Token
+	//	AccessToken
 	//	ExpiresAt
 	//	RefreshToken
 	//}
@@ -128,7 +128,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	//session {
 	//	ID
 	//	userID
-	//	Token
+	//	AccessToken
 	//	Status [New|Pending|Verified|Expired|Revoked|Failed]
 	//}
 	//
@@ -139,7 +139,7 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 	//suite.Run("вернется существующая сессия", func() {
 	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
 	//	input := SessionsFindIn{
-	//		Token: uws.Session.Token,
+	//		AccessToken: uws.Session.AccessToken,
 	//	}
 	//	sessions, err := suite.ss.sessions.Find(input)
 	//	suite.NoError(err)

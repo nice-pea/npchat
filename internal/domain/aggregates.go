@@ -1,27 +1,5 @@
 package domain
 
-import (
-	"time"
-)
-
-// Сессия
-
-type Session2 struct {
-	//ID           string // ID сессии
-	UserID       string
-	Name         string
-	Status       int // Статус сессии
-	AccessToken  SessionToken
-	RefreshToken SessionToken
-
-	//Client SessionClient
-}
-
-type SessionToken struct {
-	Token  string
-	Expiry time.Time
-}
-
 //type SessionClient struct {
 //	ID   string // Идентификатор устройства
 //	Type string // android/ios/web
@@ -42,7 +20,7 @@ type SessionToken struct {
 //
 //type PushProvider struct {
 //	Name  string // apn, fcm, gcm, sms
-//	Token string // Токен для отправки уведомлений
+//	AccessToken string // Токен для отправки уведомлений
 //}
 
 // Сообщение

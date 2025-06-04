@@ -25,11 +25,11 @@ func CreateChat(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.CreateIn{
+			input := service.CreateChatIn{
 				ChiefUserID: context.Session().UserID,
 				Name:        rb.Name,
 			}
 
-			return context.Services().Chats().Create(input)
+			return context.Services().Chats().CreateChat(input)
 		})
 }
