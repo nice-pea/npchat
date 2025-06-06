@@ -145,6 +145,16 @@ func (suite *servicesTestSuite) addParticipant(chat *chatt.Chat, p chatt.Partici
 	suite.Require().NoError(chat.AddParticipant(p))
 }
 
+func (suite *servicesTestSuite) newInvitation(subjectID, recipientID string) chatt.Invitation {
+	i, err := chatt.NewInvitation(subjectID, recipientID)
+	suite.Require().NoError(err)
+	return i
+}
+
+func (suite *servicesTestSuite) addInvitation(chat *chatt.Chat, i chatt.Invitation) {
+	suite.Require().NoError(chat.AddInvitation(i))
+}
+
 //
 //// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
 //func (suite *servicesTestSuite) saveMember(participant chatt.Participant) chatt.Participant {
