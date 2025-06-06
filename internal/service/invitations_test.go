@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
@@ -420,7 +419,7 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		suite.addInvitation(&chat, invitation)
 		// Отменить приглашение
 		input := CancelInvitationIn{
-			SubjectID:    participant.UserID,
+			SubjectID:    participantOther.UserID,
 			InvitationID: invitation.ID,
 		}
 		err := suite.ss.chats.CancelInvitation(input)
