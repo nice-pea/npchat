@@ -374,97 +374,79 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 			SubjectID:    uuid.NewString(),
 			InvitationID: uuid.NewString(),
 		}
-		err := suite.ss.invitations.CancelInvitation(input)
+		err := suite.ss.chats.CancelInvitation(input)
 		// Вернется ошибка, потому что приглашения не существует
 		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
 
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(domain.Chat{
-			ID:          uuid.NewString(),
-			ChiefUserID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
-		subjectMember := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
+		participant := suite.addRndParticipant(&chat)
 		// Объявить id приглашаемого пользователя
-		userID := uuid.NewString()
+		recipientID := uuid.NewString()
 
 		// Список id тех пользователей, которые могут отменять приглашение
 		cancelInvitationSubjectIDs := []string{
-			chat.ChiefUserID,     // главный администратор
-			subjectMember.UserID, // пригласивший
-			userID,               // приглашаемый
+			chat.ChiefID,       // главный администратор
+			participant.UserID, // пригласивший
+			recipientID,        // приглашаемый
 		}
 		// Каждый попытается отменить приглашение
 		for _, subjectUserID := range cancelInvitationSubjectIDs {
 			// Создать приглашение
-			invitation := suite.saveInvitation(domain.Invitation{
-				ID:            uuid.NewString(),
-				SubjectUserID: subjectMember.UserID,
-				UserID:        userID,
-				ChatID:        chat.ID,
-			})
+			invitation := suite.newInvitation(participant.UserID, recipientID)
+			suite.addInvitation(&chat, invitation)
 			// Отменить приглашение
 			input := CancelInvitationIn{
 				SubjectID:    subjectUserID,
 				InvitationID: invitation.ID,
 			}
-			err := suite.ss.invitations.CancelInvitation(input)
+			err := suite.ss.chats.CancelInvitation(input)
 			suite.NoError(err)
 		}
 	})
 
 	suite.Run("другие участники не могут отменять приглашать ", func() {
+		// Создать чат
+		chat := suite.upsertChat(suite.rndChat())
+		// Создать участника
+		participant := suite.addRndParticipant(&chat)
 		// Случайный участник
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
-		})
+		participantOther := suite.addRndParticipant(&chat)
 		// Создать приглашение
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-			ChatID:        member.ChatID,
-		})
+		invitation := suite.newInvitation(participant.UserID, uuid.NewString())
+		suite.addInvitation(&chat, invitation)
 		// Отменить приглашение
 		input := CancelInvitationIn{
-			SubjectID:    member.UserID,
+			SubjectID:    participant.UserID,
 			InvitationID: invitation.ID,
 		}
-		err := suite.ss.invitations.CancelInvitation(input)
+		err := suite.ss.chats.CancelInvitation(input)
 		// Вернется ошибка, потому что случайный участник не может отменять приглашение
 		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
 	})
 
 	suite.Run("после отмены, приглашение удаляется", func() {
+		// Создать чат
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
-		subjectMember := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-		})
+		participant := suite.addRndParticipant(&chat)
 		// Создать приглашение
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: subjectMember.UserID,
-			UserID:        uuid.NewString(),
-		})
+		invitation := suite.newInvitation(participant.UserID, uuid.NewString())
+		suite.addInvitation(&chat, invitation)
 		// Отменить приглашение
 		input := CancelInvitationIn{
-			SubjectID:    invitation.SubjectUserID,
+			SubjectID:    invitation.SubjectID,
 			InvitationID: invitation.ID,
 		}
-		err := suite.ss.invitations.CancelInvitation(input)
+		err := suite.ss.chats.CancelInvitation(input)
 		suite.Require().NoError(err)
 		// Получить список приглашений
-		invitations, err := suite.ss.invitations.InvitationsRepo.List(domain.InvitationsFilter{})
+		chats, err := suite.rr.chats.List(chatt.Filter{})
 		suite.NoError(err)
-		suite.Empty(invitations)
+		suite.Require().Len(chats, 1)
+		suite.Empty(chats[0].Invitations)
 	})
 }
