@@ -191,7 +191,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 			ChatID:    uuid.NewString(),
 			UserID:    uuid.NewString(),
 		}
-		invitation, err := suite.ss.invitations.SendInvitation(input)
+		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, ErrChatNotExists)
 		suite.Zero(invitation)
@@ -199,17 +199,14 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("субъект должен быть участником", func() {
 		// Создать чат
-		chat := suite.upsertChat(domain.Chat{
-			ID:          uuid.NewString(),
-			ChiefUserID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Отправить приглашение
 		input := SendInvitationIn{
 			SubjectID: uuid.NewString(),
 			ChatID:    chat.ID,
 			UserID:    uuid.NewString(),
 		}
-		invitation, err := suite.ss.invitations.SendInvitation(input)
+		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что субъект не является участником чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
 		suite.Zero(invitation)
@@ -219,18 +216,14 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
+		participant := suite.addRndParticipant(&chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
-			SubjectID: member.UserID,
+			SubjectID: participant.UserID,
 			UserID:    uuid.NewString(),
 		}
-		invitation, err := suite.ss.invitations.SendInvitation(input)
+		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемого пользователя не существует
 		suite.ErrorIs(err, ErrUserNotExists)
 		suite.Zero(invitation)
@@ -240,28 +233,16 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
-		subjectMember := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
-		// Создать приглашаемого пользователя
-		targetUser := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
+		participant := suite.addRndParticipant(&chat)
 		// Создать участника для приглашаемого пользователя
-		suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: targetUser.ID,
-			ChatID: chat.ID,
-		})
+		participantInvitating := suite.addRndParticipant(&chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
-			SubjectID: subjectMember.UserID,
-			UserID:    targetUser.ID,
+			SubjectID: participant.UserID,
+			UserID:    participantInvitating.UserID,
 		}
-		invitation, err := suite.ss.invitations.SendInvitation(input)
+		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемый пользователь уже является участником этого чата
 		suite.ErrorIs(err, ErrUserIsAlreadyInChat)
 		suite.Zero(invitation)
@@ -271,26 +252,20 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
 		// Создать участника
-		subjectMember := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: chat.ID,
-		})
+		participant := suite.addRndParticipant(&chat)
 		// Создать приглашаемого пользователя
-		targetUser := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
+		targetUserID := uuid.NewString()
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
-			SubjectID: subjectMember.UserID,
-			UserID:    targetUser.ID,
+			SubjectID: participant.UserID,
+			UserID:    targetUserID,
 		}
-		invitation, err := suite.ss.invitations.SendInvitation(input)
+		invitation, err := suite.ss.chats.SendInvitation(input)
 		suite.NoError(err)
 		suite.Require().NotZero(invitation)
 		// Отправить повторно приглашение
-		invitation, err = suite.ss.invitations.SendInvitation(input)
+		invitation, err = suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что этот пользователь уже приглашен в чат
 		suite.ErrorIs(err, ErrUserIsAlreadyInvited)
 		suite.Zero(invitation)
@@ -300,40 +275,31 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
 		// Создать много приглашений от разных участников
-		var createdInvitations []domain.Invitation
+		var invitationsCreated []chatt.Invitation
 		for range 5 {
 			// Создать участника
-			subjectMember := suite.saveMember(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			})
+			participant := suite.addRndParticipant(&chat)
 			for range 5 {
-				// Создать приглашаемого пользователя
-				targetUser := suite.saveUser(domain.User{
-					ID: uuid.NewString(),
-				})
 				// Отправить приглашение
 				input := SendInvitationIn{
 					ChatID:    chat.ID,
-					SubjectID: subjectMember.UserID,
-					UserID:    targetUser.ID,
+					SubjectID: participant.UserID,
+					UserID:    uuid.NewString(),
 				}
-				invitation, err := suite.ss.invitations.SendInvitation(input)
+				out, err := suite.ss.chats.SendInvitation(input)
 				suite.NoError(err)
-				suite.Require().NotZero(invitation)
-				createdInvitations = append(createdInvitations, invitation)
+				suite.Require().NotZero(out)
+				invitationsCreated = append(invitationsCreated, out.Invitation)
 			}
 		}
 		// Получить список приглашений
-		invitationsFromRepo, err := suite.ss.invitations.InvitationsRepo.List(domain.InvitationsFilter{})
+		chats, err := suite.rr.chats.List(chatt.Filter{})
 		suite.NoError(err)
 		// В списке содержатся все созданные приглашения
-		suite.Require().Len(invitationsFromRepo, len(createdInvitations))
-		for i, createdInvitation := range createdInvitations {
-			suite.Equal(createdInvitation.ChatID, invitationsFromRepo[i].ChatID)
-			suite.Equal(createdInvitation.SubjectUserID, invitationsFromRepo[i].SubjectUserID)
-			suite.Equal(createdInvitation.UserID, invitationsFromRepo[i].UserID)
+		suite.Require().Len(chats, 1)
+		suite.Require().Len(chats[0].Invitations, len(invitationsCreated))
+		for _, createdInvitation := range invitationsCreated {
+			suite.Contains(chats[0].Invitations, createdInvitation)
 		}
 	})
 }
