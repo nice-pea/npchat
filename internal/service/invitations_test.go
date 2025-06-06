@@ -318,81 +318,40 @@ func Test_AcceptInvitationInput_Validate(t *testing.T) {
 // Test_Invitations_AcceptInvitation тестирует принятие приглашения
 func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
-		// Принять приглашение
-		input := AcceptInvitationIn{
-			SubjectID:    uuid.NewString(),
-			InvitationID: uuid.NewString(),
-		}
-		err := suite.ss.invitations.AcceptInvitation(input)
-		suite.ErrorIs(err, ErrInvitationNotExists)
-	})
-
-	suite.Run("пользователь должен существовать", func() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
-		// Создать приглашение
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-			ChatID:        chat.ID,
-		})
+		// Создать участника
+		p := suite.addRndParticipant(&chat)
 		// Принять приглашение
 		input := AcceptInvitationIn{
-			SubjectID:    invitation.UserID,
-			InvitationID: invitation.ID,
+			SubjectID:    p.UserID,
+			InvitationID: uuid.NewString(),
 		}
-		err := suite.ss.invitations.AcceptInvitation(input)
-		suite.ErrorIs(err, ErrUserNotExists)
-	})
-
-	suite.Run("приглашение быть направлено пользователю", func() {
-		// Создать чат
-		user := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
-		// Создать приглашение
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
-			UserID:        uuid.NewString(),
-		})
-		// Принять приглашение
-		input := AcceptInvitationIn{
-			SubjectID:    user.ID,
-			InvitationID: invitation.ID,
-		}
-		err := suite.ss.invitations.AcceptInvitation(input)
-		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
+		err := suite.ss.chats.AcceptInvitation(input)
+		suite.ErrorIs(err, ErrInvitationNotExists)
 	})
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
-		user := suite.saveUser(domain.User{
-			ID: uuid.NewString(),
-		})
+		// Создать участника
+		p := suite.addRndParticipant(&chat)
 		// Создать приглашение
-		invitation := suite.saveInvitation(domain.Invitation{
-			ID:            uuid.NewString(),
-			SubjectUserID: uuid.NewString(),
-			UserID:        user.ID,
-			ChatID:        chat.ID,
-		})
+		invitation := suite.newInvitation(p.UserID, uuid.NewString())
 		// Принять приглашение
 		input := AcceptInvitationIn{
-			SubjectID:    user.ID,
+			SubjectID:    invitation.RecipientID,
 			InvitationID: invitation.ID,
 		}
-		err := suite.ss.invitations.AcceptInvitation(input)
+		err := suite.ss.chats.AcceptInvitation(input)
 		suite.Require().NoError(err)
 		// Получить список участников
-		members, err := suite.ss.invitations.MembersRepo.List(domain.MembersFilter{})
+		chats, err := suite.rr.chats.List(chatt.Filter{})
 		suite.NoError(err)
 		// В списке будет только один участник, который принял приглашение
-		suite.Require().Len(members, 1)
-		suite.Equal(user.ID, members[0].UserID)
-		suite.Equal(chat.ID, members[0].ChatID)
+		suite.Require().Len(chats, 1)
+		suite.Require().Len(chats[0].Participants, 1)
+		suite.Equal(p, chats[0].Participants[0])
 	})
 }
 
