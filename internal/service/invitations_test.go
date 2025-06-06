@@ -337,6 +337,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		p := suite.addRndParticipant(&chat)
 		// Создать приглашение
 		invitation := suite.newInvitation(p.UserID, uuid.NewString())
+		suite.addInvitation(&chat, invitation)
 		// Принять приглашение
 		input := AcceptInvitationIn{
 			SubjectID:    invitation.RecipientID,
@@ -385,7 +386,6 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		participant := suite.addRndParticipant(&chat)
 		// Объявить id приглашаемого пользователя
 		recipientID := uuid.NewString()
-
 		// Список id тех пользователей, которые могут отменять приглашение
 		cancelInvitationSubjectIDs := []string{
 			chat.ChiefID,       // главный администратор
