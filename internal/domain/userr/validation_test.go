@@ -1,4 +1,4 @@
-package domain
+package userr
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_AuthnPassword_ValidateLogin(t *testing.T) {
+func TestValidateBasicAuthLogin(t *testing.T) {
 	tests := []struct {
 		testname string
 		login    string
@@ -42,8 +42,7 @@ func Test_AuthnPassword_ValidateLogin(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testname, func(t *testing.T) {
-			ap := &AuthnPassword{Login: tt.login}
-			if err := ap.ValidateLogin(); tt.wantErr {
+			if err := ValidateBasicAuthLogin(tt.login); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -52,7 +51,7 @@ func Test_AuthnPassword_ValidateLogin(t *testing.T) {
 	}
 }
 
-func Test_AuthnPassword_ValidatePassword(t *testing.T) {
+func TestValidateBasicAuthPassword(t *testing.T) {
 	tests := []struct {
 		testname string
 		password string
@@ -80,8 +79,7 @@ func Test_AuthnPassword_ValidatePassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testname, func(t *testing.T) {
-			ap := &AuthnPassword{Password: tt.password}
-			if err := ap.ValidatePassword(); tt.wantErr {
+			if err := ValidateBasicAuthPassword(tt.password); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -90,48 +88,79 @@ func Test_AuthnPassword_ValidatePassword(t *testing.T) {
 	}
 }
 
-func Test_AuthnPassword_ValidateUserID(t *testing.T) {
+func TestValidateUserName(t *testing.T) {
 	tests := []struct {
 		testname string
-		userID   string
+		name     string
 		wantErr  bool
 	}{
-		{
-			testname: "empty user ID",
-			userID:   "",
-			wantErr:  true,
-		},
-		{
-			testname: "invalid UUID format",
-			userID:   "not-a-uuid",
-			wantErr:  true,
-		},
-		{
-			testname: "UUID with invalid characters",
-			userID:   "123e4567-e89b-12d3-a456-42661417400g",
-			wantErr:  true,
-		},
-		{
-			testname: "UUID wrong length",
-			userID:   "123e4567-e89b-12d3-a456",
-			wantErr:  true,
-		},
-		{
-			testname: "UUID with missing hyphens",
-			userID:   "123e4567e89b12d3a456426614174000",
-			wantErr:  false,
-		},
-		{
-			testname: "valid user ID",
-			userID:   "123e4567-e89b-12d3-a456-426614174000",
-			wantErr:  false,
-		},
-	}
+		// Invalid cases
+		{testname: "empty name", name: "", wantErr: true},
+		{testname: "whitespace only", name: " ", wantErr: true},
+		{testname: "control characters", name: "q\n\t\r\a\f\vq", wantErr: true},
+		{testname: "leading space", name: " Name", wantErr: true},
+		{testname: "trailing space", name: "Name ", wantErr: true},
+		{testname: "too long name", name: strings.Repeat("名", 35+1), wantErr: true},
 
+		// Valid ASCII cases
+		{testname: "single character", name: "q", wantErr: false},
+		{testname: "single digit", name: "1", wantErr: false},
+		{testname: "lowercase name", name: "name", wantErr: false},
+		{testname: "alphanumeric name", name: "Name2", wantErr: false},
+		{testname: "name with space", name: "first last", wantErr: false},
+
+		// Unicode cases (valid if supported)
+		{testname: "cyrillic letters", name: "ИмяФамилия", wantErr: false},
+		{testname: "chinese characters", name: "名字", wantErr: false},
+		{testname: "emoji", name: "😊nick", wantErr: false},
+		{testname: "special unicode (ñ, é)", name: "niño café", wantErr: false},
+		{testname: "japanese (kanji + hiragana)", name: "名前なまえ", wantErr: false},
+	}
 	for _, tt := range tests {
 		t.Run(tt.testname, func(t *testing.T) {
-			ap := &AuthnPassword{UserID: tt.userID}
-			if err := ap.ValidateUserID(); tt.wantErr {
+			if err := ValidateUserName(tt.name); tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateUserNick(t *testing.T) {
+	tests := []struct {
+		testname string
+		nick     string
+		wantErr  bool
+	}{
+		// Invalid cases
+		{testname: "whitespace only", nick: " ", wantErr: true},
+		{testname: "control characters", nick: "\n\t\r\a\f\v", wantErr: true},
+		{testname: "space in middle", nick: "first last", wantErr: true},
+		{testname: "surrounding spaces", nick: " name ", wantErr: true},
+		{testname: "digits only", nick: "1111", wantErr: true},
+		{testname: "special characters", nick: "-!@#$%^&*()+}{:\"'?><.", wantErr: true},
+		{testname: "trailing underscore", nick: "name_", wantErr: true},
+		{testname: "leading underscore", nick: "_name", wantErr: true},
+		{testname: "hyphen in middle", nick: "first-last", wantErr: true},
+		{testname: "cyrillic letters", nick: "ИмяФамилия", wantErr: true},
+		{testname: "chinese characters", nick: "名字", wantErr: true},
+		{testname: "emoji", nick: "😊nick", wantErr: true}, // или true, если эмодзи запрещены
+		{testname: "special unicode (ñ, é)", nick: "niño café", wantErr: true},
+		{testname: "japanese (kanji + hiragana)", nick: "名前なまえ", wantErr: true},
+		{testname: "too long name", nick: strings.Repeat("a", 35+1), wantErr: true},
+
+		// Valid cases
+		{testname: "empty nick", nick: "", wantErr: false},
+		{testname: "valid simple name", nick: "name", wantErr: false},
+		{testname: "valid name with digits", nick: "1na1me1", wantErr: false},
+		{testname: "valid underscore separated", nick: "first_last", wantErr: false},
+		{testname: "alphabetic", nick: "abcdefghijklmnopqrstuvwxyz", wantErr: false},
+		{testname: "alphabetic", nick: "ABCDEFGHIJKLMNOPQRSTUVWXYZ", wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testname, func(t *testing.T) {
+			if err := ValidateUserNick(tt.nick); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
