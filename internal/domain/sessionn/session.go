@@ -8,6 +8,7 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
+// Session представляет собой агрегат сессии
 type Session struct {
 	ID           string // ID сессии
 	UserID       string // ID пользователя, к которому относится сессия

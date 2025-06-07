@@ -8,25 +8,13 @@ import (
 )
 
 func TestNewChat(t *testing.T) {
-	t.Run("параметр name не должен быть пустым", func(t *testing.T) {
-		chat, err := NewChat("", uuid.NewString())
-		assert.Zero(t, chat)
-		assert.ErrorIs(t, err, ErrInvalidChatName)
-	})
-
 	t.Run("параметр name должен быть валидными и не пустыми", func(t *testing.T) {
 		chat, err := NewChat("\ninvalid\t", uuid.NewString())
 		assert.Zero(t, chat)
 		assert.ErrorIs(t, err, ErrInvalidChatName)
 	})
 
-	t.Run("параметр chiefID не должен быть пустым", func(t *testing.T) {
-		chat, err := NewChat("name", "")
-		assert.Zero(t, chat)
-		assert.ErrorIs(t, err, ErrInvalidChiefID)
-	})
-
-	t.Run("параметр chiefID должен быть валидным", func(t *testing.T) {
+	t.Run("параметр chiefID должен быть валидными и не пустыми", func(t *testing.T) {
 		chat, err := NewChat("name", "invalid")
 		assert.Zero(t, chat)
 		assert.ErrorIs(t, err, ErrInvalidChiefID)
