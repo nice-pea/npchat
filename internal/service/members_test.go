@@ -6,15 +6,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
-
-// assertEqualMembers сравнивает поля domain.Member
-func (suite *servicesTestSuite) assertEqualMembers(expected, actual domain.Member) {
-	suite.Equal(expected.ID, actual.ID)
-	suite.Equal(expected.UserID, actual.UserID)
-	suite.Equal(expected.ChatID, actual.ChatID)
-}
 
 // Test_ChatMembersInput_Validate тестирует валидацию входящих параметров
 func Test_ChatMembersInput_Validate(t *testing.T) {
@@ -34,63 +28,48 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 			ChatID:    uuid.NewString(),
 			SubjectID: uuid.NewString(),
 		}
-		members, err := suite.ss.members.ChatMembers(input)
+		out, err := suite.ss.chats.ChatMembers(input)
 		suite.ErrorIs(err, ErrChatNotExists)
-		suite.Empty(members)
+		suite.Empty(out)
 	})
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
-		// Создать участника в другом чате
-		member := suite.saveMember(domain.Member{
-			ID:     uuid.NewString(),
-			UserID: uuid.NewString(),
-			ChatID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Запросить список участников чата
 		input := ChatMembersIn{
 			ChatID:    chat.ID,
-			SubjectID: member.UserID,
+			SubjectID: uuid.NewString(),
 		}
-		members, err := suite.ss.members.ChatMembers(input)
+		out, err := suite.ss.chats.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
-		suite.Empty(members)
+		suite.Empty(out)
 	})
 
 	suite.Run("возвращается список участников чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(domain.Chat{
-			ID: uuid.NewString(),
-		})
+		chat := suite.upsertChat(suite.rndChat())
 		// Создать несколько участников в чате
 		const membersAllCount = 20
-		membersSaved := make([]domain.Member, membersAllCount)
+		participants := make([]chatt.Participant, membersAllCount)
 		for i := range membersAllCount {
 			// Создать участника в чате
-			membersSaved[i] = suite.saveMember(domain.Member{
-				ID:     uuid.NewString(),
-				UserID: uuid.NewString(),
-				ChatID: chat.ID,
-			})
+			participants[i] = suite.addRndParticipant(&chat)
 		}
 		// Запрашивать список будет первый участник
-		subjectMember := membersSaved[0]
+		participant := participants[0]
 		// Получить список участников в чате
 		input := ChatMembersIn{
-			ChatID:    subjectMember.ChatID,
-			SubjectID: subjectMember.UserID,
+			ChatID:    chat.ID,
+			SubjectID: participant.UserID,
 		}
-		membersFromRepo, err := suite.ss.members.ChatMembers(input)
+		membersFromRepo, err := suite.ss.chats.ChatMembers(input)
 		suite.NoError(err)
-		if suite.Len(membersFromRepo, membersAllCount) {
-			// Сравнить каждого сохраненного участника с ранее созданным
-			for i := range membersSaved {
-				suite.assertEqualMembers(membersSaved[i], membersFromRepo[i])
-			}
+		suite.Require().Len(membersFromRepo, membersAllCount)
+		// Сравнить каждого сохраненного участника с ранее созданным
+		for i := range participants {
+			suite.Contains(membersFromRepo, participants[i])
 		}
 	})
 }
