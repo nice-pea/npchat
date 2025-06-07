@@ -15,9 +15,9 @@ func MyChats(router http2.Router) {
 		"GET /chats",
 		middleware.ClientAuthChain, // Цепочка middleware, проверяющая авторизацию пользователя
 		func(context http2.Context) (any, error) {
-			input := service.UserChatsInput{
-				SubjectUserID: context.Session().UserID,
-				UserID:        context.Session().UserID,
+			input := service.WhichParticipateIn{
+				SubjectID: context.Session().UserID,
+				UserID:    context.Session().UserID,
 			}
 
 			return context.Services().Chats().UserChats(input)

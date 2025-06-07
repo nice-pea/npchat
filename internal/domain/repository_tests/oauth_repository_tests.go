@@ -102,7 +102,7 @@ func OAuthRepositoryTests(t *testing.T, newRepository func() domain.OAuthReposit
 			require.Len(t, sessions, 1)
 			assert.Equal(t, savedLink, sessions[0])
 		})
-		t.Run("фильтр по ExternalID", func(t *testing.T) {
+		t.Run("фильтр по ID", func(t *testing.T) {
 			r := newRepository()
 			// Сохранить связь
 			savedLink := saveLink(t, r, rndLink())

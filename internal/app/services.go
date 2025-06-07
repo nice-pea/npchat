@@ -52,7 +52,7 @@ func initServices(repos *repositories, adaps *adapters) *services {
 			ChatsRepo:   repos.chats,
 		},
 		sessions: &service.Sessions{
-			SessionsRepo: repos.sessions,
+			Repo: repos.sessions,
 		},
 		authnPassword: &service.AuthnPassword{
 			AuthnPasswordRepo: repos.authnPassword,
