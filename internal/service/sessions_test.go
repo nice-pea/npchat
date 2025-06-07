@@ -1,30 +1,26 @@
 package service
 
 import (
-	"math/rand/v2"
-
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus int) (out struct {
-	User    domain.User
-	Session domain.Session
+func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus string) (out struct {
+	User    userr.User
+	Session sessionn.Session
 }) {
-	out.User = domain.User{
-		ID: uuid.NewString(),
-	}
-	err := suite.rr.users.Save(out.User)
+	var err error
+	out.User, err = userr.NewUser(gofakeit.Name(), "")
+	suite.Require().NoError(err)
+	err = suite.rr.users.Upsert(out.User)
 	suite.Require().NoError(err)
 
-	out.Session = domain.Session{
-		ID:     uuid.NewString(),
-		UserID: out.User.ID,
-		Token:  uuid.NewString(),
-		Status: sessionStatus,
-	}
-	err = suite.rr.sessions.Save(out.Session)
+	out.Session, err = sessionn.NewSession(out.User.ID, gofakeit.ChromeUserAgent(), sessionStatus)
+	suite.Require().NoError(err)
+	err = suite.rr.sessions.Upsert(out.Session)
 	suite.Require().NoError(err)
 
 	return
@@ -33,7 +29,7 @@ func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus int) (out st
 func (suite *servicesTestSuite) Test_Sessions_Find() {
 	suite.Run("токен должен быть передан", func() {
 		for range 10 {
-			suite.newRndUserWithSession(rand.Int() % 6)
+			suite.newRndUserWithSession(sessionn.StatusNew)
 		}
 		input := SessionsFindIn{
 			Token: "",
@@ -42,9 +38,10 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 		suite.ErrorIs(err, ErrInvalidToken)
 		suite.Empty(sessions)
 	})
+
 	suite.Run("вернется пустой список если нет совпадающего токена", func() {
 		for range 10 {
-			suite.newRndUserWithSession(rand.Int() % 6)
+			suite.newRndUserWithSession(sessionn.StatusNew)
 		}
 		input := SessionsFindIn{
 			Token: uuid.NewString(),
@@ -53,97 +50,15 @@ func (suite *servicesTestSuite) Test_Sessions_Find() {
 		suite.NoError(err)
 		suite.Empty(sessions)
 	})
+
 	suite.Run("вернется существующая сессия", func() {
-		uws := suite.newRndUserWithSession(rand.Int() % 6)
+		uws := suite.newRndUserWithSession(sessionn.StatusNew)
 		input := SessionsFindIn{
-			Token: uws.Session.Token,
+			Token: uws.Session.AccessToken.Token,
 		}
 		sessions, err := suite.ss.sessions.Find(input)
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
 		suite.Equal(uws.Session, sessions[0])
 	})
-	//suite.Run("необходимый заголовок должен находится в карте", func() {
-	//	input := ByHttpHeader{
-	//		Headers: headers{
-	//			"other-header": "1234567890",
-	//		},
-	//	}
-	//	user, err := suite.sessionsService.ByHttpHeader(input)
-	//	suite.ErrorIs(err, ErrInvalidAuthorizationToken)
-	//	suite.Zero(user)
-	//})
-	//
-	//suite.Run("значение заголовка должно иметь определенный формат", func() {
-	//	input := ByHttpHeader{
-	//		Headers: headers{
-	//			sessionAuthHeader: "IOCUgnxcausUIASd 1234567890",
-	//		},
-	//	}
-	//	user, err := suite.sessionsService.ByHttpHeader(input)
-	//	suite.ErrorIs(err, ErrInvalidAuthorizationToken)
-	//	suite.Zero(user)
-	//})
-	//
-	//suite.Run("токен должен соответствовать пользователю", func() {
-	//	input := ByHttpHeader{
-	//		Headers: headers{
-	//			sessionAuthHeader: sessionAuthScheme + " 1234567890",
-	//		},
-	//	}
-	//	user, err := suite.sessionsService.ByHttpHeader(input)
-	//	suite.ErrorIs(err, ErrInvalidAuthorizationToken)
-	//	suite.Zero(user)
-	//})
-
-	//suite.Run("токен должен соответствовать пользователю", func() {
-	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
-	//	input := SessionsFindIn{
-	//		AccessToken: uws.Session.AccessToken,
-	//	}
-	//	sessions, err := suite.ss.sessions.Find(input)
-	//	suite.NoError(err)
-	//	suite.Require().Len(sessions, 1)
-	//	suite.Equal(uws.Session, sessions[0])
-	//
-	//	input := SessionGet{
-	//		Headers: headers{
-	//			sessionAuthHeader: sessionAuthScheme + " 1234567890",
-	//		},
-	//	}
-	//	user, err := suite.sessionsService.ByHttpHeader(input)
-	//	suite.ErrorIs(err, ErrInvalidAuthorizationToken)
-	//	suite.Zero(user)
-	//})
-	//suite.sessionsService.Repository
-
-	//OAuth{
-	//	StateUnq
-	//	UserCode
-	//	AccessToken
-	//	ExpiresAt
-	//	RefreshToken
-	//}
-
-	//session {
-	//	ID
-	//	userID
-	//	AccessToken
-	//	Status [New|Pending|Verified|Expired|Revoked|Failed]
-	//}
-	//
-	//[Credentials|OAuthGoogle|OAuthVK]SessionVerification{ // ..._SV{}
-	//	SessionID
-	//	...
-	//}
-	//suite.Run("вернется существующая сессия", func() {
-	//	uws := suite.newRndUserWithSession(SessionStatusVerified)
-	//	input := SessionsFindIn{
-	//		AccessToken: uws.Session.AccessToken,
-	//	}
-	//	sessions, err := suite.ss.sessions.Find(input)
-	//	suite.NoError(err)
-	//	suite.Require().Len(sessions, 1)
-	//	suite.Equal(uws.Session, sessions[0])
-	//})
 }

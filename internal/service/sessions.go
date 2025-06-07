@@ -1,24 +1,24 @@
 package service
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 )
 
 // Sessions implements the authentication interface
 type Sessions struct {
-	SessionsRepo domain.SessionsRepository
+	Repo sessionn.Repository
 }
 
 type SessionsFindIn struct {
 	Token string
 }
 
-func (s *Sessions) Find(in SessionsFindIn) ([]domain.Session, error) {
+func (s *Sessions) Find(in SessionsFindIn) ([]sessionn.Session, error) {
 	if in.Token == "" {
 		return nil, ErrInvalidToken
 	}
 
-	sessions, err := s.SessionsRepo.List(domain.SessionsFilter{Token: in.Token})
+	sessions, err := s.Repo.List(sessionn.Filter{AccessToken: in.Token})
 	if err != nil {
 		return nil, err
 	}

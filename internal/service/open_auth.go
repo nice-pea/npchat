@@ -2,11 +2,10 @@ package service
 
 import (
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
@@ -49,8 +48,8 @@ func (in CompeteOAuthRegistrationIn) Validate() error {
 
 // CompeteOAuthRegistrationOut представляет собой результат завершения регистрации OAuth.
 type CompeteOAuthRegistrationOut struct {
-	Session domain.Session // Сессия пользователя
-	User    userr.User     // Пользователь
+	Session sessionn.Session // Сессия пользователя
+	User    userr.User       // Пользователь
 }
 
 // CompeteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
@@ -101,20 +100,12 @@ func (u *Users) CompeteOAuthRegistration(in CompeteOAuthRegistrationIn) (Compete
 	}
 
 	// Создать сессию для пользователя
-	session := domain.Session2{
-		UserID: user.ID,
-		Name:   "todo: [название модели телефона / название браузера]",
-		Status: domain.SessionStatusVerified, // Подтвержденная сессия
-		AccessToken: domain.SessionToken{
-			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(time.Minute * 10),
-		},
-		RefreshToken: domain.SessionToken{
-			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(time.Hour * 24 * 60),
-		},
+	sessionName := "todo: [название модели телефона / название браузера]"
+	session, err := sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified)
+	if err != nil {
+		return CompeteOAuthRegistrationOut{}, err
 	}
-	if err = u.SessionsRepo.Save(session); err != nil {
+	if err = u.SessionsRepo.Upsert(session); err != nil {
 		return CompeteOAuthRegistrationOut{}, err
 	}
 
@@ -197,8 +188,8 @@ type CompleteOAuthLoginIn struct {
 
 // CompleteOAuthLoginOut представляет собой результат завершения входа через OAuth.
 type CompleteOAuthLoginOut struct {
-	Session domain.Session // Сессия пользователя
-	User    userr.User     // Пользователь
+	Session sessionn.Session // Сессия пользователя
+	User    userr.User       // Пользователь
 }
 
 // CompleteOAuthLogin завершает процесс входа пользователя через OAuth.

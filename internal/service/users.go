@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
@@ -17,5 +17,5 @@ type Users struct {
 	//		Timestamp time.Time
 	//	}) error
 	//}
-	SessionsRepo domain.SessionsRepository // Репозиторий сессий пользователей
+	SessionsRepo sessionn.Repository // Репозиторий сессий пользователей
 }

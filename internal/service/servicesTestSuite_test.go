@@ -88,7 +88,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 		Repo: suite.rr.chats,
 	}
 	suite.ss.sessions = &Sessions{
-		SessionsRepo: suite.rr.sessions,
+		Repo: suite.rr.sessions,
 	}
 	suite.ss.users = &Users{
 		Providers:    OAuthProviders{suite.ad.oauth.Name(): suite.ad.oauth},
