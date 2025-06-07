@@ -58,7 +58,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	suite.rr.sessions = suite.factory.NewSessionsRepository()
 
 	// Инициализация адаптеров
-	suite.mockOAuthUsers = generateMockUsers()
+	suite.mockOAuthUsers = suite.generateMockUsers()
 	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
 	for token := range suite.mockOAuthUsers {
 		suite.mockOAuthTokens[randomString(13)] = token
@@ -191,31 +191,40 @@ func randomString(n int) string {
 }
 
 // Генерация случайного OAuthToken
-func randomOAuthToken() userr.OpenAuthToken {
-	return userr.OpenAuthToken{
-		AccessToken:  randomString(32),
-		TokenType:    "Bearer",
-		RefreshToken: randomString(32),
-		Expiry:       time.Now().Add(time.Hour * 24 * time.Duration(rand.Intn(7)+1)),
-	}
+func (suite *servicesTestSuite) randomOAuthToken() userr.OpenAuthToken {
+	t, err := userr.NewOpenAuthToken(
+		randomString(32), // AccessToken
+		"Bearer",         // TokenType
+		randomString(32), // RefreshToken
+		time.Now().Add(time.Hour*24*time.Duration(rand.Intn(7)+1)), // Expiry
+
+	)
+	suite.Require().NoError(err)
+
+	return t
 }
 
 // Генерация случайного OAuthUser
-func randomOAuthUser() userr.OpenAuthUser {
-	return userr.OpenAuthUser{
-		ID:      randomString(21), // Providers ID обычно длина ~21
-		Email:   randomString(8) + "@example.com",
-		Name:    randomString(6) + " " + randomString(7),
-		Picture: "https://example.com/avatar/" + randomString(10) + ".png",
-	}
+func (suite *servicesTestSuite) randomOAuthUser() userr.OpenAuthUser {
+	u, err := userr.NewOpenAuthUser(
+		randomString(21),                                      // ID
+		(&oauthProvider.Mock{}).Name(),                        // Provider
+		randomString(8)+"@example.com",                        // Email
+		randomString(6)+" "+randomString(7),                   // Name
+		"https://example.com/avatar/"+randomString(10)+".png", // Picture
+		userr.OpenAuthToken{},                                 // Token
+	)
+	suite.Require().NoError(err)
+
+	return u
 }
 
-func generateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
+func (suite *servicesTestSuite) generateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
 	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
 	for i := 0; i < 10; i++ {
-		token := randomOAuthToken()
-		user := randomOAuthUser()
+		token := suite.randomOAuthToken()
+		user := suite.randomOAuthUser()
 		tokenToUser[token] = user
 	}
 

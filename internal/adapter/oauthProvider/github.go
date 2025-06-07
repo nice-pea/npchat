@@ -42,12 +42,12 @@ func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
 		return userr.OpenAuthToken{}, err // Возвращает ошибку, если обмен не удался
 	}
 
-	return userr.OpenAuthToken{
-		AccessToken:  token.AccessToken,  // Токен доступа
-		TokenType:    token.Type(),       // Тип токена
-		RefreshToken: token.RefreshToken, // Токен обновления
-		Expiry:       token.Expiry,       // Время истечения токена
-	}, nil
+	return userr.NewOpenAuthToken(
+		token.AccessToken,  // Токен доступа
+		token.Type(),       // Тип токена
+		token.RefreshToken, // Токен обновления
+		token.Expiry,       // Время истечения токена
+	)
 }
 
 // User получает информацию о пользователе GitHub, используя токен OAuth.
@@ -82,14 +82,14 @@ func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 		return userr.OpenAuthUser{}, err
 	}
 
-	return userr.OpenAuthUser{
-		ID:       string(rune(githubUser.ID)),
-		Provider: o.Name(),
-		Email:    githubUser.Email,
-		Name:     githubUser.Name,
-		Picture:  githubUser.AvatarURL,
-		Token:    token,
-	}, nil
+	return userr.NewOpenAuthUser(
+		string(rune(githubUser.ID)), // Идентификатор пользователя
+		o.Name(),                    // Имя провайдера
+		githubUser.Email,            // Электронная почта пользователя
+		githubUser.Name,             // Имя пользователя
+		githubUser.AvatarURL,        // URL изображения профиля
+		token,
+	)
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.

@@ -46,12 +46,12 @@ func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 		return userr.OpenAuthToken{}, err
 	}
 
-	return userr.OpenAuthToken{
-		AccessToken:  token.AccessToken,  // Токен доступа
-		TokenType:    token.Type(),       // Тип токена
-		RefreshToken: token.RefreshToken, // Токен обновления
-		Expiry:       token.Expiry,       // Время истечения токена
-	}, nil
+	return userr.NewOpenAuthToken(
+		token.AccessToken,  // Токен доступа
+		token.Type(),       // Тип токена
+		token.RefreshToken, // Токен обновления
+		token.Expiry,       // Время истечения токена
+	)
 }
 
 // User получает информацию о пользователе Google, используя токен OAuth.
@@ -80,14 +80,14 @@ func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 		return userr.OpenAuthUser{}, err // Возвращает ошибку, если разбор JSON не удался
 	}
 
-	return userr.OpenAuthUser{
-		ID:       googleUser.ID,      // Идентификатор пользователя
-		Provider: o.Name(),           // Имя провайдера
-		Email:    googleUser.Email,   // Электронная почта пользователя
-		Name:     googleUser.Name,    // Имя пользователя
-		Picture:  googleUser.Picture, // URL изображения профиля
-		Token:    token,
-	}, nil
+	return userr.NewOpenAuthUser(
+		googleUser.ID,      // Идентификатор пользователя
+		o.Name(),           // Имя провайдера
+		googleUser.Email,   // Электронная почта пользователя
+		googleUser.Name,    // Имя пользователя
+		googleUser.Picture, // URL изображения профиля
+		token,
+	)
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
