@@ -7,15 +7,7 @@ import (
 
 // Users сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата пользователей
 type Users struct {
-	Providers OAuthProviders // Карта провайдеров OAuth
-	Repo      userr.Repository
-	//Login     interface {
-	//	Upsert(struct {
-	//		ID        string
-	//		UserID    string
-	//		IP        string
-	//		Timestamp time.Time
-	//	}) error
-	//}
+	Providers    OAuthProviders // Карта провайдеров OAuth
+	Repo         userr.Repository
 	SessionsRepo sessionn.Repository // Репозиторий сессий пользователей
 }

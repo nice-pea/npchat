@@ -6,13 +6,14 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/exp/maps"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
 
 func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
-		out, err := suite.ss.oauth.InitRegistration(InitOAuthRegistrationIn{
+		out, err := suite.ss.users.InitOAuthRegistration(InitOAuthRegistrationIn{
 			Provider: "",
 		})
 		suite.ErrorIs(err, ErrInvalidProvider)
@@ -24,14 +25,14 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 		input := InitOAuthRegistrationIn{
 			Provider: "unknownProvider",
 		}
-		out, err := suite.ss.oauth.InitRegistration(input)
+		out, err := suite.ss.users.InitOAuthRegistration(input)
 		suite.ErrorIs(err, ErrUnknownOAuthProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
-		out, err := suite.ss.oauth.InitRegistration(InitOAuthRegistrationIn{
+		out, err := suite.ss.users.InitOAuthRegistration(InitOAuthRegistrationIn{
 			Provider: suite.ad.oauth.Name(),
 		})
 		suite.NoError(err)
@@ -56,7 +57,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: "",
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidUserCode)
 		suite.Zero(out)
 	})
@@ -66,7 +67,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: "",
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
 	})
@@ -76,7 +77,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
 		suite.Zero(out)
 	})
@@ -87,22 +88,23 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: "unknownProvider",
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrUnknownOAuthProvider)
 		suite.Zero(out)
 	})
 
-	suite.Run("после регистрации будет создан пользователь", func() { // Завершить регистрацию
+	suite.Run("после регистрации будет создан пользователь", func() {
+		// Завершить регистрацию
 		input := CompeteOAuthRegistrationIn{
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
 		// Проверить users репозиторий
-		users, err := suite.rr.users.List(domain.UsersFilter{})
+		users, err := suite.rr.users.List(userr.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(users, 1)
 		suite.Equal(out.User, users[0])
@@ -118,17 +120,19 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
-		// Проверить oauth репозиторий
-		links, err := suite.rr.oauth.ListLinks(domain.OAuthListLinksFilter{})
+		// Проверить созданную связь
+		users, err := suite.rr.users.List(userr.Filter{})
 		suite.NoError(err)
-		suite.Require().Len(links, 1)
-		suite.Equal(pUser.ID, links[0].ExternalID)
-		suite.Equal(out.User.ID, links[0].UserID)
-		suite.Equal(input.Provider, links[0].Provider)
+		suite.Require().Len(users, 1)
+		user := users[0]
+		suite.Require().Len(user.OpenAuthUsers, 1)
+		oauthUser := user.OpenAuthUsers[0]
+		suite.Equal(pUser.ID, oauthUser.ID)
+		suite.Equal(input.Provider, oauthUser.Provider)
 	})
 
 	suite.Run("после регистрации будет создана сессия", func() {
@@ -137,16 +141,16 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: maps.Keys(suite.mockOAuthTokens)[0],
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
 		// Проверить сессию
-		sessions, err := suite.rr.sessions.List(domain.SessionsFilter{})
+		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
 		suite.Equal(out.Session, sessions[0])
-		suite.Equal(domain.SessionStatusVerified, sessions[0].Status)
+		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
 	suite.Run("невозможно дважды зарегистрироваться на одного пользователя провайдера", func() {
@@ -157,7 +161,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err := suite.ss.oauth.CompeteRegistration(input)
+		out, err := suite.ss.users.CompeteOAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.NotZero(out)
 
@@ -166,7 +170,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.ad.oauth.Name(),
 		}
-		out, err = suite.ss.oauth.CompeteRegistration(input)
+		out, err = suite.ss.users.CompeteOAuthRegistration(input)
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
 		suite.Zero(out)
 	})
