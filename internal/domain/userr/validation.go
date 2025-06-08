@@ -1,7 +1,6 @@
 package userr
 
 import (
-	"fmt"
 	"strings"
 	"unicode"
 )
@@ -40,7 +39,7 @@ func ValidateBasicAuthPassword(password string) error {
 			}
 			hasDigit = true // Устанавливаем флаг, если найдена цифра
 		case unicode.IsSpace(r):
-			return fmt.Errorf("пароль не может содержать пробелы") // Проверка на наличие пробелов
+			return ErrPasswordContainsSpaces // Проверка на наличие пробелов
 		case strings.ContainsRune(allowedSpecial, r):
 			// Разрешенные спецсимволы - ничего не делаем
 		default:

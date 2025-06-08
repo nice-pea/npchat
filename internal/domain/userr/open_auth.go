@@ -3,6 +3,7 @@ package userr
 import (
 	"errors"
 	"fmt"
+	"net/mail"
 	"net/url"
 	"time"
 )
@@ -26,8 +27,8 @@ func NewOpenAuthUser(id string, provider string, email string, name string, pict
 		return OpenAuthUser{}, errors.New("provider is required")
 	}
 	if email != "" {
-		if err := ValidateEmail(email); err != nil {
-			return OpenAuthUser{}, errors.New("email is required")
+		if _, err := mail.ParseAddress(email); err != nil {
+			return OpenAuthUser{}, err
 		}
 	}
 	if name == "" {
