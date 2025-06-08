@@ -10,9 +10,9 @@ type ChattRepository struct {
 	db *sqlx.DB
 }
 
-func (m *RepositoryFactory) NewChattRepository() chatt.Repository {
+func (r *RepositoryFactory) NewChattRepository() chatt.Repository {
 	return &ChattRepository{
-		db: m.db,
+		db: r.db,
 	}
 }
 

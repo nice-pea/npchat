@@ -45,9 +45,9 @@ func membersFromDomain(domainMembers []domain.Member) []member {
 	}
 	return repoMembers
 }
-func (m *RepositoryFactory) NewMembersRepository() domain.MembersRepository {
+func (r *RepositoryFactory) NewMembersRepository() domain.MembersRepository {
 	return &MembersRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 

@@ -61,9 +61,9 @@ type OAuthRepository struct {
 	DB *sqlx.DB
 }
 
-func (m *RepositoryFactory) NewOAuthRepository() domain.OAuthRepository {
+func (r *RepositoryFactory) NewOAuthRepository() domain.OAuthRepository {
 	return &OAuthRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 

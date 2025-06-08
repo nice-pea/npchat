@@ -49,9 +49,9 @@ func invitationsFromDomain(domainInvitations []domain.Invitation) []invitation {
 	return repoInvitations
 }
 
-func (m *RepositoryFactory) NewInvitationsRepository() domain.InvitationsRepository {
+func (r *RepositoryFactory) NewInvitationsRepository() domain.InvitationsRepository {
 	return &InvitationsRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 

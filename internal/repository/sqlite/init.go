@@ -33,8 +33,8 @@ func InitRepositoryFactory(config Config) (*RepositoryFactory, error) {
 	return sqliteMemory, nil
 }
 
-func (m *RepositoryFactory) Close() error {
-	return m.db.Close()
+func (r *RepositoryFactory) Close() error {
+	return r.db.Close()
 }
 
 func migrate(db *sqlx.DB, migrationsDir string) error {

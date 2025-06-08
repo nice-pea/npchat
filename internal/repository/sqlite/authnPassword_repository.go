@@ -9,9 +9,9 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
 
-func (m *RepositoryFactory) NewAuthnPasswordRepository() domain.AuthnPasswordRepository {
+func (r *RepositoryFactory) NewAuthnPasswordRepository() domain.AuthnPasswordRepository {
 	return &AuthnPasswordRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 

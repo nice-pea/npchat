@@ -42,9 +42,9 @@ func sessionsToDomain(sessions []session) []domain.Session {
 	return result
 }
 
-func (m *RepositoryFactory) NewSessionsRepository() domain.SessionsRepository {
+func (r *RepositoryFactory) NewSessionsRepository() domain.SessionsRepository {
 	return &SessionsRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 

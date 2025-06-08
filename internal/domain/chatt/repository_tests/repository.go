@@ -1,7 +1,6 @@
 package repository_tests
 
 import (
-	"math/rand"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -10,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/saime-0/nice-pea-chat/internal/domain/common"
 )
 
 // TestRepository реализацию репозитория
@@ -62,7 +62,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 				upsertChat(t, r, chats[i])
 			}
 			// Определить случайны искомый чат
-			expectedChat := rndElem(chats)
+			expectedChat := common.RndElem(chats)
 
 			// Получить список
 			chatsFromRepo, err := r.List(chatt.Filter{
@@ -85,7 +85,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 				upsertChat(t, r, chats[i])
 			}
 			// Определить случайны искомый чат
-			expectedChat := rndElem(chats)
+			expectedChat := common.RndElem(chats)
 
 			// Получить список
 			chatsFromRepo, err := r.List(chatt.Filter{
@@ -107,7 +107,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 				upsertChat(t, r, chats[i])
 			}
 			// Определить случайны искомый чат
-			expectedChat := rndElem(chats)
+			expectedChat := common.RndElem(chats)
 
 			// Получить список
 			chatsFromRepo, err := r.List(chatt.Filter{
@@ -130,7 +130,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 				upsertChat(t, r, chats[i])
 			}
 			// Определить случайны искомый чат
-			expectedChat := rndElem(chats)
+			expectedChat := common.RndElem(chats)
 
 			// Получить список
 			chatsFromRepo, err := r.List(chatt.Filter{
@@ -246,16 +246,6 @@ func upsertChat(t *testing.T, r chatt.Repository, chat chatt.Chat) chatt.Chat {
 	return chat
 }
 
-// rndElem возвращает случайный элемент из среза
-func rndElem[T any](slice []T) T {
-	if len(slice) == 0 {
-		var zero T
-		return zero
-	}
-	index := rand.Intn(len(slice))
-	return slice[index]
-}
-
 // rndInv создает случайное приглашение
 func rndInv(t *testing.T) chatt.Invitation {
 	inv, err := chatt.NewInvitation(uuid.NewString(), uuid.NewString())
@@ -279,7 +269,7 @@ func addRndParticipant(t *testing.T, chat *chatt.Chat) {
 
 // addRndInv добавляет случайное приглашение в чат
 func addRndInv(t *testing.T, chat *chatt.Chat) {
-	inv, err := chatt.NewInvitation(rndElem(chat.Participants).UserID, uuid.NewString())
+	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.NewString())
 	require.NoError(t, err)
 	require.NoError(t, chat.AddInvitation(inv))
 }

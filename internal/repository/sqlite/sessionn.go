@@ -20,8 +20,8 @@ func (s SessionnRepository) Upsert(s2 sessionn.Session) error {
 	panic("implement me")
 }
 
-func (m *RepositoryFactory) NewSessionnRepository() sessionn.Repository {
+func (r *RepositoryFactory) NewSessionnRepository() sessionn.Repository {
 	return &SessionnRepository{
-		db: m.db,
+		db: r.db,
 	}
 }

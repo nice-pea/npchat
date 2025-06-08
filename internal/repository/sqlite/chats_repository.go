@@ -40,9 +40,9 @@ func chatsToDomain(repoChats []chat) []domain.Chat {
 	return domainChats
 }
 
-func (m *RepositoryFactory) NewChatsRepository() domain.ChatsRepository {
+func (r *RepositoryFactory) NewChatsRepository() domain.ChatsRepository {
 	return &ChatsRepository{
-		DB: m.db,
+		DB: r.db,
 	}
 }
 
