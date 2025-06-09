@@ -17,9 +17,8 @@ func MyInvitations(router http2.Router) {
 		func(context http2.Context) (any, error) {
 			input := service.ReceivedInvitationsIn{
 				SubjectID: context.Session().UserID,
-				UserID:    context.Session().UserID,
 			}
 
-			return context.Services().Invitations().ReceivedInvitations(input)
+			return context.Services().Chats().ReceivedInvitations(input)
 		})
 }

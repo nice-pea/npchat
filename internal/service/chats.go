@@ -15,7 +15,7 @@ type Chats struct {
 // WhichParticipateIn входящие параметры
 type WhichParticipateIn struct {
 	SubjectID string
-	UserID    string
+	UserID    string // TODO: удалить
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -62,7 +62,7 @@ func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, er
 // CreateChatIn входящие параметры
 type CreateChatIn struct {
 	Name        string
-	ChiefUserID string
+	ChiefUserID string // TODO: переименовать в SubjectID
 }
 
 func (in CreateChatIn) Validate() error {

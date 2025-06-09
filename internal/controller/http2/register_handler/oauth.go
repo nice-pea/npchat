@@ -27,7 +27,7 @@ func OAuthInitRegistration(router http2.Router) {
 			}
 
 			// Инициируем OAuth-процесс регистрации у сервиса
-			out, err := context.Services().OAuth().InitRegistration(input)
+			out, err := context.Services().Users().InitOAuthRegistration(input)
 			if err != nil {
 				return nil, err
 			}
@@ -66,7 +66,7 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 				Provider: http2.PathStr(context, "provider"),
 			}
 
-			return context.Services().OAuth().CompeteRegistration(input)
+			return context.Services().Users().CompeteOAuthRegistration(input)
 		},
 	)
 }
@@ -86,7 +86,7 @@ func OAuthInitLogin(router http2.Router) {
 			}
 
 			// Инициируем OAuth-процесс входа у сервиса
-			out, err := context.Services().OAuth().InitLogin(input)
+			out, err := context.Services().Users().InitOAuthLogin(input)
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +125,7 @@ func OAuthCompleteLoginCallback(router http2.Router) {
 				Provider: http2.PathStr(context, "provider"),
 			}
 
-			return context.Services().OAuth().CompleteLogin(input)
+			return context.Services().Users().CompleteOAuthLogin(input)
 		},
 	)
 }

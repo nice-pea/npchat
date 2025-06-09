@@ -32,6 +32,6 @@ func SendInvitation(router http2.Router) {
 				UserID:    rb.UserID,
 			}
 
-			return context.Services().Invitations().SendInvitation(input)
+			return context.Services().Chats().SendInvitation(input)
 		})
 }

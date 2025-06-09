@@ -20,6 +20,6 @@ func LeaveChat(router http2.Router) {
 				ChatID:    http2.PathStr(context, "chatID"),
 			}
 
-			return nil, context.Services().Members().LeaveChat(input)
+			return nil, context.Services().Chats().LeaveChat(input)
 		})
 }

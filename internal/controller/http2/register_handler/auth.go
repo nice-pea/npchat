@@ -31,7 +31,7 @@ func LoginByPassword(router http2.Router) {
 				Password: rb.Password,
 			}
 
-			return context.Services().AuthnPassword().Login(input)
+			return context.Services().Users().BasicAuthLogin(input)
 		})
 }
 
@@ -64,6 +64,6 @@ func RegistrationByPassword(router http2.Router) {
 				Nick:     rb.Nick,
 			}
 
-			return context.Services().AuthnPassword().Registration(input)
+			return context.Services().Users().BasicAuthRegistration(input)
 		})
 }

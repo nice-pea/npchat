@@ -20,6 +20,6 @@ func MyChats(router http2.Router) {
 				UserID:    context.Session().UserID,
 			}
 
-			return context.Services().Chats().UserChats(input)
+			return context.Services().Chats().WhichParticipate(input)
 		})
 }

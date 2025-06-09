@@ -20,6 +20,6 @@ func CancelInvitation(router http2.Router) {
 				InvitationID: http2.PathStr(context, "invitationID"),
 			}
 
-			return nil, context.Services().Invitations().CancelInvitation(input)
+			return nil, context.Services().Chats().CancelInvitation(input)
 		})
 }

@@ -31,6 +31,6 @@ func DeleteMember(router http2.Router) {
 				UserID:    rb.UserID,
 			}
 
-			return nil, context.Services().Members().DeleteMember(input)
+			return nil, context.Services().Chats().DeleteMember(input)
 		})
 }

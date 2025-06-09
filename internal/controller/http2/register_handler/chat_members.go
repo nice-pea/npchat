@@ -20,6 +20,6 @@ func ChatMembers(router http2.Router) {
 				ChatID:    http2.PathStr(context, "chatID"),
 			}
 
-			return context.Services().Members().ChatMembers(input)
+			return context.Services().Chats().ChatMembers(input)
 		})
 }
