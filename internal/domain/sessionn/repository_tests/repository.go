@@ -2,13 +2,13 @@ package repository_tests
 
 import (
 	"testing"
-	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/saime-0/nice-pea-chat/internal/domain/common"
 	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 )
 
@@ -16,11 +16,36 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 	t.Run("List", func(t *testing.T) {
 		t.Run("из пустого репозитория вернется пустой список", func(t *testing.T) {
 			r := newRepository()
-			users, err := r.List(sessionn.Filter{})
+			sessions, err := r.List(sessionn.Filter{})
 			assert.NoError(t, err)
-			assert.Empty(t, users)
+			assert.Empty(t, sessions)
+		})
+
+		t.Run("без фильтра из репозитория вернутся все сохраненные элементы", func(t *testing.T) {
+			r := newRepository()
+			sessions := upsertRndSessions(t, r, 10)
+			fromRepo, err := r.List(sessionn.Filter{})
+			assert.NoError(t, err)
+			assert.Len(t, fromRepo, len(sessions))
+		})
+
+		t.Run("с фильтром по AccessToken вернутся, имеющие такой токен доступа", func(t *testing.T) {
+			r := newRepository()
+			// Создать много
+			sessions := upsertRndSessions(t, r, 10)
+			// Определить случайны искомый
+			expected := common.RndElem(sessions)
+			// Получить список
+			fromRepo, err := r.List(sessionn.Filter{
+				AccessToken: expected.AccessToken.Token,
+			})
+			// Сравнить ожидания и результат
+			assert.NoError(t, err)
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
 		})
 	})
+
 	t.Run("Upsert", func(t *testing.T) {
 		t.Run("нельзя сохранять без ID", func(t *testing.T) {
 			r := newRepository()
@@ -41,20 +66,14 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 
 		t.Run("сохраненная сущность полностью соответствует сохраняемой", func(t *testing.T) {
 			r := newRepository()
-			// Создать
-			session := rndUser(t)
-			addRndBasicAuth(t, &session)
-			addRndOpenAuth(t, &session)
-
-			// Сохранить
-			err := r.Upsert(session)
-			require.NoError(t, err)
+			// Создать и Сохранить
+			session := upsertSession(t, r, rndSession(t))
 
 			// Прочитать из репозитория
-			users, err := r.List(sessionn.Filter{})
+			sessions, err := r.List(sessionn.Filter{})
 			assert.NoError(t, err)
-			require.Len(t, users, 1)
-			assert.Equal(t, session, users[0])
+			require.Len(t, sessions, 1)
+			assert.Equal(t, session, sessions[0])
 		})
 
 		t.Run("перезапись с новыми значениями по ID", func(t *testing.T) {
@@ -62,47 +81,42 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 			id := uuid.NewString()
 			// Несколько промежуточных состояний
 			for range 33 {
-				session := rndUser(t)
+				session := rndSession(t)
 				session.ID = id
-				upsertUser(t, r, session)
+				upsertSession(t, r, session)
 			}
 			// Последнее сохраненное состояние
-			expectedUser := rndUser(t)
-			expectedUser.ID = id
-			upsertUser(t, r, expectedUser)
+			expected := rndSession(t)
+			expected.ID = id
+			upsertSession(t, r, expected)
 
 			// Прочитать из репозитория
-			users, err := r.List(sessionn.Filter{})
+			sessions, err := r.List(sessionn.Filter{})
 			assert.NoError(t, err)
-			require.Len(t, users, 1)
-			assert.Equal(t, expectedUser, users[0])
+			require.Len(t, sessions, 1)
+			assert.Equal(t, expected, sessions[0])
 		})
 	})
 }
 
-func rndUser(t *testing.T) sessionn.Session {
-	u, err := sessionn.NewUser(gofakeit.Name(), gofakeit.Noun())
+func rndSession(t *testing.T) sessionn.Session {
+	session, err := sessionn.NewSession(uuid.NewString(), gofakeit.UserAgent(), common.RndElem(sessionn.Statuses()))
 	require.NoError(t, err)
-	return u
+
+	return session
 }
 
-func addRndBasicAuth(t *testing.T, session *sessionn.Session) {
-	ba, err := sessionn.NewBasicAuth(gofakeit.Noun(), "Passw0rd!")
-	require.NoError(t, err)
-	err = session.AddBasicAuth(ba)
-	require.NoError(t, err)
+func upsertRndSessions(t *testing.T, r sessionn.Repository, count int) []sessionn.Session {
+	ss := make([]sessionn.Session, count)
+	for i := range ss {
+		ss[i] = rndSession(t)
+		upsertSession(t, r, ss[i])
+	}
+
+	return ss
 }
 
-func addRndOpenAuth(t *testing.T, session *sessionn.Session) {
-	token, err := sessionn.NewOpenAuthToken(uuid.NewString(), "test", uuid.NewString(), time.Now().Add(1*time.Hour))
-	require.NoError(t, err)
-	openAuthUser, err := sessionn.NewOpenAuthUser(uuid.NewString(), "test", "", gofakeit.Noun(), "", token)
-	require.NoError(t, err)
-	err = session.AddOpenAuthUser(openAuthUser)
-	require.NoError(t, err)
-}
-
-func upsertUser(t *testing.T, r sessionn.Repository, session sessionn.Session) sessionn.Session {
+func upsertSession(t *testing.T, r sessionn.Repository, session sessionn.Session) sessionn.Session {
 	err := r.Upsert(session)
 	require.NoError(t, err)
 

@@ -24,13 +24,10 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 
 		t.Run("без фильтра из репозитория вернутся все сохраненные элементы", func(t *testing.T) {
 			r := newRepository()
-			users := make([]userr.User, 10)
-			for i := range users {
-				users[i] = upsertUser(t, r, rndUser(t))
-			}
-			userFromRepo, err := r.List(userr.Filter{})
+			users := upsertRndUsers(t, r, 10)
+			fromRepo, err := r.List(userr.Filter{})
 			assert.NoError(t, err)
-			assert.Len(t, userFromRepo, len(users))
+			assert.Len(t, fromRepo, len(users))
 		})
 
 		t.Run("с фильтром по ID вернется сохраненный элемент", func(t *testing.T) {
@@ -38,15 +35,15 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			// Создать много
 			users := upsertRndUsers(t, r, 10)
 			// Определить случайны искомый
-			expectedUser := common.RndElem(users)
+			expected := common.RndElem(users)
 			// Получить список
-			userFromRepo, err := r.List(userr.Filter{
-				ID: expectedUser.ID,
+			fromRepo, err := r.List(userr.Filter{
+				ID: expected.ID,
 			})
 			// Сравнить ожидания и результат
 			assert.NoError(t, err)
-			require.Len(t, userFromRepo, 1)
-			assert.Equal(t, expectedUser, userFromRepo[0])
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
 		})
 
 		t.Run("с фильтром по OAuthUserID вернутся, имеющие связь с пользователем oauth провайдера", func(t *testing.T) {
@@ -180,15 +177,15 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 				upsertUser(t, r, user)
 			}
 			// Последнее сохраненное состояние
-			expectedUser := rndUser(t)
-			expectedUser.ID = id
-			upsertUser(t, r, expectedUser)
+			expected := rndUser(t)
+			expected.ID = id
+			upsertUser(t, r, expected)
 
 			// Прочитать из репозитория
 			users, err := r.List(userr.Filter{})
 			assert.NoError(t, err)
 			require.Len(t, users, 1)
-			assert.Equal(t, expectedUser, users[0])
+			assert.Equal(t, expected, users[0])
 		})
 	})
 }

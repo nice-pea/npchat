@@ -6,3 +6,12 @@ const (
 	StatusExpired  = "expired"  // Истекшая
 	StatusRevoked  = "revoked"  // Отозванная
 )
+
+func Statuses() []string {
+	return []string{
+		StatusNew,
+		StatusVerified,
+		StatusExpired,
+		StatusRevoked,
+	}
+}
