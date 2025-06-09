@@ -9,7 +9,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2/registerHandler"
+	registerHandler "github.com/saime-0/nice-pea-chat/internal/controller/http2/register_handler"
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2/router"
 )
 

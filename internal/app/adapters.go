@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/saime-0/nice-pea-chat/internal/adapter"
-	"github.com/saime-0/nice-pea-chat/internal/adapter/oauthProvider"
+	oauthProvider "github.com/saime-0/nice-pea-chat/internal/adapter/oauth_provider"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 

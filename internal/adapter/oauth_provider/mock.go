@@ -1,4 +1,4 @@
-package oauthProvider
+package oauth_provider
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"

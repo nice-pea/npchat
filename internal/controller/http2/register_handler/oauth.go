@@ -1,4 +1,4 @@
-package registerHandler
+package register_handler
 
 import (
 	"errors"

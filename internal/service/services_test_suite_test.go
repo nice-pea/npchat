@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/saime-0/nice-pea-chat/internal/adapter/oauthProvider"
+	oauthProvider "github.com/saime-0/nice-pea-chat/internal/adapter/oauth_provider"
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"

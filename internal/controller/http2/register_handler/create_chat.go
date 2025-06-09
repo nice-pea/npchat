@@ -1,4 +1,4 @@
-package registerHandler
+package register_handler
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
@@ -6,18 +6,17 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// SendInvitation регистрирует обработчик, позволяющий отправить приглашение в чат.
+// CreateChat регистрирует обработчик, позволяющий создать новый чат.
 // Доступен только авторизованным пользователям.
 //
-// Метод: POST /invitations
-func SendInvitation(router http2.Router) {
-	// Тело запроса для отправки приглашения.
+// Метод: POST /chats
+func CreateChat(router http2.Router) {
+	// Тело запроса для создания чата.
 	type requestBody struct {
-		ChatID string `json:"chat_id"`
-		UserID string `json:"user_id"`
+		Name string `json:"name"`
 	}
 	router.HandleFunc(
-		"POST /invitations",
+		"POST /chats",
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
 			var rb requestBody
@@ -26,12 +25,11 @@ func SendInvitation(router http2.Router) {
 				return nil, err
 			}
 
-			input := service.SendInvitationIn{
-				SubjectID: context.Session().UserID,
-				ChatID:    rb.ChatID,
-				UserID:    rb.UserID,
+			input := service.CreateChatIn{
+				ChiefUserID: context.Session().UserID,
+				Name:        rb.Name,
 			}
 
-			return context.Services().Invitations().SendInvitation(input)
+			return context.Services().Chats().CreateChat(input)
 		})
 }

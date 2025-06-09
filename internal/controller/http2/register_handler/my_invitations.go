@@ -1,4 +1,4 @@
-package registerHandler
+package register_handler
 
 import (
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
@@ -6,20 +6,20 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
-// ChatMembers регистрирует обработчик, позволяющий получить список участников чата.
+// MyInvitations регистрирует обработчик, позволяющий получить список приглашений пользователя.
 // Доступен только авторизованным пользователям.
 //
-// Метод: GET /chats/{chatID}/members
-func ChatMembers(router http2.Router) {
+// Метод: GET /invitations
+func MyInvitations(router http2.Router) {
 	router.HandleFunc(
-		"GET /chats/{chatID}/members",
+		"GET /invitations",
 		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
 		func(context http2.Context) (any, error) {
-			input := service.ChatMembersIn{
+			input := service.ReceivedInvitationsIn{
 				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathStr(context, "chatID"),
+				UserID:    context.Session().UserID,
 			}
 
-			return context.Services().Members().ChatMembers(input)
+			return context.Services().Invitations().ReceivedInvitations(input)
 		})
 }

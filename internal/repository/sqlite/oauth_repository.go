@@ -57,16 +57,6 @@ func linksToDomain(links []link) []domain.OAuthLink {
 	return result
 }
 
-type OAuthRepository struct {
-	DB *sqlx.DB
-}
-
-func (r *RepositoryFactory) NewOAuthRepository() domain.OAuthRepository {
-	return &OAuthRepository{
-		DB: r.db,
-	}
-}
-
 func (r *OAuthRepository) SaveToken(token domain.OAuthToken) error {
 	if token == (domain.OAuthToken{}) {
 		return errors.New("token must not be empty")

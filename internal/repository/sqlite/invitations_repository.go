@@ -49,16 +49,6 @@ func invitationsFromDomain(domainInvitations []domain.Invitation) []invitation {
 	return repoInvitations
 }
 
-func (r *RepositoryFactory) NewInvitationsRepository() domain.InvitationsRepository {
-	return &InvitationsRepository{
-		DB: r.db,
-	}
-}
-
-type InvitationsRepository struct {
-	DB *sqlx.DB
-}
-
 func (r *InvitationsRepository) List(filter domain.InvitationsFilter) ([]domain.Invitation, error) {
 	invitations := make([]invitation, 0)
 	if err := r.DB.Select(&invitations, `

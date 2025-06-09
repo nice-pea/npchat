@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 )
 
 // rwContext представляет контекст HTTP-запроса
@@ -12,7 +12,7 @@ type rwContext struct {
 	requestID string
 	request   *http.Request
 	writer    http.ResponseWriter
-	session   domain.Session
+	session   sessionn.Session
 	services  http2.Services
 }
 
@@ -24,7 +24,7 @@ func (r *rwContext) RequestID() string {
 	return r.requestID
 }
 
-func (r *rwContext) Session() domain.Session {
+func (r *rwContext) Session() sessionn.Session {
 	return r.session
 }
 
@@ -36,7 +36,7 @@ func (r *rwContext) Services() http2.Services {
 	return r.services
 }
 
-func (r *rwContext) SetSession(session domain.Session) {
+func (r *rwContext) SetSession(session sessionn.Session) {
 	r.session = session
 }
 

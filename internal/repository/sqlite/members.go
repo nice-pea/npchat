@@ -45,15 +45,6 @@ func membersFromDomain(domainMembers []domain.Member) []member {
 	}
 	return repoMembers
 }
-func (r *RepositoryFactory) NewMembersRepository() domain.MembersRepository {
-	return &MembersRepository{
-		DB: r.db,
-	}
-}
-
-type MembersRepository struct {
-	DB *sqlx.DB
-}
 
 func (r *MembersRepository) List(filter domain.MembersFilter) ([]domain.Member, error) {
 	members := make([]member, 0)

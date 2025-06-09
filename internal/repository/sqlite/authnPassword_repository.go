@@ -1,20 +1,8 @@
 package sqlite
 
 import (
-	"github.com/jmoiron/sqlx"
-
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 )
-
-func (r *RepositoryFactory) NewAuthnPasswordRepository() domain.AuthnPasswordRepository {
-	return &AuthnPasswordRepository{
-		DB: r.db,
-	}
-}
-
-type AuthnPasswordRepository struct {
-	DB *sqlx.DB
-}
 
 type authnPassword struct {
 	UserID   string `db:"user_id"`
