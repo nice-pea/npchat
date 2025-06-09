@@ -230,16 +230,3 @@ func (suite *servicesTestSuite) generateMockUsers() map[userr.OpenAuthToken]user
 
 	return tokenToUser
 }
-
-func randomPassword() string {
-	validPasswords := []string{
-		"Ab1!xyzZ",
-		"Password123!",
-		"Пароль123!",
-		"Aa1~!?@#$%^&*_-+()[]{}></\\|\"'.,:;",
-		"P@ssw0rd_123",
-		"Passворд123!",
-	}
-
-	return validPasswords[rand.Intn(len(validPasswords))]
-}

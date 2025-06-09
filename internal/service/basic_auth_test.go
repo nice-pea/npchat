@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/brianvoe/gofakeit/v7"
 
+	"github.com/saime-0/nice-pea-chat/internal/domain/common"
 	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )
@@ -10,7 +11,7 @@ import (
 func (suite *servicesTestSuite) newRndUserWithBasicAuth() userr.User {
 	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
 	suite.Require().NoError(err)
-	ba, err := userr.NewBasicAuth(gofakeit.Noun(), randomPassword())
+	ba, err := userr.NewBasicAuth(gofakeit.Noun(), common.RndPassword())
 	suite.Require().NoError(err)
 	err = user.AddBasicAuth(ba)
 	suite.Require().NoError(err)
@@ -74,7 +75,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -100,7 +101,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "",
 
 			Nick: "nick",
@@ -114,7 +115,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -125,7 +126,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация второй раз с существующим логином
 		input = BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name2",
 			Nick:     "nick2",
 		}
@@ -138,7 +139,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -159,7 +160,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}
@@ -179,7 +180,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
 			Login:    "login",
-			Password: randomPassword(),
+			Password: common.RndPassword(),
 			Name:     "name",
 			Nick:     "nick",
 		}

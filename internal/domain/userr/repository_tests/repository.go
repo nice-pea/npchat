@@ -36,11 +36,9 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 		t.Run("с фильтром по ID вернется сохраненный элемент", func(t *testing.T) {
 			r := newRepository()
 			// Создать много
-			for range 10 {
-				upsertUser(t, r, rndUser(t))
-			}
+			users := upsertRndUsers(t, r, 10)
 			// Определить случайны искомый
-			expectedUser := upsertUser(t, r, rndUser(t))
+			expectedUser := common.RndElem(users)
 			// Получить список
 			userFromRepo, err := r.List(userr.Filter{
 				ID: expectedUser.ID,
@@ -51,83 +49,89 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			assert.Equal(t, expectedUser, userFromRepo[0])
 		})
 
-		t.Run("с фильтром по InvitationID вернутся чаты, имеющие с приглашение с таким ID", func(t *testing.T) {
+		t.Run("с фильтром по OAuthUserID вернутся, имеющие связь с пользователем oauth провайдера", func(t *testing.T) {
 			r := newRepository()
 			// Создать много
-			users := make([]userr.User, 10)
-			for i := range users {
-				users[i] = rndUser(t)
-				addRndBasicAuth(t, &users[i])
-				addRndOpenAuth(t, &users[i])
-				upsertUser(t, r, users[i])
-			}
+			users := upsertRndUsers(t, r, 10)
 			// Определить случайны искомый
 			expected := common.RndElem(users)
-
 			// Получить список
-			chatsFromRepo, err := r.List(userr.Filter{
-				ID:                "",
-				OAuthUserID:       "",
-				OAuthProvider:     "",
-				BasicAuthLogin:    "",
-				BasicAuthPassword: "",
+			fromRepo, err := r.List(userr.Filter{
+				OAuthUserID: expected.OpenAuthUsers[0].ID,
 			})
 			// Сравнить ожидания и результат
 			assert.NoError(t, err)
-			require.Len(t, chatsFromRepo, 1)
-			assert.Equal(t, expected, chatsFromRepo[0])
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
+		})
+
+		t.Run("с фильтром по OAuthProvider вернутся, имеющие связь с oauth провайдером", func(t *testing.T) {
+			r := newRepository()
+			// Создать много
+			users := upsertRndUsers(t, r, 10)
+			// Определить случайны искомый
+			expected := common.RndElem(users)
+			// Получить список
+			fromRepo, err := r.List(userr.Filter{
+				OAuthProvider: expected.OpenAuthUsers[0].Provider,
+			})
+			// Сравнить ожидания и результат
+			assert.NoError(t, err)
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
+		})
+
+		t.Run("с фильтром по BasicAuthLogin вернутся, имеющие этот логин", func(t *testing.T) {
+			r := newRepository()
+			// Создать много
+			users := upsertRndUsers(t, r, 10)
+			// Определить случайны искомый
+			expected := common.RndElem(users)
+			// Получить список
+			fromRepo, err := r.List(userr.Filter{
+				BasicAuthLogin: expected.BasicAuth.Login,
+			})
+			// Сравнить ожидания и результат
+			assert.NoError(t, err)
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
+		})
+
+		t.Run("с фильтром по BasicAuthPassword вернутся, имеющие этот пароль", func(t *testing.T) {
+			r := newRepository()
+			// Создать много
+			users := upsertRndUsers(t, r, 10)
+			// Определить случайны искомый
+			expected := common.RndElem(users)
+			// Получить список
+			fromRepo, err := r.List(userr.Filter{
+				BasicAuthPassword: expected.BasicAuth.Password,
+			})
+			// Сравнить ожидания и результат
+			assert.NoError(t, err)
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
 		})
 
 		t.Run("можно искать по всем фильтрам сразу", func(t *testing.T) {
 			r := newRepository()
 			// Создать много чатов
-			chats := make([]userr.User, 10)
-			for i := range chats {
-				chats[i] = rndChat(t)
-				addRndParticipant(t, &chats[i])
-				addRndInv(t, &chats[i])
-				upsertChat(t, r, chats[i])
-			}
+			users := upsertRndUsers(t, r, 10)
 			// Определить случайны искомый чат
-			expectedChat := common.RndElem(chats)
+			expected := common.RndElem(users)
 
 			// Получить список
-			chatsFromRepo, err := r.List(userr.Filter{
-				ID:                "",
-				OAuthUserID:       "",
-				OAuthProvider:     "",
-				BasicAuthLogin:    "",
-				BasicAuthPassword: "",
+			fromRepo, err := r.List(userr.Filter{
+				//ID:                expected.ID,
+				OAuthUserID:       expected.OpenAuthUsers[0].ID,
+				OAuthProvider:     expected.OpenAuthUsers[0].Provider,
+				BasicAuthLogin:    expected.BasicAuth.Login,
+				BasicAuthPassword: expected.BasicAuth.Password,
 			})
 			// Сравнить ожидания и результат
 			assert.NoError(t, err)
-			require.Len(t, chatsFromRepo, 1)
-			assert.Equal(t, expectedChat, chatsFromRepo[0])
-		})
-
-		t.Run("можно вернуться несколько элементов", func(t *testing.T) {
-			r := newRepository()
-			// Участник, который есть во многих чатах
-			rndp := rndParticipant(t)
-			// Создать много чатов с искомым участником
-			const expectedCount = 10
-			for range expectedCount {
-				user := rndChat(t)
-				err := user.AddParticipant(rndp)
-				require.NoError(t, err)
-				upsertChat(t, r, user)
-			}
-			// Создать несколько других чатов
-			for range 21 {
-				upsertChat(t, r, rndChat(t))
-			}
-			// Получить список
-			chatsFromRepo, err := r.List(userr.Filter{
-				ParticipantID: rndp.UserID,
-			})
-			// Сравнить ожидания и результат
-			assert.NoError(t, err)
-			require.Len(t, chatsFromRepo, expectedCount)
+			require.Len(t, fromRepo, 1)
+			assert.Equal(t, expected, fromRepo[0])
 		})
 	})
 	t.Run("Upsert", func(t *testing.T) {
@@ -192,11 +196,24 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 func rndUser(t *testing.T) userr.User {
 	u, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
 	require.NoError(t, err)
+
 	return u
 }
 
+func upsertRndUsers(t *testing.T, r userr.Repository, count int) []userr.User {
+	users := make([]userr.User, count)
+	for i := range users {
+		users[i] = rndUser(t)
+		addRndBasicAuth(t, &users[i])
+		addRndOpenAuth(t, &users[i])
+		upsertUser(t, r, users[i])
+	}
+
+	return users
+}
+
 func addRndBasicAuth(t *testing.T, user *userr.User) {
-	ba, err := userr.NewBasicAuth(gofakeit.Noun(), "Passw0rd!")
+	ba, err := userr.NewBasicAuth(gofakeit.Noun(), common.RndPassword())
 	require.NoError(t, err)
 	err = user.AddBasicAuth(ba)
 	require.NoError(t, err)
@@ -205,7 +222,7 @@ func addRndBasicAuth(t *testing.T, user *userr.User) {
 func addRndOpenAuth(t *testing.T, user *userr.User) {
 	token, err := userr.NewOpenAuthToken(uuid.NewString(), "test", uuid.NewString(), time.Now().Add(1*time.Hour))
 	require.NoError(t, err)
-	openAuthUser, err := userr.NewOpenAuthUser(uuid.NewString(), gofakeit.Company(), "", gofakeit.Noun(), "", token)
+	openAuthUser, err := userr.NewOpenAuthUser(uuid.NewString(), gofakeit.Company(), gofakeit.Email(), gofakeit.Noun(), gofakeit.URL(), token)
 	require.NoError(t, err)
 	err = user.AddOpenAuthUser(openAuthUser)
 	require.NoError(t, err)
