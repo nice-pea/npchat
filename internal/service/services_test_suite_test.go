@@ -54,8 +54,8 @@ func (suite *servicesTestSuite) SetupSubTest() {
 
 	// Инициализация репозиториев
 	suite.rr.chats = suite.factory.NewChatsRepository()
-	suite.rr.users = suite.factory.NewUsersRepository()
-	suite.rr.sessions = suite.factory.NewSessionsRepository()
+	suite.rr.users = suite.factory.NewUserrRepository()
+	suite.rr.sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
 	suite.mockOAuthUsers = suite.generateMockUsers()

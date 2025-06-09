@@ -10,18 +10,12 @@ type SessionnRepository struct {
 	db *sqlx.DB
 }
 
-func (s SessionnRepository) List(filter sessionn.Filter) ([]sessionn.Session, error) {
+func (r SessionnRepository) List(filter sessionn.Filter) ([]sessionn.Session, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s SessionnRepository) Upsert(s2 sessionn.Session) error {
+func (r SessionnRepository) Upsert(session sessionn.Session) error {
 	//TODO implement me
 	panic("implement me")
-}
-
-func (r *RepositoryFactory) NewSessionnRepository() sessionn.Repository {
-	return &SessionnRepository{
-		db: r.db,
-	}
 }

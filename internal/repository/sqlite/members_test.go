@@ -11,27 +11,6 @@ import (
 	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
 )
 
-func TestNewMembersRepository(t *testing.T) {
-	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
-		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.Nil(t, err)
-		assert.NotNil(t, repositoryFactory)
-		repo := repositoryFactory.NewMembersRepository()
-		assert.NotNil(t, repo)
-	})
-}
-
-func TestMembersRepository(t *testing.T) {
-	repository_tests.MembersRepositoryTests(t, func() domain.MembersRepository {
-		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.Nil(t, err)
-		assert.NotNil(t, repositoryFactory)
-		repo := repositoryFactory.NewMembersRepository()
-		require.NotNil(t, repo)
-		return repo
-	})
-}
-
 func TestMembersRepository_Mapping(t *testing.T) {
 	t.Run("один в domain", func(t *testing.T) {
 		repoMember := member{

@@ -8,6 +8,9 @@ import (
 
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 )
 
 type Config struct {
@@ -35,6 +38,24 @@ func InitRepositoryFactory(config Config) (*RepositoryFactory, error) {
 
 func (r *RepositoryFactory) Close() error {
 	return r.db.Close()
+}
+
+func (r *RepositoryFactory) NewUserrRepository() *UserrRepository {
+	return &UserrRepository{
+		db: r.db,
+	}
+}
+
+func (r *RepositoryFactory) NewSessionnRepository() sessionn.Repository {
+	return &SessionnRepository{
+		db: r.db,
+	}
+}
+
+func (r *RepositoryFactory) NewChattRepository() chatt.Repository {
+	return &ChattRepository{
+		db: r.db,
+	}
 }
 
 func migrate(db *sqlx.DB, migrationsDir string) error {

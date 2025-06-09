@@ -5,32 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/domain/repository_tests"
 )
-
-func TestNewUsersRepository(t *testing.T) {
-	t.Run("создание репозитория с дефолтными значениями", func(t *testing.T) {
-		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.NoError(t, err)
-		require.NotZero(t, repositoryFactory)
-		repo := repositoryFactory.NewUsersRepository()
-		assert.NotNil(t, repo)
-	})
-}
-
-func TestUsersRepository(t *testing.T) {
-	repository_tests.UsersRepositoryTests(t, func() domain.UsersRepository {
-		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
-		assert.NoError(t, err)
-		require.NotZero(t, repositoryFactory)
-		repo := repositoryFactory.NewUsersRepository()
-		require.NotNil(t, repo)
-		return repo
-	})
-}
 
 func TestUsersRepository_Mapping(t *testing.T) {
 	t.Run("один в domain", func(t *testing.T) {

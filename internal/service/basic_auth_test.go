@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/brianvoe/gofakeit/v7"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/common"
+	"github.com/saime-0/nice-pea-chat/internal/common"
 	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 )

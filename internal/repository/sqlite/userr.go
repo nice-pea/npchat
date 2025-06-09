@@ -10,18 +10,12 @@ type UserrRepository struct {
 	db *sqlx.DB
 }
 
-func (r *RepositoryFactory) NewUserrRepository() *UserrRepository {
-	return &UserrRepository{
-		db: r.db,
-	}
-}
-
-func (u *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
+func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (u *UserrRepository) Upsert(u2 userr.User) error {
+func (r *UserrRepository) Upsert(user userr.User) error {
 	//TODO implement me
 	panic("implement me")
 }
