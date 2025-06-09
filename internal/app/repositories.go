@@ -23,7 +23,7 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 	}
 
 	rs := &repositories{
-		chats:    factory.NewChatsRepository(),
+		chats:    factory.NewChattRepository(),
 		users:    factory.NewUserrRepository(),
 		sessions: factory.NewSessionnRepository(),
 	}

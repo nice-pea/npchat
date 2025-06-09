@@ -1,46 +1,37 @@
 package sqlite
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/jmoiron/sqlx"
-
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-)
-
-type session struct {
-	ID     string `db:"id"`
-	UserID string `db:"user_id"`
-	Token  string `db:"token"`
-	Status int    `db:"status"`
-}
-
-func sessionFromDomain(s domain.Session) session {
-	return session{
-		ID:     s.ID,
-		UserID: s.UserID,
-		Token:  s.Token,
-		Status: s.Status,
-	}
-}
-
-func sessionToDomain(s session) domain.Session {
-	return domain.Session{
-		ID:     s.ID,
-		UserID: s.UserID,
-		Token:  s.Token,
-		Status: s.Status,
-	}
-}
-
-func sessionsToDomain(sessions []session) []domain.Session {
-	result := make([]domain.Session, len(sessions))
-	for i, s := range sessions {
-		result[i] = sessionToDomain(s)
-	}
-	return result
-}
+//type session struct {
+//	ID     string `db:"id"`
+//	UserID string `db:"user_id"`
+//	Token  string `db:"token"`
+//	Status int    `db:"status"`
+//}
+//
+//func sessionFromDomain(s domain.Session) session {
+//	return session{
+//		ID:     s.ID,
+//		UserID: s.UserID,
+//		Token:  s.Token,
+//		Status: s.Status,
+//	}
+//}
+//
+//func sessionToDomain(s session) domain.Session {
+//	return domain.Session{
+//		ID:     s.ID,
+//		UserID: s.UserID,
+//		Token:  s.Token,
+//		Status: s.Status,
+//	}
+//}
+//
+//func sessionsToDomain(sessions []session) []domain.Session {
+//	result := make([]domain.Session, len(sessions))
+//	for i, s := range sessions {
+//		result[i] = sessionToDomain(s)
+//	}
+//	return result
+//}
 
 //func (r *SessionsRepository) List(filter domain.SessionsFilter) ([]domain.Session, error) {
 //	sessions := make([]session, 0)

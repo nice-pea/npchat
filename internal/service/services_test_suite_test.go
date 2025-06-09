@@ -53,7 +53,7 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	require.NoError(err)
 
 	// Инициализация репозиториев
-	suite.rr.chats = suite.factory.NewChatsRepository()
+	suite.rr.chats = suite.factory.NewChattRepository()
 	suite.rr.users = suite.factory.NewUserrRepository()
 	suite.rr.sessions = suite.factory.NewSessionnRepository()
 
@@ -119,14 +119,7 @@ func (suite *servicesTestSuite) rndChat() chatt.Chat {
 	return chat
 }
 
-// rndParticipant создает случайного участника
-func (suite *servicesTestSuite) rndParticipant() chatt.Participant {
-	p, err := chatt.NewParticipant(uuid.NewString())
-	suite.Require().NoError(err)
-	return p
-}
-
-// rndParticipant создает случайного участника
+// newParticipant создает случайного участника
 func (suite *servicesTestSuite) newParticipant(userID string) chatt.Participant {
 	p, err := chatt.NewParticipant(userID)
 	suite.Require().NoError(err)
@@ -155,32 +148,7 @@ func (suite *servicesTestSuite) addInvitation(chat *chatt.Chat, i chatt.Invitati
 	suite.Require().NoError(chat.AddInvitation(i))
 }
 
-//
-//// saveMember сохраняет участника в репозиторий, в случае ошибки завершит тест
-//func (suite *servicesTestSuite) saveMember(participant chatt.Participant) chatt.Participant {
-//	err := suite.rr..Save(participant)
-//	suite.Require().NoError(err)
-//
-//	return participant
-//}
-
-//// saveInvitation сохраняет приглашение в репозиторий, в случае ошибки завершит тест
-//func (suite *servicesTestSuite) saveInvitation(invitation domain.Invitation) domain.Invitation {
-//	err := suite.rr.invitations.Save(invitation)
-//	suite.Require().NoError(err)
-//
-//	return invitation
-//}
-
-// saveUser сохраняет пользователя в репозиторий, в случае ошибки завершит тест
-func (suite *servicesTestSuite) saveUser(user userr.User) userr.User {
-	err := suite.rr.users.Upsert(user)
-	suite.Require().NoError(err)
-
-	return user
-}
-
-// Функция для генерации случайной строки
+// randomString генерирует случайную строку
 func randomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, n)
@@ -190,7 +158,7 @@ func randomString(n int) string {
 	return string(b)
 }
 
-// Генерация случайного OAuthToken
+// randomOAuthToken генерирует случайный OAuthToken
 func (suite *servicesTestSuite) randomOAuthToken() userr.OpenAuthToken {
 	t, err := userr.NewOpenAuthToken(
 		randomString(32), // AccessToken

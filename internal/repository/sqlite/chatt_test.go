@@ -15,7 +15,7 @@ func TestChattRepository(t *testing.T) {
 		repositoryFactory, err := InitRepositoryFactory(defaultTestConfig)
 		assert.Nil(t, err)
 		assert.NotNil(t, repositoryFactory)
-		repo := repositoryFactory.NewChatsRepository()
+		repo := repositoryFactory.NewChattRepository()
 		require.NotNil(t, repo)
 		return repo
 	})

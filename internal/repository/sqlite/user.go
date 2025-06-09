@@ -1,51 +1,42 @@
 package sqlite
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/jmoiron/sqlx"
-
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-)
-
-type user struct {
-	ID   string `db:"id"`
-	Name string `db:"name"`
-	Nick string `db:"nick"`
-}
-
-func userToDomain(repoUser user) domain.User {
-	return domain.User{
-		ID:   repoUser.ID,
-		Name: repoUser.Name,
-		Nick: repoUser.Nick,
-	}
-}
-
-func userFromDomain(domainUser domain.User) user {
-	return user{
-		ID:   domainUser.ID,
-		Name: domainUser.Name,
-		Nick: domainUser.Nick,
-	}
-}
-
-func usersToDomain(repoUsers []user) []domain.User {
-	users := make([]domain.User, len(repoUsers))
-	for i, repoUser := range repoUsers {
-		users[i] = userToDomain(repoUser)
-	}
-	return users
-}
-
-func usersFromDomain(domainUsers []domain.User) []user {
-	repoUsers := make([]user, len(domainUsers))
-	for i, repoUser := range domainUsers {
-		repoUsers[i] = userFromDomain(repoUser)
-	}
-	return repoUsers
-}
+//type user struct {
+//	ID   string `db:"id"`
+//	Name string `db:"name"`
+//	Nick string `db:"nick"`
+//}
+//
+//func userToDomain(repoUser user) domain.User {
+//	return domain.User{
+//		ID:   repoUser.ID,
+//		Name: repoUser.Name,
+//		Nick: repoUser.Nick,
+//	}
+//}
+//
+//func userFromDomain(domainUser domain.User) user {
+//	return user{
+//		ID:   domainUser.ID,
+//		Name: domainUser.Name,
+//		Nick: domainUser.Nick,
+//	}
+//}
+//
+//func usersToDomain(repoUsers []user) []domain.User {
+//	users := make([]domain.User, len(repoUsers))
+//	for i, repoUser := range repoUsers {
+//		users[i] = userToDomain(repoUser)
+//	}
+//	return users
+//}
+//
+//func usersFromDomain(domainUsers []domain.User) []user {
+//	repoUsers := make([]user, len(domainUsers))
+//	for i, repoUser := range domainUsers {
+//		repoUsers[i] = userFromDomain(repoUser)
+//	}
+//	return repoUsers
+//}
 
 //func (r *UsersRepository) List(filter domain.UsersFilter) ([]domain.User, error) {
 //	users := make([]user, 0)

@@ -1,38 +1,34 @@
 package sqlite
 
-import (
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-)
-
-type authnPassword struct {
-	UserID   string `db:"user_id"`
-	Login    string `db:"login"`
-	Password string `db:"password"`
-}
-
-func authnPasswordFromDomain(c domain.AuthnPassword) authnPassword {
-	return authnPassword{
-		UserID:   c.UserID,
-		Login:    c.Login,
-		Password: c.Password,
-	}
-}
-
-func authnPasswordToDomain(c authnPassword) domain.AuthnPassword {
-	return domain.AuthnPassword{
-		UserID:   c.UserID,
-		Login:    c.Login,
-		Password: c.Password,
-	}
-}
-
-func authnPasswordListToDomain(authnPasswords []authnPassword) []domain.AuthnPassword {
-	result := make([]domain.AuthnPassword, len(authnPasswords))
-	for i, s := range authnPasswords {
-		result[i] = authnPasswordToDomain(s)
-	}
-	return result
-}
+//type authnPassword struct {
+//	UserID   string `db:"user_id"`
+//	Login    string `db:"login"`
+//	Password string `db:"password"`
+//}
+//
+//func authnPasswordFromDomain(c domain.AuthnPassword) authnPassword {
+//	return authnPassword{
+//		UserID:   c.UserID,
+//		Login:    c.Login,
+//		Password: c.Password,
+//	}
+//}
+//
+//func authnPasswordToDomain(c authnPassword) domain.AuthnPassword {
+//	return domain.AuthnPassword{
+//		UserID:   c.UserID,
+//		Login:    c.Login,
+//		Password: c.Password,
+//	}
+//}
+//
+//func authnPasswordListToDomain(authnPasswords []authnPassword) []domain.AuthnPassword {
+//	result := make([]domain.AuthnPassword, len(authnPasswords))
+//	for i, s := range authnPasswords {
+//		result[i] = authnPasswordToDomain(s)
+//	}
+//	return result
+//}
 
 //func (r *AuthnPasswordRepository) List(filter domain.AuthnPasswordFilter) ([]domain.AuthnPassword, error) {
 //	aps := make([]authnPassword, 0)

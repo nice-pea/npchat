@@ -246,13 +246,6 @@ func upsertChat(t *testing.T, r chatt.Repository, chat chatt.Chat) chatt.Chat {
 	return chat
 }
 
-// rndInv создает случайное приглашение
-func rndInv(t *testing.T) chatt.Invitation {
-	inv, err := chatt.NewInvitation(uuid.NewString(), uuid.NewString())
-	require.NoError(t, err)
-	return inv
-}
-
 // rndParticipant создает случайного участника
 func rndParticipant(t *testing.T) chatt.Participant {
 	p, err := chatt.NewParticipant(uuid.NewString())

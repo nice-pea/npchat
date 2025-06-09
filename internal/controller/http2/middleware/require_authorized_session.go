@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
@@ -30,21 +30,21 @@ func RequireAuthorizedSession(next http2.HandlerFuncRW) http2.HandlerFuncRW {
 	}
 }
 
-func getSession(ctx http2.Context) (domain.Session, error) {
+func getSession(ctx http2.Context) (sessionn.Session, error) {
 	header := ctx.Request().Header.Get("Authorization")
 	token, _ := strings.CutPrefix(header, "Bearer ")
 	if token == "" {
-		return domain.Session{}, nil
+		return sessionn.Session{}, nil
 	}
 
 	sessions, err := ctx.Services().Sessions().Find(service.SessionsFindIn{
 		Token: token,
 	})
 	if err != nil {
-		return domain.Session{}, fmt.Errorf("c.sessions.Find: %w", err)
+		return sessionn.Session{}, fmt.Errorf("c.sessions.Find: %w", err)
 	}
 	if len(sessions) != 1 {
-		return domain.Session{}, nil
+		return sessionn.Session{}, nil
 	}
 
 	return sessions[0], nil
