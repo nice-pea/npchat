@@ -3,7 +3,7 @@ package http2
 import (
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/service"
 )
 
@@ -22,7 +22,7 @@ type Context interface {
 	RequestID() string
 
 	// Session возвращает текущую сессию пользователя
-	Session() domain.Session
+	Session() sessionn.Session
 
 	// Request возвращает HTTP-запрос
 	Request() *http.Request
@@ -43,7 +43,7 @@ type RWContext interface {
 	Context
 
 	// SetSession устанавливает сессию пользователя
-	SetSession(domain.Session)
+	SetSession(sessionn.Session)
 
 	// SetRequestID устанавливает уникальный идентификатор запроса
 	SetRequestID(string)
@@ -57,10 +57,7 @@ type Middleware func(rw HandlerFuncRW) HandlerFuncRW
 
 // Services определяет интерфейс для доступа к сервисам приложения
 type Services interface {
-	Chats() *service.Chats                 // Сервис чатов
-	Invitations() *service.Invitations     // Сервис приглашений
-	Members() *service.Members             // Сервис участников чата
-	Sessions() *service.Sessions           // Сервис сессий
-	AuthnPassword() *service.AuthnPassword // Сервис аутентификации по паролю
-	OAuth() *service.OAuth                 // Сервис OAuth2
+	Chats() *service.Chats       // Сервис чатов
+	Sessions() *service.Sessions // Сервис сессий
+	Users() *service.Users       // Сервис пользователей
 }

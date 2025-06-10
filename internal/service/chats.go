@@ -3,191 +3,160 @@ package service
 import (
 	"errors"
 
-	"github.com/google/uuid"
-
 	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
 
-// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте сущности
+// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата чатов
 type Chats struct {
-	ChatsRepo   domain.ChatsRepository
-	MembersRepo domain.MembersRepository
+	Repo chatt.Repository
 }
 
-// UserChatsInput входящие параметры
-type UserChatsInput struct {
-	SubjectUserID string
-	UserID        string
+// WhichParticipateIn входящие параметры
+type WhichParticipateIn struct {
+	SubjectID string
+	UserID    string // TODO: удалить
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in UserChatsInput) Validate() error {
-	if err := uuid.Validate(in.SubjectUserID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectUserID)
+func (in WhichParticipateIn) Validate() error {
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
-	if err := uuid.Validate(in.UserID); err != nil {
+	if err := domain.ValidateID(in.UserID); err != nil {
 		return errors.Join(err, ErrInvalidUserID)
 	}
 
 	return nil
 }
 
-// UserChats возвращает список чатов, в которых участвует пользователь
-func (c *Chats) UserChats(in UserChatsInput) ([]domain.Chat, error) {
+// WhichParticipateOut результат запроса чатов
+type WhichParticipateOut struct {
+	Chats []chatt.Chat
+}
+
+// WhichParticipate возвращает список чатов, в которых участвует пользователь
+func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, error) {
 	// Валидировать параметры
 	var err error
 	if err = in.Validate(); err != nil {
-		return nil, err
+		return WhichParticipateOut{}, err
 	}
 
 	// Пользователь может запрашивать только свой список чатов
-	if in.UserID != in.SubjectUserID {
-		return nil, ErrUnauthorizedChatsView
+	if in.UserID != in.SubjectID {
+		return WhichParticipateOut{}, ErrUnauthorizedChatsView
 	}
 
 	// Получить список участников с фильтром по пользователю
-	members, err := c.MembersRepo.List(domain.MembersFilter{
-		UserID: in.UserID,
+	chats, err := c.Repo.List(chatt.Filter{
+		ParticipantID: in.UserID,
 	})
 	if err != nil {
-		return nil, err
+		return WhichParticipateOut{}, err
 	}
 
-	// Если нет участников, то запрашивать чаты не надо
-	if len(members) == 0 {
-		return nil, nil
-	}
-
-	// Собрать ID чатов, к которым принадлежат участники
-	chatIds := make([]string, len(members))
-	for i, member := range members {
-		chatIds[i] = member.ChatID
-	}
-
-	// Вернуть список чатов с фильтром по ID
-	chats, err := c.ChatsRepo.List(domain.ChatsFilter{
-		IDs: chatIds,
-	})
-
-	return chats, err
+	return WhichParticipateOut{Chats: chats}, err
 }
 
-// CreateInput входящие параметры
-type CreateInput struct {
+// CreateChatIn входящие параметры
+type CreateChatIn struct {
 	Name        string
-	ChiefUserID string
+	ChiefUserID string // TODO: переименовать в SubjectID
 }
 
-// Validate валидирует значение отдельно каждого параметры
-func (in CreateInput) Validate() error {
-	chat := domain.Chat{
-		Name:        in.Name,
-		ChiefUserID: in.ChiefUserID,
+func (in CreateChatIn) Validate() error {
+	if err := domain.ValidateID(in.ChiefUserID); err != nil {
+		return errors.Join(ErrInvalidChiefID, err)
 	}
-	if err := chat.ValidateName(); err != nil {
-		return errors.Join(err, ErrInvalidName)
-	}
-	if err := chat.ValidateChiefUserID(); err != nil {
-		return errors.Join(err, ErrInvalidChiefUserID)
+	if err := chatt.ValidateChatName(in.Name); err != nil {
+		return errors.Join(ErrInvalidName, err)
 	}
 
 	return nil
 }
 
-// CreateOutput результат создания чата
-type CreateOutput struct {
-	Chat        domain.Chat
-	ChiefMember domain.Member
+// CreateChatOut результат создания чата
+type CreateChatOut struct {
+	Chat chatt.Chat
 }
 
-// Create создает новый чат и участника для главного администратора - пользователя который создал этот чат
-func (c *Chats) Create(in CreateInput) (CreateOutput, error) {
-	// Валидировать параметры
+// CreateChat создает новый чат и участника для главного администратора - пользователя, который создал этот чат
+func (c *Chats) CreateChat(in CreateChatIn) (CreateChatOut, error) {
 	if err := in.Validate(); err != nil {
-		return CreateOutput{}, err
+		return CreateChatOut{}, err
+	}
+
+	chat, err := chatt.NewChat(in.Name, in.ChiefUserID)
+	if err != nil {
+		return CreateChatOut{}, err
 	}
 
 	// Сохранить чат в репозиторий
-	newChat := domain.Chat{
-		ID:          uuid.NewString(),
-		Name:        in.Name,
-		ChiefUserID: in.ChiefUserID,
-	}
-	if err := c.ChatsRepo.Save(newChat); err != nil {
-		return CreateOutput{}, err
+	if err := c.Repo.Upsert(chat); err != nil {
+		return CreateChatOut{}, err
 	}
 
-	// Создать участника
-	member := domain.Member{
-		ID:     uuid.NewString(),
-		UserID: newChat.ChiefUserID,
-		ChatID: newChat.ID,
-	}
-	if err := c.MembersRepo.Save(member); err != nil {
-		return CreateOutput{}, err
-	}
-
-	return CreateOutput{
-		Chat:        newChat,
-		ChiefMember: member,
+	return CreateChatOut{
+		Chat: chat,
 	}, nil
 }
 
-// UpdateNameInput входящие параметры
-type UpdateNameInput struct {
-	SubjectUserID string
-	ChatID        string
-	NewName       string
+// UpdateNameIn входящие параметры
+type UpdateNameIn struct {
+	SubjectID string
+	ChatID    string
+	NewName   string
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in UpdateNameInput) Validate() error {
-	chat := domain.Chat{
-		ID:          in.ChatID,
-		Name:        in.NewName,
-		ChiefUserID: in.SubjectUserID,
+func (in UpdateNameIn) Validate() error {
+	if err := domain.ValidateID(in.ChatID); err != nil {
+		return errors.Join(err, ErrInvalidChatID)
 	}
-	if err := chat.ValidateID(); err != nil {
-		return errors.Join(err, ErrInvalidID)
-	}
-	if err := chat.ValidateName(); err != nil {
+	if err := chatt.ValidateChatName(in.NewName); err != nil {
 		return errors.Join(err, ErrInvalidName)
 	}
-	if err := chat.ValidateChiefUserID(); err != nil {
-		return errors.Join(err, ErrInvalidChiefUserID)
+	if err := domain.ValidateID(in.SubjectID); err != nil {
+		return errors.Join(err, ErrInvalidSubjectID)
 	}
 
 	return nil
+}
+
+// UpdateNameOut результат обновления названия чата
+type UpdateNameOut struct {
+	Chat chatt.Chat
 }
 
 // UpdateName обновляет название чата.
 // Доступно только для главного администратора этого чата
-func (c *Chats) UpdateName(in UpdateNameInput) (domain.Chat, error) {
+func (c *Chats) UpdateName(in UpdateNameIn) (UpdateNameOut, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
-		return domain.Chat{}, err
+		return UpdateNameOut{}, err
 	}
 
-	// Найти чат для обновления
-	chat, err := getChat(c.ChatsRepo, in.ChatID)
+	// Найти чат
+	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
 	if err != nil {
-		return domain.Chat{}, err
+		return UpdateNameOut{}, err
 	}
 
 	// Проверить доступ пользователя к этому действию
-	if in.SubjectUserID != chat.ChiefUserID {
-		return domain.Chat{}, ErrSubjectUserIsNotChief
+	if in.SubjectID != chat.ChiefID {
+		return UpdateNameOut{}, ErrSubjectUserIsNotChief
 	}
 
 	// Перезаписать с новым значением
-	updatedChat := domain.Chat{
-		ID:          chat.ID,
-		Name:        in.NewName,
-		ChiefUserID: chat.ChiefUserID,
+	if err = chat.UpdateName(in.NewName); err != nil {
+		return UpdateNameOut{}, err
 	}
-	if err = c.ChatsRepo.Save(updatedChat); err != nil {
-		return domain.Chat{}, err
+	if err = c.Repo.Upsert(chat); err != nil {
+		return UpdateNameOut{}, err
 	}
 
-	return updatedChat, nil
+	return UpdateNameOut{
+		Chat: chat,
+	}, nil
 }

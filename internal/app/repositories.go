@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
 	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
 )
 
 type repositories struct {
-	chats         domain.ChatsRepository
-	invitations   domain.InvitationsRepository
-	members       domain.MembersRepository
-	users         domain.UsersRepository
-	sessions      domain.SessionsRepository
-	authnPassword domain.AuthnPasswordRepository
-	oauth         domain.OAuthRepository
+	chats    chatt.Repository
+	users    userr.Repository
+	sessions sessionn.Repository
 }
 
 func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error) {
@@ -25,13 +23,9 @@ func initSqliteRepositories(config sqlite.Config) (*repositories, func(), error)
 	}
 
 	rs := &repositories{
-		chats:         factory.NewChatsRepository(),
-		invitations:   factory.NewInvitationsRepository(),
-		members:       factory.NewMembersRepository(),
-		users:         factory.NewUsersRepository(),
-		sessions:      factory.NewSessionsRepository(),
-		authnPassword: factory.NewAuthnPasswordRepository(),
-		oauth:         factory.NewOAuthRepository(),
+		chats:    factory.NewChattRepository(),
+		users:    factory.NewUserrRepository(),
+		sessions: factory.NewSessionnRepository(),
 	}
 
 	return rs, func() {

@@ -3,6 +3,7 @@ module github.com/saime-0/nice-pea-chat
 go 1.24
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
