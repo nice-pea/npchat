@@ -6,38 +6,34 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/saime-0/nice-pea-chat/internal/common"
 )
 
 // TestNewInvitation тестирует создание приглашения.
 func TestNewInvitation(t *testing.T) {
 	t.Run("параметр subjectID не должен быть пустым", func(t *testing.T) {
-		inv, err := NewInvitation("", uuid.NewString())
+		inv, err := NewInvitation(common.Zero[uuid.UUID](), uuid.New())
 		assert.Zero(t, inv)
 		assert.Error(t, err)
 	})
 
 	t.Run("параметр recipientID не должен быть пустым", func(t *testing.T) {
-		inv, err := NewInvitation(uuid.NewString(), "")
-		assert.Zero(t, inv)
-		assert.Error(t, err)
-	})
-
-	t.Run("параметры должны быть валидными UUID", func(t *testing.T) {
-		inv, err := NewInvitation("invalid", "invalid")
+		inv, err := NewInvitation(uuid.New(), common.Zero[uuid.UUID]())
 		assert.Zero(t, inv)
 		assert.Error(t, err)
 	})
 
 	t.Run("subjectID и recipientID не могут быть одинаковыми", func(t *testing.T) {
-		id := uuid.NewString()
+		id := uuid.New()
 		inv, err := NewInvitation(id, id)
 		assert.Zero(t, inv)
 		assert.ErrorIs(t, err, ErrSubjectAndRecipientMustBeDifferent)
 	})
 
 	t.Run("создание валидного приглашения", func(t *testing.T) {
-		subjectID := uuid.NewString()
-		recipientID := uuid.NewString()
+		subjectID := uuid.New()
+		recipientID := uuid.New()
 		inv, err := NewInvitation(subjectID, recipientID)
 		assert.NotZero(t, inv)
 		assert.NoError(t, err)
@@ -53,11 +49,11 @@ func TestNewInvitation(t *testing.T) {
 func TestChat_AddInvitation(t *testing.T) {
 	t.Run("нельзя добавить приглашение от не участника чата", func(t *testing.T) {
 		// Создать чат
-		chat, err := NewChat("chatName", uuid.NewString())
+		chat, err := NewChat("chatName", uuid.New())
 		require.NoError(t, err)
 
 		// Создать и добавить первое приглашение
-		inv, err := NewInvitation(uuid.NewString(), uuid.NewString())
+		inv, err := NewInvitation(uuid.New(), uuid.New())
 		require.NoError(t, err)
 		err = chat.AddInvitation(inv)
 		assert.ErrorIs(t, err, ErrSubjectIsNotMember)
@@ -65,12 +61,12 @@ func TestChat_AddInvitation(t *testing.T) {
 
 	t.Run("нельзя пригласить существующего участника", func(t *testing.T) {
 		// Создать чат
-		chief := uuid.NewString()
+		chief := uuid.New()
 		chat, err := NewChat("test", chief)
 		require.NoError(t, err)
 
 		// Создать и добавить участника
-		p, err := NewParticipant(uuid.NewString())
+		p, err := NewParticipant(uuid.New())
 		require.NoError(t, err)
 		err = chat.AddParticipant(p)
 		require.NoError(t, err)
@@ -84,8 +80,8 @@ func TestChat_AddInvitation(t *testing.T) {
 
 	t.Run("нельзя пригласить уже приглашенного пользователя", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
-		recipientID := uuid.NewString()
+		chiefID := uuid.New()
+		recipientID := uuid.New()
 		chat, err := NewChat("chatName", chiefID)
 		require.NoError(t, err)
 
@@ -104,12 +100,12 @@ func TestChat_AddInvitation(t *testing.T) {
 
 	t.Run("успешное добавление приглашения", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, err := NewChat("chatName", chiefID)
 		require.NoError(t, err)
 
 		// Создать и добавить приглашение
-		inv, err := NewInvitation(chiefID, uuid.NewString())
+		inv, err := NewInvitation(chiefID, uuid.New())
 		require.NoError(t, err)
 		err = chat.AddInvitation(inv)
 		assert.NoError(t, err)
@@ -121,21 +117,21 @@ func TestChat_AddInvitation(t *testing.T) {
 func TestChat_RemoveInvitation(t *testing.T) {
 	t.Run("нельзя удалить несуществующее приглашение", func(t *testing.T) {
 		// Создать чат
-		chat, err := NewChat("chatName", uuid.NewString())
+		chat, err := NewChat("chatName", uuid.New())
 		require.NoError(t, err)
 
 		// Удалить приглашение
-		err = chat.RemoveInvitation(uuid.NewString())
+		err = chat.RemoveInvitation(uuid.New())
 		assert.ErrorIs(t, err, ErrInvitationNotExists)
 	})
 
 	t.Run("успешное удаление приглашения", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, _ := NewChat("chatName", chiefID)
 
 		// Создать и добавить приглашение
-		inv, _ := NewInvitation(chiefID, uuid.NewString())
+		inv, _ := NewInvitation(chiefID, uuid.New())
 		_ = chat.AddInvitation(inv)
 
 		// Удалить приглашение
@@ -149,25 +145,25 @@ func TestChat_RemoveInvitation(t *testing.T) {
 func TestChat_InvitationMethods(t *testing.T) {
 	t.Run("проверка наличия приглашения", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, _ := NewChat("chatName", chiefID)
 
 		// Создать и добавить приглашение
-		inv, _ := NewInvitation(chiefID, uuid.NewString())
+		inv, _ := NewInvitation(chiefID, uuid.New())
 		_ = chat.AddInvitation(inv)
 
 		// Проверка наличия приглашения по ID
 		assert.True(t, chat.HasInvitation(inv.ID))
-		assert.False(t, chat.HasInvitation(uuid.NewString()))
+		assert.False(t, chat.HasInvitation(uuid.New()))
 	})
 
 	t.Run("получение приглашения по ID", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, _ := NewChat("chatName", chiefID)
 
 		// Создать и добавить приглашение
-		inv, _ := NewInvitation(chiefID, uuid.NewString())
+		inv, _ := NewInvitation(chiefID, uuid.New())
 		_ = chat.AddInvitation(inv)
 
 		// Получение приглашения по ID
@@ -178,8 +174,8 @@ func TestChat_InvitationMethods(t *testing.T) {
 
 	t.Run("проверка наличия приглашения по получателю", func(t *testing.T) {
 		// Создать чат
-		chiefID := uuid.NewString()
-		recipientID := uuid.NewString()
+		chiefID := uuid.New()
+		recipientID := uuid.New()
 		chat, _ := NewChat("chatName", chiefID)
 
 		// Создать и добавить приглашение
@@ -188,6 +184,6 @@ func TestChat_InvitationMethods(t *testing.T) {
 
 		// Проверка наличия приглашения по получателю
 		assert.True(t, chat.HasInvitationWithRecipient(recipientID))
-		assert.False(t, chat.HasInvitationWithRecipient(uuid.NewString()))
+		assert.False(t, chat.HasInvitationWithRecipient(uuid.New()))
 	})
 }

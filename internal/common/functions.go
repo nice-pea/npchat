@@ -21,3 +21,13 @@ func RndElem[T any](slice []T) T {
 func RndPassword() string {
 	return gofakeit.Password(true, true, true, true, false, userr.UserPasswordMaxLen)
 }
+
+func IsZero[T comparable](v T) bool {
+	var zero T
+	return v == zero
+}
+
+func Zero[T comparable]() T {
+	var zero T
+	return zero
+}

@@ -8,9 +8,9 @@ import (
 
 // User представляет собой агрегат пользователя.
 type User struct {
-	ID   string // ID пользователя
-	Name string // Имя пользователя
-	Nick string // Ник пользователя
+	ID   uuid.UUID // ID пользователя
+	Name string    // Имя пользователя
+	Nick string    // Ник пользователя
 
 	BasicAuth     BasicAuth      // Данные для аутентификации по логину и паролю
 	OpenAuthUsers []OpenAuthUser // Связи для аутентификации по OAuth
@@ -28,7 +28,7 @@ func NewUser(name string, nick string) (User, error) {
 	}
 
 	return User{
-		ID:            uuid.NewString(),
+		ID:            uuid.New(),
 		Name:          name,
 		Nick:          nick,
 		BasicAuth:     BasicAuth{},

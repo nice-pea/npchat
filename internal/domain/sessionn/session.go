@@ -10,12 +10,12 @@ import (
 
 // Session представляет собой агрегат сессии
 type Session struct {
-	ID           string // ID сессии
-	UserID       string // ID пользователя, к которому относится сессия
-	Name         string // [название модели телефона / название браузера]
-	Status       string // Статус сессии
-	AccessToken  Token  // Токен сессии для аутентификации
-	RefreshToken Token  // Токен для обновления AccessToken
+	ID           uuid.UUID // ID сессии
+	UserID       uuid.UUID // ID пользователя, к которому относится сессия
+	Name         string    // [название модели телефона / название браузера]
+	Status       string    // Статус сессии
+	AccessToken  Token     // Токен сессии для аутентификации
+	RefreshToken Token     // Токен для обновления AccessToken
 }
 
 var (
@@ -24,7 +24,7 @@ var (
 )
 
 // NewSession создает новую сессию связанную с пользователем.
-func NewSession(userID, name, status string) (Session, error) {
+func NewSession(userID uuid.UUID, name, status string) (Session, error) {
 	if err := domain.ValidateID(userID); err != nil {
 		return Session{}, err
 	}
@@ -36,7 +36,7 @@ func NewSession(userID, name, status string) (Session, error) {
 	}
 
 	return Session{
-		ID:     uuid.NewString(),
+		ID:     uuid.New(),
 		UserID: userID,
 		Name:   name,
 		Status: status,

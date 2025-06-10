@@ -9,7 +9,7 @@ import (
 
 func TestNewChat(t *testing.T) {
 	t.Run("параметр name должен быть валидными и не пустыми", func(t *testing.T) {
-		chat, err := NewChat("\ninvalid\t", uuid.NewString())
+		chat, err := NewChat("\ninvalid\t", uuid.New())
 		assert.Zero(t, chat)
 		assert.ErrorIs(t, err, ErrInvalidChatName)
 	})
@@ -21,7 +21,7 @@ func TestNewChat(t *testing.T) {
 	})
 
 	t.Run("новому чату присваивается id, другие свойства равны переданным", func(t *testing.T) {
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		name := "name"
 		chat, err := NewChat(name, chiefID)
 		assert.NotZero(t, chat)
@@ -36,7 +36,7 @@ func TestNewChat(t *testing.T) {
 	})
 
 	t.Run("в новом чате создается главный администратор", func(t *testing.T) {
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, err := NewChat("name", chiefID)
 		assert.NotZero(t, chat)
 		assert.NoError(t, err)
@@ -47,7 +47,7 @@ func TestNewChat(t *testing.T) {
 	})
 
 	t.Run("в новом чате нет приглашений", func(t *testing.T) {
-		chat, err := NewChat("name", uuid.NewString())
+		chat, err := NewChat("name", uuid.New())
 		assert.NotZero(t, chat)
 		assert.NoError(t, err)
 
