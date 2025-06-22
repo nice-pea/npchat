@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	slog.Info("main: starting")
+	slog.Info("Запуск")
 	ctx, cancel := context.WithCancel(context.Background())
 	go appRun(ctx)
 	waitInterrupt(cancel)
@@ -25,13 +25,13 @@ func main() {
 func appRun(ctx context.Context) {
 	err := initCliCommand().Run(ctx, os.Args)
 	if errors.Is(err, context.Canceled) {
-		slog.Info("main: appRun: exit by context canceled")
+		slog.Info("Завершение работы из-за отмены контекста")
 		os.Exit(0)
 	} else if err != nil {
-		slog.Error("main: appRun: " + err.Error())
+		slog.Error("Завершение работы из-за ошибки: " + err.Error())
 		os.Exit(1)
 	}
-	slog.Info("main: appRun: finished")
+	slog.Info("Завершение без ошибок")
 	os.Exit(0)
 }
 
@@ -39,9 +39,9 @@ func appRun(ctx context.Context) {
 func waitInterrupt(cancel context.CancelFunc) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
-	slog.Info("main: waitInterrupt: Received signal " + (<-interrupt).String())
+	slog.Info("Получен сигнал от ОС: " + (<-interrupt).String())
 	cancel()
-	slog.Info("main: waitInterrupt: Context canceled")
+	slog.Info("Контекст отменен")
 	time.Sleep(3 * time.Second)
 }
 
