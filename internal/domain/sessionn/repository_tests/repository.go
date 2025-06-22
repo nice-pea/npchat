@@ -50,7 +50,7 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 		t.Run("нельзя сохранять без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(sessionn.Session{
-				//ID:   "",
+				ID:   uuid.Nil,
 				Name: "someName",
 			})
 			assert.Error(t, err)

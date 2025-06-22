@@ -175,7 +175,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 		t.Run("нельзя сохранять чат без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(chatt.Chat{
-				//ID:   "",
+				ID:   uuid.Nil,
 				Name: "someName",
 			})
 			assert.Error(t, err)
