@@ -98,8 +98,8 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 		INSERT INTO chats(id, name, chief_id) 
 		VALUES (:id, :name, :chief_id)
 		ON CONFLICT DO UPDATE SET
-			name=:name,
-			chief_id=:chief_id
+			name=excluded.name,
+			chief_id=excluded.chief_id
 	`, toDBChat(chat)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}

@@ -1,8 +1,6 @@
 package service
 
 import (
-	"errors"
-
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
@@ -72,13 +70,13 @@ type BasicAuthRegistrationIn struct {
 
 func (in BasicAuthRegistrationIn) Validate() error {
 	if in.Login == "" {
-		return errors.New("login is required")
+		return ErrLoginIsRequired
 	}
 	if in.Password == "" {
-		return errors.New("password is required")
+		return ErrPasswordIsRequired
 	}
 	if in.Name == "" {
-		return errors.New("name is required")
+		return ErrNameIsRequired
 	}
 
 	return nil

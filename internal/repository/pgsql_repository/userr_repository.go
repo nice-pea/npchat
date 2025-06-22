@@ -82,10 +82,10 @@ func (r *UserrRepository) upsert(user userr.User) error {
 		INSERT INTO users(id, name, nick, login, password) 
 		VALUES (:is, :name, :nick, :login, :password)
 		ON CONFLICT DO UPDATE SET
-			name = :name,
-			nick = :nick,
-			login = :login,
-			password = :password
+			name = excluded.name,
+			nick = excluded.nick,
+			login = excluded.login,
+			password = excluded.password
 	`, toDBUser(user)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}

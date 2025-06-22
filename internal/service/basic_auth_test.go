@@ -80,7 +80,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick:     "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidLogin)
+		suite.ErrorIs(err, ErrLoginIsRequired)
 		suite.Zero(out)
 	})
 
@@ -93,7 +93,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick:     "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidPassword)
+		suite.ErrorIs(err, ErrPasswordIsRequired)
 		suite.Zero(out)
 	})
 
@@ -107,7 +107,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick: "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidName)
+		suite.ErrorIs(err, ErrNameIsRequired)
 		suite.Zero(out)
 	})
 

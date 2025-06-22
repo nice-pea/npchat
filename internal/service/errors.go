@@ -36,4 +36,7 @@ var (
 	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
 	ErrUnknownOAuthProvider         = errors.New("неизвестный OAuth провайдер")
 	ErrLoginOrPasswordDoesNotMatch  = errors.New("не совпадает BasicAuthLogin или Password")
+	ErrLoginIsRequired              = errors.New("login это обязательный параметр")
+	ErrPasswordIsRequired           = errors.New("password это обязательный параметр")
+	ErrNameIsRequired               = errors.New("name это обязательный параметр")
 )
