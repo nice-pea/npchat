@@ -55,12 +55,6 @@ func initCliCommand() *cli.Command {
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "sqlite-migrations-dir",
-				Destination: &cfg.SQLite.MigrationsDir,
-				Usage:       "Путь к директории с миграциями SQLite",
-				Value:       "./migrations/repository/sqlite",
-			},
-			&cli.StringFlag{
 				Name:        "pgsql-dsn",
 				Destination: &cfg.Pgsql.DSN,
 				Usage:       "Строка подключения PostgreSQL в формате 'postgres://user:password@host:port/dbname'",

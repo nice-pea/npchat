@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -14,12 +15,12 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	"github.com/nice-pea/npchat/internal/repository/sqlite"
+	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
 )
 
 type servicesTestSuite struct {
 	suite.Suite
-	factory *sqlite.RepositoryFactory
+	factory *pgsqlRepository.Factory
 	rr      struct {
 		chats    chatt.Repository
 		sessions sessionn.Repository
@@ -37,7 +38,13 @@ type servicesTestSuite struct {
 	mockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
+var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
+
 func Test_ServicesTestSuite(t *testing.T) {
+	if pgsqlDSN == "" {
+		t.Skip()
+	}
+
 	suite.Run(t, new(servicesTestSuite))
 }
 
@@ -46,9 +53,9 @@ func (suite *servicesTestSuite) SetupSubTest() {
 	var err error
 	require := suite.Require()
 
-	// Инициализация SQLiteMemory
-	suite.factory, err = sqlite.InitRepositoryFactory(sqlite.Config{
-		MigrationsDir: "../../migrations/repository/sqlite",
+	// Инициализация тестового репозитория
+	suite.factory, err = pgsqlRepository.InitFactory(pgsqlRepository.Config{
+		DSN: pgsqlDSN,
 	})
 	require.NoError(err)
 
