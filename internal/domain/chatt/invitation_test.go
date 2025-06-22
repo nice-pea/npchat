@@ -6,20 +6,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/saime-0/nice-pea-chat/internal/common"
 )
 
 // TestNewInvitation тестирует создание приглашения.
 func TestNewInvitation(t *testing.T) {
 	t.Run("параметр subjectID не должен быть пустым", func(t *testing.T) {
-		inv, err := NewInvitation(common.Zero[uuid.UUID](), uuid.New())
+		inv, err := NewInvitation(uuid.Nil, uuid.New())
 		assert.Zero(t, inv)
 		assert.Error(t, err)
 	})
 
 	t.Run("параметр recipientID не должен быть пустым", func(t *testing.T) {
-		inv, err := NewInvitation(uuid.New(), common.Zero[uuid.UUID]())
+		inv, err := NewInvitation(uuid.New(), uuid.Nil)
 		assert.Zero(t, inv)
 		assert.Error(t, err)
 	})
