@@ -46,7 +46,5 @@ services:
       - ./pgsql/init:/docker-entrypoint-initdb.d
     networks:
       npc.network:
-        aliases:
-          - pgsql
 #    volumes:
 #      - npc.pgsql.data:/var/lib/postgresql/data

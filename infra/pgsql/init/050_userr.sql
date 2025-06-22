@@ -7,14 +7,6 @@ CREATE TABLE users
     password TEXT NOT NULL
 );
 
-CREATE TABLE oauth_tokens
-(
-    access_token  TEXT        NOT NULL,
-    token_type    TEXT        NOT NULL,
-    refresh_token TEXT        NOT NULL,
-    expiry        TIMESTAMPTZ NOT NULL
-);
-
 CREATE TABLE oauth_users
 (
     id            TEXT PRIMARY KEY,
