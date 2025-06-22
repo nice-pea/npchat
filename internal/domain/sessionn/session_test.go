@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/nice-pea/npchat/internal/domain"
 )
 
 func TestNewSession(t *testing.T) {

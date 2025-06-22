@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/repository/sqlite"
 )
 
 type repositories struct {

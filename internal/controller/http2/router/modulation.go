@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
 var (

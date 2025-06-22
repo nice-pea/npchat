@@ -4,8 +4,8 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus string) (out struct {

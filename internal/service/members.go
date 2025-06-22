@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
 // ChatMembersIn входящие параметры

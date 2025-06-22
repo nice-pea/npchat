@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/adapter/oauth_provider"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
+	"github.com/nice-pea/npchat/internal/adapter/oauth_provider"
+	"github.com/nice-pea/npchat/internal/repository/sqlite"
 )
 
 type Config struct {

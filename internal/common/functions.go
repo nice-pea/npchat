@@ -5,7 +5,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // RndElem возвращает случайный элемент из среза

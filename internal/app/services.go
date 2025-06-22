@@ -1,6 +1,6 @@
 package app
 
-import "github.com/saime-0/nice-pea-chat/internal/service"
+import "github.com/nice-pea/npchat/internal/service"
 
 type services struct {
 	chats    *service.Chats

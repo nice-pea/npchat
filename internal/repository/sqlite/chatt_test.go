@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	chattRepoTests "github.com/saime-0/nice-pea-chat/internal/domain/chatt/repository_tests"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
+	chattRepoTests "github.com/nice-pea/npchat/internal/domain/chatt/repository_tests"
 )
 
 func TestChattRepository(t *testing.T) {

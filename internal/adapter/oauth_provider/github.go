@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // GitHub представляет собой структуру для работы с OAuth2 аутентификацией через GitHub.

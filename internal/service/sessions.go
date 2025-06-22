@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 // Sessions implements the authentication interface

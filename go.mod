@@ -1,4 +1,4 @@
-module github.com/saime-0/nice-pea-chat
+module github.com/nice-pea/npchat
 
 go 1.24
 

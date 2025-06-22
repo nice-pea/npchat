@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/nice-pea/npchat/internal/domain"
 )
 
 // Participant представляет собой участника чата.

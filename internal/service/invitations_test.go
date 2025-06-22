@@ -3,7 +3,7 @@ package service
 import (
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
 // Test_Invitations_ChatInvitations тестирует получение списка приглашений

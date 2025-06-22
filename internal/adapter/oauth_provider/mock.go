@@ -1,7 +1,7 @@
 package oauth_provider
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // Mock представляет собой мок для OAuthProvider, используемый для тестирования.

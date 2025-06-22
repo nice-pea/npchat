@@ -11,7 +11,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/saime-0/nice-pea-chat/internal/app"
+	"github.com/nice-pea/npchat/internal/app"
 )
 
 func main() {

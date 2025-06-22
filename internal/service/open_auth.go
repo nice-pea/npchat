@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // OAuthProviders представляет собой карту провайдеров OAuth, где ключом является имя провайдера.

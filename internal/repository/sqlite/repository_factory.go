@@ -9,8 +9,8 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 type Config struct {

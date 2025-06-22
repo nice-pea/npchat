@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/adapter"
-	oauthProvider "github.com/saime-0/nice-pea-chat/internal/adapter/oauth_provider"
-	"github.com/saime-0/nice-pea-chat/internal/service"
+	"github.com/nice-pea/npchat/internal/adapter"
+	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
+	"github.com/nice-pea/npchat/internal/service"
 )
 
 type adapters struct {
