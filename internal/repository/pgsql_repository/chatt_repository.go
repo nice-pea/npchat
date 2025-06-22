@@ -81,7 +81,7 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 
 func (r *ChattRepository) Upsert(chat chatt.Chat) error {
 	if chat.ID == uuid.Nil {
-		return fmt.Errorf("invalid chat id")
+		return fmt.Errorf("chat ID is required")
 	}
 
 	if r.IsTx() {

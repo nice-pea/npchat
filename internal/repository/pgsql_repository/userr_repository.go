@@ -63,6 +63,10 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 }
 
 func (r *UserrRepository) Upsert(user userr.User) error {
+	if user.ID == uuid.Nil {
+		return fmt.Errorf("user ID is required")
+	}
+
 	if r.IsTx() {
 		return r.upsert(user)
 	} else {

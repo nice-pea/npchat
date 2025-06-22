@@ -28,6 +28,10 @@ func (r *SessionnRepository) List(filter sessionn.Filter) ([]sessionn.Session, e
 }
 
 func (r *SessionnRepository) Upsert(session sessionn.Session) error {
+	if session.ID == uuid.Nil {
+		return fmt.Errorf("session ID is required")
+	}
+
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO sessions(id, user_id, name, status, access_token, access_expiry, refresh_token, refresh_expiry) 
 		VALUES (:id, :user_id, :name, :status, :access_token, :access_expiry, :refresh_token, :refresh_expiry)
