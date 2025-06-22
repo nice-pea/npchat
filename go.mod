@@ -7,8 +7,8 @@ require (
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/google/uuid v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/nullism/bqb v1.7.4
 	github.com/stretchr/testify v1.10.0
+	github.com/urfave/cli/v3 v3.3.8
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sync v0.12.0

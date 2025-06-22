@@ -13,9 +13,23 @@ import (
 
 // GitHub представляет собой структуру для работы с OAuth2 аутентификацией через GitHub.
 type GitHub struct {
-	ClientID     string // Идентификатор клиента для OAuth2
-	ClientSecret string // Секрет клиента для OAuth2
-	RedirectURL  string // URL для перенаправления после аутентификации
+	clientID     string // Идентификатор клиента для OAuth2
+	clientSecret string // Секрет клиента для OAuth2
+	redirectURL  string // URL для перенаправления после аутентификации
+}
+
+type GitHubConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+}
+
+func NewGitHub(cfg GitHubConfig) *GitHub {
+	return &GitHub{
+		clientID:     cfg.ClientID,
+		clientSecret: cfg.ClientSecret,
+		redirectURL:  cfg.RedirectURL,
+	}
 }
 
 // Name возвращает имя провайдера OAuth.
@@ -26,10 +40,10 @@ func (o *GitHub) Name() string {
 // config создает и возвращает конфигурацию OAuth2 для GitHub.
 func (o *GitHub) config() *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     o.ClientID,
-		ClientSecret: o.ClientSecret,
+		ClientID:     o.clientID,
+		ClientSecret: o.clientSecret,
 		Endpoint:     github.Endpoint, // Использует конечную точку GitHub для OAuth2
-		RedirectURL:  o.RedirectURL,
+		RedirectURL:  o.redirectURL,
 		Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
 	}
 }

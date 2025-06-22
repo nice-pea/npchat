@@ -10,7 +10,11 @@ import (
 )
 
 // OAuthProviders представляет собой карту провайдеров OAuth, где ключом является имя провайдера.
-type OAuthProviders = map[string]OAuthProvider
+type OAuthProviders map[string]OAuthProvider
+
+func (o OAuthProviders) Add(p OAuthProvider) {
+	o[p.Name()] = p
+}
 
 // OAuthProvider определяет интерфейс для работы с провайдерами OAuth.
 type OAuthProvider interface {
