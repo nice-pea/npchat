@@ -1,6 +1,8 @@
 package app
 
 import (
+	"log/slog"
+
 	"github.com/nice-pea/npchat/internal/adapter"
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/service"
@@ -26,9 +28,11 @@ func initAdapters(cfg Config) *adapters {
 	oauthProviders := service.OAuthProviders{}
 	if cfg.OAuthGoogle != (oauthProvider.GoogleConfig{}) {
 		oauthProviders.Add(oauthProvider.NewGoogle(cfg.OAuthGoogle))
+		slog.Info("Подключен OAuth провайдер Google")
 	}
 	if cfg.OAuthGitHub != (oauthProvider.GitHubConfig{}) {
 		oauthProviders.Add(oauthProvider.NewGitHub(cfg.OAuthGitHub))
+		slog.Info("Подключен OAuth провайдер GitHub")
 	}
 
 	return &adapters{
