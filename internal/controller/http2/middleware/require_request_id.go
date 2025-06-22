@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
 // ErrUnknownRequestID запрос не содержит идентификатор запроса

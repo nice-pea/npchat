@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 // rwContext представляет контекст HTTP-запроса

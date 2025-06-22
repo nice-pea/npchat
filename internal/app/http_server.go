@@ -8,19 +8,19 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	registerHandler "github.com/saime-0/nice-pea-chat/internal/controller/http2/register_handler"
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2/router"
+	"github.com/nice-pea/npchat/internal/controller/http2"
+	registerHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler"
+	"github.com/nice-pea/npchat/internal/controller/http2/router"
 )
 
-func initHttpServer(ss *services) *http.Server {
+func initHttpServer(ss *services, cfg Config) *http.Server {
 	r := &router.Router{
 		Services: ss,
 	}
 	registerHandlers(r)
 
 	return &http.Server{
-		Addr:    ":8080",
+		Addr:    cfg.HttpAddr,
 		Handler: r,
 	}
 }

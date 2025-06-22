@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/saime-0/nice-pea-chat/internal/common"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/common"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 func TestRepository(t *testing.T, newRepository func() userr.Repository) {

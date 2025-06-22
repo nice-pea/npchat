@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
 // ErrUnsupportedContentTypeValue клиент не принимает JSON в качестве ответа

@@ -1,4 +1,4 @@
-.PHONY: test vet lint check run mdbook mdbook-build
+.PHONY: test vet lint check run build
 
 # Get number of CPU cores minus 1 for parallel execution
 CORES := $(shell echo $$(( $$(nproc) - 1 )))
@@ -21,10 +21,8 @@ check: vet lint
 
 run:
 	echo "Running npc main package..."
-	go run ./cmd/npc/main.go
+	go run ./cmd/npchat/main.go
 
-mdbook:
-	mdbook watch --open
-
-mdbook-build:
-	mdbook build
+build:
+	echo "Running npchat main package..."
+	CGO_ENABLED=0 GOOS=linux go build -o bin/npchat cmd/npchat/main.go

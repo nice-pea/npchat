@@ -1,9 +1,9 @@
 package register_handler
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
-	"github.com/saime-0/nice-pea-chat/internal/service"
+	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	"github.com/nice-pea/npchat/internal/service"
 )
 
 // MyChats регистрирует HTTP-обработчик для получения списка чатов пользователя.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain"
+	"github.com/nice-pea/npchat/internal/domain"
 )
 
 // Session представляет собой агрегат сессии

@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/service"
+	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/service"
 )
 
 // ErrUnauthorized запрос не содержит действительный токен авторизации

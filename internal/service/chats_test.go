@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
 func (suite *servicesTestSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {

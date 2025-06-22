@@ -3,7 +3,7 @@ package sqlite
 import (
 	"github.com/jmoiron/sqlx"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 type UserrRepository struct {

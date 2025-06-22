@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
+	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
 
 func httpStatusCodeByErr(err error) int {

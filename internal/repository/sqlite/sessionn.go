@@ -3,7 +3,7 @@ package sqlite
 import (
 	"github.com/jmoiron/sqlx"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 type SessionnRepository struct {

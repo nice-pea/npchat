@@ -3,19 +3,38 @@ package oauth_provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // GitHub представляет собой структуру для работы с OAuth2 аутентификацией через GitHub.
 type GitHub struct {
+	config *oauth2.Config // Конфигурация OAuth2 для GitHub
+}
+
+type GitHubConfig struct {
 	ClientID     string // Идентификатор клиента для OAuth2
 	ClientSecret string // Секрет клиента для OAuth2
 	RedirectURL  string // URL для перенаправления после аутентификации
+}
+
+func NewGitHub(cfg GitHubConfig) *GitHub {
+	return &GitHub{
+		config: &oauth2.Config{
+			ClientID:     cfg.ClientID,
+			ClientSecret: cfg.ClientSecret,
+			Endpoint:     github.Endpoint, // Использует конечную точку GitHub для OAuth2
+			RedirectURL:  cfg.RedirectURL,
+			Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
+		},
+	}
 }
 
 // Name возвращает имя провайдера OAuth.
@@ -23,21 +42,10 @@ func (o *GitHub) Name() string {
 	return "github"
 }
 
-// config создает и возвращает конфигурацию OAuth2 для GitHub.
-func (o *GitHub) config() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     o.ClientID,
-		ClientSecret: o.ClientSecret,
-		Endpoint:     github.Endpoint, // Использует конечную точку GitHub для OAuth2
-		RedirectURL:  o.RedirectURL,
-		Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
-	}
-}
-
 // Exchange обменивает код авторизации на токен OAuth.
 func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
 	// Обменять кода авторизации на токен OAuth
-	token, err := o.config().Exchange(context.Background(), code)
+	token, err := o.config.Exchange(context.Background(), code)
 	if err != nil {
 		return userr.OpenAuthToken{}, err // Возвращает ошибку, если обмен не удался
 	}
@@ -50,6 +58,8 @@ func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
 	)
 }
 
+const githubGetUserUrl = "https://api.github.com/user"
+
 // User получает информацию о пользователе GitHub, используя токен OAuth.
 func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
@@ -57,12 +67,16 @@ func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	))
 
 	// Сделать запрос на GitHub для получения информации о пользователе
-	const getUser = "https://api.github.com/user"
-	response, err := client.Get(getUser)
+	response, err := client.Get(githubGetUserUrl)
 	if err != nil {
 		return userr.OpenAuthUser{}, err
 	}
 	defer func() { _ = response.Body.Close() }()
+
+	// Проверить код ответа
+	if response.StatusCode != http.StatusOK {
+		return userr.OpenAuthUser{}, fmt.Errorf("unexpected status code: %d", response.StatusCode)
+	}
 
 	// Прочитать данные из тела ответа
 	data, err := io.ReadAll(response.Body)
@@ -83,16 +97,16 @@ func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	}
 
 	return userr.NewOpenAuthUser(
-		string(rune(githubUser.ID)), // Идентификатор пользователя
-		o.Name(),                    // Имя провайдера
-		githubUser.Email,            // Электронная почта пользователя
-		githubUser.Name,             // Имя пользователя
-		githubUser.AvatarURL,        // URL изображения профиля
+		strconv.FormatInt(githubUser.ID, 10), // Идентификатор пользователя
+		o.Name(),                             // Имя провайдера
+		githubUser.Email,                     // Электронная почта пользователя
+		githubUser.Name,                      // Имя пользователя
+		githubUser.AvatarURL,                 // URL изображения профиля
 		token,
 	)
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
 func (o *GitHub) AuthorizationURL(state string) string {
-	return o.config().AuthCodeURL(state)
+	return o.config.AuthCodeURL(state)
 }

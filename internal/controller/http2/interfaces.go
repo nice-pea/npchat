@@ -3,8 +3,8 @@ package http2
 import (
 	"net/http"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/service"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/service"
 )
 
 // Router определяет интерфейс для маршрутизации HTTP-запросов

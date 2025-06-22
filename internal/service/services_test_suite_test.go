@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
-	oauthProvider "github.com/saime-0/nice-pea-chat/internal/adapter/oauth_provider"
-	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
-	"github.com/saime-0/nice-pea-chat/internal/repository/sqlite"
+	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
+	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/repository/sqlite"
 )
 
 type servicesTestSuite struct {

@@ -9,14 +9,33 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // Google представляет собой структуру для работы с OAuth2 аутентификацией через Google.
 type Google struct {
+	config *oauth2.Config // Конфигурация OAuth2 для Google
+}
+
+type GoogleConfig struct {
 	ClientID     string // Идентификатор клиента для OAuth2
 	ClientSecret string // Секрет клиента для OAuth2
 	RedirectURL  string // URL для перенаправления после аутентификации
+}
+
+func NewGoogle(cfg GoogleConfig) *Google {
+	return &Google{
+		config: &oauth2.Config{
+			ClientID:     cfg.ClientID,     // Идентификатор клиента
+			ClientSecret: cfg.ClientSecret, // Секрет клиента
+			Endpoint:     google.Endpoint,  // Использует конечную точку Google для OAuth2
+			RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
+			Scopes: []string{
+				"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
+				"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
+			},
+		},
+	}
 }
 
 // Name возвращает имя провайдера OAuth.
@@ -24,24 +43,10 @@ func (o *Google) Name() string {
 	return "google"
 }
 
-// config создает и возвращает конфигурацию OAuth2 для Google.
-func (o *Google) config() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     o.ClientID,      // Идентификатор клиента
-		ClientSecret: o.ClientSecret,  // Секрет клиента
-		Endpoint:     google.Endpoint, // Использует конечную точку Google для OAuth2
-		RedirectURL:  o.RedirectURL,   // URL для перенаправления
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
-			"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
-		},
-	}
-}
-
 // Exchange обменивает код авторизации на токен OAuth.
 func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 	// Обменять код авторизации на токен OAuth
-	token, err := o.config().Exchange(context.Background(), code)
+	token, err := o.config.Exchange(context.Background(), code)
 	if err != nil {
 		return userr.OpenAuthToken{}, err
 	}
@@ -92,5 +97,5 @@ func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
 func (o *Google) AuthorizationURL(state string) string {
-	return o.config().AuthCodeURL(state) // Генерирует URL для авторизации
+	return o.config.AuthCodeURL(state) // Генерирует URL для авторизации
 }

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
-	"github.com/saime-0/nice-pea-chat/internal/domain/userr"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
 // Users сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата пользователей
