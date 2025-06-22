@@ -127,14 +127,10 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	return nil
 }
 
-func (r *ChattRepository) WithTxConn(txConn sqlxRepo.DbConn) chatt.Repository {
-	return &ChattRepository{
-		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
-	}
-}
-
 func (r *ChattRepository) InTransaction(fn func(txRepo chatt.Repository) error) error {
-	return sqlxRepo.InTransaction(r, fn)
+	return r.SqlxRepo.InTransaction(func(txSqlxRepo sqlxRepo.SqlxRepo) error {
+		return fn(&ChattRepository{SqlxRepo: txSqlxRepo})
+	})
 }
 
 type dbChat struct {

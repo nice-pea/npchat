@@ -103,14 +103,10 @@ func (r *UserrRepository) upsert(user userr.User) error {
 	return nil
 }
 
-func (r *UserrRepository) WithTxConn(txConn sqlxRepo.DbConn) userr.Repository {
-	return &UserrRepository{
-		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
-	}
-}
-
 func (r *UserrRepository) InTransaction(fn func(txRepo userr.Repository) error) error {
-	return sqlxRepo.InTransaction(r, fn)
+	return r.SqlxRepo.InTransaction(func(txSqlxRepo sqlxRepo.SqlxRepo) error {
+		return fn(&UserrRepository{SqlxRepo: txSqlxRepo})
+	})
 }
 
 type dbUser struct {

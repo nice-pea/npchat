@@ -50,14 +50,10 @@ func (r *SessionnRepository) Upsert(session sessionn.Session) error {
 	return nil
 }
 
-func (r *SessionnRepository) WithTxConn(txConn sqlxRepo.DbConn) sessionn.Repository {
-	return &SessionnRepository{
-		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
-	}
-}
-
 func (r *SessionnRepository) InTransaction(fn func(txRepo sessionn.Repository) error) error {
-	return sqlxRepo.InTransaction(r, fn)
+	return r.SqlxRepo.InTransaction(func(txSqlxRepo sqlxRepo.SqlxRepo) error {
+		return fn(&SessionnRepository{SqlxRepo: txSqlxRepo})
+	})
 }
 
 type dbSession struct {
