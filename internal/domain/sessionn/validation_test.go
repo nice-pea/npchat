@@ -31,7 +31,7 @@ func TestValidateSessionName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateSessionName(tt.name); tt.wantErr {
+			if err := ValidateSessionName(tt.sessionName); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
@@ -79,7 +79,7 @@ func TestValidateSessionStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateSessionStatus(tt.name); tt.wantErr {
+			if err := ValidateSessionStatus(tt.status); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
