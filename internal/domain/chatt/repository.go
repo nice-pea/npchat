@@ -6,6 +6,7 @@ import "github.com/google/uuid"
 type Repository interface {
 	List(Filter) ([]Chat, error)
 	Upsert(Chat) error
+	InTransaction(func(txRepo Repository) error) error
 }
 
 // Filter представляет собой фильтр для выборки чатов.
