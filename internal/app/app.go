@@ -2,12 +2,17 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func Run(ctx context.Context, cfg Config) error {
 	g, ctx := errgroup.WithContext(ctx)
+
+	slog.SetLogLoggerLevel(cfg.SlogLevel)
+	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.SlogLevel))
 
 	// Инициализация репозиториев
 	repos, closeSqliteRepos, err := initSqliteRepositories(cfg.SQLite)
