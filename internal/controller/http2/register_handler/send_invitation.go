@@ -1,6 +1,8 @@
 package register_handler
 
 import (
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 	"github.com/saime-0/nice-pea-chat/internal/service"
@@ -13,8 +15,8 @@ import (
 func SendInvitation(router http2.Router) {
 	// Тело запроса для отправки приглашения.
 	type requestBody struct {
-		ChatID string `json:"chat_id"`
-		UserID string `json:"user_id"`
+		ChatID uuid.UUID `json:"chat_id"`
+		UserID uuid.UUID `json:"user_id"`
 	}
 	router.HandleFunc(
 		"POST /invitations",

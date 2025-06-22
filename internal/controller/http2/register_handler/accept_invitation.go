@@ -17,7 +17,7 @@ func AcceptInvitation(router http2.Router) {
 		func(context http2.Context) (any, error) {
 			input := service.AcceptInvitationIn{
 				SubjectID:    context.Session().UserID,
-				InvitationID: http2.PathStr(context, "invitationID"),
+				InvitationID: http2.PathUUID(context, "invitationID"),
 			}
 
 			return nil, context.Services().Chats().AcceptInvitation(input)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+
+	"github.com/google/uuid"
 )
 
 // DecodeBody декодирует тело запроса в структуру dst.
@@ -18,6 +20,12 @@ func DecodeBody(context Context, dst any) error {
 // PathStr возвращает значение из пути запроса
 func PathStr(context Context, name string) string {
 	return context.Request().PathValue(name)
+}
+
+// PathUUID возвращает значение из пути запроса как uuid
+func PathUUID(context Context, name string) uuid.UUID {
+	val, _ := uuid.Parse(context.Request().PathValue(name))
+	return val
 }
 
 // FormStr возвращает значение query-параметра или form-data запроса

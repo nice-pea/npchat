@@ -15,7 +15,7 @@ func TestNewChat(t *testing.T) {
 	})
 
 	t.Run("параметр chiefID должен быть валидными и не пустыми", func(t *testing.T) {
-		chat, err := NewChat("name", "invalid")
+		chat, err := NewChat("name", uuid.Nil)
 		assert.Zero(t, chat)
 		assert.ErrorIs(t, err, ErrInvalidChiefID)
 	})

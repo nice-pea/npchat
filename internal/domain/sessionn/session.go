@@ -23,7 +23,7 @@ var (
 	accessTokenLifetime  = 15 * time.Minute    // 15 минут
 )
 
-// NewSession создает новую сессию связанную с пользователем.
+// NewSession создает новую сессию, связанную с пользователем.
 func NewSession(userID uuid.UUID, name, status string) (Session, error) {
 	if err := domain.ValidateID(userID); err != nil {
 		return Session{}, err

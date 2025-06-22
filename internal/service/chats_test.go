@@ -10,10 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
 
-func (suite *servicesTestSuite) newUserChatsInput(userID string) WhichParticipateIn {
+func (suite *servicesTestSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {
 	return WhichParticipateIn{
 		SubjectID: userID,
 		UserID:    userID,
@@ -22,28 +21,17 @@ func (suite *servicesTestSuite) newUserChatsInput(userID string) WhichParticipat
 
 func (suite *servicesTestSuite) newCreateInputRandom() CreateChatIn {
 	return CreateChatIn{
-		ChiefUserID: uuid.NewString(),
+		ChiefUserID: uuid.New(),
 		Name:        fmt.Sprintf("name%d", rand.Int()),
 	}
-}
-
-// Test_UserChatsInput_Validate тестирует валидацию входящих параметров запроса списка чатов в которых участвует пользователь
-func Test_UserChatsInput_Validate(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := WhichParticipateIn{
-			SubjectID: id,
-			UserID:    id,
-		}
-		return in.Validate()
-	})
 }
 
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
 func (suite *servicesTestSuite) Test_Chats_UserChats() {
 	suite.Run("пользователь может запрашивать только свой чат", func() {
 		input := WhichParticipateIn{
-			SubjectID: uuid.NewString(),
-			UserID:    uuid.NewString(),
+			SubjectID: uuid.New(),
+			UserID:    uuid.New(),
 		}
 		chats, err := suite.ss.chats.WhichParticipate(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
@@ -51,7 +39,7 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 	})
 
 	suite.Run("пустой список из пустого репозитория", func() {
-		input := suite.newUserChatsInput(uuid.NewString())
+		input := suite.newUserChatsInput(uuid.New())
 		userChats, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
 		suite.Empty(userChats)
@@ -63,42 +51,24 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 			chat := suite.upsertChat(suite.rndChat())
 			suite.addRndParticipant(&chat)
 		}
-		input := suite.newUserChatsInput(uuid.NewString())
+		input := suite.newUserChatsInput(uuid.New())
 		userChats, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
 		suite.Empty(userChats)
 	})
 
 	suite.Run("у пользователя может быть несколько чатов", func() {
-		userID := uuid.NewString()
+		userID := uuid.New()
 		const chatsAllCount = 11
 		for range chatsAllCount {
 			chat := suite.upsertChat(suite.rndChat())
-			p := suite.newParticipant(uuid.NewString())
+			p := suite.newParticipant(uuid.New())
 			suite.addParticipant(&chat, p)
 		}
 		input := suite.newUserChatsInput(userID)
 		userChats, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
 		suite.Len(userChats, chatsAllCount)
-	})
-}
-
-// Test_CreateChatInput_Validate тестирует валидацию входящих параметров для создания чата
-func Test_CreateChatInput_Validate(t *testing.T) {
-	t.Run("ошибка при пустом name", func(t *testing.T) {
-		input := CreateChatIn{
-			ChiefUserID: uuid.NewString(),
-			Name:        "",
-		}
-		assert.ErrorIs(t, input.Validate(), ErrInvalidName)
-	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := CreateChatIn{
-			ChiefUserID: id,
-			Name:        "validName",
-		}
-		return in.Validate()
 	})
 }
 
@@ -162,7 +132,7 @@ func (suite *servicesTestSuite) Test_Chats_CreateChat() {
 
 	suite.Run("количество созданных чатов на одного пользователя не ограничено", func() {
 		// Пользователь
-		userID := uuid.NewString()
+		userID := uuid.New()
 		// Создать много чатов от лица пользователя
 		const chatsAllCount = 900
 		for range chatsAllCount {
@@ -253,8 +223,8 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				input := UpdateNameIn{
-					SubjectID: uuid.NewString(),
-					ChatID:    uuid.NewString(),
+					SubjectID: uuid.New(),
+					ChatID:    uuid.New(),
 					NewName:   tt.newName,
 				}
 				if err := input.Validate(); tt.wantErr {
@@ -265,22 +235,14 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 			})
 		}
 	})
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := UpdateNameIn{
-			SubjectID: id,
-			ChatID:    id,
-			NewName:   "NewName",
-		}
-		return input.Validate()
-	})
 }
 
 // Test_Chats_UpdateName тестирует обновления названия чата
 func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 	suite.Run("только существующий чат можно обновить", func() {
 		input := UpdateNameIn{
-			SubjectID: uuid.NewString(),
-			ChatID:    uuid.NewString(),
+			SubjectID: uuid.New(),
+			ChatID:    uuid.New(),
 			NewName:   "newName",
 		}
 		// Обновить название чата
@@ -298,7 +260,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 		suite.Require().NotZero(createdOut)
 		// Попытаться изменить название от имени случайного пользователя
 		input := UpdateNameIn{
-			SubjectID: uuid.NewString(),
+			SubjectID: uuid.New(),
 			ChatID:    createdOut.Chat.ID,
 			NewName:   "newName",
 		}

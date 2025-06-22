@@ -1,6 +1,8 @@
 package register_handler
 
 import (
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2/middleware"
 	"github.com/saime-0/nice-pea-chat/internal/service"
@@ -13,7 +15,7 @@ import (
 func DeleteMember(router http2.Router) {
 	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
-		UserID string `json:"user_id"`
+		UserID uuid.UUID `json:"user_id"`
 	}
 	router.HandleFunc(
 		"DELETE /chats/{chatID}/members",
@@ -27,7 +29,7 @@ func DeleteMember(router http2.Router) {
 
 			input := service.DeleteMemberIn{
 				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathStr(context, "chatID"),
+				ChatID:    http2.PathUUID(context, "chatID"),
 				UserID:    rb.UserID,
 			}
 

@@ -175,7 +175,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 		t.Run("нельзя сохранять чат без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(chatt.Chat{
-				ID:   "",
+				//ID:   "",
 				Name: "someName",
 			})
 			assert.Error(t, err)
@@ -184,7 +184,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 		t.Run("остальные поля, кроме ID могут быть пустыми", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(chatt.Chat{
-				ID: uuid.NewString(),
+				ID: uuid.New(),
 			})
 			assert.NoError(t, err)
 		})
@@ -209,7 +209,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 
 		t.Run("перезапись с новыми значениями по ID", func(t *testing.T) {
 			r := newRepository()
-			id := uuid.NewString()
+			id := uuid.New()
 			// Несколько промежуточных состояний чата
 			for range 33 {
 				chat := rndChat(t)
@@ -232,7 +232,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 
 // rndChat создает случайный экземпляр чата
 func rndChat(t *testing.T) chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.NewString())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
 	require.NoError(t, err)
 
 	return chat
@@ -248,21 +248,21 @@ func upsertChat(t *testing.T, r chatt.Repository, chat chatt.Chat) chatt.Chat {
 
 // rndParticipant создает случайного участника
 func rndParticipant(t *testing.T) chatt.Participant {
-	p, err := chatt.NewParticipant(uuid.NewString())
+	p, err := chatt.NewParticipant(uuid.New())
 	require.NoError(t, err)
 	return p
 }
 
 // addRndParticipant добавляет случайного участника в чат
 func addRndParticipant(t *testing.T, chat *chatt.Chat) {
-	p, err := chatt.NewParticipant(uuid.NewString())
+	p, err := chatt.NewParticipant(uuid.New())
 	require.NoError(t, err)
 	require.NoError(t, chat.AddParticipant(p))
 }
 
 // addRndInv добавляет случайное приглашение в чат
 func addRndInv(t *testing.T, chat *chatt.Chat) {
-	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.NewString())
+	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.New())
 	require.NoError(t, err)
 	require.NoError(t, chat.AddInvitation(inv))
 }
