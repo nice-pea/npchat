@@ -15,11 +15,11 @@ func Run(ctx context.Context, cfg Config) error {
 	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.SlogLevel))
 
 	// Инициализация репозиториев
-	repos, closeSqliteRepos, err := initSqliteRepositories(cfg.SQLite)
+	repos, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
 	if err != nil {
 		return err
 	}
-	defer closeSqliteRepos()
+	defer closeRepos()
 
 	// Инициализация адаптеров
 	adaps := initAdapters(cfg)

@@ -61,6 +61,12 @@ func initCliCommand() *cli.Command {
 				Value:       "./migrations/repository/sqlite",
 			},
 			&cli.StringFlag{
+				Name:        "pgsql-dsn",
+				Destination: &cfg.Pgsql.DSN,
+				Usage:       "Строка подключения PostgreSQL в формате 'postgres://user:password@host:port/dbname'",
+				Required:    true,
+			},
+			&cli.StringFlag{
 				Name:        "http-addr",
 				Destination: &cfg.HttpAddr,
 				Usage:       "Адрес для запуска HTTP сервера",
