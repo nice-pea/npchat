@@ -6,12 +6,13 @@ import (
 
 	"github.com/google/uuid"
 
+	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
+
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	baseRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/base_repo"
 )
 
 type UserrRepository struct {
-	baseRepo.BaseRepo
+	sqlxRepo.SqlxRepo
 }
 
 func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
@@ -102,14 +103,14 @@ func (r *UserrRepository) upsert(user userr.User) error {
 	return nil
 }
 
-func (r *UserrRepository) WithTxConn(txConn baseRepo.DbConn) userr.Repository {
+func (r *UserrRepository) WithTxConn(txConn sqlxRepo.DbConn) userr.Repository {
 	return &UserrRepository{
-		BaseRepo: r.BaseRepo.WithTxConn(txConn),
+		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
 	}
 }
 
 func (r *UserrRepository) InTransaction(fn func(txRepo userr.Repository) error) error {
-	return baseRepo.InTransaction(r, fn)
+	return sqlxRepo.InTransaction(r, fn)
 }
 
 type dbUser struct {

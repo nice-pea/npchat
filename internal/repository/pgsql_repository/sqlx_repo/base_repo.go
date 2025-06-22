@@ -1,4 +1,4 @@
-package baseRepo
+package sqlxRepo
 
 import (
 	"database/sql"
@@ -6,40 +6,40 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type BaseRepo struct {
+type SqlxRepo struct {
 	db    DbConn
 	txBeg TxBeginner
 	isTx  bool // Признак выполнения в транзакции
 }
 
-func New(conn interface {
+func New(sqlxDB interface {
 	DbConn
 	TxBeginner
-}) BaseRepo {
-	return BaseRepo{
-		db:    conn,
-		txBeg: conn,
+}) SqlxRepo {
+	return SqlxRepo{
+		db:    sqlxDB,
+		txBeg: sqlxDB,
 		isTx:  false,
 	}
 }
 
-func (r BaseRepo) WithTxConn(txConn DbConn) BaseRepo {
-	return BaseRepo{
+func (r SqlxRepo) WithTxConn(txConn DbConn) SqlxRepo {
+	return SqlxRepo{
 		db:    txConn,
 		txBeg: r.txBeg,
 		isTx:  true,
 	}
 }
 
-func (r BaseRepo) DB() DbConn {
+func (r SqlxRepo) DB() DbConn {
 	return r.db
 }
 
-func (r BaseRepo) TxBeginner() TxBeginner {
+func (r SqlxRepo) TxBeginner() TxBeginner {
 	return r.txBeg
 }
 
-func (r BaseRepo) IsTx() bool {
+func (r SqlxRepo) IsTx() bool {
 	return r.isTx
 }
 

@@ -1,4 +1,4 @@
-package baseRepo
+package sqlxRepo
 
 type transactional[R any] interface {
 	WithTxConn(db DbConn) R

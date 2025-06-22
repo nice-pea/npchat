@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
-	baseRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/base_repo"
+	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
 )
 
 type SessionnRepository struct {
-	baseRepo.BaseRepo
+	sqlxRepo.SqlxRepo
 }
 
 func (r *SessionnRepository) List(filter sessionn.Filter) ([]sessionn.Session, error) {
@@ -50,14 +50,14 @@ func (r *SessionnRepository) Upsert(session sessionn.Session) error {
 	return nil
 }
 
-func (r *SessionnRepository) WithTxConn(txConn baseRepo.DbConn) sessionn.Repository {
+func (r *SessionnRepository) WithTxConn(txConn sqlxRepo.DbConn) sessionn.Repository {
 	return &SessionnRepository{
-		BaseRepo: r.BaseRepo.WithTxConn(txConn),
+		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
 	}
 }
 
 func (r *SessionnRepository) InTransaction(fn func(txRepo sessionn.Repository) error) error {
-	return baseRepo.InTransaction(r, fn)
+	return sqlxRepo.InTransaction(r, fn)
 }
 
 type dbSession struct {

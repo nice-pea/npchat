@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
-	baseRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/base_repo"
+	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
 )
 
 type ChattRepository struct {
-	baseRepo.BaseRepo
+	sqlxRepo.SqlxRepo
 }
 
 func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
@@ -127,14 +127,14 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	return nil
 }
 
-func (r *ChattRepository) WithTxConn(txConn baseRepo.DbConn) chatt.Repository {
+func (r *ChattRepository) WithTxConn(txConn sqlxRepo.DbConn) chatt.Repository {
 	return &ChattRepository{
-		BaseRepo: r.BaseRepo.WithTxConn(txConn),
+		SqlxRepo: r.SqlxRepo.WithTxConn(txConn),
 	}
 }
 
 func (r *ChattRepository) InTransaction(fn func(txRepo chatt.Repository) error) error {
-	return baseRepo.InTransaction(r, fn)
+	return sqlxRepo.InTransaction(r, fn)
 }
 
 type dbChat struct {

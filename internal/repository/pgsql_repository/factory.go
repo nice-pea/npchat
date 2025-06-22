@@ -10,7 +10,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	baseRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/base_repo"
+	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
 )
 
 // Config представляет собой конфигурацию репозитория
@@ -48,20 +48,20 @@ func (f *Factory) Close() error {
 // NewUserrRepository создает репозиторий пользователей
 func (f *Factory) NewUserrRepository() userr.Repository {
 	return &UserrRepository{
-		BaseRepo: baseRepo.New(f.db),
+		SqlxRepo: sqlxRepo.New(f.db),
 	}
 }
 
 // NewChattRepository создает репозиторий чатов
 func (f *Factory) NewChattRepository() chatt.Repository {
 	return &ChattRepository{
-		BaseRepo: baseRepo.New(f.db),
+		SqlxRepo: sqlxRepo.New(f.db),
 	}
 }
 
 // NewSessionnRepository создает репозиторий сессий
 func (f *Factory) NewSessionnRepository() sessionn.Repository {
 	return &SessionnRepository{
-		BaseRepo: baseRepo.New(f.db),
+		SqlxRepo: sqlxRepo.New(f.db),
 	}
 }
