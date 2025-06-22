@@ -52,7 +52,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
 	}
 
-	// Создать карту, где ключ это ID пользователя, а значение этос список его oauth пользователей
+	// Создать карту, где ключ это ID пользователя, а значение это список его oauth пользователей
 	oauthUsersMap := make(map[string][]dbOAuthUser, len(users))
 	for _, u := range oauthUsers {
 		oauthUsersMap[u.UserID] = append(oauthUsersMap[u.UserID], u)

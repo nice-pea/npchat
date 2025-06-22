@@ -9,6 +9,7 @@ CREATE TABLE participants
 (
     chat_id TEXT NOT NULL,
     user_id TEXT NOT NULL,
+    PRIMARY KEY (chat_id, user_id),
     FOREIGN KEY (chat_id) REFERENCES chats ON DELETE RESTRICT
 );
 
