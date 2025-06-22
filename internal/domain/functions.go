@@ -1,16 +1,14 @@
 package domain
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
 )
 
 // ValidateID валидирует  ID как uuid
-func ValidateID(id string) error {
-	if err := uuid.Validate(id); err != nil {
-		return errors.Join(err, ErrInvalidID) // Возвращает ошибку, если идентификатор некорректен
+func ValidateID(id uuid.UUID) error {
+	if id == uuid.Nil {
+		return ErrInvalidID
 	}
 
-	return nil // Идентификатор валиден
+	return nil
 }

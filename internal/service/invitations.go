@@ -4,14 +4,16 @@ import (
 	"errors"
 	"slices"
 
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
 
 // ChatInvitationsIn параметры для запроса приглашений конкретного чата
 type ChatInvitationsIn struct {
-	SubjectID string
-	ChatID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
 }
 
 // Validate валидирует параметры для запроса приглашений конкретного чата
@@ -66,7 +68,7 @@ func (c *Chats) ChatInvitations(in ChatInvitationsIn) (ChatInvitationsOut, error
 }
 
 type ReceivedInvitationsIn struct {
-	SubjectID string
+	SubjectID uuid.UUID
 }
 
 func (in ReceivedInvitationsIn) Validate() error {
@@ -80,7 +82,7 @@ func (in ReceivedInvitationsIn) Validate() error {
 // ReceivedInvitationsOut входящие параметры
 type ReceivedInvitationsOut struct {
 	// ChatsInvitations карта приглашений, где ключ - chatID, значение - приглашение
-	ChatsInvitations map[string]chatt.Invitation
+	ChatsInvitations map[uuid.UUID]chatt.Invitation
 }
 
 // ReceivedInvitations возвращает список приглашений конкретного пользователя в чаты
@@ -104,7 +106,7 @@ func (c *Chats) ReceivedInvitations(in ReceivedInvitationsIn) (ReceivedInvitatio
 	}
 
 	// Собрать приглашения, полученные пользователем
-	invitations := make(map[string]chatt.Invitation, len(chats))
+	invitations := make(map[uuid.UUID]chatt.Invitation, len(chats))
 	for _, chat := range chats {
 		invitations[chat.ID], _ = chat.RecipientInvitation(in.SubjectID)
 	}
@@ -115,9 +117,9 @@ func (c *Chats) ReceivedInvitations(in ReceivedInvitationsIn) (ReceivedInvitatio
 }
 
 type SendInvitationIn struct {
-	SubjectID string
-	ChatID    string
-	UserID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
+	UserID    uuid.UUID
 }
 
 func (in SendInvitationIn) Validate() error {
@@ -172,8 +174,8 @@ func (c *Chats) SendInvitation(in SendInvitationIn) (SendInvitationOut, error) {
 }
 
 type AcceptInvitationIn struct {
-	SubjectID    string
-	InvitationID string
+	SubjectID    uuid.UUID
+	InvitationID uuid.UUID
 }
 
 func (in AcceptInvitationIn) Validate() error {
@@ -227,8 +229,8 @@ func (c *Chats) AcceptInvitation(in AcceptInvitationIn) error {
 }
 
 type CancelInvitationIn struct {
-	SubjectID    string
-	InvitationID string
+	SubjectID    uuid.UUID
+	InvitationID uuid.UUID
 }
 
 func (in CancelInvitationIn) Validate() error {
@@ -271,7 +273,7 @@ func (c *Chats) CancelInvitation(in CancelInvitationIn) error {
 	}
 
 	// Список тех, кто может отменять приглашение
-	allowedSubjects := []string{
+	allowedSubjects := []uuid.UUID{
 		chat.ChiefID,           // Главный администратор
 		invitation.SubjectID,   // Пригласивший
 		invitation.RecipientID, // Приглашаемый

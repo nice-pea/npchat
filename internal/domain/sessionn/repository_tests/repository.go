@@ -50,7 +50,7 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 		t.Run("нельзя сохранять без ID", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(sessionn.Session{
-				ID:   "",
+				ID:   uuid.Nil,
 				Name: "someName",
 			})
 			assert.Error(t, err)
@@ -59,7 +59,7 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 		t.Run("остальные поля, кроме ID могут быть пустыми", func(t *testing.T) {
 			r := newRepository()
 			err := r.Upsert(sessionn.Session{
-				ID: uuid.NewString(),
+				ID: uuid.New(),
 			})
 			assert.NoError(t, err)
 		})
@@ -78,7 +78,7 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 
 		t.Run("перезапись с новыми значениями по ID", func(t *testing.T) {
 			r := newRepository()
-			id := uuid.NewString()
+			id := uuid.New()
 			// Несколько промежуточных состояний
 			for range 33 {
 				session := rndSession(t)
@@ -100,7 +100,7 @@ func TestRepository(t *testing.T, newRepository func() sessionn.Repository) {
 }
 
 func rndSession(t *testing.T) sessionn.Session {
-	session, err := sessionn.NewSession(uuid.NewString(), gofakeit.UserAgent(), common.RndElem(sessionn.Statuses()))
+	session, err := sessionn.NewSession(uuid.New(), gofakeit.UserAgent(), common.RndElem(sessionn.Statuses()))
 	require.NoError(t, err)
 
 	return session

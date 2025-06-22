@@ -17,7 +17,7 @@ func LeaveChat(router http2.Router) {
 		func(context http2.Context) (any, error) {
 			input := service.LeaveChatIn{
 				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathStr(context, "chatID"),
+				ChatID:    http2.PathUUID(context, "chatID"),
 			}
 
 			return nil, context.Services().Chats().LeaveChat(input)

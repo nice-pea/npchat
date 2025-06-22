@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/controller/http2"
 	"github.com/saime-0/nice-pea-chat/internal/domain/sessionn"
 	"github.com/saime-0/nice-pea-chat/internal/service"
@@ -21,7 +23,7 @@ func RequireAuthorizedSession(next http2.HandlerFuncRW) http2.HandlerFuncRW {
 		if err != nil {
 			return nil, fmt.Errorf("getSession: %w", err)
 		}
-		if session.ID == "" {
+		if session.ID == uuid.Nil {
 			return nil, ErrUnauthorized
 		}
 		context.SetSession(session)

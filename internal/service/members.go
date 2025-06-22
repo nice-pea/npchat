@@ -3,14 +3,16 @@ package service
 import (
 	"errors"
 
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
 
 // ChatMembersIn входящие параметры
 type ChatMembersIn struct {
-	SubjectID string
-	ChatID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -55,8 +57,8 @@ func (c *Chats) ChatMembers(in ChatMembersIn) (ChatMembersOut, error) {
 
 // LeaveChatIn входящие параметры
 type LeaveChatIn struct {
-	SubjectID string
-	ChatID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -99,9 +101,9 @@ func (c *Chats) LeaveChat(in LeaveChatIn) error {
 
 // DeleteMemberIn входящие параметры
 type DeleteMemberIn struct {
-	SubjectID string
-	ChatID    string
-	UserID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
+	UserID    uuid.UUID
 }
 
 // Validate валидирует значение отдельно каждого параметры

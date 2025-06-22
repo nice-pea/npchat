@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 
+	"github.com/google/uuid"
+
 	"github.com/saime-0/nice-pea-chat/internal/domain"
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
 )
@@ -14,8 +16,8 @@ type Chats struct {
 
 // WhichParticipateIn входящие параметры
 type WhichParticipateIn struct {
-	SubjectID string
-	UserID    string // TODO: удалить
+	SubjectID uuid.UUID
+	UserID    uuid.UUID // TODO: удалить
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -62,7 +64,7 @@ func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, er
 // CreateChatIn входящие параметры
 type CreateChatIn struct {
 	Name        string
-	ChiefUserID string // TODO: переименовать в SubjectID
+	ChiefUserID uuid.UUID // TODO: переименовать в SubjectID
 }
 
 func (in CreateChatIn) Validate() error {
@@ -104,8 +106,8 @@ func (c *Chats) CreateChat(in CreateChatIn) (CreateChatOut, error) {
 
 // UpdateNameIn входящие параметры
 type UpdateNameIn struct {
-	SubjectID string
-	ChatID    string
+	SubjectID uuid.UUID
+	ChatID    uuid.UUID
 	NewName   string
 }
 

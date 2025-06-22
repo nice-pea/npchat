@@ -10,16 +10,16 @@ import (
 
 // Chat представляет собой агрегат чата.
 type Chat struct {
-	ID      string // Уникальный ID чата
-	Name    string // Название чата
-	ChiefID string // ID главного пользователя чата
+	ID      uuid.UUID // Уникальный ID чата
+	Name    string    // Название чата
+	ChiefID uuid.UUID // ID главного пользователя чата
 
 	Participants []Participant // Список участников чата
 	Invitations  []Invitation  // Список приглашений в чате
 }
 
 // NewChat создает новый чат.
-func NewChat(name string, chiefID string) (Chat, error) {
+func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 	if err := ValidateChatName(name); err != nil {
 		return Chat{}, err
 	}
@@ -28,7 +28,7 @@ func NewChat(name string, chiefID string) (Chat, error) {
 	}
 
 	return Chat{
-		ID:      uuid.NewString(),
+		ID:      uuid.New(),
 		Name:    name,
 		ChiefID: chiefID,
 		Participants: []Participant{

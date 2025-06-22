@@ -9,13 +9,13 @@ import (
 
 // Invitation представляет собой отправленное приглашение в чат.
 type Invitation struct {
-	ID          string // Глобальный уникальный ID приглашения
-	RecipientID string // Пользователь, получивший приглашение
-	SubjectID   string // Пользователь, отправивший приглашение
+	ID          uuid.UUID // Глобальный уникальный ID приглашения
+	RecipientID uuid.UUID // Пользователь, получивший приглашение
+	SubjectID   uuid.UUID // Пользователь, отправивший приглашение
 }
 
 // NewInvitation создает новое приглашение в чате
-func NewInvitation(subjectID, recipientID string) (Invitation, error) {
+func NewInvitation(subjectID, recipientID uuid.UUID) (Invitation, error) {
 	if err := domain.ValidateID(subjectID); err != nil {
 		return Invitation{}, err
 	}
@@ -29,7 +29,7 @@ func NewInvitation(subjectID, recipientID string) (Invitation, error) {
 	}
 
 	return Invitation{
-		ID:          uuid.NewString(),
+		ID:          uuid.New(),
 		RecipientID: recipientID,
 		SubjectID:   subjectID,
 	}, nil
@@ -58,7 +58,7 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 }
 
 // RemoveInvitation удаляет приглашение из чата
-func (c *Chat) RemoveInvitation(id string) error {
+func (c *Chat) RemoveInvitation(id uuid.UUID) error {
 	// Убедиться, что приглашение существует
 	if !c.HasInvitation(id) {
 		return ErrInvitationNotExists
@@ -73,7 +73,7 @@ func (c *Chat) RemoveInvitation(id string) error {
 }
 
 // Invitation возвращает приглашение по его ID
-func (c *Chat) Invitation(id string) (Invitation, error) {
+func (c *Chat) Invitation(id uuid.UUID) (Invitation, error) {
 	for _, i := range c.Invitations {
 		if i.ID == id {
 			return i, nil
@@ -84,7 +84,7 @@ func (c *Chat) Invitation(id string) (Invitation, error) {
 }
 
 // HasInvitation проверяет, существует ли приглашение с указанным ID
-func (c *Chat) HasInvitation(id string) bool {
+func (c *Chat) HasInvitation(id uuid.UUID) bool {
 	_, err := c.Invitation(id)
 
 	// Если приглашение найдено, возвращаем true
@@ -92,7 +92,7 @@ func (c *Chat) HasInvitation(id string) bool {
 }
 
 // HasInvitationWithRecipient проверяет, существует ли приглашение с указанным получателем
-func (c *Chat) HasInvitationWithRecipient(recipientID string) bool {
+func (c *Chat) HasInvitationWithRecipient(recipientID uuid.UUID) bool {
 	for _, i := range c.Invitations {
 		if i.RecipientID == recipientID {
 			return true
@@ -103,14 +103,14 @@ func (c *Chat) HasInvitationWithRecipient(recipientID string) bool {
 }
 
 // SubjectInvitations возвращает список приглашений, отправленных пользователем с указанным ID
-func (c *Chat) SubjectInvitations(subjectID string) []Invitation {
+func (c *Chat) SubjectInvitations(subjectID uuid.UUID) []Invitation {
 	return slices.DeleteFunc(c.Invitations, func(i Invitation) bool {
 		return i.SubjectID != subjectID
 	})
 }
 
 // RecipientInvitation возвращает приглашение, направленное пользователю с указанным ID
-func (c *Chat) RecipientInvitation(recipientID string) (Invitation, error) {
+func (c *Chat) RecipientInvitation(recipientID uuid.UUID) (Invitation, error) {
 	for _, inv := range c.Invitations {
 		if inv.RecipientID == recipientID {
 			return inv, nil

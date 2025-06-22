@@ -27,7 +27,7 @@ func UpdateChatName(router http2.Router) {
 
 			input := service.UpdateNameIn{
 				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathStr(context, "chatID"),
+				ChatID:    http2.PathUUID(context, "chatID"),
 				NewName:   rb.NewName,
 			}
 

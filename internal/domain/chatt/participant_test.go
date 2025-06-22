@@ -10,20 +10,14 @@ import (
 
 // TestNewParticipant тестирует создание участника.
 func TestNewParticipant(t *testing.T) {
-	t.Run("параметр userID не должен быть пустым", func(t *testing.T) {
-		participant, err := NewParticipant("")
-		assert.Zero(t, participant)
-		assert.ErrorIs(t, err, ErrInvalidUserID)
-	})
-
 	t.Run("параметр userID должен быть валидным UUID", func(t *testing.T) {
-		participant, err := NewParticipant("invalid-uuid")
+		participant, err := NewParticipant(uuid.Nil)
 		assert.Zero(t, participant)
 		assert.ErrorIs(t, err, ErrInvalidUserID)
 	})
 
 	t.Run("новому участнику присваивается корректный userID", func(t *testing.T) {
-		userID := uuid.NewString()
+		userID := uuid.New()
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
 		assert.Equal(t, userID, participant.UserID)
@@ -34,11 +28,11 @@ func TestNewParticipant(t *testing.T) {
 func TestChat_AddParticipant(t *testing.T) {
 	t.Run("добавление участника в чат", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.NewString())
+		chat, err := NewChat("test chat", uuid.New())
 		require.NoError(t, err)
 
 		// Создаем нового участника
-		userID := uuid.NewString()
+		userID := uuid.New()
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
 
@@ -52,11 +46,11 @@ func TestChat_AddParticipant(t *testing.T) {
 
 	t.Run("нельзя добавить уже существующего участника", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.NewString())
+		chat, err := NewChat("test chat", uuid.New())
 		require.NoError(t, err)
 
 		// Создаем участника
-		userID := uuid.NewString()
+		userID := uuid.New()
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
 
@@ -71,10 +65,10 @@ func TestChat_AddParticipant(t *testing.T) {
 
 	t.Run("нельзя добавить если есть приглашение к этому участнику", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.NewString())
+		chat, err := NewChat("test chat", uuid.New())
 		require.NoError(t, err)
 
-		userID := uuid.NewString()
+		userID := uuid.New()
 
 		// Создаем и добавляем приглашение
 		inv, err := NewInvitation(chat.ChiefID, userID)
@@ -94,12 +88,12 @@ func TestChat_AddParticipant(t *testing.T) {
 func TestChat_RemoveParticipant(t *testing.T) {
 	t.Run("удаление участника из чата", func(t *testing.T) {
 		// Создаем чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, err := NewChat("test chat", chiefID)
 		require.NoError(t, err)
 
 		// Создаем и добавляем участника
-		userID := uuid.NewString()
+		userID := uuid.New()
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
 		err = chat.AddParticipant(participant)
@@ -115,17 +109,17 @@ func TestChat_RemoveParticipant(t *testing.T) {
 
 	t.Run("нельзя удалить несуществующего участника", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.NewString())
+		chat, err := NewChat("test chat", uuid.New())
 		require.NoError(t, err)
 
 		// Удаляем участника (несуществующего)
-		err = chat.RemoveParticipant(uuid.NewString())
+		err = chat.RemoveParticipant(uuid.New())
 		assert.ErrorIs(t, err, ErrParticipantNotExists)
 	})
 
 	t.Run("нельзя удалить главного администратора", func(t *testing.T) {
 		// Создаем чат
-		chiefID := uuid.NewString()
+		chiefID := uuid.New()
 		chat, err := NewChat("test chat", chiefID)
 		require.NoError(t, err)
 

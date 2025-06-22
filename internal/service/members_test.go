@@ -1,31 +1,17 @@
 package service
 
 import (
-	"testing"
-
 	"github.com/google/uuid"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain/chatt"
-	"github.com/saime-0/nice-pea-chat/internal/domain/helpers_tests"
 )
-
-// Test_ChatMembersInput_Validate тестирует валидацию входящих параметров
-func Test_ChatMembersInput_Validate(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := ChatMembersIn{
-			ChatID:    id,
-			SubjectID: id,
-		}
-		return in.Validate()
-	})
-}
 
 // Test_Members_ChatMembers тестирует получение списка участников чата
 func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 	suite.Run("чат должен существовать", func() {
 		input := ChatMembersIn{
-			ChatID:    uuid.NewString(),
-			SubjectID: uuid.NewString(),
+			ChatID:    uuid.New(),
+			SubjectID: uuid.New(),
 		}
 		out, err := suite.ss.chats.ChatMembers(input)
 		suite.ErrorIs(err, ErrChatNotExists)
@@ -38,7 +24,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 		// Запросить список участников чата
 		input := ChatMembersIn{
 			ChatID:    chat.ID,
-			SubjectID: uuid.NewString(),
+			SubjectID: uuid.New(),
 		}
 		out, err := suite.ss.chats.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
@@ -73,24 +59,13 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 	})
 }
 
-// Test_LeaveInput_Validate тестирует валидацию входящих параметров
-func Test_LeaveInput_Validate(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		in := LeaveChatIn{
-			SubjectID: id,
-			ChatID:    id,
-		}
-		return in.Validate()
-	})
-}
-
 // Test_Members_LeaveChat тестирует выход участника из чата
 func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
 		input := LeaveChatIn{
-			SubjectID: uuid.NewString(),
-			ChatID:    uuid.NewString(),
+			SubjectID: uuid.New(),
+			ChatID:    uuid.New(),
 		}
 		err := suite.ss.chats.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
@@ -102,7 +77,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 		chat := suite.upsertChat(suite.rndChat())
 		// Покинуть чат
 		input := LeaveChatIn{
-			SubjectID: uuid.NewString(),
+			SubjectID: uuid.New(),
 			ChatID:    chat.ID,
 		}
 		err := suite.ss.chats.LeaveChat(input)
@@ -145,26 +120,14 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 	})
 }
 
-// Test_DeleteMemberInput_Validate тестирует валидацию входящих параметров
-func Test_DeleteMemberInput_Validate(t *testing.T) {
-	helpers_tests.RunValidateRequiredIDTest(t, func(id string) error {
-		input := DeleteMemberIn{
-			SubjectID: id,
-			ChatID:    id,
-			UserID:    id,
-		}
-		return input.Validate()
-	})
-}
-
 // Test_Members_DeleteMember тестирует удаление участника чата
 func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
-		userID := uuid.NewString()
+		userID := uuid.New()
 		input := DeleteMemberIn{
 			SubjectID: userID,
-			ChatID:    uuid.NewString(),
+			ChatID:    uuid.New(),
 			UserID:    userID,
 		}
 		err := suite.ss.chats.DeleteMember(input)
@@ -175,9 +138,9 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 	suite.Run("чат должен существовать", func() {
 		// Удалить участника
 		input := DeleteMemberIn{
-			SubjectID: uuid.NewString(),
-			ChatID:    uuid.NewString(),
-			UserID:    uuid.NewString(),
+			SubjectID: uuid.New(),
+			ChatID:    uuid.New(),
+			UserID:    uuid.New(),
 		}
 		err := suite.ss.chats.DeleteMember(input)
 		// Вернется ошибка, потому что чата не существует
@@ -189,9 +152,9 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 		chat := suite.upsertChat(suite.rndChat())
 		// Удалить участника
 		input := DeleteMemberIn{
-			SubjectID: uuid.NewString(),
+			SubjectID: uuid.New(),
 			ChatID:    chat.ID,
-			UserID:    uuid.NewString(),
+			UserID:    uuid.New(),
 		}
 		err := suite.ss.chats.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь не участник чата
@@ -207,7 +170,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 		input := DeleteMemberIn{
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
-			UserID:    uuid.NewString(),
+			UserID:    uuid.New(),
 		}
 		err := suite.ss.chats.DeleteMember(input)
 		// Вернется ошибка, потому что участник не главный администратор
@@ -221,7 +184,7 @@ func (suite *servicesTestSuite) Test_Members_DeleteMember() {
 		input := DeleteMemberIn{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
-			UserID:    uuid.NewString(),
+			UserID:    uuid.New(),
 		}
 		err := suite.ss.chats.DeleteMember(input)
 		// Вернется ошибка, потому что удаляемый пользователь не является участником

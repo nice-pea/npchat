@@ -3,6 +3,7 @@ package chatt
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
 	"github.com/saime-0/nice-pea-chat/internal/domain"
@@ -10,11 +11,11 @@ import (
 
 // Participant представляет собой участника чата.
 type Participant struct {
-	UserID string // ID пользователя, который является участником чата
+	UserID uuid.UUID // ID пользователя, который является участником чата
 }
 
 // NewParticipant создает новый участник чата.
-func NewParticipant(userID string) (Participant, error) {
+func NewParticipant(userID uuid.UUID) (Participant, error) {
 	if err := domain.ValidateID(userID); err != nil {
 		return Participant{}, errors.Join(err, ErrInvalidUserID)
 	}
@@ -25,7 +26,7 @@ func NewParticipant(userID string) (Participant, error) {
 }
 
 // HasParticipant проверяет, является ли пользователь участником чата.
-func (c *Chat) HasParticipant(userID string) bool {
+func (c *Chat) HasParticipant(userID uuid.UUID) bool {
 	for _, p := range c.Participants {
 		if p.UserID == userID {
 			return true
@@ -36,7 +37,7 @@ func (c *Chat) HasParticipant(userID string) bool {
 }
 
 // RemoveParticipant удаляет участника из чата.
-func (c *Chat) RemoveParticipant(userID string) error {
+func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
 		return ErrCannotRemoveChief

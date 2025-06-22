@@ -113,21 +113,21 @@ func (suite *servicesTestSuite) upsertChat(chat chatt.Chat) chatt.Chat {
 
 // upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
 func (suite *servicesTestSuite) rndChat() chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.NewString())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
 	suite.Require().NoError(err)
 
 	return chat
 }
 
 // newParticipant создает случайного участника
-func (suite *servicesTestSuite) newParticipant(userID string) chatt.Participant {
+func (suite *servicesTestSuite) newParticipant(userID uuid.UUID) chatt.Participant {
 	p, err := chatt.NewParticipant(userID)
 	suite.Require().NoError(err)
 	return p
 }
 
 func (suite *servicesTestSuite) addRndParticipant(chat *chatt.Chat) chatt.Participant {
-	p, err := chatt.NewParticipant(uuid.NewString())
+	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
 	suite.Require().NoError(chat.AddParticipant(p))
 
@@ -138,7 +138,7 @@ func (suite *servicesTestSuite) addParticipant(chat *chatt.Chat, p chatt.Partici
 	suite.Require().NoError(chat.AddParticipant(p))
 }
 
-func (suite *servicesTestSuite) newInvitation(subjectID, recipientID string) chatt.Invitation {
+func (suite *servicesTestSuite) newInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
 	i, err := chatt.NewInvitation(subjectID, recipientID)
 	suite.Require().NoError(err)
 	return i
