@@ -31,6 +31,14 @@ func (r *SessionnRepository) Upsert(session sessionn.Session) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO sessions(id, user_id, name, status, access_token, access_expiry, refresh_token, refresh_expiry) 
 		VALUES (:id, :user_id, :name, :status, :access_token, :access_expiry, :refresh_token, :refresh_expiry)
+		ON CONFLICT DO UPDATE SET
+			user_id=:user_id,
+			name=:name,
+			status=:status,
+			access_token=:access_token,
+			access_expiry=:access_expiry,
+			refresh_token=:refresh_token,
+			refresh_expiry=:refresh_expiry
 	`, toDBSession(session)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}

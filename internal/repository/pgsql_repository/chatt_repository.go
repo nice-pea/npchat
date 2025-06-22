@@ -107,7 +107,7 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	if _, err := r.DB().NamedExec(`
 		DELETE
 		FROM participants
-		WHERE chat_id = $1;
+		WHERE chat_id = :chat_id;
 		INSERT INTO participants(chat_id, user_id)
 		VALUES (:chat_id, :user_id)
 	`, toDBParticipants(chat)); err != nil {
@@ -115,12 +115,11 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	}
 
 	if _, err := r.DB().NamedExec(`
+		DELETE
+		FROM invitations
+		WHERE chat_id = :chat_id;
 		INSERT INTO invitations(id, chat_id, subject_id, recipient_id)
 		VALUES (:id, :chat_id, :subject_id, :recipient_id)
-		ON CONFLICT DO UPDATE SET
-			chat_id=:chat_id,
-			subject_id=:subject_id,
-			recipient_id=:recipient_id
 	`, toDBInvitations(chat)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}

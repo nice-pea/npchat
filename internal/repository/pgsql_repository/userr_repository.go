@@ -26,6 +26,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 			AND ($3 = '' OR $3 = u.password)
 			AND ($4 = '' OR $4 = o.provider)
 			AND ($5 = '' OR $5 = o.user_id)
+		GROUP BY u.id
 	`, filter.ID, filter.BasicAuthLogin, filter.BasicAuthPassword,
 		filter.OAuthProvider, filter.OAuthUserID); err != nil {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
@@ -75,11 +76,19 @@ func (r *UserrRepository) upsert(user userr.User) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO users(id, name, nick, login, password) 
 		VALUES (:is, :name, :nick, :login, :password)
+		ON CONFLICT DO UPDATE SET
+			name = :name,
+			nick = :nick,
+			login = :login,
+			password = :password
 	`, toDBUser(user)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
 
 	if _, err := r.DB().NamedExec(`
+		DELETE
+		FROM oauth_users
+		WHERE user_id =  :user_id;
 		INSERT INTO oauth_users(id, user_id, provider, email, name, picture, access_token, token_type, refresh_token, expiry) 
 		VALUES (:id, :user_id, :provider, :email, :name, :picture, :access_token, :token_type, :refresh_token, :expiry)
 	`, toDBOAuthUsers(user)); err != nil {
