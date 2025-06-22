@@ -1,13 +1,11 @@
-package pgsqlRepository
-
-import baseRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/base_repo"
+package baseRepo
 
 type transactional[R any] interface {
-	withTxConn(db baseRepo.DbConn) R
-	TxBeginner() baseRepo.TxBeginner
+	WithTxConn(db DbConn) R
+	TxBeginner() TxBeginner
 }
 
-func inTransaction[R any](r transactional[R], fn func(R) error) error {
+func InTransaction[R any](r transactional[R], fn func(R) error) error {
 	// Начинаем транзакцию
 	tx, err := r.TxBeginner().Beginx()
 	if err != nil {
@@ -15,7 +13,7 @@ func inTransaction[R any](r transactional[R], fn func(R) error) error {
 	}
 
 	// Создаем транзакционный репозиторий
-	txRepo := r.withTxConn(tx)
+	txRepo := r.WithTxConn(tx)
 
 	// Откатить в случае паники
 	defer func() {

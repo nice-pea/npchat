@@ -19,12 +19,12 @@ func (r *ChattRepository) Upsert(chat chatt.Chat) error {
 	panic("implement me")
 }
 
-func (r *ChattRepository) withTxConn(txConn baseRepo.DbConn) chatt.Repository {
+func (r *ChattRepository) WithTxConn(txConn baseRepo.DbConn) chatt.Repository {
 	return &ChattRepository{
-		BaseRepo: r.WithTxConn(txConn),
+		BaseRepo: r.BaseRepo.WithTxConn(txConn),
 	}
 }
 
 func (r *ChattRepository) InTransaction(fn func(txRepo chatt.Repository) error) error {
-	return inTransaction(r, fn)
+	return baseRepo.InTransaction(r, fn)
 }

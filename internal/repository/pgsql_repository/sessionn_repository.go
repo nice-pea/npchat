@@ -19,12 +19,12 @@ func (r *SessionnRepository) Upsert(session sessionn.Session) error {
 	panic("implement me")
 }
 
-func (r *SessionnRepository) withTxConn(txConn baseRepo.DbConn) sessionn.Repository {
+func (r *SessionnRepository) WithTxConn(txConn baseRepo.DbConn) sessionn.Repository {
 	return &SessionnRepository{
-		BaseRepo: r.WithTxConn(txConn),
+		BaseRepo: r.BaseRepo.WithTxConn(txConn),
 	}
 }
 
 func (r *SessionnRepository) InTransaction(fn func(txRepo sessionn.Repository) error) error {
-	return inTransaction(r, fn)
+	return baseRepo.InTransaction(r, fn)
 }
