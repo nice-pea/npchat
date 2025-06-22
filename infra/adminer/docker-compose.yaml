@@ -1,0 +1,14 @@
+networks:
+  npc.network:
+    external: true
+
+services:
+#  https://hub.docker.com/_/adminer/
+  adminer:
+    container_name: npc.adminer
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8088:8080" # http://127.0.0.1:8088/
+    networks:
+      npc.network:
