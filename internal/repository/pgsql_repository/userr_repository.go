@@ -80,8 +80,8 @@ func (r *UserrRepository) Upsert(user userr.User) error {
 func (r *UserrRepository) upsert(user userr.User) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO users(id, name, nick, login, password) 
-		VALUES (:is, :name, :nick, :login, :password)
-		ON CONFLICT DO UPDATE SET
+		VALUES (:id, :name, :nick, :login, :password)
+		ON CONFLICT ON CONSTRAINT DO UPDATE SET
 			name = excluded.name,
 			nick = excluded.nick,
 			login = excluded.login,
@@ -90,10 +90,19 @@ func (r *UserrRepository) upsert(user userr.User) error {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
 
+	// Удалить прошлых связанных oauth пользователей
+	if _, err := r.DB().Exec(`
+		DELETE FROM oauth_users	WHERE user_id = $1
+	`, user.ID); err != nil {
+		return fmt.Errorf("r.DB().Exec: %w", err)
+	}
+
+	// Выйти, если не надо сохранять oauth пользователей
+	if len(user.OpenAuthUsers) == 0 {
+		return nil
+	}
+
 	if _, err := r.DB().NamedExec(`
-		DELETE
-		FROM oauth_users
-		WHERE user_id =  :user_id;
 		INSERT INTO oauth_users(id, user_id, provider, email, name, picture, access_token, token_type, refresh_token, expiry) 
 		VALUES (:id, :user_id, :provider, :email, :name, :picture, :access_token, :token_type, :refresh_token, :expiry)
 	`, toDBOAuthUsers(user)); err != nil {
