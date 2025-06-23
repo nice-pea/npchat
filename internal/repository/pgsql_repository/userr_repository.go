@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/nullism/bqb"
 
 	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
@@ -32,21 +33,25 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 		}
 	}
 
-	var users []dbUser
-	if err := r.DB().Select(&users, `
-		SELECT u.*
-		FROM users u
-			LEFT JOIN oauth_users o ON u.id = o.user_id
-		WHERE ($1 IS NULL OR $1 = u.id)
-			AND ($2 = '' OR $2 = u.login)
-			AND ($3 = '' OR $3 = u.password)
-		GROUP BY u.id
-	`, filter.ID, filter.BasicAuthLogin, filter.BasicAuthPassword,
-		filter.OAuthProvider, filter.OAuthUserID); err != nil {
-		return nil, fmt.Errorf("r.DB().Select: %w", err)
+	if filter.ID != uuid.Nil {
+		where = where.Space("u.id = ?", filter.ID)
+	}
+	if filter.BasicAuthLogin != "" {
+		where = where.Space("u.login = ?", filter.BasicAuthLogin)
+	}
+	if filter.BasicAuthPassword != "" {
+		where = where.Space("u.password = ?", filter.BasicAuthPassword)
 	}
 
-	bqb.New("GROUP BY u.id")
+	query, args, err := bqb.New("? ? GROUP BY u.id", sel, where).ToPgsql()
+	if err != nil {
+		return nil, fmt.Errorf("bqb.New: %w", err)
+	}
+
+	var users []dbUser
+	if err := r.DB().Select(&users, query, args...); err != nil {
+		return nil, fmt.Errorf("r.DB().Select: %w", err)
+	}
 
 	// Если пользователей нет, сразу вернуть пустой список
 	if len(users) == 0 {
@@ -65,7 +70,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 		SELECT *
 		FROM oauth_users
 		WHERE user_id = ANY($1)
-	`, userIDs); err != nil {
+	`, pq.Array(userIDs)); err != nil {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
 	}
 
