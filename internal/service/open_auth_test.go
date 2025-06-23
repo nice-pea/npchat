@@ -10,7 +10,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
+func (suite *testSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
 		out, err := suite.ss.users.InitOAuthRegistration(InitOAuthRegistrationIn{
@@ -51,7 +51,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	})
 }
 
-func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
+func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
 		input := CompeteOAuthRegistrationIn{
 			UserCode: "",

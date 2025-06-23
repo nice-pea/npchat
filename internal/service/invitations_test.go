@@ -7,7 +7,7 @@ import (
 )
 
 // Test_Invitations_ChatInvitations тестирует получение списка приглашений
-func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
+func (suite *testSuite) Test_Invitations_ChatInvitations() {
 	suite.Run("чат должен существовать", func() {
 		// Получить список приглашений
 		input := ChatInvitationsIn{
@@ -103,7 +103,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 }
 
 // Test_Invitations_UserInvitations тестирует получение списка приглашений направленных пользователю
-func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
+func (suite *testSuite) Test_Invitations_UserInvitations() {
 	suite.Run("пользователя не приглашали и потому вернется пустой список", func() {
 		// Получить список приглашений
 		input := ReceivedInvitationsIn{
@@ -146,7 +146,7 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 }
 
 // Test_Invitations_SendChatInvitation тестирует отправку приглашения
-func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
+func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("чат должен существовать", func() {
 		// Отправить приглашение
 		input := SendInvitationIn{
@@ -268,7 +268,7 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 }
 
 // Test_Invitations_AcceptInvitation тестирует принятие приглашения
-func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
+func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Создать чат
 		chat := suite.upsertChat(suite.rndChat())
@@ -309,7 +309,7 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 }
 
 // Test_Invitations_CancelInvitation тестирует отмену приглашения
-func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
+func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
 		input := CancelInvitationIn{

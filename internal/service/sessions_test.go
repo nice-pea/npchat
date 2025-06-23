@@ -8,7 +8,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus string) (out struct {
+func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct {
 	User    userr.User
 	Session sessionn.Session
 }) {
@@ -26,7 +26,7 @@ func (suite *servicesTestSuite) newRndUserWithSession(sessionStatus string) (out
 	return
 }
 
-func (suite *servicesTestSuite) Test_Sessions_Find() {
+func (suite *testSuite) Test_Sessions_Find() {
 	suite.Run("токен должен быть передан", func() {
 		for range 10 {
 			suite.newRndUserWithSession(sessionn.StatusNew)

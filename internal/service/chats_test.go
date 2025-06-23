@@ -12,14 +12,14 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
-func (suite *servicesTestSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {
+func (suite *testSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {
 	return WhichParticipateIn{
 		SubjectID: userID,
 		UserID:    userID,
 	}
 }
 
-func (suite *servicesTestSuite) newCreateInputRandom() CreateChatIn {
+func (suite *testSuite) newCreateInputRandom() CreateChatIn {
 	return CreateChatIn{
 		ChiefUserID: uuid.New(),
 		Name:        fmt.Sprintf("name%d", rand.Int()),
@@ -27,7 +27,7 @@ func (suite *servicesTestSuite) newCreateInputRandom() CreateChatIn {
 }
 
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
-func (suite *servicesTestSuite) Test_Chats_UserChats() {
+func (suite *testSuite) Test_Chats_UserChats() {
 	suite.Run("пользователь может запрашивать только свой чат", func() {
 		input := WhichParticipateIn{
 			SubjectID: uuid.New(),
@@ -73,7 +73,7 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 }
 
 // Test_Chats_CreateChat тестирует создание чата
-func (suite *servicesTestSuite) Test_Chats_CreateChat() {
+func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("выходящие совпадают с заданными", func() {
 		// Создать чат
 		input := suite.newCreateInputRandom()
@@ -238,7 +238,7 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 }
 
 // Test_Chats_UpdateName тестирует обновления названия чата
-func (suite *servicesTestSuite) Test_Chats_UpdateName() {
+func (suite *testSuite) Test_Chats_UpdateName() {
 	suite.Run("только существующий чат можно обновить", func() {
 		input := UpdateNameIn{
 			SubjectID: uuid.New(),

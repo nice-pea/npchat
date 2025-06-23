@@ -8,7 +8,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) newRndUserWithBasicAuth() userr.User {
+func (suite *testSuite) newRndUserWithBasicAuth() userr.User {
 	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
 	suite.Require().NoError(err)
 	ba, err := userr.NewBasicAuth(gofakeit.Noun(), common.RndPassword())
@@ -18,7 +18,7 @@ func (suite *servicesTestSuite) newRndUserWithBasicAuth() userr.User {
 	return user
 }
 
-func (suite *servicesTestSuite) Test_BasicAuthLogin() {
+func (suite *testSuite) Test_BasicAuthLogin() {
 	suite.Run("Login должен быть валидным", func() {
 		out, err := suite.ss.users.BasicAuthLogin(BasicAuthLoginIn{
 			Login:    " inv ald login",
@@ -70,7 +70,7 @@ func (suite *servicesTestSuite) Test_BasicAuthLogin() {
 	})
 }
 
-func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
+func (suite *testSuite) Test_AuthnPassword_Registration() {
 	suite.Run("BasicAuthLogin должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{

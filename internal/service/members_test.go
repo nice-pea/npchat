@@ -7,7 +7,7 @@ import (
 )
 
 // Test_Members_ChatMembers тестирует получение списка участников чата
-func (suite *servicesTestSuite) Test_Members_ChatMembers() {
+func (suite *testSuite) Test_Members_ChatMembers() {
 	suite.Run("чат должен существовать", func() {
 		input := ChatMembersIn{
 			ChatID:    uuid.New(),
@@ -60,7 +60,7 @@ func (suite *servicesTestSuite) Test_Members_ChatMembers() {
 }
 
 // Test_Members_LeaveChat тестирует выход участника из чата
-func (suite *servicesTestSuite) Test_Members_LeaveChat() {
+func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
 		input := LeaveChatIn{
@@ -121,7 +121,7 @@ func (suite *servicesTestSuite) Test_Members_LeaveChat() {
 }
 
 // Test_Members_DeleteMember тестирует удаление участника чата
-func (suite *servicesTestSuite) Test_Members_DeleteMember() {
+func (suite *testSuite) Test_Members_DeleteMember() {
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
 		userID := uuid.New()
