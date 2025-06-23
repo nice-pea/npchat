@@ -35,7 +35,7 @@ func (r *SessionnRepository) Upsert(session sessionn.Session) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO sessions(id, user_id, name, status, access_token, access_expiry, refresh_token, refresh_expiry) 
 		VALUES (:id, :user_id, :name, :status, :access_token, :access_expiry, :refresh_token, :refresh_expiry)
-		ON CONFLICT DO UPDATE SET
+		ON CONFLICT (id) DO UPDATE SET
 			user_id=excluded.user_id,
 			name=excluded.name,
 			status=excluded.status,

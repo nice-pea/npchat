@@ -81,7 +81,7 @@ func (r *UserrRepository) upsert(user userr.User) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO users(id, name, nick, login, password) 
 		VALUES (:id, :name, :nick, :login, :password)
-		ON CONFLICT ON CONSTRAINT DO UPDATE SET
+		ON CONFLICT (id) DO UPDATE SET
 			name = excluded.name,
 			nick = excluded.nick,
 			login = excluded.login,
