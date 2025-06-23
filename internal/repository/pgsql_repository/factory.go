@@ -45,6 +45,32 @@ func (f *Factory) Close() error {
 	return f.db.Close()
 }
 
+// Cleanup очищает все сохраненные записи
+func (f *Factory) Cleanup() error {
+	return sqlxRepo.New(f.db).InTransaction(func(tx sqlxRepo.SqlxRepo) error {
+		if _, err := tx.DB().Exec("DELETE FROM sessions"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM oauth_users"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM users"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM chats"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM participants"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM invitations"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+
+		return nil
+	})
+}
+
 // NewUserrRepository создает репозиторий пользователей
 func (f *Factory) NewUserrRepository() userr.Repository {
 	return &UserrRepository{

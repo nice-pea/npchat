@@ -82,8 +82,8 @@ func (suite *testSuite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, 
 	}
 }
 
-// SetupSubTest выполняется перед каждым подтестом, связанным с suite
-func (suite *testSuite) SetupSubTest() {
+// SetupTest
+func (suite *testSuite) SetupTest() {
 	// Инициализация фабрики репозиториев
 	suite.factory, suite.factoryCloser = suite.newPgsqlContainerFactory()
 
@@ -91,7 +91,10 @@ func (suite *testSuite) SetupSubTest() {
 	suite.rr.chats = suite.factory.NewChattRepository()
 	suite.rr.users = suite.factory.NewUserrRepository()
 	suite.rr.sessions = suite.factory.NewSessionnRepository()
-
+	//}
+	//
+	//// SetupSubTest выполняется перед каждым подтестом, связанным с suite
+	//func (suite *testSuite) SetupSubTest() {
 	// Инициализация адаптеров
 	suite.mockOAuthUsers = suite.generateMockUsers()
 	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
@@ -134,6 +137,12 @@ func (suite *testSuite) SetupSubTest() {
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
 func (suite *testSuite) TearDownSubTest() {
+	err := suite.factory.Cleanup()
+	suite.Require().NoError(err)
+}
+
+// TearDownSubTest выполняется после каждого подтеста, связанного с suite
+func (suite *testSuite) TearDownTest() {
 	suite.factoryCloser()
 }
 

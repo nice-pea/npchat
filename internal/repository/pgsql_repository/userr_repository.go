@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nullism/bqb"
 
 	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
 
@@ -17,21 +18,35 @@ type UserrRepository struct {
 
 func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	// Запросить пользователей
+	sel := bqb.New("SELECT u.* FROM users u")
+	where := bqb.Optional("WHERE")
+
+	hasOauthFilter := filter.OAuthUserID != "" || filter.OAuthProvider != ""
+	if hasOauthFilter {
+		sel = sel.Space("LEFT JOIN oauth_users o ON u.id = o.user_id")
+		if filter.OAuthUserID != "" {
+			where = where.Space("o.user_id = ?", filter.OAuthUserID)
+		}
+		if filter.OAuthProvider != "" {
+			where = where.Space("o.provider = ?", filter.OAuthProvider)
+		}
+	}
+
 	var users []dbUser
 	if err := r.DB().Select(&users, `
 		SELECT u.*
 		FROM users u
 			LEFT JOIN oauth_users o ON u.id = o.user_id
-		WHERE ($1 = '' OR $1 = u.id)
+		WHERE ($1 IS NULL OR $1 = u.id)
 			AND ($2 = '' OR $2 = u.login)
 			AND ($3 = '' OR $3 = u.password)
-			AND ($4 = '' OR $4 = o.provider)
-			AND ($5 = '' OR $5 = o.user_id)
 		GROUP BY u.id
 	`, filter.ID, filter.BasicAuthLogin, filter.BasicAuthPassword,
 		filter.OAuthProvider, filter.OAuthUserID); err != nil {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
 	}
+
+	bqb.New("GROUP BY u.id")
 
 	// Если пользователей нет, сразу вернуть пустой список
 	if len(users) == 0 {
