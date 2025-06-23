@@ -66,7 +66,7 @@ func (suite *testSuite) Test_BasicAuthLogin() {
 		})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(output.Session, sessions[0])
+		suite.equalSessions(output.Session, sessions[0])
 	})
 }
 
@@ -172,7 +172,7 @@ func (suite *testSuite) Test_AuthnPassword_Registration() {
 		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(out.Session, sessions[0])
+		suite.equalSessions(out.Session, sessions[0])
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
@@ -198,4 +198,15 @@ func (suite *testSuite) Test_AuthnPassword_Registration() {
 		suite.Equal(input.Login, users[0].BasicAuth.Login)
 		suite.Equal(input.Password, users[0].BasicAuth.Password)
 	})
+}
+
+func (suite *testSuite) equalSessions(s1, s2 sessionn.Session) {
+	suite.Equal(s1.ID, s2.ID)
+	suite.Equal(s1.UserID, s2.UserID)
+	suite.Equal(s1.Name, s2.Name)
+	suite.Equal(s1.Status, s2.Status)
+	suite.Equal(s1.AccessToken.Token, s2.AccessToken.Token)
+	suite.True(s1.AccessToken.Expiry.Equal(s2.AccessToken.Expiry))
+	suite.Equal(s1.RefreshToken.Token, s2.RefreshToken.Token)
+	suite.True(s1.RefreshToken.Expiry.Equal(s2.RefreshToken.Expiry))
 }

@@ -32,7 +32,7 @@ func NewUser(name string, nick string) (User, error) {
 		Name:          name,
 		Nick:          nick,
 		BasicAuth:     BasicAuth{},
-		OpenAuthUsers: nil,
+		OpenAuthUsers: []OpenAuthUser{},
 	}, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -41,7 +42,7 @@ type testSuite struct {
 	mockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
-//var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
+var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
 
 func Test_ServicesTestSuite(t *testing.T) {
 	if testing.Short() {
@@ -49,6 +50,15 @@ func Test_ServicesTestSuite(t *testing.T) {
 	}
 
 	testifySuite.Run(t, new(testSuite))
+}
+
+func (suite *testSuite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
+	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
+		DSN: dsn,
+	})
+	suite.Require().NoError(err)
+
+	return factory, func() { _ = factory.Close() }
 }
 
 func (suite *testSuite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, closer func()) {
@@ -82,19 +92,20 @@ func (suite *testSuite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, 
 	}
 }
 
-// SetupTest
+// SetupTest выполняется перед каждым тестом, связанным с suite
 func (suite *testSuite) SetupTest() {
 	// Инициализация фабрики репозиториев
-	suite.factory, suite.factoryCloser = suite.newPgsqlContainerFactory()
+	if pgsqlDSN != "" {
+		suite.factory, suite.factoryCloser = suite.newPgsqlExternalFactory(pgsqlDSN)
+	} else {
+		suite.factory, suite.factoryCloser = suite.newPgsqlContainerFactory()
+	}
 
 	// Инициализация репозиториев
 	suite.rr.chats = suite.factory.NewChattRepository()
 	suite.rr.users = suite.factory.NewUserrRepository()
 	suite.rr.sessions = suite.factory.NewSessionnRepository()
-	//}
-	//
-	//// SetupSubTest выполняется перед каждым подтестом, связанным с suite
-	//func (suite *testSuite) SetupSubTest() {
+
 	// Инициализация адаптеров
 	suite.mockOAuthUsers = suite.generateMockUsers()
 	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
