@@ -16,7 +16,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 		}
 		invitations, err := suite.ss.chats.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, ErrChatNotExists)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Empty(invitations)
 	})
 
@@ -271,9 +271,11 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		p := suite.addRndParticipant(&chat)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Принять приглашение
 		input := AcceptInvitationIn{
 			SubjectID:    p.UserID,
@@ -285,12 +287,14 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		p := suite.addRndParticipant(&chat)
 		// Создать приглашение
 		invitation := suite.newInvitation(p.UserID, uuid.New())
 		suite.addInvitation(&chat, invitation)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Принять приглашение
 		input := AcceptInvitationIn{
 			SubjectID:    invitation.RecipientID,
@@ -301,10 +305,10 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Получить список участников
 		chats, err := suite.rr.chats.List(chatt.Filter{})
 		suite.NoError(err)
-		// В списке будет только один участник, который принял приглашение
+		// В списке будет 3 участника: адм., приглашаемый, приглашающий
 		suite.Require().Len(chats, 1)
-		suite.Require().Len(chats[0].Participants, 1)
-		suite.Equal(p, chats[0].Participants[0])
+		suite.Require().Len(chats[0].Participants, 3)
+		suite.Equal(p, chats[0].Participants[2])
 	})
 }
 
