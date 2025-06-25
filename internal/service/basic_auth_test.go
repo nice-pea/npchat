@@ -49,6 +49,10 @@ func (suite *testSuite) Test_BasicAuthLogin() {
 	suite.Run("вернется Verified сессия", func() {
 		// Создаем нового пользователя с AuthnPassword
 		user := suite.newRndUserWithBasicAuth()
+		err := suite.rr.users.Upsert(user)
+		if err != nil {
+			return
+		}
 		// Входим сессию с правильными данными
 		input := BasicAuthLoginIn{
 			Login:    user.BasicAuth.Login,
