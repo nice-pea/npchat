@@ -33,16 +33,16 @@ func (suite *testSuite) Test_Chats_UserChats() {
 			SubjectID: uuid.New(),
 			UserID:    uuid.New(),
 		}
-		chats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
-		suite.Empty(chats)
+		suite.Empty(out)
 	})
 
 	suite.Run("пустой список из пустого репозитория", func() {
 		input := suite.newUserChatsInput(uuid.New())
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Empty(userChats)
+		suite.Empty(out)
 	})
 
 	suite.Run("пустой список если у пользователя нет чатов", func() {
@@ -52,23 +52,24 @@ func (suite *testSuite) Test_Chats_UserChats() {
 			suite.addRndParticipant(&chat)
 		}
 		input := suite.newUserChatsInput(uuid.New())
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Empty(userChats)
+		suite.Empty(out)
 	})
 
 	suite.Run("у пользователя может быть несколько чатов", func() {
 		userID := uuid.New()
 		const chatsAllCount = 11
 		for range chatsAllCount {
-			chat := suite.upsertChat(suite.rndChat())
-			p := suite.newParticipant(uuid.New())
+			chat := suite.rndChat()
+			p := suite.newParticipant(userID)
 			suite.addParticipant(&chat, p)
+			suite.upsertChat(chat)
 		}
 		input := suite.newUserChatsInput(userID)
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Len(userChats, chatsAllCount)
+		suite.Len(out.Chats, chatsAllCount)
 	})
 }
 
