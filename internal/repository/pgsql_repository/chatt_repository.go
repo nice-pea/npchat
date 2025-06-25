@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
+	"github.com/nullism/bqb"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	sqlxRepo "github.com/nice-pea/npchat/internal/repository/pgsql_repository/sqlx_repo"
@@ -14,23 +16,41 @@ type ChattRepository struct {
 }
 
 func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
+	sel := bqb.New("SELECT c.* FROM chats c")
+	where := bqb.Optional("WHERE")
+
+	hasParticipantsFilter := filter.ParticipantID != uuid.Nil
+	if hasParticipantsFilter {
+		sel = sel.Space("LEFT JOIN participants p ON c.id = p.chat_id")
+		if filter.ParticipantID != uuid.Nil {
+			where = where.And("p.user_id = ?", filter.ParticipantID)
+		}
+	}
+
+	hasInvitationFilter := filter.InvitationID != uuid.Nil || filter.InvitationRecipientID != uuid.Nil
+	if hasInvitationFilter {
+		sel = sel.Space("LEFT JOIN invitations i ON c.id = i.chat_id")
+		if filter.InvitationID != uuid.Nil {
+			where = where.And("i.id = ?", filter.InvitationID)
+		}
+		if filter.InvitationRecipientID != uuid.Nil {
+			where = where.And("i.recipient_id = ?", filter.InvitationRecipientID)
+		}
+	}
+
+	if filter.ID != uuid.Nil {
+		where = where.And("c.id = ?", filter.ID)
+	}
+
+	query, args, err := bqb.New("? ? GROUP BY c.id", sel, where).ToPgsql()
+	if err != nil {
+		return nil, fmt.Errorf("bqb.ToPgsql: %w", err)
+	}
+
 	// Запросить чаты
 	var chats []dbChat
-	if err := r.DB().Select(&chats, `
-		SELECT c.*
-		FROM chats c
-			LEFT JOIN participants p
-			    ON c.id = p.chat_id
-			LEFT JOIN invitations i
-				ON c.id = i.chat_id
-		WHERE ($1 = '' OR $1 = c.id)
-			AND ($2 = '' OR $2 = i.id)
-			AND ($3 = '' OR $3 = i.recipient_id)
-			AND ($4 = '' OR $4 = p.user_id)
-		GROUP BY c.id
-	`, filter.ID, filter.InvitationID, filter.InvitationRecipientID,
-		filter.ParticipantID); err != nil {
-		return nil, err
+	if err := r.DB().Select(&chats, query, args...); err != nil {
+		return nil, fmt.Errorf("bqb.Select: %w", err)
 	}
 
 	// Если чатов нет, сразу вернуть пустой список
@@ -50,7 +70,7 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 		SELECT *
 		FROM participants
 		WHERE chat_id = ANY($1)
-	`, chatIDs); err != nil {
+	`, pq.Array(chatIDs)); err != nil {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
 	}
 
@@ -66,7 +86,7 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 		SELECT *
 		FROM invitations
 		WHERE chat_id = ANY($1)
-	`, chatIDs); err != nil {
+	`, pq.Array(chatIDs)); err != nil {
 		return nil, fmt.Errorf("r.DB().Select: %w", err)
 	}
 
@@ -97,31 +117,43 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO chats(id, name, chief_id) 
 		VALUES (:id, :name, :chief_id)
-		ON CONFLICT DO UPDATE SET
+		ON CONFLICT (id) DO UPDATE SET
 			name=excluded.name,
 			chief_id=excluded.chief_id
 	`, toDBChat(chat)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
 
-	if _, err := r.DB().NamedExec(`
-		DELETE
-		FROM participants
-		WHERE chat_id = :chat_id;
-		INSERT INTO participants(chat_id, user_id)
-		VALUES (:chat_id, :user_id)
-	`, toDBParticipants(chat)); err != nil {
-		return fmt.Errorf("r.DB().NamedExec: %w", err)
+	// Удалить прошлых участников
+	if _, err := r.DB().Exec(`
+		DELETE FROM participants WHERE chat_id = $1
+	`, chat.ID); err != nil {
+		return fmt.Errorf("r.DB().Exec: %w", err)
 	}
 
-	if _, err := r.DB().NamedExec(`
-		DELETE
-		FROM invitations
-		WHERE chat_id = :chat_id;
+	if len(chat.Participants) > 0 {
+		if _, err := r.DB().NamedExec(`
+			INSERT INTO participants(chat_id, user_id)
+			VALUES (:chat_id, :user_id)
+		`, toDBParticipants(chat)); err != nil {
+			return fmt.Errorf("r.DB().NamedExec: %w", err)
+		}
+	}
+
+	// Удалить прошлые приглашения
+	if _, err := r.DB().Exec(`
+		DELETE FROM invitations WHERE chat_id = $1
+	`, chat.ID); err != nil {
+		return fmt.Errorf("r.DB().Exec: %w", err)
+	}
+
+	if len(chat.Invitations) > 0 {
+		if _, err := r.DB().NamedExec(`
 		INSERT INTO invitations(id, chat_id, subject_id, recipient_id)
 		VALUES (:id, :chat_id, :subject_id, :recipient_id)
 	`, toDBInvitations(chat)); err != nil {
-		return fmt.Errorf("r.DB().NamedExec: %w", err)
+			return fmt.Errorf("r.DB().NamedExec: %w", err)
+		}
 	}
 
 	return nil

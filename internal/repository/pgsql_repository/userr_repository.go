@@ -45,7 +45,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 
 	query, args, err := bqb.New("? ? GROUP BY u.id", sel, where).ToPgsql()
 	if err != nil {
-		return nil, fmt.Errorf("bqb.New: %w", err)
+		return nil, fmt.Errorf("bqb.ToPgsql: %w", err)
 	}
 
 	var users []dbUser

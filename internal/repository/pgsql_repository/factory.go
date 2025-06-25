@@ -57,13 +57,13 @@ func (f *Factory) Cleanup() error {
 		if _, err := tx.DB().Exec("DELETE FROM users"); err != nil {
 			return fmt.Errorf("tx.DB().Exec: %w", err)
 		}
-		if _, err := tx.DB().Exec("DELETE FROM chats"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
 		if _, err := tx.DB().Exec("DELETE FROM participants"); err != nil {
 			return fmt.Errorf("tx.DB().Exec: %w", err)
 		}
 		if _, err := tx.DB().Exec("DELETE FROM invitations"); err != nil {
+			return fmt.Errorf("tx.DB().Exec: %w", err)
+		}
+		if _, err := tx.DB().Exec("DELETE FROM chats"); err != nil {
 			return fmt.Errorf("tx.DB().Exec: %w", err)
 		}
 
