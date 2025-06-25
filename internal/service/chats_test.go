@@ -248,7 +248,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 		// Обновить название чата
 		chat, err := suite.ss.chats.UpdateName(input)
 		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, ErrChatNotExists)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Zero(chat)
 	})
 
