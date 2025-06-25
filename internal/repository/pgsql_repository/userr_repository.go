@@ -26,21 +26,21 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	if hasOauthFilter {
 		sel = sel.Space("LEFT JOIN oauth_users o ON u.id = o.user_id")
 		if filter.OAuthUserID != "" {
-			where = where.Space("o.user_id = ?", filter.OAuthUserID)
+			where = where.And("o.user_id = ?", filter.OAuthUserID)
 		}
 		if filter.OAuthProvider != "" {
-			where = where.Space("o.provider = ?", filter.OAuthProvider)
+			where = where.And("o.provider = ?", filter.OAuthProvider)
 		}
 	}
 
 	if filter.ID != uuid.Nil {
-		where = where.Space("u.id = ?", filter.ID)
+		where = where.And("u.id = ?", filter.ID)
 	}
 	if filter.BasicAuthLogin != "" {
-		where = where.Space("u.login = ?", filter.BasicAuthLogin)
+		where = where.And("u.login = ?", filter.BasicAuthLogin)
 	}
 	if filter.BasicAuthPassword != "" {
-		where = where.Space("u.password = ?", filter.BasicAuthPassword)
+		where = where.And("u.password = ?", filter.BasicAuthPassword)
 	}
 
 	query, args, err := bqb.New("? ? GROUP BY u.id", sel, where).ToPgsql()

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
@@ -17,10 +19,10 @@ type BasicAuthLoginOut struct {
 // Validate валидирует значение отдельно каждого параметры
 func (in BasicAuthLoginIn) Validate() error {
 	if err := userr.ValidateBasicAuthLogin(in.Login); err != nil {
-		return err
+		return errors.Join(ErrInvalidLogin, err)
 	}
 	if err := userr.ValidateBasicAuthPassword(in.Password); err != nil {
-		return err
+		return errors.Join(ErrInvalidPassword, err)
 	}
 
 	return nil
