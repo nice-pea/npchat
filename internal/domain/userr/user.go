@@ -64,3 +64,54 @@ func (u *User) AddBasicAuth(auth BasicAuth) error {
 
 	return nil
 }
+
+// Equal проверяет пользователей на равенство
+func (u *User) Equal(u2 User) bool {
+	if u.ID != u2.ID {
+		return false
+	}
+	if u.Name != u2.Name {
+		return false
+	}
+	if u.Nick != u2.Nick {
+		return false
+	}
+	if len(u2.OpenAuthUsers) != len(u.OpenAuthUsers) {
+		return false
+	}
+
+	for i, openAuthUser := range u2.OpenAuthUsers {
+		if openAuthUser.ID != u.OpenAuthUsers[i].ID {
+			return false
+		}
+		if openAuthUser.Provider != u.OpenAuthUsers[i].Provider {
+			return false
+		}
+		if openAuthUser.Email != u.OpenAuthUsers[i].Email {
+			return false
+		}
+		if openAuthUser.Name != u.OpenAuthUsers[i].Name {
+			return false
+		}
+		if openAuthUser.Picture != u.OpenAuthUsers[i].Picture {
+			return false
+		}
+
+		token2 := openAuthUser.Token
+		token1 := u.OpenAuthUsers[i].Token
+		if token1.AccessToken != token2.AccessToken {
+			return false
+		}
+		if token1.TokenType != token2.TokenType {
+			return false
+		}
+		if token1.RefreshToken != token2.RefreshToken {
+			return false
+		}
+		if !token2.Expiry.Equal(token1.Expiry) {
+			return false
+		}
+	}
+
+	return true
+}

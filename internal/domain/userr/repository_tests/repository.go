@@ -210,7 +210,7 @@ func upsertRndUsers(t *testing.T, r userr.Repository, count int) []userr.User {
 }
 
 func addRndBasicAuth(t *testing.T, user *userr.User) {
-	ba, err := userr.NewBasicAuth(gofakeit.Noun(), common.RndPassword())
+	ba, err := userr.NewBasicAuth(gofakeit.Username(), common.RndPassword())
 	require.NoError(t, err)
 	err = user.AddBasicAuth(ba)
 	require.NoError(t, err)
