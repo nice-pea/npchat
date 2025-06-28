@@ -14,7 +14,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 			SubjectID: uuid.New(),
 		}
 		out, err := suite.ss.chats.ChatMembers(input)
-		suite.ErrorIs(err, ErrChatNotExists)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Empty(out)
 	})
 
