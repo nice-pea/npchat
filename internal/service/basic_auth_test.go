@@ -9,9 +9,9 @@ import (
 )
 
 func (suite *testSuite) newRndUserWithBasicAuth() userr.User {
-	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
+	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
 	suite.Require().NoError(err)
-	ba, err := userr.NewBasicAuth(gofakeit.Noun()+"four", common.RndPassword())
+	ba, err := userr.NewBasicAuth(gofakeit.Username()+"four", common.RndPassword())
 	suite.Require().NoError(err)
 	err = user.AddBasicAuth(ba)
 	suite.Require().NoError(err)
