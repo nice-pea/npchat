@@ -107,7 +107,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		users, err := suite.rr.users.List(userr.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(users, 1)
-		suite.Equal(out.User, users[0])
+		suite.equalUsers(out.User, users[0])
 	})
 
 	suite.Run("после регистрации будет создан метод авторизации", func() {
@@ -149,7 +149,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(out.Session, sessions[0])
+		suite.equalSessions(out.Session, sessions[0])
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
@@ -174,4 +174,24 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
 		suite.Zero(out)
 	})
+}
+
+func (suite *testSuite) equalUsers(u1, u2 userr.User) {
+	suite.Equal(u1.ID, u2.ID)
+	suite.Equal(u1.Name, u2.Name)
+	suite.Equal(u1.Nick, u2.Nick)
+	suite.Len(u2.OpenAuthUsers, len(u1.OpenAuthUsers))
+	for i, openAuthUser := range u2.OpenAuthUsers {
+		suite.Equal(openAuthUser.ID, u1.OpenAuthUsers[i].ID)
+		suite.Equal(openAuthUser.Provider, u1.OpenAuthUsers[i].Provider)
+		suite.Equal(openAuthUser.Email, u1.OpenAuthUsers[i].Email)
+		suite.Equal(openAuthUser.Name, u1.OpenAuthUsers[i].Name)
+		suite.Equal(openAuthUser.Picture, u1.OpenAuthUsers[i].Picture)
+		token2 := openAuthUser.Token
+		token1 := u1.OpenAuthUsers[i].Token
+		suite.Equal(token1.AccessToken, token2.AccessToken)
+		suite.Equal(token1.TokenType, token2.TokenType)
+		suite.Equal(token1.RefreshToken, token2.RefreshToken)
+		suite.True(token2.Expiry.Equal(token1.Expiry))
+	}
 }

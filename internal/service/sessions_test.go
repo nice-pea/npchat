@@ -59,6 +59,6 @@ func (suite *testSuite) Test_Sessions_Find() {
 		sessions, err := suite.ss.sessions.Find(input)
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(uws.Session, sessions[0])
+		suite.equalSessions(uws.Session, sessions[0])
 	})
 }
