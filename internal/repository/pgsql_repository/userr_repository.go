@@ -22,15 +22,15 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	sel := bqb.New("SELECT u.* FROM users u")
 	where := bqb.Optional("WHERE")
 
-	hasOauthFilter := filter.OAuthUserID != "" || filter.OAuthProvider != ""
-	if hasOauthFilter {
+	needJoinOAuthUsers := filter.OAuthUserID != "" || filter.OAuthProvider != ""
+	if needJoinOAuthUsers {
 		sel = sel.Space("LEFT JOIN oauth_users o ON u.id = o.user_id")
-		if filter.OAuthUserID != "" {
-			where = where.And("o.user_id = ?", filter.OAuthUserID)
-		}
-		if filter.OAuthProvider != "" {
-			where = where.And("o.provider = ?", filter.OAuthProvider)
-		}
+	}
+	if filter.OAuthUserID != "" {
+		where = where.And("o.user_id = ?", filter.OAuthUserID)
+	}
+	if filter.OAuthProvider != "" {
+		where = where.And("o.provider = ?", filter.OAuthProvider)
 	}
 
 	if filter.ID != uuid.Nil {

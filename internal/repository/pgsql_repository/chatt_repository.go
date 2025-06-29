@@ -19,23 +19,23 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 	sel := bqb.New("SELECT c.* FROM chats c")
 	where := bqb.Optional("WHERE")
 
-	hasParticipantsFilter := filter.ParticipantID != uuid.Nil
-	if hasParticipantsFilter {
+	needJoinParticipants := filter.ParticipantID != uuid.Nil
+	if needJoinParticipants {
 		sel = sel.Space("LEFT JOIN participants p ON c.id = p.chat_id")
-		if filter.ParticipantID != uuid.Nil {
-			where = where.And("p.user_id = ?", filter.ParticipantID)
-		}
+	}
+	if filter.ParticipantID != uuid.Nil {
+		where = where.And("p.user_id = ?", filter.ParticipantID)
 	}
 
-	hasInvitationFilter := filter.InvitationID != uuid.Nil || filter.InvitationRecipientID != uuid.Nil
-	if hasInvitationFilter {
+	needJoinInvitations := filter.InvitationID != uuid.Nil || filter.InvitationRecipientID != uuid.Nil
+	if needJoinInvitations {
 		sel = sel.Space("LEFT JOIN invitations i ON c.id = i.chat_id")
-		if filter.InvitationID != uuid.Nil {
-			where = where.And("i.id = ?", filter.InvitationID)
-		}
-		if filter.InvitationRecipientID != uuid.Nil {
-			where = where.And("i.recipient_id = ?", filter.InvitationRecipientID)
-		}
+	}
+	if filter.InvitationID != uuid.Nil {
+		where = where.And("i.id = ?", filter.InvitationID)
+	}
+	if filter.InvitationRecipientID != uuid.Nil {
+		where = where.And("i.recipient_id = ?", filter.InvitationRecipientID)
 	}
 
 	if filter.ID != uuid.Nil {
