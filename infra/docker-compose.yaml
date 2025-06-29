@@ -23,8 +23,8 @@ services:
       - ":8080"
       - "--pgsql-dsn"
       - "postgresql://postgres:postgres@pgsql:5432/npc_db?sslmode=disable"
-      - "--slog-level"
-      - "-4"
+      - "--log-level"
+      - "debug"
 
 # https://github.com/docker-library/docs/blob/master/postgres/README.md
   pgsql:

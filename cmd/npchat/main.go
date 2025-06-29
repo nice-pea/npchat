@@ -66,11 +66,11 @@ func initCliCommand() *cli.Command {
 				Usage:       "Адрес для запуска HTTP сервера",
 				Value:       ":8080",
 			},
-			&cli.IntFlag{
-				Name:        "slog-level",
-				Destination: (*int)(&cfg.SlogLevel),
-				Usage:       "Уровень логирования. Может быть -1 (debug), 0 (info), 4 (warn), 8 (error)",
-				Value:       int(slog.LevelInfo),
+			&cli.StringFlag{
+				Name:        "log-level",
+				Destination: &cfg.LogLevel,
+				Usage:       "Уровень логирования. Может быть debug, info, warn, error",
+				Value:       app.LogLevelInfo,
 			},
 			// Google
 			&cli.StringFlag{

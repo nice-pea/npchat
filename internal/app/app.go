@@ -11,8 +11,8 @@ import (
 func Run(ctx context.Context, cfg Config) error {
 	g, ctx := errgroup.WithContext(ctx)
 
-	slog.SetLogLoggerLevel(cfg.SlogLevel)
-	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.SlogLevel))
+	slog.SetLogLoggerLevel(slogLevel(cfg.LogLevel))
+	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.LogLevel))
 
 	// Инициализация репозиториев
 	repos, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
