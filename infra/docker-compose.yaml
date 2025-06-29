@@ -6,8 +6,8 @@ networks:
 #    external: true
 
 services:
-  npchat:
-    container_name: npc.npchat
+  test.npchat:
+    container_name: npc.test.npchat
     build:
       context: ../
       dockerfile: ./Containerfile
@@ -16,25 +16,25 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      pgsql:
+      test.pgsql:
         condition: service_healthy
     command:
       - "--http-addr"
       - ":8080"
       - "--pgsql-dsn"
-      - "postgresql://postgres:postgres@pgsql:5432/npc_db?sslmode=disable"
+      - "postgresql://postgres:postgres@test.pgsql:5432/test_npc_db?sslmode=disable"
       - "--log-level"
       - "debug"
 
 # https://github.com/docker-library/docs/blob/master/postgres/README.md
-  pgsql:
-    container_name: npc.pgsql
+  test.pgsql:
+    container_name: npc.test.pgsql
     image: postgres:17
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: npc_db
+      POSTGRES_DB: test_npc_db
     ports:
       - "5432:5432"
     healthcheck:

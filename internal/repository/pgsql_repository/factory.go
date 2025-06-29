@@ -3,6 +3,7 @@ package pgsqlRepository
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -47,26 +48,24 @@ func (f *Factory) Close() error {
 
 // Cleanup очищает все сохраненные записи
 func (f *Factory) Cleanup() error {
-	return sqlxRepo.New(f.db).InTransaction(func(tx sqlxRepo.SqlxRepo) error {
-		if _, err := tx.DB().Exec("DELETE FROM sessions"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
-		if _, err := tx.DB().Exec("DELETE FROM oauth_users"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
-		if _, err := tx.DB().Exec("DELETE FROM users"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
-		if _, err := tx.DB().Exec("DELETE FROM participants"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
-		if _, err := tx.DB().Exec("DELETE FROM invitations"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
-		if _, err := tx.DB().Exec("DELETE FROM chats"); err != nil {
-			return fmt.Errorf("tx.DB().Exec: %w", err)
-		}
+	var dbName string
+	err := f.db.QueryRow("SELECT current_database()").Scan(&dbName)
+	if err != nil {
+		return fmt.Errorf("не удалось получить имя базы данных: %w", err)
+	}
+	if !strings.HasPrefix(dbName, "test_") {
+		return fmt.Errorf("очистка возможна только на тестовыз базах данных, текущая: %s", dbName)
+	}
 
+	// Список таблиц для очистки
+	tables := []string{"sessions", "oauth_users", "users", "participants", "invitations", "chats"}
+
+	return sqlxRepo.New(f.db).InTransaction(func(tx sqlxRepo.SqlxRepo) error {
+		for _, table := range tables {
+			if _, err := tx.DB().Exec("DELETE FROM " + table); err != nil {
+				return fmt.Errorf("tx.DB().Exec: %w", err)
+			}
+		}
 		return nil
 	})
 }
