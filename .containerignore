@@ -1,0 +1,10 @@
+.github
+bin
+infra
+.gitignore
+.containerignore
+Containerfile
+LICENSE
+Makefile
+README.md
+server-requests.http

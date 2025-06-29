@@ -42,11 +42,11 @@ func NewSession(userID uuid.UUID, name, status string) (Session, error) {
 		Status: status,
 		AccessToken: Token{
 			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(accessTokenLifetime),
+			Expiry: time.Now().Add(accessTokenLifetime).In(time.UTC).Truncate(time.Microsecond),
 		},
 		RefreshToken: Token{
 			Token:  uuid.NewString(),
-			Expiry: time.Now().Add(refreshTokenLifetime),
+			Expiry: time.Now().Add(refreshTokenLifetime).In(time.UTC).Truncate(time.Microsecond),
 		},
 	}, nil
 }

@@ -88,28 +88,35 @@ func (u *Users) CompeteOAuthRegistration(in CompeteOAuthRegistrationIn) (Compete
 		return CompeteOAuthRegistrationOut{}, err
 	}
 
-	// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
-	if conflictUsers, err := u.Repo.List(userr.Filter{
-		OAuthUserID:   openAuthUser.ID,
-		OAuthProvider: in.Provider,
+	// Обернуть работу с репозиторием в транзакцию
+	var session sessionn.Session
+	if err = u.Repo.InTransaction(func(txRepo userr.Repository) error {
+		// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
+		if conflictUsers, err := u.Repo.List(userr.Filter{
+			OAuthUserID:   openAuthUser.ID,
+			OAuthProvider: in.Provider,
+		}); err != nil {
+			return err // Возвращает ошибку, если запрос к репозиторию не удался
+		} else if len(conflictUsers) != 0 {
+			return ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
+		}
+
+		// Сохранить пользователя в репозиторий
+		if err = u.Repo.Upsert(user); err != nil {
+			return err
+		}
+
+		// Создать сессию для пользователя
+		sessionName := "todo: [название модели телефона / название браузера]"
+		if session, err = sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified); err != nil {
+			return err
+		}
+		if err = u.SessionsRepo.Upsert(session); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
-		return CompeteOAuthRegistrationOut{}, err // Возвращает ошибку, если запрос к репозиторию не удался
-	} else if len(conflictUsers) != 0 {
-		return CompeteOAuthRegistrationOut{}, ErrProvidersUserIsAlreadyLinked // Возвращает ошибку, если пользователь уже связан
-	}
-
-	// Сохранить пользователя в репозиторий
-	if err = u.Repo.Upsert(user); err != nil {
-		return CompeteOAuthRegistrationOut{}, err
-	}
-
-	// Создать сессию для пользователя
-	sessionName := "todo: [название модели телефона / название браузера]"
-	session, err := sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified)
-	if err != nil {
-		return CompeteOAuthRegistrationOut{}, err
-	}
-	if err = u.SessionsRepo.Upsert(session); err != nil {
 		return CompeteOAuthRegistrationOut{}, err
 	}
 

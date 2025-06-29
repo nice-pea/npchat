@@ -10,7 +10,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
+func (suite *testSuite) Test_OAuth_InitRegistration() {
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
 		out, err := suite.ss.users.InitOAuthRegistration(InitOAuthRegistrationIn{
@@ -51,7 +51,7 @@ func (suite *servicesTestSuite) Test_OAuth_InitRegistration() {
 	})
 }
 
-func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
+func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("UserCode обязательное поле", func() {
 		input := CompeteOAuthRegistrationIn{
 			UserCode: "",
@@ -107,7 +107,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		users, err := suite.rr.users.List(userr.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(users, 1)
-		suite.Equal(out.User, users[0])
+		suite.True(out.User.Equal(users[0]))
 	})
 
 	suite.Run("после регистрации будет создан метод авторизации", func() {
@@ -149,7 +149,7 @@ func (suite *servicesTestSuite) Test_OAuth_CompleteRegistration() {
 		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(out.Session, sessions[0])
+		suite.equalSessions(out.Session, sessions[0])
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 

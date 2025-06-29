@@ -83,6 +83,6 @@ func NewOpenAuthToken(accessToken string, tokenType string, refreshToken string,
 		AccessToken:  accessToken,
 		TokenType:    tokenType,
 		RefreshToken: refreshToken,
-		Expiry:       expiry,
+		Expiry:       expiry.In(time.UTC).Truncate(time.Microsecond),
 	}, nil
 }

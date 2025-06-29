@@ -19,10 +19,10 @@ type BasicAuthLoginOut struct {
 // Validate валидирует значение отдельно каждого параметры
 func (in BasicAuthLoginIn) Validate() error {
 	if err := userr.ValidateBasicAuthLogin(in.Login); err != nil {
-		return err
+		return errors.Join(ErrInvalidLogin, err)
 	}
 	if err := userr.ValidateBasicAuthPassword(in.Password); err != nil {
-		return err
+		return errors.Join(ErrInvalidPassword, err)
 	}
 
 	return nil
@@ -48,8 +48,12 @@ func (u *Users) BasicAuthLogin(in BasicAuthLoginIn) (BasicAuthLoginOut, error) {
 	user := matchUsers[0]
 
 	// Создать сессию для пользователя
-	session, err := sessionn.NewSession(user.ID, "", sessionn.StatusVerified)
+	sessionName := "todo: [название модели телефона / название браузера]"
+	session, err := sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified)
 	if err != nil {
+		return BasicAuthLoginOut{}, err
+	}
+	if err = u.SessionsRepo.Upsert(session); err != nil {
 		return BasicAuthLoginOut{}, err
 	}
 
@@ -68,13 +72,13 @@ type BasicAuthRegistrationIn struct {
 
 func (in BasicAuthRegistrationIn) Validate() error {
 	if in.Login == "" {
-		return errors.New("login is required")
+		return ErrLoginIsRequired
 	}
 	if in.Password == "" {
-		return errors.New("password is required")
+		return ErrPasswordIsRequired
 	}
 	if in.Name == "" {
-		return errors.New("name is required")
+		return ErrNameIsRequired
 	}
 
 	return nil
@@ -107,23 +111,34 @@ func (u *Users) BasicAuthRegistration(in BasicAuthRegistrationIn) (BasicAuthRegi
 		return BasicAuthRegistrationOut{}, err
 	}
 
-	// Проверка на существование пользователя с таким логином
-	if conflictUsers, err := u.Repo.List(userr.Filter{
-		BasicAuthLogin: in.Login,
+	// Обернуть работу с репозиторием в транзакцию
+	var session sessionn.Session
+	if err = u.Repo.InTransaction(func(txRepo userr.Repository) error {
+		// Проверка на существование пользователя с таким логином
+		if conflictUsers, err := u.Repo.List(userr.Filter{
+			BasicAuthLogin: in.Login,
+		}); err != nil {
+			return err
+		} else if len(conflictUsers) > 0 {
+			return ErrLoginIsAlreadyInUse
+		}
+
+		// Сохранить пользователя в репозиторий
+		if err = u.Repo.Upsert(user); err != nil {
+			return err
+		}
+
+		// Создать сессию для пользователя
+		sessionName := "todo: [название модели телефона / название браузера]"
+		if session, err = sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified); err != nil {
+			return err
+		}
+		if err = u.SessionsRepo.Upsert(session); err != nil {
+			return err
+		}
+
+		return nil
 	}); err != nil {
-		return BasicAuthRegistrationOut{}, err
-	} else if len(conflictUsers) > 0 {
-		return BasicAuthRegistrationOut{}, ErrLoginIsAlreadyInUse
-	}
-
-	// Сохранить пользователя в репозиторий
-	if err := u.Repo.Upsert(user); err != nil {
-		return BasicAuthRegistrationOut{}, err
-	}
-
-	// Создать сессию для пользователя
-	session, err := sessionn.NewSession(user.ID, "", sessionn.StatusVerified)
-	if err != nil {
 		return BasicAuthRegistrationOut{}, err
 	}
 

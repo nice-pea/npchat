@@ -76,7 +76,7 @@ func TestValidateChatName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateChatName(tt.name); tt.wantErr {
+			if err := ValidateChatName(tt.chatName); tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)

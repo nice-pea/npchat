@@ -200,7 +200,9 @@ func (c *Chats) AcceptInvitation(in AcceptInvitationIn) error {
 	chat, err := chatt.Find(c.Repo, chatt.Filter{
 		InvitationID: in.InvitationID,
 	})
-	if err != nil {
+	if errors.Is(err, chatt.ErrChatNotExists) {
+		return ErrInvitationNotExists
+	} else if err != nil {
 		return err
 	}
 
@@ -255,7 +257,9 @@ func (c *Chats) CancelInvitation(in CancelInvitationIn) error {
 	chat, err := chatt.Find(c.Repo, chatt.Filter{
 		InvitationID: in.InvitationID,
 	})
-	if err != nil {
+	if errors.Is(err, chatt.ErrChatNotExists) {
+		return ErrInvitationNotExists
+	} else if err != nil {
 		return err
 	}
 

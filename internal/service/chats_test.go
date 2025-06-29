@@ -12,14 +12,14 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
-func (suite *servicesTestSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {
+func (suite *testSuite) newUserChatsInput(userID uuid.UUID) WhichParticipateIn {
 	return WhichParticipateIn{
 		SubjectID: userID,
 		UserID:    userID,
 	}
 }
 
-func (suite *servicesTestSuite) newCreateInputRandom() CreateChatIn {
+func (suite *testSuite) newCreateInputRandom() CreateChatIn {
 	return CreateChatIn{
 		ChiefUserID: uuid.New(),
 		Name:        fmt.Sprintf("name%d", rand.Int()),
@@ -27,22 +27,22 @@ func (suite *servicesTestSuite) newCreateInputRandom() CreateChatIn {
 }
 
 // Test_Chats_UserChats тестирует запрос список чатов в которых участвует пользователь
-func (suite *servicesTestSuite) Test_Chats_UserChats() {
+func (suite *testSuite) Test_Chats_UserChats() {
 	suite.Run("пользователь может запрашивать только свой чат", func() {
 		input := WhichParticipateIn{
 			SubjectID: uuid.New(),
 			UserID:    uuid.New(),
 		}
-		chats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
-		suite.Empty(chats)
+		suite.Empty(out)
 	})
 
 	suite.Run("пустой список из пустого репозитория", func() {
 		input := suite.newUserChatsInput(uuid.New())
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Empty(userChats)
+		suite.Empty(out)
 	})
 
 	suite.Run("пустой список если у пользователя нет чатов", func() {
@@ -52,28 +52,29 @@ func (suite *servicesTestSuite) Test_Chats_UserChats() {
 			suite.addRndParticipant(&chat)
 		}
 		input := suite.newUserChatsInput(uuid.New())
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Empty(userChats)
+		suite.Empty(out)
 	})
 
 	suite.Run("у пользователя может быть несколько чатов", func() {
 		userID := uuid.New()
 		const chatsAllCount = 11
 		for range chatsAllCount {
-			chat := suite.upsertChat(suite.rndChat())
-			p := suite.newParticipant(uuid.New())
+			chat := suite.rndChat()
+			p := suite.newParticipant(userID)
 			suite.addParticipant(&chat, p)
+			suite.upsertChat(chat)
 		}
 		input := suite.newUserChatsInput(userID)
-		userChats, err := suite.ss.chats.WhichParticipate(input)
+		out, err := suite.ss.chats.WhichParticipate(input)
 		suite.NoError(err)
-		suite.Len(userChats, chatsAllCount)
+		suite.Len(out.Chats, chatsAllCount)
 	})
 }
 
 // Test_Chats_CreateChat тестирует создание чата
-func (suite *servicesTestSuite) Test_Chats_CreateChat() {
+func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("выходящие совпадают с заданными", func() {
 		// Создать чат
 		input := suite.newCreateInputRandom()
@@ -238,7 +239,7 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 }
 
 // Test_Chats_UpdateName тестирует обновления названия чата
-func (suite *servicesTestSuite) Test_Chats_UpdateName() {
+func (suite *testSuite) Test_Chats_UpdateName() {
 	suite.Run("только существующий чат можно обновить", func() {
 		input := UpdateNameIn{
 			SubjectID: uuid.New(),
@@ -248,7 +249,7 @@ func (suite *servicesTestSuite) Test_Chats_UpdateName() {
 		// Обновить название чата
 		chat, err := suite.ss.chats.UpdateName(input)
 		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, ErrChatNotExists)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Zero(chat)
 	})
 

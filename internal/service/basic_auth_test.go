@@ -8,17 +8,17 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-func (suite *servicesTestSuite) newRndUserWithBasicAuth() userr.User {
-	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
+func (suite *testSuite) newRndUserWithBasicAuth() userr.User {
+	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
 	suite.Require().NoError(err)
-	ba, err := userr.NewBasicAuth(gofakeit.Noun(), common.RndPassword())
+	ba, err := userr.NewBasicAuth(gofakeit.Username()+"four", common.RndPassword())
 	suite.Require().NoError(err)
 	err = user.AddBasicAuth(ba)
 	suite.Require().NoError(err)
 	return user
 }
 
-func (suite *servicesTestSuite) Test_BasicAuthLogin() {
+func (suite *testSuite) Test_BasicAuthLogin() {
 	suite.Run("Login должен быть валидным", func() {
 		out, err := suite.ss.users.BasicAuthLogin(BasicAuthLoginIn{
 			Login:    " inv ald login",
@@ -49,6 +49,10 @@ func (suite *servicesTestSuite) Test_BasicAuthLogin() {
 	suite.Run("вернется Verified сессия", func() {
 		// Создаем нового пользователя с AuthnPassword
 		user := suite.newRndUserWithBasicAuth()
+		err := suite.rr.users.Upsert(user)
+		if err != nil {
+			return
+		}
 		// Входим сессию с правильными данными
 		input := BasicAuthLoginIn{
 			Login:    user.BasicAuth.Login,
@@ -66,11 +70,11 @@ func (suite *servicesTestSuite) Test_BasicAuthLogin() {
 		})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(output.Session, sessions[0])
+		suite.equalSessions(output.Session, sessions[0])
 	})
 }
 
-func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
+func (suite *testSuite) Test_AuthnPassword_Registration() {
 	suite.Run("BasicAuthLogin должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := BasicAuthRegistrationIn{
@@ -80,7 +84,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick:     "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidLogin)
+		suite.ErrorIs(err, ErrLoginIsRequired)
 		suite.Zero(out)
 	})
 
@@ -93,7 +97,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick:     "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidPassword)
+		suite.ErrorIs(err, ErrPasswordIsRequired)
 		suite.Zero(out)
 	})
 
@@ -107,7 +111,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 			Nick: "nick",
 		}
 		out, err := suite.ss.users.BasicAuthRegistration(input)
-		suite.ErrorIs(err, ErrInvalidName)
+		suite.ErrorIs(err, ErrNameIsRequired)
 		suite.Zero(out)
 	})
 
@@ -172,7 +176,7 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		sessions, err := suite.rr.sessions.List(sessionn.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(sessions, 1)
-		suite.Equal(out.Session, sessions[0])
+		suite.equalSessions(out.Session, sessions[0])
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
@@ -198,4 +202,15 @@ func (suite *servicesTestSuite) Test_AuthnPassword_Registration() {
 		suite.Equal(input.Login, users[0].BasicAuth.Login)
 		suite.Equal(input.Password, users[0].BasicAuth.Password)
 	})
+}
+
+func (suite *testSuite) equalSessions(s1, s2 sessionn.Session) {
+	suite.Equal(s1.ID, s2.ID)
+	suite.Equal(s1.UserID, s2.UserID)
+	suite.Equal(s1.Name, s2.Name)
+	suite.Equal(s1.Status, s2.Status)
+	suite.Equal(s1.AccessToken.Token, s2.AccessToken.Token)
+	suite.True(s1.AccessToken.Expiry.Equal(s2.AccessToken.Expiry))
+	suite.Equal(s1.RefreshToken.Token, s2.RefreshToken.Token)
+	suite.True(s1.RefreshToken.Expiry.Equal(s2.RefreshToken.Expiry))
 }

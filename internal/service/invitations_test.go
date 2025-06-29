@@ -7,17 +7,17 @@ import (
 )
 
 // Test_Invitations_ChatInvitations тестирует получение списка приглашений
-func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
+func (suite *testSuite) Test_Invitations_ChatInvitations() {
 	suite.Run("чат должен существовать", func() {
 		// Получить список приглашений
 		input := ChatInvitationsIn{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 		}
-		invitations, err := suite.ss.chats.ChatInvitations(input)
+		out, err := suite.ss.chats.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, ErrChatNotExists)
-		suite.Empty(invitations)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
+		suite.Empty(out.Invitations)
 	})
 
 	suite.Run("субъект должен быть участником чата", func() {
@@ -28,41 +28,45 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 			ChatID:    chat.ID,
 			SubjectID: uuid.New(),
 		}
-		invitations, err := suite.ss.chats.ChatInvitations(input)
+		out, err := suite.ss.chats.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
-		suite.Empty(invitations)
+		suite.Empty(out.Invitations)
 	})
 
 	suite.Run("пустой список из чата без приглашений", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Получить список приглашений
 		input := ChatInvitationsIn{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
-		invitations, err := suite.ss.chats.ChatInvitations(input)
+		out, err := suite.ss.chats.ChatInvitations(input)
 		suite.NoError(err)
-		suite.Empty(invitations)
+		suite.Empty(out.Invitations)
 	})
 
 	suite.Run("субъект не администратор чата и видит только отправленные им приглашения", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		participant := suite.addRndParticipant(&chat)
-		// Создать приглашения отправленные участником
+		// Создать приглашения, отправленные участником
 		subjectInvitations := make([]chatt.Invitation, 3)
 		for i := range subjectInvitations {
 			subjectInvitations[i] = suite.newInvitation(participant.UserID, uuid.New())
 			suite.addInvitation(&chat, subjectInvitations[i])
 		}
-		// Создать приглашения отправленные какими-то другими пользователями
+		// Создать приглашения, отправленные какими-то другими пользователями
 		for range 3 {
 			p := suite.addRndParticipant(&chat)
 			i := suite.newInvitation(p.UserID, uuid.New())
 			suite.addInvitation(&chat, i)
 		}
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Получить список приглашений
 		input := ChatInvitationsIn{
 			ChatID:    chat.ID,
@@ -70,8 +74,8 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		}
 		out, err := suite.ss.chats.ChatInvitations(input)
 		suite.Require().NoError(err)
-		// В списке будут приглашения отправленные участником
-		suite.Require().Len(out.Invitations, len(subjectInvitations))
+		// В списке будут приглашения, отправленные участником
+		suite.Len(out.Invitations, len(subjectInvitations))
 		for i, subjectInvitation := range subjectInvitations {
 			suite.Equal(subjectInvitation, out.Invitations[i])
 		}
@@ -79,14 +83,16 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 
 	suite.Run("субъект является администратором чата и видит все отправленные приглашения в чат", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
-		// Создать приглашения отправленные какими-то пользователями
+		chat := suite.rndChat()
+		// Создать приглашения, отправленные какими-то пользователями
 		invitationsSent := make([]chatt.Invitation, 3)
 		for i := range invitationsSent {
 			p := suite.addRndParticipant(&chat)
 			invitationsSent[i] = suite.newInvitation(p.UserID, uuid.New())
 			suite.addInvitation(&chat, invitationsSent[i])
 		}
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Получить список приглашений
 		input := ChatInvitationsIn{
 			SubjectID: chat.ChiefID,
@@ -95,7 +101,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 		out, err := suite.ss.chats.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения все приглашения
-		suite.Require().Len(out, len(invitationsSent))
+		suite.Len(out.Invitations, len(invitationsSent))
 		for _, saved := range invitationsSent {
 			suite.Contains(out.Invitations, saved)
 		}
@@ -103,7 +109,7 @@ func (suite *servicesTestSuite) Test_Invitations_ChatInvitations() {
 }
 
 // Test_Invitations_UserInvitations тестирует получение списка приглашений направленных пользователю
-func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
+func (suite *testSuite) Test_Invitations_UserInvitations() {
 	suite.Run("пользователя не приглашали и потому вернется пустой список", func() {
 		// Получить список приглашений
 		input := ReceivedInvitationsIn{
@@ -115,21 +121,28 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 	})
 
 	suite.Run("из многих приглашений несколько направлено пользователю и потому вернутся только они", func() {
-		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
 		// ID пользователя
 		userID := uuid.New()
-		// Создать несколько приглашений направленных пользователю
+		// Создать несколько приглашений, направленных пользователю
 		invitationsOfUser := make([]chatt.Invitation, 5)
 		for i := range invitationsOfUser {
+			// Создать чат
+			chat := suite.rndChat()
 			p := suite.addRndParticipant(&chat)
 			invitationsOfUser[i] = suite.newInvitation(p.UserID, userID)
+			suite.addInvitation(&chat, invitationsOfUser[i])
+			// Сохранить чат
+			suite.upsertChat(chat)
 		}
-		// Создать несколько приглашений направленных каким-то другим пользователям
+		// Создать несколько приглашений, направленных каким-то другим пользователям
 		for range 10 {
+			// Создать чат
+			chat := suite.rndChat()
 			p := suite.addRndParticipant(&chat)
 			i := suite.newInvitation(p.UserID, uuid.New())
 			suite.addInvitation(&chat, i)
+			// Сохранить чат
+			suite.upsertChat(chat)
 		}
 		// Получить список приглашений
 		input := ReceivedInvitationsIn{
@@ -137,16 +150,16 @@ func (suite *servicesTestSuite) Test_Invitations_UserInvitations() {
 		}
 		out, err := suite.ss.chats.ReceivedInvitations(input)
 		suite.NoError(err)
-		// В списке будут только приглашения направленные пользователю
-		suite.Require().Len(out, len(invitationsOfUser))
-		for _, invitation := range invitationsOfUser {
-			suite.Contains(out.ChatsInvitations, invitation)
+		// В списке будут только приглашения, направленные пользователю
+		suite.Len(out.ChatsInvitations, len(invitationsOfUser))
+		for _, invitation := range out.ChatsInvitations {
+			suite.Contains(invitationsOfUser, invitation)
 		}
 	})
 }
 
 // Test_Invitations_SendChatInvitation тестирует отправку приглашения
-func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
+func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("чат должен существовать", func() {
 		// Отправить приглашение
 		input := SendInvitationIn{
@@ -156,13 +169,15 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		}
 		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, ErrChatNotExists)
+		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Zero(invitation)
 	})
 
 	suite.Run("субъект должен быть участником", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			SubjectID: uuid.New(),
@@ -171,34 +186,37 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		}
 		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что субъект не является участником чата
-		suite.ErrorIs(err, ErrSubjectIsNotMember)
+		suite.ErrorIs(err, chatt.ErrSubjectIsNotMember)
 		suite.Zero(invitation)
 	})
 
-	suite.Run("приглашаемый пользователь должен существовать", func() {
+	suite.Run("приглашаемый пользователь может не существовать", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
 			SubjectID: participant.UserID,
 			UserID:    uuid.New(),
 		}
-		invitation, err := suite.ss.chats.SendInvitation(input)
-		// Вернется ошибка, потому что приглашаемого пользователя не существует
-		suite.ErrorIs(err, ErrUserNotExists)
-		suite.Zero(invitation)
+		out, err := suite.ss.chats.SendInvitation(input)
+		suite.NoError(err)
+		suite.NotZero(out)
 	})
 
 	suite.Run("приглашаемый пользователь не должен состоять в этом чате", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
 		// Создать участника для приглашаемого пользователя
 		participantInvitating := suite.addRndParticipant(&chat)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
@@ -207,17 +225,19 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		}
 		invitation, err := suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемый пользователь уже является участником этого чата
-		suite.ErrorIs(err, ErrUserIsAlreadyInChat)
+		suite.ErrorIs(err, chatt.ErrParticipantExists)
 		suite.Zero(invitation)
 	})
 
 	suite.Run("одновременно не может существовать несколько приглашений одного пользователя в этот чат", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
 		// Создать приглашаемого пользователя
 		targetUserID := uuid.New()
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отправить приглашение
 		input := SendInvitationIn{
 			ChatID:    chat.ID,
@@ -230,18 +250,24 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 		// Отправить повторно приглашение
 		invitation, err = suite.ss.chats.SendInvitation(input)
 		// Вернется ошибка, потому что этот пользователь уже приглашен в чат
-		suite.ErrorIs(err, ErrUserIsAlreadyInvited)
+		suite.ErrorIs(err, chatt.ErrUserIsAlreadyInvited)
 		suite.Zero(invitation)
 	})
 
 	suite.Run("любой участник может приглашать много пользователей", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Создать много приглашений от разных участников
 		var invitationsCreated []chatt.Invitation
 		for range 5 {
+			chat, err := chatt.Find(suite.rr.chats, chatt.Filter{})
+			suite.Require().NoError(err)
 			// Создать участника
 			participant := suite.addRndParticipant(&chat)
+			// Сохранить чат
+			suite.upsertChat(chat)
 			for range 5 {
 				// Отправить приглашение
 				input := SendInvitationIn{
@@ -268,12 +294,14 @@ func (suite *servicesTestSuite) Test_Invitations_SendChatInvitation() {
 }
 
 // Test_Invitations_AcceptInvitation тестирует принятие приглашения
-func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
+func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		p := suite.addRndParticipant(&chat)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Принять приглашение
 		input := AcceptInvitationIn{
 			SubjectID:    p.UserID,
@@ -285,12 +313,14 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		p := suite.addRndParticipant(&chat)
 		// Создать приглашение
 		invitation := suite.newInvitation(p.UserID, uuid.New())
 		suite.addInvitation(&chat, invitation)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Принять приглашение
 		input := AcceptInvitationIn{
 			SubjectID:    invitation.RecipientID,
@@ -301,15 +331,15 @@ func (suite *servicesTestSuite) Test_Invitations_AcceptInvitation() {
 		// Получить список участников
 		chats, err := suite.rr.chats.List(chatt.Filter{})
 		suite.NoError(err)
-		// В списке будет только один участник, который принял приглашение
+		// В списке будет 3 участника: адм., приглашаемый, приглашающий
 		suite.Require().Len(chats, 1)
-		suite.Require().Len(chats[0].Participants, 1)
-		suite.Equal(p, chats[0].Participants[0])
+		suite.Require().Len(chats[0].Participants, 3)
+		suite.Contains(chats[0].Participants, p)
 	})
 }
 
 // Test_Invitations_CancelInvitation тестирует отмену приглашения
-func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
+func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
 		input := CancelInvitationIn{
@@ -323,9 +353,11 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Объявить id приглашаемого пользователя
 		recipientID := uuid.New()
 		// Список id тех пользователей, которые могут отменять приглашение
@@ -336,22 +368,26 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		}
 		// Каждый попытается отменить приглашение
 		for _, subjectUserID := range cancelInvitationSubjectIDs {
+			chat, err := chatt.Find(suite.rr.chats, chatt.Filter{})
+			suite.Require().NoError(err)
 			// Создать приглашение
 			invitation := suite.newInvitation(participant.UserID, recipientID)
 			suite.addInvitation(&chat, invitation)
+			// Сохранить чат
+			suite.upsertChat(chat)
 			// Отменить приглашение
 			input := CancelInvitationIn{
 				SubjectID:    subjectUserID,
 				InvitationID: invitation.ID,
 			}
-			err := suite.ss.chats.CancelInvitation(input)
+			err = suite.ss.chats.CancelInvitation(input)
 			suite.NoError(err)
 		}
 	})
 
 	suite.Run("другие участники не могут отменять приглашать ", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
 		// Случайный участник
@@ -359,6 +395,8 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 		// Создать приглашение
 		invitation := suite.newInvitation(participant.UserID, uuid.New())
 		suite.addInvitation(&chat, invitation)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отменить приглашение
 		input := CancelInvitationIn{
 			SubjectID:    participantOther.UserID,
@@ -371,12 +409,14 @@ func (suite *servicesTestSuite) Test_Invitations_CancelInvitation() {
 
 	suite.Run("после отмены, приглашение удаляется", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.rndChat()
 		// Создать участника
 		participant := suite.addRndParticipant(&chat)
 		// Создать приглашение
 		invitation := suite.newInvitation(participant.UserID, uuid.New())
 		suite.addInvitation(&chat, invitation)
+		// Сохранить чат
+		suite.upsertChat(chat)
 		// Отменить приглашение
 		input := CancelInvitationIn{
 			SubjectID:    invitation.SubjectID,
