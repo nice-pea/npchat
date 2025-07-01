@@ -12,7 +12,7 @@ import (
 func Ping(router http2.Router) {
 	router.HandleFunc(
 		"/ping",
-		middleware.EmptyChain, // Пустая цепочка middleware, обработчик доступен без ограничений
+		middleware.BaseChain,
 		func(context http2.Context) (any, error) {
 			// Возвращаем простую строку "pong" для подтверждения работоспособности сервера.
 			return "pong", nil
