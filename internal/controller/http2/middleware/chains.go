@@ -19,6 +19,7 @@ var ClientPubChain = []http2.Middleware{
 	RequireContentTypeJson,
 }
 
+// BaseChain общая цепочка обработчиков
 var BaseChain = []http2.Middleware{
 	RecoverPanic,
 }
