@@ -19,7 +19,7 @@ import (
 func OAuthInitRegistration(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/registration",
-		middleware.EmptyChain, // Нет аутентификации на этом этапе
+		middleware.BaseChain,
 		func(context http2.Context) (any, error) {
 			// Формируем входные данные для инициализации OAuth-регистрации
 			input := service.InitOAuthRegistrationIn{
@@ -54,7 +54,7 @@ func OAuthInitRegistration(router http2.Router) {
 func OAuthCompleteRegistrationCallback(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/registration/callback",
-		middleware.EmptyChain, // Нет аутентификации — пользователь ещё не зарегистрирован
+		middleware.BaseChain,
 		func(context http2.Context) (any, error) {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
@@ -79,7 +79,7 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 func OAuthInitLogin(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/login",
-		middleware.EmptyChain, // Нет аутентификации на этом этапе
+		middleware.BaseChain,
 		func(context http2.Context) (any, error) {
 			input := service.InitOAuthLoginIn{
 				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
@@ -113,7 +113,7 @@ func OAuthInitLogin(router http2.Router) {
 func OAuthCompleteLoginCallback(router http2.Router) {
 	router.HandleFunc(
 		"GET /oauth/{provider}/login/callback",
-		middleware.EmptyChain, // Нет аутентификации — пользователь ещё не вошёл
+		middleware.BaseChain,
 		func(context http2.Context) (any, error) {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
