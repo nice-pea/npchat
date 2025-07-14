@@ -2,12 +2,11 @@ package register_handler
 
 import (
 	"errors"
-	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/nice-pea/npchat/internal/controller/http2"
-	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/nice-pea/npchat/internal/service"
 )
 
@@ -16,32 +15,28 @@ import (
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration
-func OAuthInitRegistration(router http2.Router) {
-	router.HandleFunc(
-		"GET /oauth/{provider}/registration",
-		middleware.BaseChain,
-		func(context http2.Context) (any, error) {
+func OAuthInitRegistration(router *fiber.App, ss services) {
+	router.Get(
+		"/oauth/:provider/registration",
+		func(context *fiber.Ctx) error {
 			// Формируем входные данные для инициализации OAuth-регистрации
 			input := service.InitOAuthRegistrationIn{
-				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
+				Provider: context.Params("provider"), // Получаем имя провайдера из URL
 			}
 
 			// Инициируем OAuth-процесс регистрации у сервиса
-			out, err := context.Services().Users().InitOAuthRegistration(input)
+			out, err := ss.Users().InitOAuthRegistration(input)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
 			if err = setOAuthCookie(context, out.RedirectURL); err != nil {
-				return nil, err
+				return err
 			}
 
 			// Возвращаем команду редиректа на сторону провайдера
-			return http2.Redirect{
-				URL:  out.RedirectURL,
-				Code: http.StatusTemporaryRedirect,
-			}, nil
+			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
 		},
 	)
 }
@@ -51,22 +46,26 @@ func OAuthInitRegistration(router http2.Router) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration/callback
-func OAuthCompleteRegistrationCallback(router http2.Router) {
-	router.HandleFunc(
-		"GET /oauth/{provider}/registration/callback",
-		middleware.BaseChain,
-		func(context http2.Context) (any, error) {
+func OAuthCompleteRegistrationCallback(router *fiber.App, ss services) {
+	router.Get(
+		"/oauth/:provider/registration/callback",
+		func(context *fiber.Ctx) error {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
-				return nil, err
+				return err
 			}
 
 			input := service.CompeteOAuthRegistrationIn{
-				UserCode: http2.FormStr(context, "code"),
-				Provider: http2.PathStr(context, "provider"),
+				UserCode: context.Query("code"),
+				Provider: context.Params("provider"),
 			}
 
-			return context.Services().Users().CompeteOAuthRegistration(input)
+			out, err := ss.Users().CompeteOAuthRegistration(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
 		},
 	)
 }
@@ -76,31 +75,27 @@ func OAuthCompleteRegistrationCallback(router http2.Router) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login
-func OAuthInitLogin(router http2.Router) {
-	router.HandleFunc(
-		"GET /oauth/{provider}/login",
-		middleware.BaseChain,
-		func(context http2.Context) (any, error) {
+func OAuthInitLogin(router *fiber.App, ss services) {
+	router.Get(
+		"/oauth/:provider/login",
+		func(context *fiber.Ctx) error {
 			input := service.InitOAuthLoginIn{
-				Provider: http2.PathStr(context, "provider"), // Получаем имя провайдера из URL
+				Provider: context.Params("provider"), // Получаем имя провайдера из URL
 			}
 
 			// Инициируем OAuth-процесс входа у сервиса
-			out, err := context.Services().Users().InitOAuthLogin(input)
+			out, err := ss.Users().InitOAuthLogin(input)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
 			if err = setOAuthCookie(context, out.RedirectURL); err != nil {
-				return nil, err
+				return err
 			}
 
 			// Возвращаем команду редиректа на сторону провайдера
-			return http2.Redirect{
-				URL:  out.RedirectURL,
-				Code: http.StatusTemporaryRedirect,
-			}, nil
+			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
 		},
 	)
 }
@@ -110,22 +105,26 @@ func OAuthInitLogin(router http2.Router) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login/callback
-func OAuthCompleteLoginCallback(router http2.Router) {
-	router.HandleFunc(
-		"GET /oauth/{provider}/login/callback",
-		middleware.BaseChain,
-		func(context http2.Context) (any, error) {
+func OAuthCompleteLoginCallback(router *fiber.App, ss services) {
+	router.Get(
+		"/oauth/:provider/login/callback",
+		func(context *fiber.Ctx) error {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
-				return nil, err
+				return err
 			}
 
 			input := service.CompleteOAuthLoginIn{
-				UserCode: http2.FormStr(context, "code"),
-				Provider: http2.PathStr(context, "provider"),
+				UserCode: context.Query("code"),
+				Provider: context.Params("provider"),
 			}
 
-			return context.Services().Users().CompleteOAuthLogin(input)
+			out, err := ss.Users().CompleteOAuthLogin(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
 		},
 	)
 }
@@ -134,7 +133,7 @@ func OAuthCompleteLoginCallback(router http2.Router) {
 const oauthCookieName = "oauthState"
 
 // setOAuthCookie устанавливает куку с параметром state из строки редиректа
-func setOAuthCookie(context http2.Context, redirectURL string) error {
+func setOAuthCookie(context *fiber.Ctx, redirectURL string) error {
 	// Парсим URL, чтобы получить query-параметры
 	parsedUrl, err := url.Parse(redirectURL)
 	if err != nil {
@@ -145,11 +144,11 @@ func setOAuthCookie(context http2.Context, redirectURL string) error {
 	state := parsedUrl.Query().Get("state")
 
 	// Устанавливаем куку с этим значением
-	http.SetCookie(context.Writer(), &http.Cookie{
+	context.Cookie(&fiber.Cookie{
 		Name:     oauthCookieName,
 		Value:    state,
 		Expires:  time.Now().Add(time.Hour), // Кука живёт 1 час
-		HttpOnly: true,                      // Защита от XSS
+		HTTPOnly: true,                      // Защита от XSS
 		Secure:   true,                      // Только по HTTPS
 		Path:     "/",                       // Доступна по всему домену
 	})
@@ -162,20 +161,17 @@ var errWrongState = errors.New("неправильный state")
 
 // validateOAuthCookie проверяет, что значение 'state' в запросе совпадает с тем, что было сохранено в куке.
 // Это защищает от CSRF-атак.
-func validateOAuthCookie(context http2.Context) error {
+func validateOAuthCookie(context *fiber.Ctx) error {
 	// Получаем куку с именем oauthState
-	oauthState, err := context.Request().Cookie(oauthCookieName)
+	oauthState := context.Cookies(oauthCookieName)
 
-	if errors.Is(err, http.ErrNoCookie) {
+	if oauthState == "" {
 		// Если куки нет — возвращаем ошибку несоответствия state
 		return errWrongState
-	} else if err != nil {
-		// Любые другие ошибки также возвращаем
-		return err
 	}
 
 	// Сравниваем значение state из запроса с тем, что храним в куке
-	if http2.FormStr(context, "state") != oauthState.Value {
+	if context.Query("state") != oauthState {
 		return errWrongState
 	}
 

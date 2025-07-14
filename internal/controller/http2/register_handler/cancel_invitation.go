@@ -1,8 +1,8 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
-	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/nice-pea/npchat/internal/service"
 )
 
@@ -10,16 +10,15 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/cancel
-func CancelInvitation(router http2.Router) {
-	router.HandleFunc(
-		"POST /invitations/{invitationID}/cancel",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+func CancelInvitation(router *fiber.App, ss services) {
+	router.Post(
+		"/invitations/:invitationID/cancel",
+		func(context *fiber.Ctx) error {
 			input := service.CancelInvitationIn{
-				SubjectID:    context.Session().UserID,
-				InvitationID: http2.PathUUID(context, "invitationID"),
+				SubjectID:    Session(context).UserID,
+				InvitationID: ParamsUUID(context, "invitationID"),
 			}
 
-			return nil, context.Services().Chats().CancelInvitation(input)
+			return ss.Chats().CancelInvitation(input)
 		})
 }

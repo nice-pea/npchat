@@ -1,7 +1,8 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -10,15 +11,21 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /invitations
-func MyInvitations(router http2.Router) {
-	router.HandleFunc(
-		"GET /invitations",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+func MyInvitations(router *fiber.App, ss services) {
+	router.Get(
+		"/invitations",
+		func(context *fiber.Ctx) error {
 			input := service.ReceivedInvitationsIn{
-				SubjectID: context.Session().UserID,
+				SubjectID: Session(context).UserID,
 			}
 
-			return context.Services().Chats().ReceivedInvitations(input)
-		})
+			out, err := ss.Chats().ReceivedInvitations(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		middleware.RequareAuthoruzation(ss.Sessions()),
+	)
 }

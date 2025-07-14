@@ -1,7 +1,8 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -10,16 +11,17 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats/{chatID}/leave
-func LeaveChat(router http2.Router) {
-	router.HandleFunc(
-		"POST /chats/{chatID}/leave",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+func LeaveChat(router *fiber.App, ss services) {
+	router.Post(
+		"/chats/:chatID/leave",
+		func(context *fiber.Ctx) error {
 			input := service.LeaveChatIn{
-				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathUUID(context, "chatID"),
+				SubjectID: Session(context).UserID,
+				ChatID:    ParamsUUID(context, "chatID"),
 			}
 
-			return nil, context.Services().Chats().LeaveChat(input)
-		})
+			return ss.Chats().LeaveChat(input)
+		},
+		middleware.RequareAuthoruzation(ss.Sessions()),
+	)
 }
