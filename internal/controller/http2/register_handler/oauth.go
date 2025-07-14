@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -97,6 +98,7 @@ func OAuthInitLogin(router *fiber.App, ss services) {
 			// Возвращаем команду редиректа на сторону провайдера
 			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
 		},
+		recover2.New(),
 	)
 }
 
@@ -126,6 +128,7 @@ func OAuthCompleteLoginCallback(router *fiber.App, ss services) {
 
 			return context.JSON(out)
 		},
+		recover2.New(),
 	)
 }
 

@@ -2,7 +2,9 @@ package register_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
+	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
 
@@ -20,5 +22,8 @@ func CancelInvitation(router *fiber.App, ss services) {
 			}
 
 			return ss.Chats().CancelInvitation(input)
-		})
+		},
+		recover2.New(),
+		middleware.RequareAuthoruzation(ss.Sessions()),
+	)
 }

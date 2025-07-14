@@ -2,6 +2,7 @@ package register_handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -36,7 +37,9 @@ func LoginByPassword(router *fiber.App, ss services) {
 			}
 
 			return context.JSON(out)
-		})
+		},
+		recover2.New(),
+	)
 }
 
 // RegistrationByPassword регистрирует обработчик, позволяющий регистрироваться по логину и паролю.
@@ -73,5 +76,7 @@ func RegistrationByPassword(router *fiber.App, ss services) {
 			}
 
 			return context.JSON(out)
-		})
+		},
+		recover2.New(),
+	)
 }
