@@ -17,6 +17,7 @@ type Config struct {
 	HttpAddr string
 }
 
+// RunHttpServer запускает http сервер до момента отмена контекста
 func RunHttpServer(ctx context.Context, ss registerHandler.Services, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
@@ -76,11 +77,13 @@ func registerHandlers(r *fiber.App, ss registerHandler.Services) {
 
 // fiberErrorHandler разделяет составные ошибки и помещает в body.
 func fiberErrorHandler(ctx *fiber.Ctx, err error) error {
-	var resp errorResponse
+	var errs []map[string]any
 	for _, err2 := range errorsFlatten(err) {
-		resp.Errors = append(resp.Errors, errAsMap(err2))
+		errs = append(errs, errAsMap(err2))
 	}
-	return ctx.JSON(resp)
+	return ctx.JSON(fiber.Map{
+		"errors": errs,
+	})
 }
 
 // errAsMap преобразует ошибку в карту
@@ -125,8 +128,4 @@ func errorsFlatten(err error) []error {
 	}
 
 	return errs
-}
-
-type errorResponse struct {
-	Errors []map[string]any `json:"errors"`
 }
