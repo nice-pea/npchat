@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/sync/errgroup"
@@ -13,7 +14,9 @@ import (
 )
 
 func runHttpServer(ctx context.Context, ss *services, cfg Config) error {
-	fiberApp := fiber.New()
+	fiberApp := fiber.New(fiber.Config{
+		ErrorHandler: fiberErrorHandler,
+	})
 	registerHandlers(fiberApp, ss)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -64,4 +67,55 @@ func registerHandlers(r *fiber.App, ss *services) {
 	registerHandler.SendInvitation(r, ss)
 	registerHandler.AcceptInvitation(r, ss)
 	registerHandler.CancelInvitation(r, ss)
+}
+
+func fiberErrorHandler(ctx *fiber.Ctx, err error) error {
+	var resp errorResponse
+	for _, err2 := range errorsFlatten(err) {
+		resp.Errors = append(resp.Errors, errorElemFrom(err2))
+	}
+	return ctx.JSON(resp)
+}
+
+func errorElemFrom(err error) errorElem {
+	var fiberErr *fiber.Error
+	if errors.As(err, &fiberErr) {
+		return errorElem{
+			Code:    strconv.Itoa(fiberErr.Code),
+			Message: fiberErr.Message,
+		}
+	}
+
+	return errorElem{
+		Code:    "", // Пока не продумал полностью детализацию и коды для ошибок
+		Message: err.Error(),
+	}
+}
+
+// errorsFlatten рекурсивно извлекает все ошибки из составной ошибки.
+func errorsFlatten(err error) []error {
+	var errs []error
+	if err == nil {
+		return errs
+	}
+
+	// Проверяем, поддерживает ли ошибка интерфейс Unwrap() []error
+	if unwrap, ok := err.(interface{ Unwrap() []error }); ok {
+		for _, e := range unwrap.Unwrap() {
+			errs = append(errs, errorsFlatten(e)...)
+		}
+	} else {
+		// Простая ошибка — добавляем её
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
+type errorResponse struct {
+	Errors []errorElem `json:"errors"`
+}
+type errorElem struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
 }
