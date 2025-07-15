@@ -8,7 +8,8 @@ import (
 	"github.com/nice-pea/npchat/internal/service"
 )
 
-func RequareAuthoruzation(sessions *service.Sessions) fiber.Handler {
+// RequireAuthorizedSession требует авторизованную сессии
+func RequireAuthorizedSession(sessions *service.Sessions) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")

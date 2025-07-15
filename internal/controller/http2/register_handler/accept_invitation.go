@@ -24,5 +24,5 @@ func AcceptInvitation(router *fiber.App, ss Services) {
 			return ss.Chats().AcceptInvitation(input)
 		},
 		recover2.New(),
-		middleware.RequareAuthoruzation(ss.Sessions()))
+		middleware.RequireAuthorizedSession(ss.Sessions()))
 }

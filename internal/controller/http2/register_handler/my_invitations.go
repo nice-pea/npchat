@@ -28,6 +28,6 @@ func MyInvitations(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequareAuthoruzation(ss.Sessions()),
+		middleware.RequireAuthorizedSession(ss.Sessions()),
 	)
 }
