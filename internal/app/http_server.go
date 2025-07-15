@@ -39,6 +39,7 @@ func runHttpServer(ctx context.Context, ss *services, cfg Config) error {
 	return g.Wait()
 }
 
+// registerHandlers регистрирует обработчики
 func registerHandlers(r *fiber.App, ss *services) {
 	// Служебные
 	registerHandler.Ping(r, ss)
@@ -69,26 +70,28 @@ func registerHandlers(r *fiber.App, ss *services) {
 	registerHandler.CancelInvitation(r, ss)
 }
 
+// fiberErrorHandler разделяет составные ошибки и помещает в body.
 func fiberErrorHandler(ctx *fiber.Ctx, err error) error {
 	var resp errorResponse
 	for _, err2 := range errorsFlatten(err) {
-		resp.Errors = append(resp.Errors, errorElemFrom(err2))
+		resp.Errors = append(resp.Errors, errAsMap(err2))
 	}
 	return ctx.JSON(resp)
 }
 
-func errorElemFrom(err error) errorElem {
+// errAsMap преобразует ошибку в карту
+func errAsMap(err error) map[string]any {
 	var fiberErr *fiber.Error
 	if errors.As(err, &fiberErr) {
-		return errorElem{
-			Code:    strconv.Itoa(fiberErr.Code),
-			Message: fiberErr.Message,
+		return map[string]any{
+			"code":    strconv.Itoa(fiberErr.Code),
+			"message": fiberErr.Message,
 		}
 	}
 
-	return errorElem{
-		Code:    "", // Пока не продумал полностью детализацию и коды для ошибок
-		Message: err.Error(),
+	return map[string]any{
+		//"code": "", // Пока не продумал полностью детализацию и коды для ошибок
+		"message": err.Error(),
 	}
 }
 
@@ -113,9 +116,5 @@ func errorsFlatten(err error) []error {
 }
 
 type errorResponse struct {
-	Errors []errorElem `json:"errors"`
-}
-type errorElem struct {
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message"`
+	Errors []map[string]any `json:"errors"`
 }
