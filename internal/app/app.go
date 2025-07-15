@@ -17,17 +17,17 @@ func Run(ctx context.Context, cfg Config) error {
 	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.LogLevel))
 
 	// Инициализация репозиториев
-	repos, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
+	rr, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
 	if err != nil {
 		return err
 	}
 	defer closeRepos()
 
 	// Инициализация адаптеров
-	adaps := initAdapters(cfg)
+	aa := initAdapters(cfg)
 
 	// Инициализация сервисов
-	ss := initServices(repos, adaps)
+	ss := initServices(rr, aa)
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
