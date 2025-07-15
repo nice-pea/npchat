@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/cancel
-func CancelInvitation(router *fiber.App, ss services) {
+func CancelInvitation(router *fiber.App, ss Services) {
 	router.Post(
 		"/invitations/:invitationID/cancel",
 		func(context *fiber.Ctx) error {

@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats/{chatID}/leave
-func LeaveChat(router *fiber.App, ss services) {
+func LeaveChat(router *fiber.App, ss Services) {
 	router.Post(
 		"/chats/:chatID/leave",
 		func(context *fiber.Ctx) error {

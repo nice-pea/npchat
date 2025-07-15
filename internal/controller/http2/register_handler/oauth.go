@@ -16,7 +16,7 @@ import (
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration
-func OAuthInitRegistration(router *fiber.App, ss services) {
+func OAuthInitRegistration(router *fiber.App, ss Services) {
 	router.Get(
 		"/oauth/:provider/registration",
 		func(context *fiber.Ctx) error {
@@ -47,7 +47,7 @@ func OAuthInitRegistration(router *fiber.App, ss services) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration/callback
-func OAuthCompleteRegistrationCallback(router *fiber.App, ss services) {
+func OAuthCompleteRegistrationCallback(router *fiber.App, ss Services) {
 	router.Get(
 		"/oauth/:provider/registration/callback",
 		func(context *fiber.Ctx) error {
@@ -76,7 +76,7 @@ func OAuthCompleteRegistrationCallback(router *fiber.App, ss services) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login
-func OAuthInitLogin(router *fiber.App, ss services) {
+func OAuthInitLogin(router *fiber.App, ss Services) {
 	router.Get(
 		"/oauth/:provider/login",
 		func(context *fiber.Ctx) error {
@@ -107,7 +107,7 @@ func OAuthInitLogin(router *fiber.App, ss services) {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login/callback
-func OAuthCompleteLoginCallback(router *fiber.App, ss services) {
+func OAuthCompleteLoginCallback(router *fiber.App, ss Services) {
 	router.Get(
 		"/oauth/:provider/login/callback",
 		func(context *fiber.Ctx) error {

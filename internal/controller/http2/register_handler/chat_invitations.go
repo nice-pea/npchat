@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /chats/{chatID}/invitations
-func ChatInvitations(router *fiber.App, ss services) {
+func ChatInvitations(router *fiber.App, ss Services) {
 	router.Get(
 		"/chats/:chatID/invitations",
 		func(context *fiber.Ctx) error {

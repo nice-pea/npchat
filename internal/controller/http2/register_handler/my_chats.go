@@ -12,7 +12,7 @@ import (
 // Данный обработчик доступен только авторизованным пользователям.
 //
 // Метод: GET /chats
-func MyChats(router *fiber.App, ss services) {
+func MyChats(router *fiber.App, ss Services) {
 	router.Get(
 		"/chats",
 		func(context *fiber.Ctx) error {

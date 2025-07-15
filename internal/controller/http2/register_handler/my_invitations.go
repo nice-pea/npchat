@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /invitations
-func MyInvitations(router *fiber.App, ss services) {
+func MyInvitations(router *fiber.App, ss Services) {
 	router.Get(
 		"/invitations",
 		func(context *fiber.Ctx) error {

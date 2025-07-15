@@ -11,7 +11,7 @@ import (
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/login
-func LoginByPassword(router *fiber.App, ss services) {
+func LoginByPassword(router *fiber.App, ss Services) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -46,7 +46,7 @@ func LoginByPassword(router *fiber.App, ss services) {
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/registration
-func RegistrationByPassword(router *fiber.App, ss services) {
+func RegistrationByPassword(router *fiber.App, ss Services) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`

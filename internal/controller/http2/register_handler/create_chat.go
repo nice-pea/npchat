@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats
-func CreateChat(router *fiber.App, ss services) {
+func CreateChat(router *fiber.App, ss Services) {
 	// Тело запроса для создания чата.
 	type requestBody struct {
 		Name string `json:"name"`

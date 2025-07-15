@@ -6,6 +6,8 @@ import (
 	"log/slog"
 
 	"golang.org/x/sync/errgroup"
+
+	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
 func Run(ctx context.Context, cfg Config) error {
@@ -29,7 +31,7 @@ func Run(ctx context.Context, cfg Config) error {
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
-		return runHttpServer(ctx, ss, cfg)
+		return http2.RunHttpServer(ctx, ss, cfg.Http2)
 	})
 
 	return g.Wait()

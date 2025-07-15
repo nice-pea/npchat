@@ -8,7 +8,7 @@ import (
 // Данный обработчик не требует авторизации и может использоваться для health-check'а.
 //
 // Метод: GET /ping
-func Ping(router *fiber.App, ss services) {
+func Ping(router *fiber.App, ss Services) {
 	router.All(
 		"/ping",
 		func(context *fiber.Ctx) error {

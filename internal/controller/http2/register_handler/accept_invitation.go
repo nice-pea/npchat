@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/accept
-func AcceptInvitation(router *fiber.App, ss services) {
+func AcceptInvitation(router *fiber.App, ss Services) {
 	router.Post(
 		"/invitations/:invitationID/accept",
 		func(context *fiber.Ctx) error {

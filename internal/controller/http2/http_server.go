@@ -1,4 +1,4 @@
-package app
+package http2
 
 import (
 	"context"
@@ -13,7 +13,11 @@ import (
 	registerHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler"
 )
 
-func runHttpServer(ctx context.Context, ss *services, cfg Config) error {
+type Config struct {
+	HttpAddr string
+}
+
+func RunHttpServer(ctx context.Context, ss registerHandler.Services, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
@@ -40,7 +44,7 @@ func runHttpServer(ctx context.Context, ss *services, cfg Config) error {
 }
 
 // registerHandlers регистрирует обработчики
-func registerHandlers(r *fiber.App, ss *services) {
+func registerHandlers(r *fiber.App, ss registerHandler.Services) {
 	// Служебные
 	registerHandler.Ping(r, ss)
 

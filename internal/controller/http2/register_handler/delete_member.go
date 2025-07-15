@@ -13,7 +13,7 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: DELETE /chats/{chatID}/members
-func DeleteMember(router *fiber.App, ss services) {
+func DeleteMember(router *fiber.App, ss Services) {
 	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
 		UserID uuid.UUID `json:"user_id"`

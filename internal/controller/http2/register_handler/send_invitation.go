@@ -13,7 +13,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations
-func SendInvitation(router *fiber.App, ss services) {
+func SendInvitation(router *fiber.App, ss Services) {
 	// Тело запроса для отправки приглашения.
 	type requestBody struct {
 		ChatID uuid.UUID `json:"chat_id"`
