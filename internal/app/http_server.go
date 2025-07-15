@@ -89,8 +89,16 @@ func errAsMap(err error) map[string]any {
 		}
 	}
 
+	// https://habr.com/ru/companies/oleg-bunin/articles/913096/#:~:text=4.%20Wrapping%20%D0%B4%D0%BB%D1%8F%20%D0%BD%D0%B5%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%82%D1%83%D1%80%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D1%85%20%D0%B4%D0%B0%D0%BD%D0%BD%D1%8B%D1%85
+	var detailsErr interface{ Details() map[string]any }
+	if errors.As(err, &detailsErr) {
+		return map[string]any{
+			"message": err.Error(),
+			"details": detailsErr.Details(),
+		}
+	}
+
 	return map[string]any{
-		//"code": "", // Пока не продумал полностью детализацию и коды для ошибок
 		"message": err.Error(),
 	}
 }
