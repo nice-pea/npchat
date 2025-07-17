@@ -1,8 +1,9 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
-	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
+
 	"github.com/nice-pea/npchat/internal/service"
 )
 
@@ -10,20 +11,19 @@ import (
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/login
-func LoginByPassword(router http2.Router) {
+func LoginByPassword(router *fiber.App, ss Services) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
 	}
-	router.HandleFunc(
-		"POST /auth/password/login",
-		middleware.ClientPubChain, // Цепочка middleware для публичных обработчиков (без авторизации)
-		func(context http2.Context) (any, error) {
+	router.Post(
+		"/auth/password/login",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.BasicAuthLoginIn{
@@ -31,15 +31,22 @@ func LoginByPassword(router http2.Router) {
 				Password: rb.Password,
 			}
 
-			return context.Services().Users().BasicAuthLogin(input)
-		})
+			out, err := ss.Users().BasicAuthLogin(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		recover2.New(),
+	)
 }
 
 // RegistrationByPassword регистрирует обработчик, позволяющий регистрироваться по логину и паролю.
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/registration
-func RegistrationByPassword(router http2.Router) {
+func RegistrationByPassword(router *fiber.App, ss Services) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -47,14 +54,13 @@ func RegistrationByPassword(router http2.Router) {
 		Name     string `json:"name"`
 		Nick     string `json:"nick"`
 	}
-	router.HandleFunc(
-		"POST /auth/password/registration",
-		middleware.ClientPubChain, // Цепочка middleware для публичных обработчиков (без авторизации)
-		func(context http2.Context) (any, error) {
+	router.Post(
+		"/auth/password/registration",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.BasicAuthRegistrationIn{
@@ -64,6 +70,13 @@ func RegistrationByPassword(router http2.Router) {
 				Nick:     rb.Nick,
 			}
 
-			return context.Services().Users().BasicAuthRegistration(input)
-		})
+			out, err := ss.Users().BasicAuthRegistration(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		recover2.New(),
+	)
 }

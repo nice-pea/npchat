@@ -1,9 +1,10 @@
 package register_handler
 
 import (
+	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/google/uuid"
 
-	"github.com/nice-pea/npchat/internal/controller/http2"
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -12,28 +13,35 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations
-func SendInvitation(router http2.Router) {
+func SendInvitation(router *fiber.App, ss Services) {
 	// Тело запроса для отправки приглашения.
 	type requestBody struct {
 		ChatID uuid.UUID `json:"chat_id"`
 		UserID uuid.UUID `json:"user_id"`
 	}
-	router.HandleFunc(
-		"POST /invitations",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+	router.Post(
+		"/invitations",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.SendInvitationIn{
-				SubjectID: context.Session().UserID,
+				SubjectID: Session(context).UserID,
 				ChatID:    rb.ChatID,
 				UserID:    rb.UserID,
 			}
 
-			return context.Services().Chats().SendInvitation(input)
-		})
+			out, err := ss.Chats().SendInvitation(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		recover2.New(),
+		middleware.RequireAuthorizedSession(ss.Sessions()),
+	)
 }

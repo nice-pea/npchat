@@ -62,7 +62,7 @@ func initCliCommand() *cli.Command {
 			},
 			&cli.StringFlag{
 				Name:        "http-addr",
-				Destination: &cfg.HttpAddr,
+				Destination: &cfg.Http2.HttpAddr,
 				Usage:       "Адрес для запуска HTTP сервера",
 				Value:       ":8080",
 			},

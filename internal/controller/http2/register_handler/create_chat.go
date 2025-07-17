@@ -1,7 +1,9 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
+
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -10,26 +12,33 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats
-func CreateChat(router http2.Router) {
+func CreateChat(router *fiber.App, ss Services) {
 	// Тело запроса для создания чата.
 	type requestBody struct {
 		Name string `json:"name"`
 	}
-	router.HandleFunc(
-		"POST /chats",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+	router.Post(
+		"/chats",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.CreateChatIn{
-				ChiefUserID: context.Session().UserID,
+				ChiefUserID: Session(context).UserID,
 				Name:        rb.Name,
 			}
 
-			return context.Services().Chats().CreateChat(input)
-		})
+			out, err := ss.Chats().CreateChat(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		recover2.New(),
+		middleware.RequireAuthorizedSession(ss.Sessions()),
+	)
 }

@@ -1,9 +1,10 @@
 package register_handler
 
 import (
+	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/google/uuid"
 
-	"github.com/nice-pea/npchat/internal/controller/http2"
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -12,27 +13,29 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: DELETE /chats/{chatID}/members
-func DeleteMember(router http2.Router) {
+func DeleteMember(router *fiber.App, ss Services) {
 	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
 		UserID uuid.UUID `json:"user_id"`
 	}
-	router.HandleFunc(
-		"DELETE /chats/{chatID}/members",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+	router.Delete(
+		"/chats/:chatID/members",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.DeleteMemberIn{
-				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathUUID(context, "chatID"),
+				SubjectID: Session(context).UserID,
+				ChatID:    ParamsUUID(context, "chatID"),
 				UserID:    rb.UserID,
 			}
 
-			return nil, context.Services().Chats().DeleteMember(input)
-		})
+			return ss.Chats().DeleteMember(input)
+		},
+		recover2.New(),
+		middleware.RequireAuthorizedSession(ss.Sessions()),
+	)
 }

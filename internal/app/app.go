@@ -6,6 +6,8 @@ import (
 	"log/slog"
 
 	"golang.org/x/sync/errgroup"
+
+	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
 func Run(ctx context.Context, cfg Config) error {
@@ -15,22 +17,21 @@ func Run(ctx context.Context, cfg Config) error {
 	slog.Info(fmt.Sprintf("Уровень логирования: %s", cfg.LogLevel))
 
 	// Инициализация репозиториев
-	repos, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
+	rr, closeRepos, err := initPgsqlRepositories(cfg.Pgsql)
 	if err != nil {
 		return err
 	}
 	defer closeRepos()
 
 	// Инициализация адаптеров
-	adaps := initAdapters(cfg)
+	aa := initAdapters(cfg)
 
 	// Инициализация сервисов
-	ss := initServices(repos, adaps)
+	ss := initServices(rr, aa)
 
 	// Инициализация и Запуск http контроллера
-	server := initHttpServer(ss, cfg)
 	g.Go(func() error {
-		return runHttpServer(ctx, server)
+		return http2.RunHttpServer(ctx, ss, cfg.Http2)
 	})
 
 	return g.Wait()

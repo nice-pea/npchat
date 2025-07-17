@@ -1,53 +1,39 @@
 package middleware
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
+	"github.com/gofiber/fiber/v2"
 
-	"github.com/nice-pea/npchat/internal/controller/http2"
-	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/service"
 )
 
-// ErrUnauthorized запрос не содержит действительный токен авторизации
-var ErrUnauthorized = errors.New("unauthorized. Please, use token in header: Authorization: Bearer <token>")
-
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(next http2.HandlerFuncRW) http2.HandlerFuncRW {
-	return func(context http2.RWContext) (any, error) {
-		var err error
-		session, err := getSession(context)
+func RequireAuthorizedSession(sessions *service.Sessions) fiber.Handler {
+	return func(ctx *fiber.Ctx) error {
+		// Прочитать заголовок
+		header := ctx.Get("Authorization")
+		token, _ := strings.CutPrefix(header, "Bearer ")
+		if token == "" {
+			return fiber.ErrUnauthorized
+		}
+
+		// Найти сессию по токену
+		userSessions, err := sessions.Find(service.SessionsFindIn{
+			Token: token,
+		})
 		if err != nil {
-			return nil, fmt.Errorf("getSession: %w", err)
+			return fiber.ErrInternalServerError
 		}
-		if session.ID == uuid.Nil {
-			return nil, ErrUnauthorized
+		if len(userSessions) != 1 {
+			return fiber.ErrUnauthorized
 		}
-		context.SetSession(session)
 
-		return next(context)
+		// Сохранить сессию в контекст
+		ctx.Locals(CtxUserSession, userSessions[0])
+
+		return nil
 	}
 }
 
-func getSession(ctx http2.Context) (sessionn.Session, error) {
-	header := ctx.Request().Header.Get("Authorization")
-	token, _ := strings.CutPrefix(header, "Bearer ")
-	if token == "" {
-		return sessionn.Session{}, nil
-	}
-
-	sessions, err := ctx.Services().Sessions().Find(service.SessionsFindIn{
-		Token: token,
-	})
-	if err != nil {
-		return sessionn.Session{}, fmt.Errorf("c.sessions.Find: %w", err)
-	}
-	if len(sessions) != 1 {
-		return sessionn.Session{}, nil
-	}
-
-	return sessions[0], nil
-}
+var CtxUserSession = "userSession"

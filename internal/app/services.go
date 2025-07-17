@@ -20,18 +20,18 @@ func (s *services) Users() *service.Users {
 	return s.users
 }
 
-func initServices(repos *repositories, adaps *adapters) *services {
+func initServices(rr *repositories, aa *adapters) *services {
 	return &services{
 		chats: &service.Chats{
-			Repo: repos.chats,
+			Repo: rr.chats,
 		},
 		sessions: &service.Sessions{
-			Repo: repos.sessions,
+			Repo: rr.sessions,
 		},
 		users: &service.Users{
-			Providers:    adaps.OAuthProviders(),
-			Repo:         repos.users,
-			SessionsRepo: repos.sessions,
+			Providers:    aa.OAuthProviders(),
+			Repo:         rr.users,
+			SessionsRepo: rr.sessions,
 		},
 	}
 }

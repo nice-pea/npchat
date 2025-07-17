@@ -1,7 +1,9 @@
 package register_handler
 
 import (
-	"github.com/nice-pea/npchat/internal/controller/http2"
+	"github.com/gofiber/fiber/v2"
+	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
+
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	"github.com/nice-pea/npchat/internal/service"
 )
@@ -10,27 +12,34 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: PUT /chats/{chatID}/name
-func UpdateChatName(router http2.Router) {
+func UpdateChatName(router *fiber.App, ss Services) {
 	// Тело запроса для обновления названия чата.
 	type requestBody struct {
 		NewName string `json:"new_name"`
 	}
-	router.HandleFunc(
-		"PUT /chats/{chatID}/name",
-		middleware.ClientAuthChain, // Цепочка middleware для клиентских запросов с аутентификацией
-		func(context http2.Context) (any, error) {
+	router.Put(
+		"/chats/:chatID/name",
+		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := http2.DecodeBody(context, &rb); err != nil {
-				return nil, err
+			if err := context.BodyParser(&rb); err != nil {
+				return err
 			}
 
 			input := service.UpdateNameIn{
-				SubjectID: context.Session().UserID,
-				ChatID:    http2.PathUUID(context, "chatID"),
+				SubjectID: Session(context).UserID,
+				ChatID:    ParamsUUID(context, "chatID"),
 				NewName:   rb.NewName,
 			}
 
-			return context.Services().Chats().UpdateName(input)
-		})
+			out, err := ss.Chats().UpdateName(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
+		},
+		recover2.New(),
+		middleware.RequireAuthorizedSession(ss.Sessions()),
+	)
 }
