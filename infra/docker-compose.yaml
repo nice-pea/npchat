@@ -6,6 +6,26 @@ networks:
 #    external: true
 
 services:
+  prod.npchat:
+    container_name: npc.prod.npchat
+    build:
+      context: ../
+      dockerfile: ./Containerfile
+    networks:
+      npc.network:
+    ports:
+      - "8080:8080"
+    depends_on:
+      test.pgsql:
+        condition: service_healthy
+    command:
+      - "--http-addr"
+      - ":8080"
+      - "--pgsql-dsn"
+      - "postgresql://postgres:postgres@test.pgsql:5432/test_npc_db?sslmode=disable"
+      - "--log-level"
+      - "debug"
+
   test.npchat:
     container_name: npc.test.npchat
     build:
