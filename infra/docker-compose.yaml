@@ -14,17 +14,26 @@ services:
     networks:
       npc.network:
     ports:
-      - "8080:8080"
-    depends_on:
-      test.pgsql:
-        condition: service_healthy
+      - "8465:8080"
     command:
       - "--http-addr"
       - ":8080"
-      - "--pgsql-dsn"
-      - "postgresql://postgres:postgres@test.pgsql:5432/test_npc_db?sslmode=disable"
       - "--log-level"
-      - "debug"
+      - "warn"
+      - "--pgsql-dsn"
+      - "${PGSQL_DSN}"
+      - "--oauth-google-client-id"
+      - "${OAUTH_GOOGLE_CLIENT_ID}"
+      - "--oauth-google-client-secret"
+      - "${OAUTH_GOOGLE_CLIENT_SECRET}"
+      - "--oauth-google-callback-url"
+      - "${OAUTH_GOOGLE_CALLBACK_URL}"
+      - "--oauth-github-client-id"
+      - "${OAUTH_GITHUB_CLIENT_ID}"
+      - "--oauth-github-client-secret"
+      - "${OAUTH_GITHUB_CLIENT_SECRET}"
+      - "--oauth-github-callback-url"
+      - "${OAUTH_GITHUB_CALLBACK_URL}"
 
   test.npchat:
     container_name: npc.test.npchat
