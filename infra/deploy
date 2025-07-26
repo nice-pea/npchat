@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
-
+set -e
+docker compose down prod.npchat
+docker compose up --build --force-recreate prod.npchat
