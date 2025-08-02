@@ -1,0 +1,78 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24
+
+      - name: Install dependencies
+        run: go mod download && go mod verify
+
+      - name: Build application
+        run: make build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          overwrite: true
+          retention-days: 1
+          path: ./bin
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: ./bin
+
+      - name: Make executable
+        run: chmod +x ./bin/npchat
+
+      - name: Setup SSH config
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id
+          chmod 600 ~/.ssh/id
+          cat <<EOF >> ~/.ssh/config
+          Host Server
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USERNAME }}
+            Port ${{ secrets.SSH_PORT }}
+            IdentityFile ~/.ssh/id
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Delivery
+        run: |
+          rsync --delete -avzrP \
+            --include='bin/***' \
+            --include='infra/***' \
+            --exclude='*' \
+            . Server:~/release/npchat
+          
+      - name: Deploy
+        run: |
+          ssh Server "
+            set -e
+            cd ~/release/npchat/infra
+            ./deploy
+          " 
