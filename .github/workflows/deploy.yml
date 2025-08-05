@@ -7,72 +7,54 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.24
-
-      - name: Install dependencies
-        run: go mod download && go mod verify
-
-      - name: Build application
-        run: make build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app
-          overwrite: true
-          retention-days: 1
-          path: ./bin
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      - uses: actions/checkout@v4
+      - name: Extract version
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - name: Validate tag
+        run: |
+          if [ -z "${{ steps.version.outputs.VERSION }}" ]; then
+            echo "❌ No tag found. This workflow should be triggered by a git tag."
+            exit 1
+          fi
+
+      - name: Deploy with rollback
+        uses: appleboy/ssh-action@v1.2.2
+        # continue-on-error: true
         with:
-          name: app
-          path: ./bin
-
-      - name: Make executable
-        run: chmod +x ./bin/npchat
-
-      - name: Setup SSH config
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id
-          chmod 600 ~/.ssh/id
-          cat <<EOF >> ~/.ssh/config
-          Host Server
-            HostName ${{ secrets.SSH_HOST }}
-            User ${{ secrets.SSH_USERNAME }}
-            Port ${{ secrets.SSH_PORT }}
-            IdentityFile ~/.ssh/id
-            StrictHostKeyChecking no
-          EOF
-          chmod 600 ~/.ssh/config
-
-      - name: Delivery
-        run: |
-          rsync --delete -avzrP \
-            --include='bin/***' \
-            --include='infra/***' \
-            --exclude='*' \
-            . Server:~/release/npchat
-          
-      - name: Deploy
-        run: |
-          ssh Server "
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
             set -e
-            cd ~/release/npchat/infra
-            ./deploy
-          " 
+            NEW_VERSION=${{ steps.version.outputs.VERSION }}
+            APP_NAME=npchat
+            PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
+
+            echo "Deploying version $NEW_VERSION..."
+
+            # Останавливаем текущий контейнер
+            docker stop $APP_NAME || true
+            docker rm $APP_NAME || true
+
+            # Запускаем новый
+            RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/releases/"$NEW_VERSION"/infra/docker-compose.yaml up --wait npc.npchat)
+            if [ $? -eq 0 ]; then
+              echo "✅ Deployment of $NEW_VERSION successful."
+              exit 0
+            fi
+
+            echo "❌ Deployment of $NEW_VERSION failed."
+
+            # Пытаемся восстановить предыдущий контейнер
+            if [ -n "$PREV_VERSION" ]; then
+              echo "🔄 Rolling back to previous version $PREV_VERSION..."
+              IMAGE_TAG=$PREV_VERSION docker compose -f /opt/npchat/releases/"$PREV_VERSION"/infra/docker-compose.yaml up --wait npc.npchat
+            fi
+        
+    

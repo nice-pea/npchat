@@ -6,15 +6,21 @@ networks:
 #    external: true
 
 services:
-  prod.npchat:
-    container_name: npc.prod.npchat
-    build:
-      context: ../
-      dockerfile: ./Containerfile
+  npc.npchat:
+    container_name: npc.npchat
+    image: npchat:${IMAGE_TAG}
+    restart: unless-stopped
     networks:
       npc.network:
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "8465:8080"
+    env_file:
+      - /opt/npchat/.env.production
     command:
       - "--http-addr"
       - ":8080"
