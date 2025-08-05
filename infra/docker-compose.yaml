@@ -6,6 +6,35 @@ networks:
 #    external: true
 
 services:
+  prod.npchat:
+    container_name: npc.prod.npchat
+    build:
+      context: ../
+      dockerfile: ./Containerfile
+    networks:
+      npc.network:
+    ports:
+      - "8465:8080"
+    command:
+      - "--http-addr"
+      - ":8080"
+      - "--log-level"
+      - "warn"
+      - "--pgsql-dsn"
+      - "${PGSQL_DSN}"
+      - "--oauth-google-client-id"
+      - "${OAUTH_GOOGLE_CLIENT_ID}"
+      - "--oauth-google-client-secret"
+      - "${OAUTH_GOOGLE_CLIENT_SECRET}"
+      - "--oauth-google-callback-url"
+      - "${OAUTH_GOOGLE_CALLBACK_URL}"
+      - "--oauth-github-client-id"
+      - "${OAUTH_GITHUB_CLIENT_ID}"
+      - "--oauth-github-client-secret"
+      - "${OAUTH_GITHUB_CLIENT_SECRET}"
+      - "--oauth-github-callback-url"
+      - "${OAUTH_GITHUB_CALLBACK_URL}"
+
   test.npchat:
     container_name: npc.test.npchat
     build:
