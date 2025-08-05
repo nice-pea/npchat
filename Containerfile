@@ -1,10 +1,18 @@
 # Build stage
 FROM golang:1.24 AS builder
+
 WORKDIR /app
+
 COPY go.mod go.sum ./
 RUN go mod download
+
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o npchat cmd/npchat/main.go
+
+ARG VERSION="dev"
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+RUN go build -ldflags "-X main.version=${VERSION} -X main.buildDate=$(date +"%Y-%m-%dT%H:%M:%SZ")" -o npchat cmd/npchat/main.go
 
 # Final stage
 FROM alpine:latest

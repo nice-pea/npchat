@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -12,6 +13,11 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/nice-pea/npchat/internal/app"
+)
+
+var (
+	version   string
+	buildDate string
 )
 
 func main() {
@@ -53,6 +59,7 @@ func initCliCommand() *cli.Command {
 		Action: func(ctx context.Context, command *cli.Command) error {
 			return app.Run(ctx, cfg)
 		},
+		Version: fmt.Sprintf("%s (built %s)", version, buildDate),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "pgsql-dsn",
