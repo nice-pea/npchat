@@ -42,6 +42,11 @@ jobs:
             docker stop $APP_NAME || true
             docker rm $APP_NAME || true
 
+            # Загрузить переменные окружения, чтобы были доступны в docker-compose
+            set -o allexport; 
+            source /opt/npchat/.env.production
+            set +o allexport
+
             # Запускаем новый
             RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/releases/"$NEW_VERSION"/infra/docker-compose.yaml up --wait npc.npchat)
             if [ $? -eq 0 ]; then
