@@ -9,13 +9,13 @@ services:
   npc.npchat:
     container_name: npc.npchat
     image: npchat:${IMAGE_TAG}
-    restart: unless-stopped
+    restart: on-failure:3
     networks:
       npc.network:
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.0:8080/ping"]
-      interval: 5s
-      timeout: 5s
+      interval: 3s
+      timeout: 1s
       retries: 5
     ports:
       - "8465:8080"
