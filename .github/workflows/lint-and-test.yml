@@ -1,13 +1,17 @@
 # Определяем имя workflow
-name: Run Linters and Tests
+name: Golang линтеры и тесты
 
 # Указываем триггеры для запуска workflow
 on:
   workflow_dispatch:
   push:
     branches: [master]
+    paths:
+      - '**.go'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '**.go'
 
 # Определяем jobs, которые будут выполняться в рамках workflow
 jobs:
