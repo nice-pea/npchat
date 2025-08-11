@@ -1,5 +1,5 @@
-name: Delivery and build image
-
+name: Доставить код и собрать docker-образ на сервере
+  
 on:
   push:
     tags:

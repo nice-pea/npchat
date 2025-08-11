@@ -1,4 +1,4 @@
-name: Deploy
+name: Запустить docker-контейнер в рабочей среде
 
 on:
   workflow_dispatch:
