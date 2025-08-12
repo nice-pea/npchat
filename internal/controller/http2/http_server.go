@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"golang.org/x/sync/errgroup"
 
 	registerHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler"
@@ -46,6 +47,11 @@ func RunHttpServer(ctx context.Context, ss registerHandler.Services, cfg Config)
 
 // registerHandlers регистрирует обработчики
 func registerHandlers(r *fiber.App, ss registerHandler.Services) {
+	// Подключение middleware для логирования
+	r.Use(logger.New(logger.Config{
+		TimeFormat: "2006-01-02 15:04:05",
+	}))
+
 	// Служебные
 	registerHandler.Ping(r, ss)
 
