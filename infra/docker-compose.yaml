@@ -2,6 +2,8 @@
 #  npc.pgsql.data:
 
 networks:
+  proxy:
+   external: true
   npc.network:
 #    external: true
 
@@ -12,6 +14,7 @@ services:
     restart: on-failure:3
     networks:
       npc.network:
+      proxy:
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.0:8080/ping"]
       interval: 3s
