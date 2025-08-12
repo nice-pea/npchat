@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS oauth_users;
+DROP TABLE IF EXISTS users;
