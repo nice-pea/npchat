@@ -1,1 +1,1 @@
-[Открыть mdbook](https://nice-pea.github.io/npchat-docs)
+[Документация](https://github.com/nice-pea/npchat/wiki)
