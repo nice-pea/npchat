@@ -2,11 +2,14 @@ package register_handler
 
 import (
 	"errors"
+	"log"
 	"net/url"
 	"time"
 
+	"github.com/cristalhq/jwt/v5"
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 
 	completeOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_login"
 	completeOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
@@ -56,6 +59,12 @@ type UsecasesForOAuthInitRegistration interface {
 //
 // Метод: GET /oauth/{provider}/registration/callback
 func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCompleteRegistrationCallback) {
+
+	var key []byte = []byte(`secret`)
+	var signer, err = jwt.NewSignerHS(jwt.HS256, key)
+	if err != nil {
+		log.Fatal(err)
+	}
 	router.Get(
 		"/oauth/:provider/registration/callback",
 		func(context *fiber.Ctx) error {
@@ -74,7 +83,32 @@ func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCom
 				return err
 			}
 
-			return context.JSON(out)
+			type jwtPayload struct {
+				UserID    uuid.UUID
+				SessionID uuid.UUID
+				jwt.RegisteredClaims
+			}
+
+			claims := jwtPayload{
+				UserID:    out.Session.UserID,
+				SessionID: out.Session.ID,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(2 * time.Minute)), // Время истечения
+					IssuedAt:  jwt.NewNumericDate(time.Now()),                      // Время выпуска
+					NotBefore: jwt.NewNumericDate(time.Now()),                      // Не действует до
+					Issuer:    "npc",                                               // Издатель
+				},
+			}
+			builder := jwt.NewBuilder(signer)
+			token, err := builder.Build(claims)
+			if err != nil {
+				return err
+			}
+			type Out struct {
+				Jwt string `json:"jwt"`
+			}
+			outt := Out{Jwt: token.String()}
+			return context.JSON(outt)
 		},
 	)
 }
