@@ -8,6 +8,8 @@ import (
 	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
 )
 
+const CtxKeyUserSession = "userSession"
+
 // RequireAuthorizedSession требует авторизованную сессии
 func RequireAuthorizedSession(uc interface {
 	SessionsFind(sessionsFind.In) (sessionsFind.Out, error)
@@ -32,10 +34,8 @@ func RequireAuthorizedSession(uc interface {
 		}
 
 		// Сохранить сессию в контекст
-		ctx.Locals(CtxUserSession, out.Sessions[0])
+		ctx.Locals(CtxKeyUserSession, out.Sessions[0])
 
 		return nil
 	}
 }
-
-var CtxUserSession = "userSession"

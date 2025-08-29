@@ -9,7 +9,7 @@ import (
 )
 
 func Session(context *fiber.Ctx) sessionn.Session {
-	return context.Locals(middleware.CtxUserSession, sessionn.Session{}).(sessionn.Session)
+	return context.Locals(middleware.CtxKeyUserSession, sessionn.Session{}).(sessionn.Session)
 }
 
 // ParamsUUID возвращает значение из пути запроса как uuid
