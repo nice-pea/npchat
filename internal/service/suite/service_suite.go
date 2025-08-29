@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"testing"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -39,14 +38,6 @@ type Suite struct {
 }
 
 var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
-
-func Test_ServicesTestSuite(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
-
-	testifySuite.Run(t, new(Suite))
-}
 
 func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
 	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
@@ -103,10 +94,10 @@ func (suite *Suite) SetupTest() {
 	suite.RR.Sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
-	suite.mockOAuthUsers = suite.generateMockUsers()
+	suite.mockOAuthUsers = suite.GenerateMockUsers()
 	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
 	for token := range suite.mockOAuthUsers {
-		suite.mockOAuthTokens[randomString(13)] = token
+		suite.mockOAuthTokens[RandomString(13)] = token
 	}
 	suite.Adapters.Oauth = &oauthProvider.Mock{
 		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
@@ -140,102 +131,6 @@ func (suite *Suite) TearDownTest() {
 	suite.factoryCloser()
 }
 
-// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
-func (suite *Suite) upsertChat(chat chatt.Chat) chatt.Chat {
-	err := suite.RR.Chats.Upsert(chat)
-	suite.Require().NoError(err)
-
-	return chat
-}
-
-// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
-func (suite *Suite) rndChat() chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
-	suite.Require().NoError(err)
-
-	return chat
-}
-
-// newParticipant создает случайного участника
-func (suite *Suite) newParticipant(userID uuid.UUID) chatt.Participant {
-	p, err := chatt.NewParticipant(userID)
-	suite.Require().NoError(err)
-	return p
-}
-
-func (suite *Suite) addRndParticipant(chat *chatt.Chat) chatt.Participant {
-	p, err := chatt.NewParticipant(uuid.New())
-	suite.Require().NoError(err)
-	suite.Require().NoError(chat.AddParticipant(p))
-
-	return p
-}
-
-func (suite *Suite) addParticipant(chat *chatt.Chat, p chatt.Participant) {
-	suite.Require().NoError(chat.AddParticipant(p))
-}
-
-func (suite *Suite) newInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
-	i, err := chatt.NewInvitation(subjectID, recipientID)
-	suite.Require().NoError(err)
-	return i
-}
-
-func (suite *Suite) addInvitation(chat *chatt.Chat, i chatt.Invitation) {
-	suite.Require().NoError(chat.AddInvitation(i))
-}
-
-// randomString генерирует случайную строку
-func randomString(n int) string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-// randomOAuthToken генерирует случайный OAuthToken
-func (suite *Suite) randomOAuthToken() userr.OpenAuthToken {
-	t, err := userr.NewOpenAuthToken(
-		randomString(32), // AccessToken
-		"Bearer",         // TokenType
-		randomString(32), // RefreshToken
-		time.Now().Add(time.Hour*24*time.Duration(rand.Intn(7)+1)), // Expiry
-
-	)
-	suite.Require().NoError(err)
-
-	return t
-}
-
-// Генерация случайного OAuthUser
-func (suite *Suite) randomOAuthUser() userr.OpenAuthUser {
-	u, err := userr.NewOpenAuthUser(
-		randomString(21),                                      // ID
-		(&oauthProvider.Mock{}).Name(),                        // Provider
-		randomString(8)+"@example.com",                        // Email
-		randomString(6)+" "+randomString(7),                   // Name
-		"https://example.com/avatar/"+randomString(10)+".png", // Picture
-		userr.OpenAuthToken{},                                 // Token
-	)
-	suite.Require().NoError(err)
-
-	return u
-}
-
-func (suite *Suite) generateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
-	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
-
-	for i := 0; i < 10; i++ {
-		token := suite.randomOAuthToken()
-		user := suite.randomOAuthUser()
-		tokenToUser[token] = user
-	}
-
-	return tokenToUser
-}
-
 func (suite *Suite) EqualSessions(s1, s2 sessionn.Session) {
 	suite.Equal(s1.ID, s2.ID)
 	suite.Equal(s1.UserID, s2.UserID)
@@ -245,4 +140,100 @@ func (suite *Suite) EqualSessions(s1, s2 sessionn.Session) {
 	suite.True(s1.AccessToken.Expiry.Equal(s2.AccessToken.Expiry))
 	suite.Equal(s1.RefreshToken.Token, s2.RefreshToken.Token)
 	suite.True(s1.RefreshToken.Expiry.Equal(s2.RefreshToken.Expiry))
+}
+
+// UpsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+func (suite *Suite) UpsertChat(chat chatt.Chat) chatt.Chat {
+	err := suite.RR.Chats.Upsert(chat)
+	suite.Require().NoError(err)
+
+	return chat
+}
+
+// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+func (suite *Suite) RndChat() chatt.Chat {
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
+	suite.Require().NoError(err)
+
+	return chat
+}
+
+// NewParticipant создает случайного участника
+func (suite *Suite) NewParticipant(userID uuid.UUID) chatt.Participant {
+	p, err := chatt.NewParticipant(userID)
+	suite.Require().NoError(err)
+	return p
+}
+
+func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
+	p, err := chatt.NewParticipant(uuid.New())
+	suite.Require().NoError(err)
+	suite.Require().NoError(chat.AddParticipant(p))
+
+	return p
+}
+
+func (suite *Suite) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
+	suite.Require().NoError(chat.AddParticipant(p))
+}
+
+func (suite *Suite) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
+	i, err := chatt.NewInvitation(subjectID, recipientID)
+	suite.Require().NoError(err)
+	return i
+}
+
+func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
+	suite.Require().NoError(chat.AddInvitation(i))
+}
+
+// RandomString генерирует случайную строку
+func RandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+// RandomOAuthToken генерирует случайный OAuthToken
+func (suite *Suite) RandomOAuthToken() userr.OpenAuthToken {
+	t, err := userr.NewOpenAuthToken(
+		RandomString(32), // AccessToken
+		"Bearer",         // TokenType
+		RandomString(32), // RefreshToken
+		time.Now().Add(time.Hour*24*time.Duration(rand.Intn(7)+1)), // Expiry
+
+	)
+	suite.Require().NoError(err)
+
+	return t
+}
+
+// Генерация случайного OAuthUser
+func (suite *Suite) RandomOAuthUser() userr.OpenAuthUser {
+	u, err := userr.NewOpenAuthUser(
+		RandomString(21),                                      // ID
+		(&oauthProvider.Mock{}).Name(),                        // Provider
+		RandomString(8)+"@example.com",                        // Email
+		RandomString(6)+" "+RandomString(7),                   // Name
+		"https://example.com/avatar/"+RandomString(10)+".png", // Picture
+		userr.OpenAuthToken{},                                 // Token
+	)
+	suite.Require().NoError(err)
+
+	return u
+}
+
+func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
+	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
+
+	for i := 0; i < 10; i++ {
+		token := suite.RandomOAuthToken()
+		user := suite.RandomOAuthUser()
+		tokenToUser[token] = user
+	}
+
+	return tokenToUser
 }

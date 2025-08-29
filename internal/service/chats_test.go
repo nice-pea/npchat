@@ -48,8 +48,8 @@ func (suite *testSuite) Test_Chats_UserChats() {
 	suite.Run("пустой список если у пользователя нет чатов", func() {
 		const chatsAllCount = 11
 		for range chatsAllCount {
-			chat := suite.upsertChat(suite.rndChat())
-			suite.addRndParticipant(&chat)
+			chat := suite.UpsertChat(suite.RndChat())
+			suite.AddRndParticipant(&chat)
 		}
 		input := suite.newUserChatsInput(uuid.New())
 		out, err := suite.ss.chats.WhichParticipate(input)
@@ -61,10 +61,10 @@ func (suite *testSuite) Test_Chats_UserChats() {
 		userID := uuid.New()
 		const chatsAllCount = 11
 		for range chatsAllCount {
-			chat := suite.rndChat()
-			p := suite.newParticipant(userID)
-			suite.addParticipant(&chat, p)
-			suite.upsertChat(chat)
+			chat := suite.RndChat()
+			p := suite.NewParticipant(userID)
+			suite.AddParticipant(&chat, p)
+			suite.UpsertChat(chat)
 		}
 		input := suite.newUserChatsInput(userID)
 		out, err := suite.ss.chats.WhichParticipate(input)

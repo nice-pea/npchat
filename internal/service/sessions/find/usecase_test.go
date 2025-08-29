@@ -1,8 +1,11 @@
 package sessionsFind
 
 import (
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
@@ -29,15 +32,17 @@ func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct 
 
 type testSuite struct {
 	serviceSuite.Suite
-	*SessionsFindUsecase
 }
 
-func (suite *testSuite) SetupTest() {
-	suite.Suite.SetupTest()
-	suite.SessionsFindUsecase = &SessionsFindUsecase{Repo: suite.RR.Sessions}
+func Test_TestSuite(t *testing.T) {
+	testifySuite.Run(t, new(testSuite))
 }
 
 func (suite *testSuite) Test_Sessions_Find() {
+	usecase := &SessionsFindUsecase{
+		Repo: suite.RR.Sessions,
+	}
+
 	suite.Run("токен должен быть передан", func() {
 		for range 10 {
 			suite.newRndUserWithSession(sessionn.StatusNew)
@@ -46,7 +51,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 			Token: "",
 		}
 
-		out, err := suite.SessionsFind(input)
+		out, err := usecase.SessionsFind(input)
 		suite.ErrorIs(err, ErrInvalidToken)
 		suite.Zero(out)
 	})
@@ -58,7 +63,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 		input := In{
 			Token: uuid.NewString(),
 		}
-		out, err := suite.SessionsFind(input)
+		out, err := usecase.SessionsFind(input)
 		suite.NoError(err)
 		suite.Zero(out)
 	})
@@ -68,7 +73,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 		input := In{
 			Token: uws.Session.AccessToken.Token,
 		}
-		out, err := suite.SessionsFind(input)
+		out, err := usecase.SessionsFind(input)
 		suite.NoError(err)
 		suite.Require().Len(out.Sessions, 1)
 		suite.EqualSessions(uws.Session, out.Sessions[0])

@@ -20,7 +20,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.UpsertChat(suite.RndChat())
 		// Запросить список участников чата
 		input := ChatMembersIn{
 			ChatID:    chat.ID,
@@ -34,16 +34,16 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 
 	suite.Run("возвращается список участников чата", func() {
 		// Создать чат
-		chat := suite.rndChat()
+		chat := suite.RndChat()
 		// Создать несколько участников в чате
 		const membersAllCount = 20
 		participants := make([]chatt.Participant, membersAllCount-1)
 		for i := range participants {
 			// Создать участника в чате
-			participants[i] = suite.addRndParticipant(&chat)
+			participants[i] = suite.AddRndParticipant(&chat)
 		}
 		// Сохранить чат
-		suite.upsertChat(chat)
+		suite.UpsertChat(chat)
 		// Запрашивать список будет первый участник
 		participant := participants[0]
 		// Получить список участников в чате
@@ -76,7 +76,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.UpsertChat(suite.RndChat())
 		// Покинуть чат
 		input := LeaveChatIn{
 			SubjectID: uuid.New(),
@@ -89,7 +89,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь не должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.UpsertChat(suite.RndChat())
 		// Покинуть чат
 		input := LeaveChatIn{
 			SubjectID: chat.ChiefID,
@@ -102,11 +102,11 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 
 	suite.Run("после выхода пользователь перестает быть участником", func() {
 		// Создать чат
-		chat := suite.rndChat()
+		chat := suite.RndChat()
 		// Создать участника в этом чате
-		participant := suite.addRndParticipant(&chat)
+		participant := suite.AddRndParticipant(&chat)
 		// Сохранить чат
-		suite.upsertChat(chat)
+		suite.UpsertChat(chat)
 		// Покинуть чат
 		input := LeaveChatIn{
 			SubjectID: participant.UserID,
@@ -165,9 +165,9 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("subject должен быть главным администратором чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.UpsertChat(suite.RndChat())
 		// Создать участника
-		participant := suite.addRndParticipant(&chat)
+		participant := suite.AddRndParticipant(&chat)
 		// Удалить участника
 		input := DeleteMemberIn{
 			SubjectID: participant.UserID,
@@ -181,7 +181,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("user должен быть участником чата", func() {
 		// Создать чат
-		chat := suite.upsertChat(suite.rndChat())
+		chat := suite.UpsertChat(suite.RndChat())
 		// Удалить участника
 		input := DeleteMemberIn{
 			SubjectID: chat.ChiefID,
@@ -195,11 +195,11 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("после удаления участник перестает быть участником", func() {
 		// Создать чат
-		chat := suite.rndChat()
+		chat := suite.RndChat()
 		// Создать участника для удаления
-		participant := suite.addRndParticipant(&chat)
+		participant := suite.AddRndParticipant(&chat)
 		// Сохранить чат
-		suite.upsertChat(chat)
+		suite.UpsertChat(chat)
 		// Удалить участника
 		input := DeleteMemberIn{
 			SubjectID: chat.ChiefID,

@@ -162,3 +162,29 @@ func (c *Chats) UpdateName(in UpdateNameIn) (UpdateNameOut, error) {
 		Chat: chat,
 	}, nil
 }
+
+// AcceptInvitation
+// CancelInvitation
+// ChatInvitations
+// ChatMembers
+// CreateChat
+// DeleteMember
+// LeaveChat
+// ReceivedInvitations
+// SendInvitation
+// UpdateName
+// WhichParticipate
+
+// accept_invitation
+// cancel_invitation
+// chat_invitations
+// chat_members
+// create_chat
+// delete_member
+// leave_chat
+// received_invitations
+// send_invitation
+// update_name
+// which_participate
+
+// accept_invitation cancel_invitation chat_invitations chat_members create_chat delete_member leave_chat received_invitations send_invitation update_name which_participate 
