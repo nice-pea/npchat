@@ -19,7 +19,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
-	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
+	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions/find"
 )
 
 type testSuite struct {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	serviceSuite "github.com/nice-pea/npchat/internal/service/service_suite"
+	serviceSuite "github.com/nice-pea/npchat/internal/service/suite"
 )
 
 func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct {

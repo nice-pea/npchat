@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/nice-pea/npchat/internal/service"
-	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
+	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions/find"
 )
 
 type services struct {

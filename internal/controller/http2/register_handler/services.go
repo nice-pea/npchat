@@ -2,7 +2,7 @@ package register_handler
 
 import (
 	"github.com/nice-pea/npchat/internal/service"
-	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
+	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions/find"
 )
 
 // Services определяет интерфейс для доступа к сервисам приложения
