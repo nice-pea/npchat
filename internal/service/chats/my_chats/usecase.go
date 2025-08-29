@@ -1,4 +1,4 @@
-package service
+package myChats
 
 import (
 	"errors"
@@ -9,19 +9,21 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
-// Chats сервис, объединяющий случаи использования(юзкейсы) в контексте агрегата чатов
-type Chats struct {
-	Repo chatt.Repository
-}
+var (
+	ErrInvalidSubjectID      = errors.New("некорректное значение SubjectID")
+	ErrInvalidName           = errors.New("некорректное значение Name")
+	ErrInvalidUserID         = errors.New("некорректное значение UserID")
+	ErrUnauthorizedChatsView = errors.New("нельзя просматривать чужой список чатов")
+)
 
-// WhichParticipateIn входящие параметры
-type WhichParticipateIn struct {
+// In входящие параметры
+type In struct {
 	SubjectID uuid.UUID
 	UserID    uuid.UUID // TODO: удалить
 }
 
 // Validate валидирует значение отдельно каждого параметры
-func (in WhichParticipateIn) Validate() error {
+func (in In) Validate() error {
 	if err := domain.ValidateID(in.SubjectID); err != nil {
 		return errors.Join(err, ErrInvalidSubjectID)
 	}
@@ -32,22 +34,26 @@ func (in WhichParticipateIn) Validate() error {
 	return nil
 }
 
-// WhichParticipateOut результат запроса чатов
-type WhichParticipateOut struct {
+// Out результат запроса чатов
+type Out struct {
 	Chats []chatt.Chat
 }
 
-// WhichParticipate возвращает список чатов, в которых участвует пользователь
-func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, error) {
+type MyChatsUsecase struct {
+	Repo chatt.Repository
+}
+
+// MyChats возвращает список чатов, в которых участвует пользователь
+func (c *MyChatsUsecase) MyChats(in In) (Out, error) {
 	// Валидировать параметры
 	var err error
 	if err = in.Validate(); err != nil {
-		return WhichParticipateOut{}, err
+		return Out{}, err
 	}
 
 	// Пользователь может запрашивать только свой список чатов
 	if in.UserID != in.SubjectID {
-		return WhichParticipateOut{}, ErrUnauthorizedChatsView
+		return Out{}, ErrUnauthorizedChatsView
 	}
 
 	// Получить список участников с фильтром по пользователю
@@ -55,8 +61,8 @@ func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, er
 		ParticipantID: in.UserID,
 	})
 	if err != nil {
-		return WhichParticipateOut{}, err
+		return Out{}, err
 	}
 
-	return WhichParticipateOut{Chats: chats}, err
+	return Out{Chats: chats}, err
 }
