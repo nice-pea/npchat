@@ -65,16 +65,6 @@ type SendInvitationIn struct {
 }
 
 func (in SendInvitationIn) Validate() error {
-	if err := domain.ValidateID(in.ChatID); err != nil {
-		return ErrInvalidChatID
-	}
-	if err := domain.ValidateID(in.SubjectID); err != nil {
-		return ErrInvalidSubjectID
-	}
-	if err := domain.ValidateID(in.UserID); err != nil {
-		return ErrInvalidUserID
-	}
-
 	return nil
 }
 
@@ -84,35 +74,7 @@ type SendInvitationOut struct {
 
 // SendInvitation отправляет приглашения пользователю от участника чата
 func (c *Chats) SendInvitation(in SendInvitationIn) (SendInvitationOut, error) {
-	if err := in.Validate(); err != nil {
-		return SendInvitationOut{}, err
-	}
-
-	// Найти чат
-	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
-	if err != nil {
-		return SendInvitationOut{}, err
-	}
-
-	// Создать приглашение
-	inv, err := chatt.NewInvitation(in.SubjectID, in.UserID)
-	if err != nil {
-		return SendInvitationOut{}, err
-	}
-
-	// Добавить приглашение в чат
-	if err = chat.AddInvitation(inv); err != nil {
-		return SendInvitationOut{}, err
-	}
-
-	// Сохранить чат в репозиторий
-	if err = c.Repo.Upsert(chat); err != nil {
-		return SendInvitationOut{}, err
-	}
-
-	return SendInvitationOut{
-		Invitation: inv,
-	}, nil
+	panic("not implemented")
 }
 
 type AcceptInvitationIn struct {
