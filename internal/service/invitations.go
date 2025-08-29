@@ -179,54 +179,11 @@ type AcceptInvitationIn struct {
 }
 
 func (in AcceptInvitationIn) Validate() error {
-	if err := domain.ValidateID(in.InvitationID); err != nil {
-		return ErrInvalidInvitationID
-	}
-	if err := domain.ValidateID(in.SubjectID); err != nil {
-		return ErrInvalidSubjectID
-	}
-
 	return nil
 }
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
 func (c *Chats) AcceptInvitation(in AcceptInvitationIn) error {
-	// Валидировать входные данные
-	if err := in.Validate(); err != nil {
-		return err
-	}
-
-	// Найти чат
-	chat, err := chatt.Find(c.Repo, chatt.Filter{
-		InvitationID: in.InvitationID,
-	})
-	if errors.Is(err, chatt.ErrChatNotExists) {
-		return ErrInvitationNotExists
-	} else if err != nil {
-		return err
-	}
-
-	// Удаляем приглашение из чата
-	if err := chat.RemoveInvitation(in.InvitationID); err != nil {
-		return err
-	}
-
-	// Создаем участника чата
-	participant, err := chatt.NewParticipant(in.SubjectID)
-	if err != nil {
-		return err
-	}
-
-	// Добавить участника в чат
-	if err := chat.AddParticipant(participant); err != nil {
-		return err
-	}
-
-	// Сохранить чат в репозиторий
-	if err := c.Repo.Upsert(chat); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -236,66 +193,10 @@ type CancelInvitationIn struct {
 }
 
 func (in CancelInvitationIn) Validate() error {
-	if err := domain.ValidateID(in.SubjectID); err != nil {
-		return ErrInvalidSubjectID
-	}
-	if err := domain.ValidateID(in.InvitationID); err != nil {
-		return ErrInvalidInvitationID
-	}
-
 	return nil
 }
 
 // CancelInvitation отменяет приглашение
 func (c *Chats) CancelInvitation(in CancelInvitationIn) error {
-	// Валидировать входные данные
-	if err := in.Validate(); err != nil {
-		return err
-	}
-
-	// Найти чат
-	chat, err := chatt.Find(c.Repo, chatt.Filter{
-		InvitationID: in.InvitationID,
-	})
-	if errors.Is(err, chatt.ErrChatNotExists) {
-		return ErrInvitationNotExists
-	} else if err != nil {
-		return err
-	}
-
-	// Достать приглашение из чата
-	invitation, err := chat.Invitation(in.InvitationID)
-	if err != nil {
-		return err
-	}
-
-	if in.SubjectID == invitation.SubjectID {
-		// Проверить, существование участника чата
-		if !chat.HasParticipant(invitation.SubjectID) {
-			return ErrSubjectIsNotMember
-		}
-	}
-
-	// Список тех, кто может отменять приглашение
-	allowedSubjects := []uuid.UUID{
-		chat.ChiefID,           // Главный администратор
-		invitation.SubjectID,   // Пригласивший
-		invitation.RecipientID, // Приглашаемый
-	}
-	// Проверить, может ли пользователь отменить приглашение
-	if !slices.Contains(allowedSubjects, in.SubjectID) {
-		return ErrSubjectUserNotAllowed
-	}
-
-	// Удаляем приглашение из чата
-	if err := chat.RemoveInvitation(in.InvitationID); err != nil {
-		return err
-	}
-
-	// Сохранить чат в репозиторий
-	if err := c.Repo.Upsert(chat); err != nil {
-		return err
-	}
-
 	return nil
 }
