@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"slices"
 
 	"github.com/google/uuid"
 
@@ -37,34 +36,7 @@ type ChatInvitationsOut struct {
 // Если SubjectID является администратором, то возвращается все приглашения в данный чат,
 // иначе только те приглашения, которые отправил именно пользователь.
 func (c *Chats) ChatInvitations(in ChatInvitationsIn) (ChatInvitationsOut, error) {
-	// Валидировать параметры
-	if err := in.Validate(); err != nil {
-		return ChatInvitationsOut{}, err
-	}
-
-	// Найти чат
-	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
-	if err != nil {
-		return ChatInvitationsOut{}, err
-	}
-
-	// Проверить является ли пользователь участником чата
-	if !chat.HasParticipant(in.SubjectID) {
-		return ChatInvitationsOut{}, ErrSubjectIsNotMember
-	}
-
-	// Сохранить сначала все приглашения
-	invitations := chat.Invitations
-
-	// Если пользователь не является администратором,
-	// то оставить только те приглашения, которые отправил именно пользователь.
-	if chat.ChiefID != in.SubjectID {
-		invitations = chat.SubjectInvitations(in.SubjectID)
-	}
-
-	return ChatInvitationsOut{
-		Invitations: invitations,
-	}, err
+	panic("not implemented")
 }
 
 type ReceivedInvitationsIn struct {
