@@ -1,97 +1,54 @@
-package service
+package deleteMember
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
+	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	serviceSuite "github.com/nice-pea/npchat/internal/service/suite"
 )
 
-// Test_Members_LeaveChat тестирует выход участника из чата
-func (suite *testSuite) Test_Members_LeaveChat() {
-	suite.Run("чат должен существовать", func() {
-		// Покинуть чат
-		input := LeaveChatIn{
-			SubjectID: uuid.New(),
-			ChatID:    uuid.New(),
-		}
-		err := suite.ss.chats.LeaveChat(input)
-		// Вернется ошибка, потому что чата не существует
-		suite.ErrorIs(err, chatt.ErrChatNotExists)
-	})
+type testSuite struct {
+	serviceSuite.Suite
+}
 
-	suite.Run("пользователь должен быть участником чата", func() {
-		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
-		// Покинуть чат
-		input := LeaveChatIn{
-			SubjectID: uuid.New(),
-			ChatID:    chat.ID,
-		}
-		err := suite.ss.chats.LeaveChat(input)
-		// Вернется ошибка, потому что пользователь не участник чата
-		suite.ErrorIs(err, chatt.ErrParticipantNotExists)
-	})
-
-	suite.Run("пользователь не должен быть главным администратором чата", func() {
-		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
-		// Покинуть чат
-		input := LeaveChatIn{
-			SubjectID: chat.ChiefID,
-			ChatID:    chat.ID,
-		}
-		err := suite.ss.chats.LeaveChat(input)
-		// Вернется ошибка, потому что пользователь главный администратор чата
-		suite.ErrorIs(err, chatt.ErrCannotRemoveChief)
-	})
-
-	suite.Run("после выхода пользователь перестает быть участником", func() {
-		// Создать чат
-		chat := suite.RndChat()
-		// Создать участника в этом чате
-		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
-		// Покинуть чат
-		input := LeaveChatIn{
-			SubjectID: participant.UserID,
-			ChatID:    chat.ID,
-		}
-		err := suite.ss.chats.LeaveChat(input)
-		suite.Require().NoError(err)
-		// Получить список участников чата
-		filter := chatt.Filter{ParticipantID: participant.UserID}
-		chats, err := suite.rr.chats.List(filter)
-		suite.Require().NoError(err)
-		suite.Zero(chats)
-	})
+func Test_TestSuite(t *testing.T) {
+	testifySuite.Run(t, new(testSuite))
 }
 
 // Test_Members_DeleteMember тестирует удаление участника чата
 func (suite *testSuite) Test_Members_DeleteMember() {
+	usecase := &DeleteMemberUsecase{
+		Repo: suite.RR.Chats,
+	}
+
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
 		userID := uuid.New()
-		input := DeleteMemberIn{
+		input := In{
 			SubjectID: userID,
 			ChatID:    uuid.New(),
 			UserID:    userID,
 		}
-		err := suite.ss.chats.DeleteMember(input)
+		out, err := usecase.DeleteMember(input)
 		// Вернется ошибка, потому что пользователь пытается удалить самого себя
 		suite.ErrorIs(err, ErrMemberCannotDeleteHimself)
+		suite.Zero(out)
 	})
 
 	suite.Run("чат должен существовать", func() {
 		// Удалить участника
-		input := DeleteMemberIn{
+		input := In{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 			UserID:    uuid.New(),
 		}
-		err := suite.ss.chats.DeleteMember(input)
+		out, err := usecase.DeleteMember(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
+		suite.Zero(out)
 	})
 
 	//suite.Run("subject должен быть участником чата", func() {
@@ -103,7 +60,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 	//		ChatID:    chat.ID,
 	//		UserID:    uuid.New(),
 	//	}
-	//	err := suite.ss.chats.DeleteMember(input)
+	//	err := usecase.DeleteMember(input)
 	//	// Вернется ошибка, потому что пользователь не участник чата
 	//	suite.ErrorIs(err, ErrSubjectIsNotMember)
 	//})
@@ -114,28 +71,30 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		// Создать участника
 		participant := suite.AddRndParticipant(&chat)
 		// Удалить участника
-		input := DeleteMemberIn{
+		input := In{
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
 			UserID:    uuid.New(),
 		}
-		err := suite.ss.chats.DeleteMember(input)
+		out, err := usecase.DeleteMember(input)
 		// Вернется ошибка, потому что участник не главный администратор
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
+		suite.Zero(out)
 	})
 
 	suite.Run("user должен быть участником чата", func() {
 		// Создать чат
 		chat := suite.UpsertChat(suite.RndChat())
 		// Удалить участника
-		input := DeleteMemberIn{
+		input := In{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 			UserID:    uuid.New(),
 		}
-		err := suite.ss.chats.DeleteMember(input)
+		out, err := usecase.DeleteMember(input)
 		// Вернется ошибка, потому что удаляемый пользователь не является участником
 		suite.ErrorIs(err, chatt.ErrParticipantNotExists)
+		suite.Zero(out)
 	})
 
 	suite.Run("после удаления участник перестает быть участником", func() {
@@ -146,16 +105,17 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		// Сохранить чат
 		suite.UpsertChat(chat)
 		// Удалить участника
-		input := DeleteMemberIn{
+		input := In{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 			UserID:    participant.UserID,
 		}
-		err := suite.ss.chats.DeleteMember(input)
+		out, err := usecase.DeleteMember(input)
 		suite.Require().NoError(err)
+		suite.Zero(out)
 		// Найти удаленного участника
 		filter := chatt.Filter{ParticipantID: participant.UserID}
-		chats, err := suite.rr.chats.List(filter)
+		chats, err := suite.RR.Chats.List(filter)
 		suite.Require().NoError(err)
 		// Чатов с таким пользователем нет
 		suite.Empty(chats)
