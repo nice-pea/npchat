@@ -61,48 +61,6 @@ func (c *Chats) WhichParticipate(in WhichParticipateIn) (WhichParticipateOut, er
 	return WhichParticipateOut{Chats: chats}, err
 }
 
-// CreateChatIn входящие параметры
-type CreateChatIn struct {
-	Name        string
-	ChiefUserID uuid.UUID // TODO: переименовать в SubjectID
-}
-
-func (in CreateChatIn) Validate() error {
-	if err := domain.ValidateID(in.ChiefUserID); err != nil {
-		return errors.Join(ErrInvalidChiefID, err)
-	}
-	if err := chatt.ValidateChatName(in.Name); err != nil {
-		return errors.Join(ErrInvalidName, err)
-	}
-
-	return nil
-}
-
-// CreateChatOut результат создания чата
-type CreateChatOut struct {
-	Chat chatt.Chat
-}
-
-// CreateChat создает новый чат и участника для главного администратора - пользователя, который создал этот чат
-func (c *Chats) CreateChat(in CreateChatIn) (CreateChatOut, error) {
-	if err := in.Validate(); err != nil {
-		return CreateChatOut{}, err
-	}
-
-	chat, err := chatt.NewChat(in.Name, in.ChiefUserID)
-	if err != nil {
-		return CreateChatOut{}, err
-	}
-
-	// Сохранить чат в репозиторий
-	if err := c.Repo.Upsert(chat); err != nil {
-		return CreateChatOut{}, err
-	}
-
-	return CreateChatOut{
-		Chat: chat,
-	}, nil
-}
 
 // UpdateNameIn входящие параметры
 type UpdateNameIn struct {
