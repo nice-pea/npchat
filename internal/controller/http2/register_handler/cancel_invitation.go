@@ -24,6 +24,6 @@ func CancelInvitation(router *fiber.App, ss Services) {
 			return ss.Chats().CancelInvitation(input)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(ss),
 	)
 }

@@ -1,19 +1,18 @@
 package app
 
-import "github.com/nice-pea/npchat/internal/service"
+import (
+	"github.com/nice-pea/npchat/internal/service"
+	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
+)
 
 type services struct {
-	chats    *service.Chats
-	sessions *service.Sessions
-	users    *service.Users
+	chats *service.Chats
+	*sessionsFind.SessionsFindUsecase
+	users *service.Users
 }
 
 func (s *services) Chats() *service.Chats {
 	return s.chats
-}
-
-func (s *services) Sessions() *service.Sessions {
-	return s.sessions
 }
 
 func (s *services) Users() *service.Users {
@@ -25,7 +24,7 @@ func initServices(rr *repositories, aa *adapters) *services {
 		chats: &service.Chats{
 			Repo: rr.chats,
 		},
-		sessions: &service.Sessions{
+		SessionsFindUsecase: &sessionsFind.SessionsFindUsecase{
 			Repo: rr.sessions,
 		},
 		users: &service.Users{

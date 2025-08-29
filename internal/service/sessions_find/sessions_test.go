@@ -1,4 +1,4 @@
-package sessionsfind
+package sessionsFind
 
 import (
 	"github.com/brianvoe/gofakeit/v7"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	servicesuite "github.com/nice-pea/npchat/internal/service/service_suite"
+	serviceSuite "github.com/nice-pea/npchat/internal/service/service_suite"
 )
 
 func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct {
@@ -28,13 +28,13 @@ func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct 
 }
 
 type testSuite struct {
-	servicesuite.Suite
-	*Impl
+	serviceSuite.Suite
+	*SessionsFindUsecase
 }
 
 func (suite *testSuite) SetupTest() {
 	suite.Suite.SetupTest()
-	suite.Impl = &Impl{Repo: suite.RR.Sessions}
+	suite.SessionsFindUsecase = &SessionsFindUsecase{Repo: suite.RR.Sessions}
 }
 
 func (suite *testSuite) Test_Sessions_Find() {

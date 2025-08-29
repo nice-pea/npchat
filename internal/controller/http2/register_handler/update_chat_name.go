@@ -40,6 +40,6 @@ func UpdateChatName(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(ss),
 	)
 }

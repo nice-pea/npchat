@@ -19,6 +19,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
+	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions_find"
 )
 
 type testSuite struct {
@@ -31,9 +32,9 @@ type testSuite struct {
 		users    userr.Repository
 	}
 	ss struct {
-		chats    *Chats
-		sessions *Sessions
-		users    *Users
+		chats        *Chats
+		sessionsFind *sessionsFind.SessionsFindUsecase
+		users        *Users
 	}
 	ad struct {
 		oauth OAuthProvider
@@ -136,7 +137,7 @@ func (suite *testSuite) SetupTest() {
 	suite.ss.chats = &Chats{
 		Repo: suite.rr.chats,
 	}
-	suite.ss.sessions = &Sessions{
+	suite.ss.sessionsFind = &sessionsFind.SessionsFindUsecase{
 		Repo: suite.rr.sessions,
 	}
 	suite.ss.users = &Users{

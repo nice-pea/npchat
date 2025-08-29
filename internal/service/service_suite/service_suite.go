@@ -1,4 +1,4 @@
-package servicesuite
+package serviceSuite
 
 import (
 	"context"

@@ -36,6 +36,6 @@ func DeleteMember(router *fiber.App, ss Services) {
 			return ss.Chats().DeleteMember(input)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(ss),
 	)
 }

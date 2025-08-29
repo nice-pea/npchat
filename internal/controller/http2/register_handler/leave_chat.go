@@ -24,6 +24,6 @@ func LeaveChat(router *fiber.App, ss Services) {
 			return ss.Chats().LeaveChat(input)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(ss),
 	)
 }
