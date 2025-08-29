@@ -44,10 +44,6 @@ type ReceivedInvitationsIn struct {
 }
 
 func (in ReceivedInvitationsIn) Validate() error {
-	if err := domain.ValidateID(in.SubjectID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectID)
-	}
-
 	return nil
 }
 
@@ -59,33 +55,7 @@ type ReceivedInvitationsOut struct {
 
 // ReceivedInvitations возвращает список приглашений конкретного пользователя в чаты
 func (c *Chats) ReceivedInvitations(in ReceivedInvitationsIn) (ReceivedInvitationsOut, error) {
-	// Валидировать параметры
-	if err := in.Validate(); err != nil {
-		return ReceivedInvitationsOut{}, err
-	}
-
-	// Найти чат
-	chats, err := c.Repo.List(chatt.Filter{
-		InvitationRecipientID: in.SubjectID,
-	})
-	if err != nil {
-		return ReceivedInvitationsOut{}, err
-	}
-
-	// Если нет чатов, вернут пустой список
-	if len(chats) == 0 {
-		return ReceivedInvitationsOut{}, nil
-	}
-
-	// Собрать приглашения, полученные пользователем
-	invitations := make(map[uuid.UUID]chatt.Invitation, len(chats))
-	for _, chat := range chats {
-		invitations[chat.ID], _ = chat.RecipientInvitation(in.SubjectID)
-	}
-
-	return ReceivedInvitationsOut{
-		ChatsInvitations: invitations,
-	}, err
+	panic("not implemented")
 }
 
 type SendInvitationIn struct {
