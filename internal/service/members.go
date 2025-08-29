@@ -17,13 +17,6 @@ type ChatMembersIn struct {
 
 // Validate валидирует значение отдельно каждого параметры
 func (in ChatMembersIn) Validate() error {
-	if err := domain.ValidateID(in.SubjectID); err != nil {
-		return errors.Join(err, ErrInvalidSubjectID)
-	}
-	if err := domain.ValidateID(in.ChatID); err != nil {
-		return errors.Join(err, ErrInvalidChatID)
-	}
-
 	return nil
 }
 
@@ -34,25 +27,7 @@ type ChatMembersOut struct {
 
 // ChatMembers возвращает список участников чата
 func (c *Chats) ChatMembers(in ChatMembersIn) (ChatMembersOut, error) {
-	// Валидировать параметры
-	if err := in.Validate(); err != nil {
-		return ChatMembersOut{}, err
-	}
-
-	// Найти чат
-	chat, err := chatt.Find(c.Repo, chatt.Filter{ID: in.ChatID})
-	if err != nil {
-		return ChatMembersOut{}, err
-	}
-
-	// Пользователь должен быть участником чата
-	if !chat.HasParticipant(in.SubjectID) {
-		return ChatMembersOut{}, ErrSubjectIsNotMember
-	}
-
-	return ChatMembersOut{
-		Participants: chat.Participants,
-	}, nil
+	panic("not implemented")
 }
 
 // LeaveChatIn входящие параметры

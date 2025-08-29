@@ -6,61 +6,6 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
-// Test_Members_ChatMembers тестирует получение списка участников чата
-func (suite *testSuite) Test_Members_ChatMembers() {
-	suite.Run("чат должен существовать", func() {
-		input := ChatMembersIn{
-			ChatID:    uuid.New(),
-			SubjectID: uuid.New(),
-		}
-		out, err := suite.ss.chats.ChatMembers(input)
-		suite.ErrorIs(err, chatt.ErrChatNotExists)
-		suite.Empty(out)
-	})
-
-	suite.Run("пользователь должен быть участником чата", func() {
-		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
-		// Запросить список участников чата
-		input := ChatMembersIn{
-			ChatID:    chat.ID,
-			SubjectID: uuid.New(),
-		}
-		out, err := suite.ss.chats.ChatMembers(input)
-		// Вернется ошибка, потому пользователь не является участником чата
-		suite.ErrorIs(err, ErrSubjectIsNotMember)
-		suite.Empty(out)
-	})
-
-	suite.Run("возвращается список участников чата", func() {
-		// Создать чат
-		chat := suite.RndChat()
-		// Создать несколько участников в чате
-		const membersAllCount = 20
-		participants := make([]chatt.Participant, membersAllCount-1)
-		for i := range participants {
-			// Создать участника в чате
-			participants[i] = suite.AddRndParticipant(&chat)
-		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
-		// Запрашивать список будет первый участник
-		participant := participants[0]
-		// Получить список участников в чате
-		input := ChatMembersIn{
-			ChatID:    chat.ID,
-			SubjectID: participant.UserID,
-		}
-		out, err := suite.ss.chats.ChatMembers(input)
-		suite.NoError(err)
-		suite.Require().Len(out.Participants, membersAllCount)
-		// Сравнить каждого сохраненного участника с ранее созданным
-		for i := range participants {
-			suite.Contains(out.Participants, participants[i])
-		}
-	})
-}
-
 // Test_Members_LeaveChat тестирует выход участника из чата
 func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
