@@ -14,6 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
+	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
@@ -236,4 +237,14 @@ func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUs
 	}
 
 	return tokenToUser
+}
+
+func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
+	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
+	suite.Require().NoError(err)
+	ba, err := userr.NewBasicAuth(gofakeit.Username()+"four", common.RndPassword())
+	suite.Require().NoError(err)
+	err = user.AddBasicAuth(ba)
+	suite.Require().NoError(err)
+	return user
 }
