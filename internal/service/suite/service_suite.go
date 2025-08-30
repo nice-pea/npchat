@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -38,7 +39,9 @@ type Suite struct {
 	MockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
-var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
+var (
+	pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
+)
 
 func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
 	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
@@ -54,8 +57,11 @@ func (suite *Suite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, clos
 	defer cancel()
 
 	// Find all migrations
-	migrations, err := filepath.Glob("../../infra/pgsql/init/*.sql")
+	_, b, _, _ := runtime.Caller(0)
+	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.sql")
+	migrations, err := filepath.Glob(migrationsDir)
 	suite.Require().NoError(err)
+	suite.Require().NotZero(migrations)
 
 	postgresContainer, err := postgres.Run(ctx,
 		"postgres:17",

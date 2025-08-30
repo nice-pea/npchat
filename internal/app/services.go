@@ -15,8 +15,8 @@ import (
 	findSession "github.com/nice-pea/npchat/internal/service/sessions/find_session"
 	basicAuthLogin "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_login"
 	basicAuthRegistration "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_registration"
-	"github.com/nice-pea/npchat/internal/service/users/oauth/completeOAuthRegistration"
 	completeOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/complete_oauth_login"
+	completeOAuthRegistration "github.com/nice-pea/npchat/internal/service/users/oauth/complete_oauth_registration"
 	initOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_login"
 	initOAuthRegistration "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_registration"
 )

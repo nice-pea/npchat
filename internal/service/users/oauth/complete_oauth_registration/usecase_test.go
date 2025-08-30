@@ -27,6 +27,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		SessionsRepo: suite.RR.Sessions,
 		Providers:    oauth.OAuthProviders{},
 	}
+	usecase.Providers.Add(suite.Adapters.Oauth)
 
 	suite.Run("UserCode обязательное поле", func() {
 		input := In{

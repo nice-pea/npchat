@@ -65,7 +65,7 @@ func (suite *testSuite) Test_FindSessions() {
 		}
 		out, err := usecase.FindSessions(input)
 		suite.NoError(err)
-		suite.Zero(out)
+		suite.Empty(out.Sessions)
 	})
 
 	suite.Run("вернется существующая сессия", func() {

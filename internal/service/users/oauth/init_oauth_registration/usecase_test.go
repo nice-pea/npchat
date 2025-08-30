@@ -22,6 +22,7 @@ func (suite *testSuite) Test_OAuth_InitRegistration() {
 	usecase := &InitOAuthRegistrationUsecase{
 		Providers: oauth.OAuthProviders{},
 	}
+	usecase.Providers.Add(suite.Adapters.Oauth)
 
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
