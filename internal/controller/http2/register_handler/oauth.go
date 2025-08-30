@@ -8,7 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
-	"github.com/nice-pea/npchat/internal/service"
+	"github.com/nice-pea/npchat/internal/service/users/oauth/completeOAuthRegistration"
+	completeOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/complete_oauth_login"
+	initOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_login"
+	initOAuthRegistration "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_registration"
 )
 
 // OAuthInitRegistration регистрирует обработчик, инициирующий процесс регистрации через OAuth.
@@ -16,17 +19,17 @@ import (
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration
-func OAuthInitRegistration(router *fiber.App, ss Services) {
+func OAuthInitRegistration(router *fiber.App, uc UsecasesForOAuthInitRegistration) {
 	router.Get(
 		"/oauth/:provider/registration",
 		func(context *fiber.Ctx) error {
 			// Формируем входные данные для инициализации OAuth-регистрации
-			input := service.InitOAuthRegistrationIn{
+			input := initOAuthRegistration.In{
 				Provider: context.Params("provider"), // Получаем имя провайдера из URL
 			}
 
 			// Инициируем OAuth-процесс регистрации у сервиса
-			out, err := ss.Users().InitOAuthRegistration(input)
+			out, err := uc.InitOAuthRegistration(input)
 			if err != nil {
 				return err
 			}
@@ -42,12 +45,16 @@ func OAuthInitRegistration(router *fiber.App, ss Services) {
 	)
 }
 
+type UsecasesForOAuthInitRegistration interface {
+	InitOAuthRegistration(initOAuthRegistration.In) (initOAuthRegistration.Out, error)
+}
+
 // OAuthCompleteRegistrationCallback регистрирует обработчик, завершающий регистрацию через OAuth.
 // Обрабатывает callback от провайдера после успешной авторизации.
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/registration/callback
-func OAuthCompleteRegistrationCallback(router *fiber.App, ss Services) {
+func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCompleteRegistrationCallback) {
 	router.Get(
 		"/oauth/:provider/registration/callback",
 		func(context *fiber.Ctx) error {
@@ -56,12 +63,12 @@ func OAuthCompleteRegistrationCallback(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.CompeteOAuthRegistrationIn{
+			input := completeOAuthRegistration.In{
 				UserCode: context.Query("code"),
 				Provider: context.Params("provider"),
 			}
 
-			out, err := ss.Users().CompeteOAuthRegistration(input)
+			out, err := uc.CompleteOAuthRegistration(input)
 			if err != nil {
 				return err
 			}
@@ -71,21 +78,25 @@ func OAuthCompleteRegistrationCallback(router *fiber.App, ss Services) {
 	)
 }
 
+type UsecasesForOAuthCompleteRegistrationCallback interface {
+	CompleteOAuthRegistration(completeOAuthRegistration.In) (completeOAuthRegistration.Out, error)
+}
+
 // OAuthInitLogin регистрирует обработчик, инициирующий процесс входа через OAuth.
 // Редиректит пользователя на страницу авторизации провайдера.
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login
-func OAuthInitLogin(router *fiber.App, ss Services) {
+func OAuthInitLogin(router *fiber.App, uc UsecasesForOAuthInitLogin) {
 	router.Get(
 		"/oauth/:provider/login",
 		func(context *fiber.Ctx) error {
-			input := service.InitOAuthLoginIn{
+			input := initOAuthLogin.In{
 				Provider: context.Params("provider"), // Получаем имя провайдера из URL
 			}
 
 			// Инициируем OAuth-процесс входа у сервиса
-			out, err := ss.Users().InitOAuthLogin(input)
+			out, err := uc.InitOAuthLogin(input)
 			if err != nil {
 				return err
 			}
@@ -102,12 +113,16 @@ func OAuthInitLogin(router *fiber.App, ss Services) {
 	)
 }
 
+type UsecasesForOAuthInitLogin interface {
+	InitOAuthLogin(initOAuthLogin.In) (initOAuthLogin.Out, error)
+}
+
 // OAuthCompleteLoginCallback регистрирует обработчик, завершающий процесс входа через OAuth.
 // Обрабатывает callback от провайдера после успешной авторизации.
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/login/callback
-func OAuthCompleteLoginCallback(router *fiber.App, ss Services) {
+func OAuthCompleteLoginCallback(router *fiber.App, uc UsecasesForOAuthCompleteLoginCallback) {
 	router.Get(
 		"/oauth/:provider/login/callback",
 		func(context *fiber.Ctx) error {
@@ -116,12 +131,12 @@ func OAuthCompleteLoginCallback(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.CompleteOAuthLoginIn{
+			input := completeOAuthLogin.In{
 				UserCode: context.Query("code"),
 				Provider: context.Params("provider"),
 			}
 
-			out, err := ss.Users().CompleteOAuthLogin(input)
+			out, err := uc.CompleteOAuthLogin(input)
 			if err != nil {
 				return err
 			}
@@ -130,6 +145,10 @@ func OAuthCompleteLoginCallback(router *fiber.App, ss Services) {
 		},
 		recover2.New(),
 	)
+}
+
+type UsecasesForOAuthCompleteLoginCallback interface {
+	CompleteOAuthLogin(completeOAuthLogin.In) (completeOAuthLogin.Out, error)
 }
 
 // oauthCookieName — имя куки, в которую сохраняется параметр state для защиты от CSRF

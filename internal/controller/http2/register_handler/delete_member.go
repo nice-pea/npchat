@@ -6,14 +6,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	deleteMember "github.com/nice-pea/npchat/internal/service/chats/delete_member"
 )
 
 // DeleteMember регистрирует обработчик, позволяющий удалить участника из чата.
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: DELETE /chats/{chatID}/members
-func DeleteMember(router *fiber.App, ss Services) {
+func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember) {
 	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
 		UserID uuid.UUID `json:"user_id"`
@@ -27,15 +27,25 @@ func DeleteMember(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.DeleteMemberIn{
+			input := deleteMember.In{
 				SubjectID: Session(context).UserID,
 				ChatID:    ParamsUUID(context, "chatID"),
 				UserID:    rb.UserID,
 			}
 
-			return ss.Chats().DeleteMember(input)
+			out, err := uc.DeleteMember(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+type UsecasesForDeleteMember interface {
+	DeleteMember(deleteMember.In) (deleteMember.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

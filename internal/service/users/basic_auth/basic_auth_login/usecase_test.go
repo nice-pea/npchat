@@ -7,7 +7,6 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	serviceSuite "github.com/nice-pea/npchat/internal/service/suite"
-	"github.com/nice-pea/npchat/internal/service/users/oauth"
 )
 
 type testSuite struct {
@@ -20,7 +19,6 @@ func Test_TestSuite(t *testing.T) {
 
 func (suite *testSuite) Test_BasicAuthLogin() {
 	usecase := &BasicAuthLoginUsecase{
-		Providers:    oauth.OAuthProviders{},
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,
 	}

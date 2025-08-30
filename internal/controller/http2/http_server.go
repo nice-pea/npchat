@@ -19,11 +19,11 @@ type Config struct {
 }
 
 // RunHttpServer запускает http сервер до момента отмена контекста
-func RunHttpServer(ctx context.Context, ss registerHandler.Services, cfg Config) error {
+func RunHttpServer(ctx context.Context, uc RequiredUsecases, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
-	registerHandlers(fiberApp, ss)
+	registerHandlers(fiberApp, uc)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -46,39 +46,39 @@ func RunHttpServer(ctx context.Context, ss registerHandler.Services, cfg Config)
 }
 
 // registerHandlers регистрирует обработчики
-func registerHandlers(r *fiber.App, ss registerHandler.Services) {
+func registerHandlers(r *fiber.App, uc RequiredUsecases) {
 	// Подключение middleware для логирования
 	r.Use(logger.New(logger.Config{
 		TimeFormat: "2006-01-02 15:04:05",
 	}))
 
 	// Служебные
-	registerHandler.Ping(r, ss)
+	registerHandler.Ping(r)
 
 	// OAuth /oauth
-	registerHandler.OAuthInitRegistration(r, ss)
-	registerHandler.OAuthCompleteRegistrationCallback(r, ss)
+	registerHandler.OAuthInitRegistration(r, uc)
+	registerHandler.OAuthCompleteRegistrationCallback(r, uc)
 
 	// Аутентификация /auth
-	registerHandler.LoginByPassword(r, ss)
-	registerHandler.RegistrationByPassword(r, ss)
+	registerHandler.LoginByPassword(r, uc)
+	registerHandler.RegistrationByPassword(r, uc)
 
 	// Чат /chats
-	registerHandler.MyChats(r, ss)
-	registerHandler.CreateChat(r, ss)
-	registerHandler.UpdateChatName(r, ss)
-	registerHandler.LeaveChat(r, ss)
-	registerHandler.ChatMembers(r, ss)
-	registerHandler.ChatInvitations(r, ss)
+	registerHandler.MyChats(r, uc)
+	registerHandler.CreateChat(r, uc)
+	registerHandler.UpdateChatName(r, uc)
+	registerHandler.LeaveChat(r, uc)
+	registerHandler.ChatMembers(r, uc)
+	registerHandler.ChatInvitations(r, uc)
 
 	// Участники /chats//members
-	registerHandler.DeleteMember(r, ss)
+	registerHandler.DeleteMember(r, uc)
 
 	// Приглашения /invitations
-	registerHandler.MyInvitations(r, ss)
-	registerHandler.SendInvitation(r, ss)
-	registerHandler.AcceptInvitation(r, ss)
-	registerHandler.CancelInvitation(r, ss)
+	registerHandler.MyInvitations(r, uc)
+	registerHandler.SendInvitation(r, uc)
+	registerHandler.AcceptInvitation(r, uc)
+	registerHandler.CancelInvitation(r, uc)
 }
 
 // fiberErrorHandler разделяет составные ошибки и помещает в body.

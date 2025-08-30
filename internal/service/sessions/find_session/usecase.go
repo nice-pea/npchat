@@ -1,4 +1,4 @@
-package sessionsFind
+package findSession
 
 import (
 	"errors"
@@ -18,11 +18,11 @@ var (
 	ErrInvalidToken = errors.New("некорректное значение Token")
 )
 
-type SessionsFindUsecase struct {
+type FindSessionsUsecase struct {
 	Repo sessionn.Repository
 }
 
-func (s *SessionsFindUsecase) SessionsFind(in In) (Out, error) {
+func (s *FindSessionsUsecase) FindSessions(in In) (Out, error) {
 	if in.Token == "" {
 		return Out{}, ErrInvalidToken
 	}

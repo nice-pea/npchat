@@ -2,8 +2,6 @@ package initOAuthLogin
 
 import (
 	"errors"
-
-	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
 var (
@@ -24,7 +22,6 @@ type Out struct {
 }
 
 type InitOAuthLoginUsecase struct {
-	Repo chatt.Repository
 }
 
 // InitOAuthLogin инициализирует процесс входа пользователя через OAuth.

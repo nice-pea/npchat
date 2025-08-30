@@ -4,32 +4,11 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v7"
 	testifySuite "github.com/stretchr/testify/suite"
 
-	"github.com/nice-pea/npchat/internal/domain/sessionn"
-	"github.com/nice-pea/npchat/internal/domain/userr"
 	serviceSuite "github.com/nice-pea/npchat/internal/service/suite"
 	"github.com/nice-pea/npchat/internal/service/users/oauth"
 )
-
-func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct {
-	User    userr.User
-	Session sessionn.Session
-}) {
-	var err error
-	out.User, err = userr.NewUser(gofakeit.Name(), "")
-	suite.Require().NoError(err)
-	err = suite.RR.Users.Upsert(out.User)
-	suite.Require().NoError(err)
-
-	out.Session, err = sessionn.NewSession(out.User.ID, gofakeit.ChromeUserAgent(), sessionStatus)
-	suite.Require().NoError(err)
-	err = suite.RR.Sessions.Upsert(out.Session)
-	suite.Require().NoError(err)
-
-	return
-}
 
 type testSuite struct {
 	serviceSuite.Suite

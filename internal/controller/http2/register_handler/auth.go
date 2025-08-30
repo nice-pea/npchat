@@ -4,14 +4,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
-	"github.com/nice-pea/npchat/internal/service"
+	basicAuthLogin "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_login"
+	basicAuthRegistration "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_registration"
 )
 
 // LoginByPassword регистрирует обработчик, позволяющий авторизоваться по логину и паролю.
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/login
-func LoginByPassword(router *fiber.App, ss Services) {
+func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -26,12 +27,12 @@ func LoginByPassword(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.BasicAuthLoginIn{
+			input := basicAuthLogin.In{
 				Login:    rb.Login,
 				Password: rb.Password,
 			}
 
-			out, err := ss.Users().BasicAuthLogin(input)
+			out, err := uc.BasicAuthLogin(input)
 			if err != nil {
 				return err
 			}
@@ -42,11 +43,15 @@ func LoginByPassword(router *fiber.App, ss Services) {
 	)
 }
 
+type UsecasesForLoginByPassword interface {
+	BasicAuthLogin(basicAuthLogin.In) (basicAuthLogin.Out, error)
+}
+
 // RegistrationByPassword регистрирует обработчик, позволяющий регистрироваться по логину и паролю.
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/registration
-func RegistrationByPassword(router *fiber.App, ss Services) {
+func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassword) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -63,14 +68,14 @@ func RegistrationByPassword(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.BasicAuthRegistrationIn{
+			input := basicAuthRegistration.In{
 				Login:    rb.Login,
 				Password: rb.Password,
 				Name:     rb.Name,
 				Nick:     rb.Nick,
 			}
 
-			out, err := ss.Users().BasicAuthRegistration(input)
+			out, err := uc.BasicAuthRegistration(input)
 			if err != nil {
 				return err
 			}
@@ -79,4 +84,8 @@ func RegistrationByPassword(router *fiber.App, ss Services) {
 		},
 		recover2.New(),
 	)
+}
+
+type UsecasesForRegistrationByPassword interface {
+	BasicAuthRegistration(basicAuthRegistration.In) (basicAuthRegistration.Out, error)
 }

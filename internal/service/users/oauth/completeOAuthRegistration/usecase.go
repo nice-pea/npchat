@@ -1,4 +1,4 @@
-package competeOAuthRegistration
+package completeOAuthRegistration
 
 import (
 	"errors"
@@ -39,14 +39,14 @@ type Out struct {
 	User    userr.User       // Пользователь
 }
 
-type CompeteOAuthRegistrationUsecase struct {
+type CompleteOAuthRegistrationUsecase struct {
 	Repo         userr.Repository
 	Providers    oauth.OAuthProviders
 	SessionsRepo sessionn.Repository // Репозиторий сессий пользователей
 }
 
-// CompeteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
-func (u *CompeteOAuthRegistrationUsecase) CompeteOAuthRegistration(in In) (Out, error) {
+// CompleteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
+func (u *CompleteOAuthRegistrationUsecase) CompleteOAuthRegistration(in In) (Out, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return Out{}, err

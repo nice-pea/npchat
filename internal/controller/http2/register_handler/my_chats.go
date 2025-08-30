@@ -5,23 +5,23 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	myChats "github.com/nice-pea/npchat/internal/service/chats/my_chats"
 )
 
 // MyChats регистрирует HTTP-обработчик для получения списка чатов пользователя.
 // Данный обработчик доступен только авторизованным пользователям.
 //
 // Метод: GET /chats
-func MyChats(router *fiber.App, ss Services) {
+func MyChats(router *fiber.App, uc UsecasesForMyChats) {
 	router.Get(
 		"/chats",
 		func(context *fiber.Ctx) error {
-			input := service.WhichParticipateIn{
+			input := myChats.In{
 				SubjectID: Session(context).UserID,
 				UserID:    Session(context).UserID,
 			}
 
-			out, err := ss.Chats().WhichParticipate(input)
+			out, err := uc.MyChats(input)
 			if err != nil {
 				return err
 			}
@@ -29,6 +29,11 @@ func MyChats(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+type UsecasesForMyChats interface {
+	MyChats(myChats.In) (myChats.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

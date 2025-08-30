@@ -5,25 +5,35 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	leaveChat "github.com/nice-pea/npchat/internal/service/chats/leave_chat"
 )
 
 // LeaveChat регистрирует обработчик, позволяющий пользователю покинуть чат.
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats/{chatID}/leave
-func LeaveChat(router *fiber.App, ss Services) {
+func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat) {
 	router.Post(
 		"/chats/:chatID/leave",
 		func(context *fiber.Ctx) error {
-			input := service.LeaveChatIn{
+			input := leaveChat.In{
 				SubjectID: Session(context).UserID,
 				ChatID:    ParamsUUID(context, "chatID"),
 			}
 
-			return ss.Chats().LeaveChat(input)
+			out, err := uc.LeaveChat(input)
+			if err != nil {
+				return err
+			}
+
+			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+type UsecasesForLeaveChat interface {
+	LeaveChat(leaveChat.In) (leaveChat.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

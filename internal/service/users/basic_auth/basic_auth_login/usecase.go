@@ -5,7 +5,6 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	"github.com/nice-pea/npchat/internal/service/users/oauth"
 )
 
 var (
@@ -40,7 +39,6 @@ type Out struct {
 type BasicAuthLoginUsecase struct {
 	Repo         userr.Repository
 	SessionsRepo sessionn.Repository
-	Providers    oauth.OAuthProviders
 }
 
 func (u *BasicAuthLoginUsecase) BasicAuthLogin(in In) (Out, error) {

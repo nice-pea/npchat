@@ -1,4 +1,4 @@
-package sessionsFind
+package findSession
 
 import (
 	"testing"
@@ -38,8 +38,8 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_Sessions_Find() {
-	usecase := &SessionsFindUsecase{
+func (suite *testSuite) Test_FindSessions() {
+	usecase := &FindSessionsUsecase{
 		Repo: suite.RR.Sessions,
 	}
 
@@ -51,7 +51,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 			Token: "",
 		}
 
-		out, err := usecase.SessionsFind(input)
+		out, err := usecase.FindSessions(input)
 		suite.ErrorIs(err, ErrInvalidToken)
 		suite.Zero(out)
 	})
@@ -63,7 +63,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 		input := In{
 			Token: uuid.NewString(),
 		}
-		out, err := usecase.SessionsFind(input)
+		out, err := usecase.FindSessions(input)
 		suite.NoError(err)
 		suite.Zero(out)
 	})
@@ -73,7 +73,7 @@ func (suite *testSuite) Test_Sessions_Find() {
 		input := In{
 			Token: uws.Session.AccessToken.Token,
 		}
-		out, err := usecase.SessionsFind(input)
+		out, err := usecase.FindSessions(input)
 		suite.NoError(err)
 		suite.Require().Len(out.Sessions, 1)
 		suite.EqualSessions(uws.Session, out.Sessions[0])

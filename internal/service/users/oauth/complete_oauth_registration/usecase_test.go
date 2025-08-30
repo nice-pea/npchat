@@ -1,4 +1,4 @@
-package competeOAuthRegistration
+package completeOAuthRegistration
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ func Test_TestSuite(t *testing.T) {
 }
 
 func (suite *testSuite) Test_OAuth_CompleteRegistration() {
-	usecase := &CompeteOAuthRegistrationUsecase{
+	usecase := &CompleteOAuthRegistrationUsecase{
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,
 		Providers:    oauth.OAuthProviders{},
@@ -33,7 +33,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: "",
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidUserCode)
 		suite.Zero(out)
 	})
@@ -43,7 +43,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: "",
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
 	})
@@ -53,7 +53,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
 		suite.Zero(out)
 	})
@@ -64,7 +64,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
 			Provider: "unknownProvider",
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.ErrorIs(err, oauth.ErrUnknownOAuthProvider)
 		suite.Zero(out)
 	})
@@ -75,7 +75,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -96,7 +96,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -117,7 +117,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -137,7 +137,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompeteOAuthRegistration(input)
+		out, err := usecase.CompleteOAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.NotZero(out)
 
@@ -146,7 +146,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err = usecase.CompeteOAuthRegistration(input)
+		out, err = usecase.CompleteOAuthRegistration(input)
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
 		suite.Zero(out)
 	})

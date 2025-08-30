@@ -5,15 +5,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	sessionsFind "github.com/nice-pea/npchat/internal/service/sessions/find"
+	findSession "github.com/nice-pea/npchat/internal/service/sessions/find_session"
 )
 
 const CtxKeyUserSession = "userSession"
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(uc interface {
-	SessionsFind(sessionsFind.In) (sessionsFind.Out, error)
-}) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -23,7 +21,7 @@ func RequireAuthorizedSession(uc interface {
 		}
 
 		// Найти сессию по токену
-		out, err := uc.SessionsFind(sessionsFind.In{
+		out, err := uc.FindSessions(findSession.In{
 			Token: token,
 		})
 		if err != nil {
@@ -38,4 +36,8 @@ func RequireAuthorizedSession(uc interface {
 
 		return nil
 	}
+}
+
+type UsecasesForRequireAuthorizedSession interface {
+	FindSessions(findSession.In) (findSession.Out, error)
 }
