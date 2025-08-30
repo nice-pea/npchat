@@ -18,7 +18,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
-	"github.com/nice-pea/npchat/internal/service"
+	"github.com/nice-pea/npchat/internal/service/users/oauth"
 )
 
 type Suite struct {
@@ -31,10 +31,10 @@ type Suite struct {
 		Users    userr.Repository
 	}
 	Adapters struct {
-		Oauth service.OAuthProvider
+		Oauth oauth.OAuthProvider
 	}
-	mockOAuthTokens map[string]userr.OpenAuthToken
-	mockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
+	MockOAuthTokens map[string]userr.OpenAuthToken
+	MockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
 var pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
@@ -94,21 +94,21 @@ func (suite *Suite) SetupTest() {
 	suite.RR.Sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
-	suite.mockOAuthUsers = suite.GenerateMockUsers()
-	suite.mockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.mockOAuthUsers))
-	for token := range suite.mockOAuthUsers {
-		suite.mockOAuthTokens[RandomString(13)] = token
+	suite.MockOAuthUsers = suite.GenerateMockUsers()
+	suite.MockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOAuthUsers))
+	for token := range suite.MockOAuthUsers {
+		suite.MockOAuthTokens[RandomString(13)] = token
 	}
 	suite.Adapters.Oauth = &oauthProvider.Mock{
 		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
-			token, ok := suite.mockOAuthTokens[code]
+			token, ok := suite.MockOAuthTokens[code]
 			if !ok {
 				return userr.OpenAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
 		},
 		UserFunc: func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-			user, ok := suite.mockOAuthUsers[token]
+			user, ok := suite.MockOAuthUsers[token]
 			if !ok {
 				return userr.OpenAuthUser{}, errors.New("user not found")
 			}

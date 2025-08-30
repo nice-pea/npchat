@@ -1,4 +1,4 @@
-package service
+package service 
 
 import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
