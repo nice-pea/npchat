@@ -38,6 +38,7 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession) fiber.Hand
 	}
 }
 
+// UsecasesForRequireAuthorizedSession определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForRequireAuthorizedSession interface {
 	FindSessions(findSession.In) (findSession.Out, error)
 }
