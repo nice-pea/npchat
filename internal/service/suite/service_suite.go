@@ -43,6 +43,7 @@ var (
 	pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
 )
 
+// newPgsqlExternalFactory создает фабрику репозиториев  для тестирования, реализованных с помощью подключения к postgres по DSN
 func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
 	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
 		DSN: dsn,
@@ -52,13 +53,14 @@ func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factor
 	return factory, func() { _ = factory.Close() }
 }
 
+// newPgsqlContainerFactory создает фабрику репозиториев  для тестирования, реализованных с помощью postgres контейнеров
 func (suite *Suite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, closer func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Find all migrations
+	// Поиск скрптов с миграциями
 	_, b, _, _ := runtime.Caller(0)
-	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.sql")
+	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.up.sql")
 	migrations, err := filepath.Glob(migrationsDir)
 	suite.Require().NoError(err)
 	suite.Require().NotZero(migrations)
@@ -138,6 +140,7 @@ func (suite *Suite) TearDownTest() {
 	suite.factoryCloser()
 }
 
+// EqualSessions сравнивает две сессии
 func (suite *Suite) EqualSessions(s1, s2 sessionn.Session) {
 	suite.Equal(s1.ID, s2.ID)
 	suite.Equal(s1.UserID, s2.UserID)
@@ -157,7 +160,7 @@ func (suite *Suite) UpsertChat(chat chatt.Chat) chatt.Chat {
 	return chat
 }
 
-// upsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
+// RndChat создает случайный чат
 func (suite *Suite) RndChat() chatt.Chat {
 	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
 	suite.Require().NoError(err)
@@ -172,6 +175,7 @@ func (suite *Suite) NewParticipant(userID uuid.UUID) chatt.Participant {
 	return p
 }
 
+// AddRndParticipant добавляет случайного участника в чат
 func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
@@ -180,16 +184,19 @@ func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
 	return p
 }
 
+// AddParticipant добавляет участника в чат
 func (suite *Suite) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
 	suite.Require().NoError(chat.AddParticipant(p))
 }
 
+// NewInvitation создает новое приглашение
 func (suite *Suite) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
 	i, err := chatt.NewInvitation(subjectID, recipientID)
 	suite.Require().NoError(err)
 	return i
 }
 
+// AddInvitation добавляет приглашение в чат
 func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
 	suite.Require().NoError(chat.AddInvitation(i))
 }
@@ -233,6 +240,7 @@ func (suite *Suite) RandomOAuthUser() userr.OpenAuthUser {
 	return u
 }
 
+// GenerateMockUsers генерирует случайных oauth-пользователей
 func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
 	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
@@ -245,6 +253,7 @@ func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUs
 	return tokenToUser
 }
 
+// NewRndUserWithBasicAuth создает случайного пользователя с базовой аутентификацией
 func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
 	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
 	suite.Require().NoError(err)
