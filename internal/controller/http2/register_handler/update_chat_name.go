@@ -5,14 +5,14 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	updateName "github.com/nice-pea/npchat/internal/usecases/chats/update_name"
 )
 
 // UpdateChatName регистрирует обработчик, позволяющий обновить название чата.
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: PUT /chats/{chatID}/name
-func UpdateChatName(router *fiber.App, ss Services) {
+func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName) {
 	// Тело запроса для обновления названия чата.
 	type requestBody struct {
 		NewName string `json:"new_name"`
@@ -26,13 +26,13 @@ func UpdateChatName(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.UpdateNameIn{
+			input := updateName.In{
 				SubjectID: Session(context).UserID,
 				ChatID:    ParamsUUID(context, "chatID"),
 				NewName:   rb.NewName,
 			}
 
-			out, err := ss.Chats().UpdateName(input)
+			out, err := uc.UpdateName(input)
 			if err != nil {
 				return err
 			}
@@ -40,6 +40,12 @@ func UpdateChatName(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+// UsecasesForUpdateName определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForUpdateName interface {
+	UpdateName(updateName.In) (updateName.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

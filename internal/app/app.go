@@ -27,11 +27,11 @@ func Run(ctx context.Context, cfg Config) error {
 	aa := initAdapters(cfg)
 
 	// Инициализация сервисов
-	ss := initServices(rr, aa)
+	uc := initUsecases(rr, aa)
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
-		return http2.RunHttpServer(ctx, ss, cfg.Http2)
+		return http2.RunHttpServer(ctx, uc, cfg.Http2)
 	})
 
 	return g.Wait()

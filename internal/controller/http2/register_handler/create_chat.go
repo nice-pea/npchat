@@ -5,14 +5,14 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	createChat "github.com/nice-pea/npchat/internal/usecases/chats/create_chat"
 )
 
 // CreateChat регистрирует обработчик, позволяющий создать новый чат.
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats
-func CreateChat(router *fiber.App, ss Services) {
+func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 	// Тело запроса для создания чата.
 	type requestBody struct {
 		Name string `json:"name"`
@@ -26,12 +26,12 @@ func CreateChat(router *fiber.App, ss Services) {
 				return err
 			}
 
-			input := service.CreateChatIn{
+			input := createChat.In{
 				ChiefUserID: Session(context).UserID,
 				Name:        rb.Name,
 			}
 
-			out, err := ss.Chats().CreateChat(input)
+			out, err := uc.CreateChat(input)
 			if err != nil {
 				return err
 			}
@@ -39,6 +39,12 @@ func CreateChat(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+// UsecasesForCreateChat определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForCreateChat interface {
+	CreateChat(createChat.In) (createChat.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

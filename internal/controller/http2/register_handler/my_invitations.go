@@ -5,22 +5,22 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/service"
+	receivedInvitations "github.com/nice-pea/npchat/internal/usecases/chats/received_invitations"
 )
 
 // MyInvitations регистрирует обработчик, позволяющий получить список приглашений пользователя.
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /invitations
-func MyInvitations(router *fiber.App, ss Services) {
+func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations) {
 	router.Get(
 		"/invitations",
 		func(context *fiber.Ctx) error {
-			input := service.ReceivedInvitationsIn{
+			input := receivedInvitations.In{
 				SubjectID: Session(context).UserID,
 			}
 
-			out, err := ss.Chats().ReceivedInvitations(input)
+			out, err := uc.ReceivedInvitations(input)
 			if err != nil {
 				return err
 			}
@@ -28,6 +28,12 @@ func MyInvitations(router *fiber.App, ss Services) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(ss.Sessions()),
+		middleware.RequireAuthorizedSession(uc),
 	)
+}
+
+// UsecasesForMyInvitations определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForMyInvitations interface {
+	ReceivedInvitations(receivedInvitations.In) (receivedInvitations.Out, error)
+	middleware.UsecasesForRequireAuthorizedSession
 }

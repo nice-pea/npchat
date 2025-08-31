@@ -5,11 +5,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/nice-pea/npchat/internal/service"
+	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
+const CtxKeyUserSession = "userSession"
+
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(sessions *service.Sessions) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -19,21 +21,24 @@ func RequireAuthorizedSession(sessions *service.Sessions) fiber.Handler {
 		}
 
 		// Найти сессию по токену
-		userSessions, err := sessions.Find(service.SessionsFindIn{
+		out, err := uc.FindSessions(findSession.In{
 			Token: token,
 		})
 		if err != nil {
 			return fiber.ErrInternalServerError
 		}
-		if len(userSessions) != 1 {
+		if len(out.Sessions) != 1 {
 			return fiber.ErrUnauthorized
 		}
 
 		// Сохранить сессию в контекст
-		ctx.Locals(CtxUserSession, userSessions[0])
+		ctx.Locals(CtxKeyUserSession, out.Sessions[0])
 
 		return nil
 	}
 }
 
-var CtxUserSession = "userSession"
+// UsecasesForRequireAuthorizedSession определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForRequireAuthorizedSession interface {
+	FindSessions(findSession.In) (findSession.Out, error)
+}
