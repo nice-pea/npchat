@@ -43,6 +43,7 @@ func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword) {
 	)
 }
 
+// UsecasesForAcceptInvitation определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForLoginByPassword interface {
 	BasicAuthLogin(basicAuthLogin.In) (basicAuthLogin.Out, error)
 }
@@ -86,6 +87,7 @@ func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassw
 	)
 }
 
+// UsecasesForRegistrationByPassword определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForRegistrationByPassword interface {
 	BasicAuthRegistration(basicAuthRegistration.In) (basicAuthRegistration.Out, error)
 }

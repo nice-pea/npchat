@@ -33,6 +33,7 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation) {
 	)
 }
 
+// UsecasesForCancelInvitation определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForCancelInvitation interface {
 	CancelInvitation(cancelInvitation.In) (cancelInvitation.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

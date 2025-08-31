@@ -45,6 +45,7 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember) {
 	)
 }
 
+// UsecasesForDeleteMember определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForDeleteMember interface {
 	DeleteMember(deleteMember.In) (deleteMember.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

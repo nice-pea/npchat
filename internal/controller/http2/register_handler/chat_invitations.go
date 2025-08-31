@@ -33,6 +33,7 @@ func ChatInvitations(router *fiber.App, uc UsecasesForChatInvitations) {
 	)
 }
 
+// UsecasesForChatInvitations определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForChatInvitations interface {
 	ChatInvitations(chatInvitations.In) (chatInvitations.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

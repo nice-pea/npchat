@@ -33,6 +33,7 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers) {
 	)
 }
 
+// UsecasesForChatMembers определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForChatMembers interface {
 	ChatMembers(chatMembers.In) (chatMembers.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

@@ -33,6 +33,7 @@ func MyChats(router *fiber.App, uc UsecasesForMyChats) {
 	)
 }
 
+// UsecasesForMyChats определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForMyChats interface {
 	MyChats(myChats.In) (myChats.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

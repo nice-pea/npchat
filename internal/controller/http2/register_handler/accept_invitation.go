@@ -33,6 +33,7 @@ func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation) {
 	)
 }
 
+// UsecasesForAcceptInvitation определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForAcceptInvitation interface {
 	AcceptInvitation(acceptInvitation.In) (acceptInvitation.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

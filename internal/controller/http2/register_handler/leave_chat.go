@@ -33,6 +33,7 @@ func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat) {
 	)
 }
 
+// UsecasesForLeaveChat определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForLeaveChat interface {
 	LeaveChat(leaveChat.In) (leaveChat.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

@@ -45,6 +45,7 @@ func OAuthInitRegistration(router *fiber.App, uc UsecasesForOAuthInitRegistratio
 	)
 }
 
+// UsecasesForOAuthInitRegistration определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForOAuthInitRegistration interface {
 	InitOAuthRegistration(initOAuthRegistration.In) (initOAuthRegistration.Out, error)
 }
@@ -78,6 +79,7 @@ func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCom
 	)
 }
 
+// UsecasesForOAuthCompleteRegistrationCallback определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForOAuthCompleteRegistrationCallback interface {
 	CompleteOAuthRegistration(completeOAuthRegistration.In) (completeOAuthRegistration.Out, error)
 }
@@ -113,6 +115,7 @@ func OAuthInitLogin(router *fiber.App, uc UsecasesForOAuthInitLogin) {
 	)
 }
 
+// UsecasesForOAuthInitLogin определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForOAuthInitLogin interface {
 	InitOAuthLogin(initOAuthLogin.In) (initOAuthLogin.Out, error)
 }
@@ -147,6 +150,7 @@ func OAuthCompleteLoginCallback(router *fiber.App, uc UsecasesForOAuthCompleteLo
 	)
 }
 
+// UsecasesForOAuthCompleteLoginCallback определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForOAuthCompleteLoginCallback interface {
 	CompleteOAuthLogin(completeOAuthLogin.In) (completeOAuthLogin.Out, error)
 }

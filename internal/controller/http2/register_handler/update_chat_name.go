@@ -44,6 +44,7 @@ func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName) {
 	)
 }
 
+// UsecasesForUpdateName определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForUpdateName interface {
 	UpdateName(updateName.In) (updateName.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

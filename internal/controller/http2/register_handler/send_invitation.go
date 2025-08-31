@@ -46,6 +46,7 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation) {
 	)
 }
 
+// UsecasesForSendInvitation определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForSendInvitation interface {
 	SendInvitation(sendInvitation.In) (sendInvitation.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession

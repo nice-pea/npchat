@@ -43,6 +43,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 	)
 }
 
+// UsecasesForCreateChat определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForCreateChat interface {
 	CreateChat(createChat.In) (createChat.Out, error)
 	middleware.UsecasesForRequireAuthorizedSession
