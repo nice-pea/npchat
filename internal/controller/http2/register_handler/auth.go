@@ -4,8 +4,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
-	basicAuthLogin "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_login"
-	basicAuthRegistration "github.com/nice-pea/npchat/internal/service/users/basic_auth/basic_auth_registration"
+	basicAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_login"
+	basicAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_registration"
 )
 
 // LoginByPassword регистрирует обработчик, позволяющий авторизоваться по логину и паролю.

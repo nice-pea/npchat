@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	chatMembers "github.com/nice-pea/npchat/internal/service/chats/chat_members"
+	chatMembers "github.com/nice-pea/npchat/internal/usecases/chats/chat_members"
 )
 
 // ChatMembers регистрирует обработчик, позволяющий получить список участников чата.

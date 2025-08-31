@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	createChat "github.com/nice-pea/npchat/internal/service/chats/create_chat"
+	createChat "github.com/nice-pea/npchat/internal/usecases/chats/create_chat"
 )
 
 // CreateChat регистрирует обработчик, позволяющий создать новый чат.

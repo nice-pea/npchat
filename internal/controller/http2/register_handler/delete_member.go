@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	deleteMember "github.com/nice-pea/npchat/internal/service/chats/delete_member"
+	deleteMember "github.com/nice-pea/npchat/internal/usecases/chats/delete_member"
 )
 
 // DeleteMember регистрирует обработчик, позволяющий удалить участника из чата.

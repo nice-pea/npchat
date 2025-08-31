@@ -8,10 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
-	completeOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/complete_oauth_login"
-	completeOAuthRegistration "github.com/nice-pea/npchat/internal/service/users/oauth/complete_oauth_registration"
-	initOAuthLogin "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_login"
-	initOAuthRegistration "github.com/nice-pea/npchat/internal/service/users/oauth/init_oauth_registration"
+	completeOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_login"
+	completeOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
+	initOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_login"
+	initOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_registration"
 )
 
 // OAuthInitRegistration регистрирует обработчик, инициирующий процесс регистрации через OAuth.

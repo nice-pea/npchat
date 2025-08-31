@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	leaveChat "github.com/nice-pea/npchat/internal/service/chats/leave_chat"
+	leaveChat "github.com/nice-pea/npchat/internal/usecases/chats/leave_chat"
 )
 
 // LeaveChat регистрирует обработчик, позволяющий пользователю покинуть чат.

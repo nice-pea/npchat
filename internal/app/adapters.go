@@ -5,7 +5,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/adapter"
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
-	"github.com/nice-pea/npchat/internal/service/users/oauth"
+	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
 
 type adapters struct {

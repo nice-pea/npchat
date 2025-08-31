@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	updateName "github.com/nice-pea/npchat/internal/service/chats/update_name"
+	updateName "github.com/nice-pea/npchat/internal/usecases/chats/update_name"
 )
 
 // UpdateChatName регистрирует обработчик, позволяющий обновить название чата.

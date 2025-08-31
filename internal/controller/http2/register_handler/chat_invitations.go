@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	chatInvitations "github.com/nice-pea/npchat/internal/service/chats/chat_invitations"
+	chatInvitations "github.com/nice-pea/npchat/internal/usecases/chats/chat_invitations"
 )
 
 // ChatInvitations регистрирует обработчик, позволяющий получить список приглашений в определённый чат.

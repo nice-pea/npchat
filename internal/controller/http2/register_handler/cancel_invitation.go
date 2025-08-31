@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	cancelInvitation "github.com/nice-pea/npchat/internal/service/chats/cancel_invitation"
+	cancelInvitation "github.com/nice-pea/npchat/internal/usecases/chats/cancel_invitation"
 )
 
 // CancelInvitation регистрирует обработчик, позволяющий отменить приглашение в чат.

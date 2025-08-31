@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	acceptInvitation "github.com/nice-pea/npchat/internal/service/chats/accept_invitation"
+	acceptInvitation "github.com/nice-pea/npchat/internal/usecases/chats/accept_invitation"
 )
 
 // AcceptInvitation регистрирует обработчик, позволяющий принять приглашение в чат.

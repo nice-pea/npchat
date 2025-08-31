@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	findSession "github.com/nice-pea/npchat/internal/service/sessions/find_session"
+	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
 const CtxKeyUserSession = "userSession"

@@ -5,7 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	myChats "github.com/nice-pea/npchat/internal/service/chats/my_chats"
+	myChats "github.com/nice-pea/npchat/internal/usecases/chats/my_chats"
 )
 
 // MyChats регистрирует HTTP-обработчик для получения списка чатов пользователя.
