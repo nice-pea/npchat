@@ -8,12 +8,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	// middleware_mock "github.com/nice-pea/npchat/internal/controller/http2/middleware/mocks"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_RequireAuthorizedSession(t *testing.T) {
@@ -21,24 +21,21 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 	t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
 		uc := mockUsecasesForRequireAuthorizedSession{}
 
-		// var wg sync.WaitGroup
-
-		// wg.Add(1)
 		server := fiber.New(fiber.Config{DisableStartupMessage: true})
 		server.Get(
 			"/", RequireAuthorizedSession(uc),
 			func(ctx *fiber.Ctx) error {
-				// defer wg.Done()
-				sessionFromLocals := ctx.Locals(CtxKeyUserSession, sessionn.Session{})
+				sessionFromLocals := ctx.Locals(CtxKeyUserSession)
 				require.IsType(t, sessionn.Session{}, sessionFromLocals)
-				log.Print("значение из locals это сессия")
 				session := sessionFromLocals.(sessionn.Session)
+				log.Print("значение из locals это сессия")
 				require.Equal(t, mockSession, session)
 				log.Print("сессии одинаковые")
 				return nil
 			})
 
 		go func() { assert.NoError(t, server.Listen("localhost:8419")) }()
+		defer server.Shutdown()
 		time.Sleep(time.Millisecond * 10)
 
 		req, err := http.NewRequest("GET", "http://localhost:8419/", nil)
@@ -47,10 +44,6 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 
 		_, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
-
-		// wg.Wait()
-
-		assert.NoError(t, server.Shutdown())
 	})
 	// t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
 	// 	knownToken := mockSession.AccessToken.Token
