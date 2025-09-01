@@ -3,7 +3,7 @@ package register_handler
 import (
 	"bufio"
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"testing"
 	"time"
@@ -22,32 +22,51 @@ func TestEvents(t *testing.T) {
 	server := fiber.New(fiber.Config{
 		ReadTimeout:           time.Second,
 		WriteTimeout:          time.Second,
-		IdleTimeout:           time.Second,
 		DisableKeepalive:      false,
 		DisableStartupMessage: true,
 		StreamRequestBody:     true,
 	})
+	// Регистрация обработчика
 	Events(server, mockSessionFinder{}, mockEventListener{})
-	go func() { assert.NoError(t, server.Listen("localhost:8418")) }()
-	time.Sleep(time.Millisecond * 100)
 
-	// Создаем HTTP-запрос
-	resp, err := http.Get("http://localhost:8418/events")
+	// Запуск сервера
+	go func() { assert.NoError(t, server.Listen("localhost:8418")) }()
+	// Задержка чтобы сервер успел запуститься
+	time.Sleep(time.Millisecond * 5)
+
+	// Контекст для корректной отмены запроса
+	ctx, cancel := context.WithCancel(context.Background())
+
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:8418/events", nil)
+	require.NoError(t, err)
+
+	// Выполнить запрос
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Читаем данные из потока
+	// Отменить запрос через некоторое время
+	time.AfterFunc(time.Millisecond*5, func() {
+		cancel()
+	})
+
+	var receivedEvents int
+
+	// Читаем данные из потока.
+	// Каждая итерация выполняется после вызова w.Flush() в обработчике
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) > 0 {
-			fmt.Println("Получено событие:", line)
-		}
+		receivedEvents++
 	}
-	require.NoError(t, scanner.Err())
+
+	// На этом моменте запрос остановлен контекстом
+	assert.False(t, scanner.Scan())
+	assert.ErrorIs(t, scanner.Err(), context.Canceled)
+	// Остановить сервер
 	assert.NoError(t, server.Shutdown())
+	log.Printf("получено событий: %d", receivedEvents)
 }
 
 var (
@@ -69,18 +88,22 @@ func (m mockSessionFinder) FindSessions(findSession.In) (findSession.Out, error)
 
 type mockEventListener struct{}
 
-func (m mockEventListener) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
-
-	f(map[string]any{
-		"name": gofakeit.Name(),
-		"id":   gofakeit.UUID(),
-		"age":  gofakeit.Number(0, 100),
-		"sex":  gofakeit.Gender(),
-	})
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
+func (m mockEventListener) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, eventHandler func(event any)) error {
+	type someEventData struct {
+		Name string `fake:"{name}"`
+		Age  int    `fake:"{number:0,100}"`
+		Sex  string `fake:"{gender}"`
 	}
-	return nil
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Print("Event Listener получил сигнал завершения контекста из http-обработчика")
+			return ctx.Err()
+		default:
+			var e someEventData
+			gofakeit.Struct(&e)
+			eventHandler(e)
+		}
+	}
 }
