@@ -25,12 +25,9 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		server.Get(
 			"/", RequireAuthorizedSession(uc),
 			func(ctx *fiber.Ctx) error {
-				sessionFromLocals := ctx.Locals(CtxKeyUserSession)
-				require.IsType(t, sessionn.Session{}, sessionFromLocals)
-				session := sessionFromLocals.(sessionn.Session)
-				log.Print("значение из locals это сессия")
+				session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+				require.True(t, ok)
 				require.Equal(t, mockSession, session)
-				log.Print("сессии одинаковые")
 				return nil
 			})
 
