@@ -37,7 +37,7 @@ func TestChat_AddParticipant(t *testing.T) {
 		require.NoError(t, err)
 
 		// Добавляем участника
-		err = chat.AddParticipant(participant)
+		err = chat.AddParticipant(participant, nil)
 		require.NoError(t, err)
 
 		// Проверяем наличие участника
@@ -55,11 +55,11 @@ func TestChat_AddParticipant(t *testing.T) {
 		require.NoError(t, err)
 
 		// Добавляем первый раз
-		err = chat.AddParticipant(participant)
+		err = chat.AddParticipant(participant, nil)
 		require.NoError(t, err)
 
 		// Пробуем добавить повторно
-		err = chat.AddParticipant(participant)
+		err = chat.AddParticipant(participant, nil)
 		assert.ErrorIs(t, err, ErrParticipantExists)
 	})
 
@@ -79,7 +79,7 @@ func TestChat_AddParticipant(t *testing.T) {
 		// Создаем и добавляем участника
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
-		err = chat.AddParticipant(participant)
+		err = chat.AddParticipant(participant, nil)
 		assert.ErrorIs(t, err, ErrUserIsAlreadyInvited)
 	})
 }
@@ -96,7 +96,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		userID := uuid.New()
 		participant, err := NewParticipant(userID)
 		require.NoError(t, err)
-		err = chat.AddParticipant(participant)
+		err = chat.AddParticipant(participant, nil)
 		require.NoError(t, err)
 
 		// Удаляем участника

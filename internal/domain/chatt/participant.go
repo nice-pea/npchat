@@ -2,11 +2,13 @@ package chatt
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Participant представляет собой участника чата.
@@ -57,7 +59,7 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
 }
 
 // AddParticipant добавляет участника в чат.
-func (c *Chat) AddParticipant(p Participant) error {
+func (c *Chat) AddParticipant(p Participant, events *events.Events) error {
 	// Проверить является ли subject участником чата
 	if c.HasParticipant(p.UserID) {
 		return ErrParticipantExists
@@ -68,6 +70,14 @@ func (c *Chat) AddParticipant(p Participant) error {
 		return ErrUserIsAlreadyInvited
 	}
 
+	// Добавить событие
+	events.AddSafety(EventParticipantAdded{
+		CreatedIn:   time.Now(),
+		Recipients:  userIDs(c.Participants),
+		Participant: p,
+	})
+
+	// Добавить участника
 	c.Participants = append(c.Participants, p)
 
 	return nil

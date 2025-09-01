@@ -153,7 +153,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 			const expectedCount = 10
 			for range expectedCount {
 				chat := rndChat(t)
-				err := chat.AddParticipant(rndp)
+				err := chat.AddParticipant(rndp, nil)
 				require.NoError(t, err)
 				upsertChat(t, r, chat)
 			}
@@ -257,7 +257,7 @@ func rndParticipant(t *testing.T) chatt.Participant {
 func addRndParticipant(t *testing.T, chat *chatt.Chat) {
 	p, err := chatt.NewParticipant(uuid.New())
 	require.NoError(t, err)
-	require.NoError(t, chat.AddParticipant(p))
+	require.NoError(t, chat.AddParticipant(p, nil))
 }
 
 // addRndInv добавляет случайное приглашение в чат

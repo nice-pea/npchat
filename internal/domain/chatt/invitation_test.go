@@ -66,7 +66,7 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Создать и добавить участника
 		p, err := NewParticipant(uuid.New())
 		require.NoError(t, err)
-		err = chat.AddParticipant(p)
+		err = chat.AddParticipant(p, nil)
 		require.NoError(t, err)
 
 		// Добавить приглашение пользователю, который уже участник
@@ -119,7 +119,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 		require.NoError(t, err)
 
 		// Удалить приглашение
-		err = chat.RemoveInvitation(uuid.New())
+		err = chat.RemoveInvitation(uuid.New(), nil)
 		assert.ErrorIs(t, err, ErrInvitationNotExists)
 	})
 
@@ -133,7 +133,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 		_ = chat.AddInvitation(inv)
 
 		// Удалить приглашение
-		err := chat.RemoveInvitation(inv.ID)
+		err := chat.RemoveInvitation(inv.ID, nil)
 		assert.NoError(t, err)
 		assert.NotContains(t, chat.Invitations, inv)
 	})

@@ -179,14 +179,14 @@ func (suite *Suite) NewParticipant(userID uuid.UUID) chatt.Participant {
 func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
-	suite.Require().NoError(chat.AddParticipant(p))
+	suite.Require().NoError(chat.AddParticipant(p, nil))
 
 	return p
 }
 
 // AddParticipant добавляет участника в чат
 func (suite *Suite) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
-	suite.Require().NoError(chat.AddParticipant(p))
+	suite.Require().NoError(chat.AddParticipant(p, nil))
 }
 
 // NewInvitation создает новое приглашение

@@ -1,10 +1,13 @@
 package chatt
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Invitation представляет собой отправленное приглашение в чат.
@@ -58,16 +61,26 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 }
 
 // RemoveInvitation удаляет приглашение из чата
-func (c *Chat) RemoveInvitation(id uuid.UUID) error {
+func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Events) error {
 	// Убедиться, что приглашение существует
 	if !c.HasInvitation(id) {
 		return ErrInvitationNotExists
 	}
 
-	// Удалить приглашение из списка
-	c.Invitations = slices.DeleteFunc(c.Invitations, func(i Invitation) bool {
+	// Найти индекс приглашения
+	i := slices.IndexFunc(c.Invitations, func(i Invitation) bool {
 		return i.ID == id
 	})
+
+	// Добавить событие
+	events.AddSafety(EventInvitationRemoved{
+		CreatedIn:  time.Now(),
+		Recipients: userIDs(c.Participants),
+		Invitation: c.Invitations[i],
+	})
+
+	// Удалить приглашение из списка
+	c.Invitations = slices.Delete(c.Invitations, i, i+1)
 
 	return nil
 }

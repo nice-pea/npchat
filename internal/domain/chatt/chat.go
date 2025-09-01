@@ -48,3 +48,11 @@ func (c *Chat) UpdateName(name string) error {
 
 	return nil
 }
+
+func userIDs(participants []Participant) []uuid.UUID {
+	userIDs := make([]uuid.UUID, len(participants))
+	for i, p := range participants {
+		userIDs[i] = p.UserID
+	}
+	return userIDs
+}

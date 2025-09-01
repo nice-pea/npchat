@@ -8,6 +8,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 var (
@@ -37,7 +38,8 @@ func (in In) Validate() error {
 type Out struct{}
 
 type CancelInvitationUsecase struct {
-	Repo chatt.Repository
+	Repo            chatt.Repository
+	EventsPublisher events.Publisher
 }
 
 // CancelInvitation отменяет приглашение
@@ -80,14 +82,21 @@ func (c *CancelInvitationUsecase) CancelInvitation(in In) (Out, error) {
 	if !slices.Contains(allowedSubjects, in.SubjectID) {
 		return Out{}, ErrSubjectUserNotAllowed
 	}
+	// Инициализировать пустую пачку событий
+	events := new(events.Events)
 
 	// Удаляем приглашение из чата
-	if err := chat.RemoveInvitation(in.InvitationID); err != nil {
+	if err := chat.RemoveInvitation(in.InvitationID, events); err != nil {
 		return Out{}, err
 	}
 
 	// Сохранить чат в репозиторий
 	if err := c.Repo.Upsert(chat); err != nil {
+		return Out{}, err
+	}
+
+	// Публикация событий
+	if err := c.EventsPublisher.Publish(events); err != nil {
 		return Out{}, err
 	}
 
