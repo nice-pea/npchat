@@ -21,6 +21,8 @@ import (
 func Events(router *fiber.App, uc UsecasesForEvents, eventListener eventListener) {
 	router.Get(
 		"/events",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(ctx *fiber.Ctx) error {
 			ctx.Set("Content-Type", "text/event-stream")
 			ctx.Set("Cache-Control", "no-cache")
@@ -50,8 +52,6 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener eventListener
 
 			return nil
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 
