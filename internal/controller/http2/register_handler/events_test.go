@@ -12,25 +12,39 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	mockRegisterHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler/mocks"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
+var (
+	mockSession = sessionn.Session{
+		ID:     uuid.New(),
+		Status: sessionn.StatusNew,
+		UserID: uuid.New(),
+		Name:   "name",
+	}
+)
+
 func TestEvents(t *testing.T) {
-	server := fiber.New(fiber.Config{
-		ReadTimeout:           time.Second,
-		WriteTimeout:          time.Second,
-		DisableKeepalive:      false,
-		DisableStartupMessage: true,
-		StreamRequestBody:     true,
-	})
+	// Создание моков
+	mockSessionFinder := mockRegisterHandler.NewUsecasesForEvents(t)
+	mockSessionFinder.
+		On("FindSessions", mock.Anything).
+		Return(findSession.Out{
+			Sessions: []sessionn.Session{mockSession},
+		}, nil)
+
+	fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
+
 	// Регистрация обработчика
-	Events(server, mockSessionFinder{}, mockEventListener{})
+	Events(fiberApp, mockSessionFinder, mockEventListener{})
 
 	// Запуск сервера
-	go func() { assert.NoError(t, server.Listen("localhost:8418")) }()
+	go func() { assert.NoError(t, fiberApp.Listen("localhost:8418")) }()
 	// Задержка чтобы сервер успел запуститься
 	time.Sleep(time.Millisecond * 5)
 
@@ -65,45 +79,30 @@ func TestEvents(t *testing.T) {
 	assert.False(t, scanner.Scan())
 	assert.ErrorIs(t, scanner.Err(), context.Canceled)
 	// Остановить сервер
-	assert.NoError(t, server.Shutdown())
+	assert.NoError(t, fiberApp.Shutdown())
 	log.Printf("получено событий: %d", receivedEvents)
-}
-
-var (
-	mockSession = sessionn.Session{
-		ID:     uuid.New(),
-		Status: sessionn.StatusNew,
-		UserID: uuid.New(),
-		Name:   "name",
-	}
-)
-
-type mockSessionFinder struct{}
-
-func (m mockSessionFinder) FindSessions(findSession.In) (findSession.Out, error) {
-	return findSession.Out{
-		Sessions: []sessionn.Session{mockSession},
-	}, nil
 }
 
 type mockEventListener struct{}
 
 func (m mockEventListener) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, eventHandler func(event any)) error {
-	type someEventData struct {
-		Name string `fake:"{name}"`
-		Age  int    `fake:"{number:0,100}"`
-		Sex  string `fake:"{gender}"`
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
 			log.Print("Event Listener получил сигнал завершения контекста из http-обработчика")
 			return ctx.Err()
 		default:
-			var e someEventData
-			gofakeit.Struct(&e)
-			eventHandler(e)
+			eventHandler(rndDirtyEvent())
 		}
 	}
+}
+
+func rndDirtyEvent() any {
+	var e struct {
+		Name string `fake:"{name}"`
+		Age  int    `fake:"{number:0,100}"`
+		Sex  string `fake:"{gender}"`
+	}
+	gofakeit.Struct(&e)
+	return e
 }

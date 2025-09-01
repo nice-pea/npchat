@@ -2,9 +2,9 @@
 all: True
 dir: "{{.InterfaceDir}}/mocks"
 filename: "{{.InterfaceName | snakecase }}_mock.go"
-structname: "{{.InterfaceName}}Mock"
+structname: "{{.InterfaceName | firstUpper}}"
 recursive: True
-pkgname: "{{.SrcPackageName}}_mock"
+pkgname: "mock{{.SrcPackageName | camelcase | firstUpper }}"
 template: testify
 packages:
   github.com/nice-pea/npchat/internal/controller/http2/middleware: 
