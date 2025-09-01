@@ -74,13 +74,15 @@ func TestEvents(t *testing.T) {
 	for scanner.Scan() {
 		receivedEvents++
 	}
+	assert.Greater(t, receivedEvents, 0)
+	log.Printf("получено событий: %d", receivedEvents)
 
 	// На этом моменте запрос остановлен контекстом
 	assert.False(t, scanner.Scan())
 	assert.ErrorIs(t, scanner.Err(), context.Canceled)
 	// Остановить сервер
 	assert.NoError(t, fiberApp.Shutdown())
-	log.Printf("получено событий: %d", receivedEvents)
+
 }
 
 type mockEventListener struct{}
