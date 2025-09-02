@@ -80,20 +80,20 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
-		var publishedEvents *events.Events
+		// Новый экземпляр usecase
+		usecase := &AcceptInvitationUsecase{
+			Repo:            suite.RR.Chats,
+			EventsPublisher: mockEvents.NewPublisher(suite.T()),
+		}
 
-		// Создать мок
-		mockEventsPublisher := mockEvents.NewPublisher(suite.T())
-		mockEventsPublisher.
+		// Настройка мока
+		var publishedEvents *events.Events
+		usecase.EventsPublisher.(*mockEvents.Publisher).
 			On("Publish", mock.Anything).
 			Run(func(args mock.Arguments) {
 				publishedEvents = args.Get(0).(*events.Events)
 			}).
 			Return(nil)
-		usecase := &AcceptInvitationUsecase{
-			Repo:            suite.RR.Chats,
-			EventsPublisher: mockEventsPublisher,
-		}
 
 		// Создать чат
 		chat := suite.RndChat()
