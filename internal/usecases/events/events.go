@@ -23,3 +23,7 @@ func (ee *Events) AddSafety(event any) {
 	}
 	ee.events = append(ee.events, event)
 }
+
+func (ee *Events) Events() []any {
+	return ee.events
+}

@@ -85,4 +85,8 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		suite.Require().NoError(err)
 		suite.Zero(chats)
 	})
+
+	suite.Run("отправленные приглашения участника, отменятся вместе с его выходом", func() {
+		// TODO
+	})
 }

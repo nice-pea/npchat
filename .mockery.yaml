@@ -1,4 +1,3 @@
-
 all: True
 dir: "{{.InterfaceDir}}/mocks"
 filename: "{{.InterfaceName | snakecase }}_mock.go"
@@ -9,3 +8,4 @@ template: testify
 packages:
   github.com/nice-pea/npchat/internal/controller/http2/middleware: 
   github.com/nice-pea/npchat/internal/controller/http2/register_handler: 
+  github.com/nice-pea/npchat/internal/usecases/events: 

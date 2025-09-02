@@ -15,5 +15,6 @@ type EventInvitationRemoved struct {
 type EventParticipantAdded struct {
 	CreatedIn   time.Time
 	Recipients  []uuid.UUID
+	ChatID      uuid.UUID
 	Participant Participant
 }

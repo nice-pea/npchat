@@ -74,8 +74,12 @@ func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Events) error {
 
 	// Добавить событие
 	events.AddSafety(EventInvitationRemoved{
-		CreatedIn:  time.Now(),
-		Recipients: userIDs(c.Participants),
+		CreatedIn: time.Now(),
+		Recipients: []uuid.UUID{
+			c.ChiefID,
+			c.Invitations[i].RecipientID,
+			c.Invitations[i].SubjectID,
+		},
 		Invitation: c.Invitations[i],
 	})
 

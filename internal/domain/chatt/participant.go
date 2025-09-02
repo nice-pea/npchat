@@ -70,15 +70,16 @@ func (c *Chat) AddParticipant(p Participant, events *events.Events) error {
 		return ErrUserIsAlreadyInvited
 	}
 
+	// Добавить участника
+	c.Participants = append(c.Participants, p)
+
 	// Добавить событие
 	events.AddSafety(EventParticipantAdded{
 		CreatedIn:   time.Now(),
 		Recipients:  userIDs(c.Participants),
+		ChatID:      c.ID,
 		Participant: p,
 	})
-
-	// Добавить участника
-	c.Participants = append(c.Participants, p)
 
 	return nil
 }
