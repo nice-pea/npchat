@@ -263,3 +263,13 @@ func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
 	suite.Require().NoError(err)
 	return user
 }
+
+// HasElementOfType возвращает true, если в срезе есть элемент заданного типа
+func HasElementOfType[T any](e []any) bool {
+	for _, e := range e {
+		if _, ok := e.(T); ok {
+			return true
+		}
+	}
+	return false
+}

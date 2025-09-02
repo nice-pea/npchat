@@ -5,25 +5,33 @@
 
 package events
 
-type Publisher interface {
-	Publish(e *Events) error
+// Consumer описывает интерфейс потребителя событий.
+type Consumer interface {
+	// Consume помещает события в consumer и не может вернуть ошибку
+	Consume(events []any)
 }
 
-type Events struct {
+// Buffer представляет структуру для удобного хранения событий
+// перед отправкой потребителю
+type Buffer struct {
 	events []any
 }
 
-func (ee *Events) Add(event any) {
+// Add добавляет событие в буфер
+func (ee *Buffer) Add(event any) {
 	ee.events = append(ee.events, event)
 }
 
-func (ee *Events) AddSafety(event any) {
+// AddSafety добавляет событие в буфер.
+// Если буфер nil, то ничего не делает
+func (ee *Buffer) AddSafety(event any) {
 	if ee == nil {
 		return
 	}
 	ee.events = append(ee.events, event)
 }
 
-func (ee *Events) Events() []any {
+// Events возвращает список событий
+func (ee *Buffer) Events() []any {
 	return ee.events
 }

@@ -8,7 +8,6 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
-	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
@@ -24,13 +23,13 @@ func Test_TestSuite(t *testing.T) {
 // Test_Members_LeaveChat тестирует выход участника из чата
 func (suite *testSuite) Test_Members_LeaveChat() {
 	usecase := &LeaveChatUsecase{
-		Repo:            suite.RR.Chats,
-		EventsPublisher: mockEvents.NewPublisher(suite.T()),
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
 	// Настройка мока
-	usecase.EventsPublisher.(*mockEvents.Publisher).
-		On("Publish", mock.Anything).
-		Return(nil)
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return()
 
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат
@@ -97,18 +96,17 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Новый экземпляр usecase
 		usecase := &LeaveChatUsecase{
-			Repo:            suite.RR.Chats,
-			EventsPublisher: mockEvents.NewPublisher(suite.T()),
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
 		}
-
 		// Настройка мока
-		var publishedEvents *events.Events
-		usecase.EventsPublisher.(*mockEvents.Publisher).
-			On("Publish", mock.Anything).
+		var consumedEvents []any
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
 			Run(func(args mock.Arguments) {
-				publishedEvents = args.Get(0).(*events.Events)
+				consumedEvents = append(consumedEvents, args.Get(0).([]any)...)
 			}).
-			Return(nil)
+			Return()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -125,15 +123,8 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		suite.Require().NoError(err)
 		suite.Zero(out)
 
-		// Событие Удаленного
-		participantRemoved := publishedEvents.Events()[0].(chatt.EventParticipantRemoved)
-		// Содержит нужных получателей
-		suite.Contains(participantRemoved.Recipients, chat.ChiefID)
-		suite.Contains(participantRemoved.Recipients, participant.UserID)
-		// Связано с чатом
-		suite.Equal(chat.ID, participantRemoved.ChatID)
-		// Содержит нужного участника
-		suite.Equal(participant, participantRemoved.Participant)
+		// Проверить список опубликованных событий
+		suite.True(serviceSuite.HasElementOfType[chatt.EventParticipantRemoved](consumedEvents))
 	})
 
 	suite.Run("отправленные приглашения участника, отменятся вместе с его выходом", func() {

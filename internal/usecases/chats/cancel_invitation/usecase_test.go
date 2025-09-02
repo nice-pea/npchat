@@ -8,7 +8,6 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
-	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
@@ -24,13 +23,13 @@ func Test_TestSuite(t *testing.T) {
 // Test_Invitations_CancelInvitation тестирует отмену приглашения
 func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	usecase := &CancelInvitationUsecase{
-		Repo:            suite.RR.Chats,
-		EventsPublisher: mockEvents.NewPublisher(suite.T()),
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
 	// Настройка мока
-	usecase.EventsPublisher.(*mockEvents.Publisher).
-		On("Publish", mock.Anything).
-		Return(nil)
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return()
 
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
@@ -130,18 +129,17 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Новый экземпляр usecase
 		usecase := &CancelInvitationUsecase{
-			Repo:            suite.RR.Chats,
-			EventsPublisher: mockEvents.NewPublisher(suite.T()),
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
 		}
-
 		// Настройка мока
-		var publishedEvents *events.Events
-		usecase.EventsPublisher.(*mockEvents.Publisher).
-			On("Publish", mock.Anything).
+		var consumedEvents []any
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
 			Run(func(args mock.Arguments) {
-				publishedEvents = args.Get(0).(*events.Events)
+				consumedEvents = append(consumedEvents, args.Get(0).([]any)...)
 			}).
-			Return(nil)
+			Return()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -162,15 +160,6 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		suite.Zero(out)
 
 		// Проверить список опубликованных событий
-		suite.Require().Len(publishedEvents.Events(), 1)
-
-		// Событие Удаленного приглашения
-		invitationRemoved := publishedEvents.Events()[0].(chatt.EventInvitationRemoved)
-		// Содержит нужных получателей
-		suite.Contains(invitationRemoved.Recipients, chat.ChiefID)
-		suite.Contains(invitationRemoved.Recipients, invitation.RecipientID)
-		suite.Contains(invitationRemoved.Recipients, invitation.SubjectID)
-		// Содержит нужное приглашение
-		suite.Equal(invitation, invitationRemoved.Invitation)
+		suite.True(serviceSuite.HasElementOfType[chatt.EventInvitationRemoved](consumedEvents))
 	})
 }

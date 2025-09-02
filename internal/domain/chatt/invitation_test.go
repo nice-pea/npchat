@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // TestNewInvitation тестирует создание приглашения.
@@ -136,6 +138,34 @@ func TestChat_RemoveInvitation(t *testing.T) {
 		err := chat.RemoveInvitation(inv.ID, nil)
 		assert.NoError(t, err)
 		assert.NotContains(t, chat.Invitations, inv)
+	})
+
+	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
+		// Создать чат
+		chiefID := uuid.New()
+		chat, _ := NewChat("chatName", chiefID)
+
+		// Создать и добавить приглашение
+		inv, _ := NewInvitation(chiefID, uuid.New())
+		_ = chat.AddInvitation(inv)
+
+		// Инициализировать буфер событий
+		eventsBuf := new(events.Buffer)
+
+		// Удалить приглашение
+		err := chat.RemoveInvitation(inv.ID, eventsBuf)
+		assert.NoError(t, err)
+		assert.NotContains(t, chat.Invitations, inv)
+
+		// Проверить, что события созданы
+		require.Len(t, eventsBuf.Events(), 1)
+		invitationRemoved := eventsBuf.Events()[0].(EventInvitationRemoved)
+		// Содержит нужных получателей
+		assert.Contains(t, invitationRemoved.Recipients, chat.ChiefID)
+		assert.Contains(t, invitationRemoved.Recipients, inv.RecipientID)
+		assert.Contains(t, invitationRemoved.Recipients, inv.SubjectID)
+		// Содержит нужное приглашение
+		assert.Equal(t, inv, invitationRemoved.Invitation)
 	})
 }
 

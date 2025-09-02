@@ -61,7 +61,7 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 }
 
 // RemoveInvitation удаляет приглашение из чата
-func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Events) error {
+func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Buffer) error {
 	// Убедиться, что приглашение существует
 	if !c.HasInvitation(id) {
 		return ErrInvitationNotExists

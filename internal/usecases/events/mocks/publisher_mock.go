@@ -37,7 +37,7 @@ func (_m *Publisher) EXPECT() *Publisher_Expecter {
 }
 
 // Publish provides a mock function for the type Publisher
-func (_mock *Publisher) Publish(e *events.Events) error {
+func (_mock *Publisher) Publish(e *events.Buffer) error {
 	ret := _mock.Called(e)
 
 	if len(ret) == 0 {
@@ -45,7 +45,7 @@ func (_mock *Publisher) Publish(e *events.Events) error {
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(*events.Events) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(*events.Buffer) error); ok {
 		r0 = returnFunc(e)
 	} else {
 		r0 = ret.Error(0)
@@ -59,16 +59,16 @@ type Publisher_Publish_Call struct {
 }
 
 // Publish is a helper method to define mock.On call
-//   - e *events.Events
+//   - e *events.Buffer
 func (_e *Publisher_Expecter) Publish(e interface{}) *Publisher_Publish_Call {
 	return &Publisher_Publish_Call{Call: _e.mock.On("Publish", e)}
 }
 
-func (_c *Publisher_Publish_Call) Run(run func(e *events.Events)) *Publisher_Publish_Call {
+func (_c *Publisher_Publish_Call) Run(run func(e *events.Buffer)) *Publisher_Publish_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *events.Events
+		var arg0 *events.Buffer
 		if args[0] != nil {
-			arg0 = args[0].(*events.Events)
+			arg0 = args[0].(*events.Buffer)
 		}
 		run(
 			arg0,
@@ -82,7 +82,7 @@ func (_c *Publisher_Publish_Call) Return(err error) *Publisher_Publish_Call {
 	return _c
 }
 
-func (_c *Publisher_Publish_Call) RunAndReturn(run func(e *events.Events) error) *Publisher_Publish_Call {
+func (_c *Publisher_Publish_Call) RunAndReturn(run func(e *events.Buffer) error) *Publisher_Publish_Call {
 	_c.Call.Return(run)
 	return _c
 }

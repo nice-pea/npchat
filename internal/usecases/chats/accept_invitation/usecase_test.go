@@ -4,12 +4,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
-	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
@@ -24,16 +22,14 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Invitations_AcceptInvitation тестирует принятие приглашения
 func (suite *testSuite) Test_Invitations_AcceptInvitation() {
-	// Создать моки
-	mockEventsPublisher := mockEvents.NewPublisher(suite.T())
-	mockEventsPublisher.
-		On("Publish", mock.Anything).
-		Return(nil)
-
 	usecase := &AcceptInvitationUsecase{
-		Repo:            suite.RR.Chats,
-		EventsPublisher: mockEventsPublisher,
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
+	// Настройка мока
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return()
 
 	suite.Run("приглашение должно существовать", func() {
 		// Создать чат
@@ -82,18 +78,17 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Новый экземпляр usecase
 		usecase := &AcceptInvitationUsecase{
-			Repo:            suite.RR.Chats,
-			EventsPublisher: mockEvents.NewPublisher(suite.T()),
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
 		}
-
 		// Настройка мока
-		var publishedEvents *events.Events
-		usecase.EventsPublisher.(*mockEvents.Publisher).
-			On("Publish", mock.Anything).
+		var consumedEvents []any
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
 			Run(func(args mock.Arguments) {
-				publishedEvents = args.Get(0).(*events.Events)
+				consumedEvents = append(consumedEvents, args.Get(0).([]any)...)
 			}).
-			Return(nil)
+			Return()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -114,32 +109,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		suite.Require().NoError(err)
 
 		// Проверить список опубликованных событий
-		suite.Require().Len(publishedEvents.Events(), 2)
-
-		// Событие Удаленного приглашения
-		invitationRemoved := lo.FindOrElse(publishedEvents.Events(), nil, func(e any) bool {
-			_, ok := e.(chatt.EventInvitationRemoved)
-			return ok
-		}).(chatt.EventInvitationRemoved)
-		// Содержит нужных получателей
-		suite.Contains(invitationRemoved.Recipients, chat.ChiefID)
-		suite.Contains(invitationRemoved.Recipients, invitation.RecipientID)
-		suite.Contains(invitationRemoved.Recipients, invitation.SubjectID)
-		// Содержит нужное приглашение
-		suite.Equal(invitation, invitationRemoved.Invitation)
-
-		// Событие Добавленного участника
-		participantAdded := lo.FindOrElse(publishedEvents.Events(), nil, func(e any) bool {
-			_, ok := e.(chatt.EventParticipantAdded)
-			return ok
-		}).(chatt.EventParticipantAdded)
-		// Содержит нужных получателей
-		suite.Contains(participantAdded.Recipients, chat.ChiefID)
-		suite.Contains(participantAdded.Recipients, invitation.RecipientID)
-		suite.Contains(participantAdded.Recipients, invitation.SubjectID)
-		// Связано с чатом
-		suite.Equal(chat.ID, participantAdded.ChatID)
-		// Содержит нужного участника
-		suite.Equal(invitation.RecipientID, participantAdded.Participant.UserID)
+		suite.True(serviceSuite.HasElementOfType[chatt.EventInvitationRemoved](consumedEvents))
+		suite.True(serviceSuite.HasElementOfType[chatt.EventParticipantAdded](consumedEvents))
 	})
 }

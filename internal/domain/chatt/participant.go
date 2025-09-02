@@ -39,7 +39,7 @@ func (c *Chat) HasParticipant(userID uuid.UUID) bool {
 }
 
 // RemoveParticipant удаляет участника из чата.
-func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Events) error {
+func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Buffer) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
 		return ErrCannotRemoveChief
@@ -70,7 +70,7 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Events) error 
 }
 
 // AddParticipant добавляет участника в чат.
-func (c *Chat) AddParticipant(p Participant, events *events.Events) error {
+func (c *Chat) AddParticipant(p Participant, events *events.Buffer) error {
 	// Проверить является ли subject участником чата
 	if c.HasParticipant(p.UserID) {
 		return ErrParticipantExists

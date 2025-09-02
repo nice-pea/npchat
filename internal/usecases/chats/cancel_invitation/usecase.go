@@ -38,8 +38,8 @@ func (in In) Validate() error {
 type Out struct{}
 
 type CancelInvitationUsecase struct {
-	Repo            chatt.Repository
-	EventsPublisher events.Publisher
+	Repo          chatt.Repository
+	EventConsumer events.Consumer
 }
 
 // CancelInvitation отменяет приглашение
@@ -82,11 +82,12 @@ func (c *CancelInvitationUsecase) CancelInvitation(in In) (Out, error) {
 	if !slices.Contains(allowedSubjects, in.SubjectID) {
 		return Out{}, ErrSubjectUserNotAllowed
 	}
-	// Инициализировать пустую пачку событий
-	events := new(events.Events)
+
+	// Инициализировать буфер событий
+	eventsBuf := new(events.Buffer)
 
 	// Удаляем приглашение из чата
-	if err := chat.RemoveInvitation(in.InvitationID, events); err != nil {
+	if err := chat.RemoveInvitation(in.InvitationID, eventsBuf); err != nil {
 		return Out{}, err
 	}
 
@@ -95,10 +96,8 @@ func (c *CancelInvitationUsecase) CancelInvitation(in In) (Out, error) {
 		return Out{}, err
 	}
 
-	// Публикация событий
-	if err := c.EventsPublisher.Publish(events); err != nil {
-		return Out{}, err
-	}
+	// Отправить собранные события
+	c.EventConsumer.Consume(eventsBuf.Events())
 
 	return Out{}, nil
 }

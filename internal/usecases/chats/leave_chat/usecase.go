@@ -37,8 +37,8 @@ func (in In) Validate() error {
 type Out struct{}
 
 type LeaveChatUsecase struct {
-	Repo            chatt.Repository
-	EventsPublisher events.Publisher
+	Repo          chatt.Repository
+	EventConsumer events.Consumer
 }
 
 // LeaveChat удаляет участника из чата
@@ -54,11 +54,11 @@ func (c *LeaveChatUsecase) LeaveChat(in In) (Out, error) {
 		return Out{}, err
 	}
 
-	// Инициализировать пустую пачку событий
-	events := new(events.Events)
+	// Инициализировать буфер событий
+	eventsBuf := new(events.Buffer)
 
 	// Удалить пользователя из чата
-	if err = chat.RemoveParticipant(in.SubjectID, events); err != nil {
+	if err = chat.RemoveParticipant(in.SubjectID, eventsBuf); err != nil {
 		return Out{}, err
 	}
 
@@ -67,10 +67,8 @@ func (c *LeaveChatUsecase) LeaveChat(in In) (Out, error) {
 		return Out{}, err
 	}
 
-	// Публикация событий
-	if err := c.EventsPublisher.Publish(events); err != nil {
-		return Out{}, err
-	}
+	// Отправить собранные события
+	c.EventConsumer.Consume(eventsBuf.Events())
 
 	return Out{}, nil
 }
