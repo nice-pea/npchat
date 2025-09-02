@@ -4,9 +4,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
+	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -21,8 +24,13 @@ func Test_TestSuite(t *testing.T) {
 // Test_Invitations_CancelInvitation тестирует отмену приглашения
 func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	usecase := &CancelInvitationUsecase{
-		Repo: suite.RR.Chats,
+		Repo:            suite.RR.Chats,
+		EventsPublisher: mockEvents.NewPublisher(suite.T()),
 	}
+	// Настройка мока
+	usecase.EventsPublisher.(*mockEvents.Publisher).
+		On("Publish", mock.Anything).
+		Return(nil)
 
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение
@@ -117,5 +125,52 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		suite.NoError(err)
 		suite.Require().Len(chats, 1)
 		suite.Empty(chats[0].Invitations)
+	})
+
+	suite.Run("после завершения операции, будут созданы события", func() {
+		// Новый экземпляр usecase
+		usecase := &CancelInvitationUsecase{
+			Repo:            suite.RR.Chats,
+			EventsPublisher: mockEvents.NewPublisher(suite.T()),
+		}
+
+		// Настройка мока
+		var publishedEvents *events.Events
+		usecase.EventsPublisher.(*mockEvents.Publisher).
+			On("Publish", mock.Anything).
+			Run(func(args mock.Arguments) {
+				publishedEvents = args.Get(0).(*events.Events)
+			}).
+			Return(nil)
+
+		// Создать чат
+		chat := suite.RndChat()
+		// Создать участника
+		participant := suite.AddRndParticipant(&chat)
+		// Создать приглашение
+		invitation := suite.NewInvitation(participant.UserID, uuid.New())
+		suite.AddInvitation(&chat, invitation)
+		// Сохранить чат
+		suite.UpsertChat(chat)
+		// Отменить приглашение
+		input := In{
+			SubjectID:    invitation.SubjectID,
+			InvitationID: invitation.ID,
+		}
+		out, err := usecase.CancelInvitation(input)
+		suite.Require().NoError(err)
+		suite.Zero(out)
+
+		// Проверить список опубликованных событий
+		suite.Require().Len(publishedEvents.Events(), 1)
+
+		// Событие Удаленного приглашения
+		invitationRemoved := publishedEvents.Events()[0].(chatt.EventInvitationRemoved)
+		// Содержит нужных получателей
+		suite.Contains(invitationRemoved.Recipients, chat.ChiefID)
+		suite.Contains(invitationRemoved.Recipients, invitation.RecipientID)
+		suite.Contains(invitationRemoved.Recipients, invitation.SubjectID)
+		// Содержит нужное приглашение
+		suite.Equal(invitation, invitationRemoved.Invitation)
 	})
 }

@@ -39,7 +39,7 @@ func (c *Chat) HasParticipant(userID uuid.UUID) bool {
 }
 
 // RemoveParticipant удаляет участника из чата.
-func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
+func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Events) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
 		return ErrCannotRemoveChief
@@ -50,10 +50,21 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
 		return ErrParticipantNotExists
 	}
 
-	// Удалить участника из списка
-	c.Participants = slices.DeleteFunc(c.Participants, func(p Participant) bool {
+	// Найти индекс участника
+	i := slices.IndexFunc(c.Participants, func(p Participant) bool {
 		return p.UserID == userID
 	})
+
+	// Добавить событие
+	events.AddSafety(EventParticipantRemoved{
+		CreatedIn:   time.Now(),
+		Recipients:  userIDs(c.Participants),
+		ChatID:      c.ID,
+		Participant: c.Participants[i],
+	})
+
+	// Удалить участника
+	c.Participants = slices.Delete(c.Participants, i, i+1)
 
 	return nil
 }

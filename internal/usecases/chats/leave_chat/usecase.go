@@ -7,6 +7,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 var (
@@ -36,7 +37,8 @@ func (in In) Validate() error {
 type Out struct{}
 
 type LeaveChatUsecase struct {
-	Repo chatt.Repository
+	Repo            chatt.Repository
+	EventsPublisher events.Publisher
 }
 
 // LeaveChat удаляет участника из чата
@@ -52,13 +54,21 @@ func (c *LeaveChatUsecase) LeaveChat(in In) (Out, error) {
 		return Out{}, err
 	}
 
+	// Инициализировать пустую пачку событий
+	events := new(events.Events)
+
 	// Удалить пользователя из чата
-	if err = chat.RemoveParticipant(in.SubjectID); err != nil {
+	if err = chat.RemoveParticipant(in.SubjectID, events); err != nil {
 		return Out{}, err
 	}
 
 	// Сохранить чат в репозиторий
 	if err = c.Repo.Upsert(chat); err != nil {
+		return Out{}, err
+	}
+
+	// Публикация событий
+	if err := c.EventsPublisher.Publish(events); err != nil {
 		return Out{}, err
 	}
 

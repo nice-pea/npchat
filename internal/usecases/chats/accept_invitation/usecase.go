@@ -37,6 +37,9 @@ type Out struct{}
 type AcceptInvitationUsecase struct {
 	Repo            chatt.Repository
 	EventsPublisher events.Publisher
+	// EventSink       interface {
+	// 	Accept(event any)
+	// }
 }
 
 // AcceptInvitation добавляет пользователя в чат, путем принятия приглашения
@@ -84,6 +87,11 @@ func (c *AcceptInvitationUsecase) AcceptInvitation(in In) (Out, error) {
 	if err := c.EventsPublisher.Publish(events); err != nil {
 		return Out{}, err
 	}
+
+	// // Публикация событий
+	// if err := c.EventsPublisher.Publish(events); err != nil {
+	// 	return Out{}, err
+	// }
 
 	return Out{}, nil
 }

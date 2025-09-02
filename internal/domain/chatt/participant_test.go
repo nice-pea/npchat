@@ -100,7 +100,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		require.NoError(t, err)
 
 		// Удаляем участника
-		err = chat.RemoveParticipant(userID)
+		err = chat.RemoveParticipant(userID, nil)
 		require.NoError(t, err)
 
 		// Проверяем, что участник удален
@@ -113,7 +113,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		require.NoError(t, err)
 
 		// Удаляем участника (несуществующего)
-		err = chat.RemoveParticipant(uuid.New())
+		err = chat.RemoveParticipant(uuid.New(), nil)
 		assert.ErrorIs(t, err, ErrParticipantNotExists)
 	})
 
@@ -124,7 +124,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		require.NoError(t, err)
 
 		// Удаляем участника (главного администратора)
-		err = chat.RemoveParticipant(chiefID)
+		err = chat.RemoveParticipant(chiefID, nil)
 		assert.ErrorIs(t, err, ErrCannotRemoveChief)
 	})
 }
