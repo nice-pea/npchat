@@ -2,7 +2,6 @@ package chatt
 
 import (
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
@@ -39,7 +38,7 @@ func (c *Chat) HasParticipant(userID uuid.UUID) bool {
 }
 
 // RemoveParticipant удаляет участника из чата.
-func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Buffer) error {
+func (c *Chat) RemoveParticipant(userID uuid.UUID, eventsBuf *events.Buffer) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
 		return ErrCannotRemoveChief
@@ -56,9 +55,8 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Buffer) error 
 	})
 
 	// Добавить событие
-	events.AddSafety(EventParticipantRemoved{
-		CreatedIn:   time.Now(),
-		Recipients:  userIDs(c.Participants),
+	eventsBuf.AddSafety(EventParticipantRemoved{
+		Head:        events.NewHead(userIDs(c.Participants)),
 		ChatID:      c.ID,
 		Participant: c.Participants[i],
 	})
@@ -70,7 +68,7 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID, events *events.Buffer) error 
 }
 
 // AddParticipant добавляет участника в чат.
-func (c *Chat) AddParticipant(p Participant, events *events.Buffer) error {
+func (c *Chat) AddParticipant(p Participant, eventsBuf *events.Buffer) error {
 	// Проверить является ли subject участником чата
 	if c.HasParticipant(p.UserID) {
 		return ErrParticipantExists
@@ -85,9 +83,8 @@ func (c *Chat) AddParticipant(p Participant, events *events.Buffer) error {
 	c.Participants = append(c.Participants, p)
 
 	// Добавить событие
-	events.AddSafety(EventParticipantAdded{
-		CreatedIn:   time.Now(),
-		Recipients:  userIDs(c.Participants),
+	eventsBuf.AddSafety(EventParticipantAdded{
+		Head:        events.NewHead(userIDs(c.Participants)),
 		ChatID:      c.ID,
 		Participant: p,
 	})

@@ -106,8 +106,8 @@ func TestChat_AddParticipant(t *testing.T) {
 		// Событие Удаленного
 		participantAdded := eventsBuf.Events()[0].(EventParticipantAdded)
 		// Содержит нужных получателей
-		assert.Contains(t, participantAdded.Recipients, chat.ChiefID)
-		assert.Contains(t, participantAdded.Recipients, participant.UserID)
+		assert.Contains(t, participantAdded.Recipients(), chat.ChiefID)
+		assert.Contains(t, participantAdded.Recipients(), participant.UserID)
 		// Связано с чатом
 		assert.Equal(t, chat.ID, participantAdded.ChatID)
 		// Содержит нужного участника
@@ -184,8 +184,8 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		// Событие Удаленного
 		participantRemoved := eventsBuf.Events()[0].(EventParticipantRemoved)
 		// Содержит нужных получателей
-		assert.Contains(t, participantRemoved.Recipients, chat.ChiefID)
-		assert.Contains(t, participantRemoved.Recipients, participant.UserID)
+		assert.Contains(t, participantRemoved.Recipients(), chat.ChiefID)
+		assert.Contains(t, participantRemoved.Recipients(), participant.UserID)
 		// Связано с чатом
 		assert.Equal(t, chat.ID, participantRemoved.ChatID)
 		// Содержит нужного участника

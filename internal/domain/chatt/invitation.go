@@ -1,8 +1,6 @@
 package chatt
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
@@ -57,12 +55,11 @@ func (c *Chat) AddInvitation(invitation Invitation, eventsBuf *events.Buffer) er
 
 	// Добавить событие
 	eventsBuf.AddSafety(EventInvitationAdded{
-		CreatedIn: time.Now(),
-		Recipients: []uuid.UUID{
+		Head: events.NewHead([]uuid.UUID{
 			c.ChiefID,
 			invitation.RecipientID,
 			invitation.SubjectID,
-		},
+		}),
 		Invitation: invitation,
 	})
 
@@ -72,7 +69,7 @@ func (c *Chat) AddInvitation(invitation Invitation, eventsBuf *events.Buffer) er
 }
 
 // RemoveInvitation удаляет приглашение из чата
-func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Buffer) error {
+func (c *Chat) RemoveInvitation(id uuid.UUID, eventsBuf *events.Buffer) error {
 	// Убедиться, что приглашение существует
 	if !c.HasInvitation(id) {
 		return ErrInvitationNotExists
@@ -84,13 +81,12 @@ func (c *Chat) RemoveInvitation(id uuid.UUID, events *events.Buffer) error {
 	})
 
 	// Добавить событие
-	events.AddSafety(EventInvitationRemoved{
-		CreatedIn: time.Now(),
-		Recipients: []uuid.UUID{
+	eventsBuf.AddSafety(EventInvitationRemoved{
+		Head: events.NewHead([]uuid.UUID{
 			c.ChiefID,
 			c.Invitations[i].RecipientID,
 			c.Invitations[i].SubjectID,
-		},
+		}),
 		Invitation: c.Invitations[i],
 	})
 

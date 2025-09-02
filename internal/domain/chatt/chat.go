@@ -48,6 +48,7 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	c.Name = name
 
 	eventsBuf.AddSafety(EventChatNameUpdated{
+		Head:   events.NewHead(userIDs(c.Participants)),
 		ChatID: c.ID,
 		Name:   c.Name,
 	})
