@@ -75,7 +75,7 @@ func TestChat_AddParticipant(t *testing.T) {
 		// Создаем и добавляем приглашение
 		inv, err := NewInvitation(chat.ChiefID, userID)
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv)
+		err = chat.AddInvitation(inv, nil)
 		require.NoError(t, err)
 
 		// Создаем и добавляем участника

@@ -39,7 +39,7 @@ func NewInvitation(subjectID, recipientID uuid.UUID) (Invitation, error) {
 }
 
 // AddInvitation добавляет приглашение в чат
-func (c *Chat) AddInvitation(invitation Invitation) error {
+func (c *Chat) AddInvitation(invitation Invitation, eventsBuf *events.Buffer) error {
 	// Проверить является ли subject участником чата
 	if !c.HasParticipant(invitation.SubjectID) {
 		return ErrSubjectIsNotMember
@@ -54,6 +54,17 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 	if c.HasInvitationWithRecipient(invitation.RecipientID) {
 		return ErrUserIsAlreadyInvited
 	}
+
+	// Добавить событие
+	eventsBuf.AddSafety(EventInvitationAdded{
+		CreatedIn: time.Now(),
+		Recipients: []uuid.UUID{
+			c.ChiefID,
+			invitation.RecipientID,
+			invitation.SubjectID,
+		},
+		Invitation: invitation,
+	})
 
 	c.Invitations = append(c.Invitations, invitation)
 

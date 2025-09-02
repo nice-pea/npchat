@@ -264,5 +264,5 @@ func addRndParticipant(t *testing.T, chat *chatt.Chat) {
 func addRndInv(t *testing.T, chat *chatt.Chat) {
 	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.New())
 	require.NoError(t, err)
-	require.NoError(t, chat.AddInvitation(inv))
+	require.NoError(t, chat.AddInvitation(inv, nil))
 }

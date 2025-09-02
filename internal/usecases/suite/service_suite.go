@@ -198,7 +198,7 @@ func (suite *Suite) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invita
 
 // AddInvitation добавляет приглашение в чат
 func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
-	suite.Require().NoError(chat.AddInvitation(i))
+	suite.Require().NoError(chat.AddInvitation(i, nil))
 }
 
 // RandomString генерирует случайную строку

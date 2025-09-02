@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Chat представляет собой агрегат чата.
@@ -39,12 +40,17 @@ func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 }
 
 // UpdateName изменяет название чата.
-func (c *Chat) UpdateName(name string) error {
+func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	if err := ValidateChatName(name); err != nil {
 		return err
 	}
 
 	c.Name = name
+
+	eventsBuf.AddSafety(EventChatNameUpdated{
+		ChatID: c.ID,
+		Name:   c.Name,
+	})
 
 	return nil
 }

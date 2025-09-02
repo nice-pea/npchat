@@ -7,6 +7,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 var (
@@ -44,7 +45,8 @@ type Out struct {
 }
 
 type UpdateNameUsecase struct {
-	Repo chatt.Repository
+	Repo          chatt.Repository
+	EventConsumer events.Consumer
 }
 
 // UpdateName обновляет название чата.
@@ -66,13 +68,19 @@ func (c *UpdateNameUsecase) UpdateName(in In) (Out, error) {
 		return Out{}, ErrSubjectUserIsNotChief
 	}
 
+	// Инициализировать буфер событий
+	eventsBuf := new(events.Buffer)
+
 	// Перезаписать с новым значением
-	if err = chat.UpdateName(in.NewName); err != nil {
+	if err = chat.UpdateName(in.NewName, eventsBuf); err != nil {
 		return Out{}, err
 	}
 	if err = c.Repo.Upsert(chat); err != nil {
 		return Out{}, err
 	}
+
+	// Отправить собранные события
+	c.EventConsumer.Consume(eventsBuf.Events())
 
 	return Out{
 		Chat: chat,

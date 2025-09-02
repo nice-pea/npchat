@@ -40,10 +40,17 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener eventListener
 				cancel()
 			}()
 
+			// Регистрация обработчика для отправки потока сообщений
 			ctx.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
 				err := eventListener.Listen(ctx2, session.UserID, session.ID, func(event any) {
-					json.NewEncoder(w).Encode(event)
-					w.Flush()
+					// Отправить данные в буфер
+					if err := json.NewEncoder(w).Encode(event); err != nil {
+						slog.Warn("eventListener.Listen: json.NewEncoder: " + err.Error())
+					}
+					// Отправить данные во writer и очистить буфер
+					if err := w.Flush(); err != nil {
+						slog.Warn("eventListener.Listen: w.Flush: " + err.Error())
+					}
 				})
 				if err != nil && !errors.Is(err, context.Canceled) {
 					slog.Warn("eventListener.Listen:" + err.Error())

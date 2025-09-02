@@ -55,7 +55,7 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Создать и добавить первое приглашение
 		inv, err := NewInvitation(uuid.New(), uuid.New())
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv)
+		err = chat.AddInvitation(inv, nil)
 		assert.ErrorIs(t, err, ErrSubjectIsNotMember)
 	})
 
@@ -74,7 +74,7 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Добавить приглашение пользователю, который уже участник
 		inv, err := NewInvitation(chief, p.UserID)
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv)
+		err = chat.AddInvitation(inv, nil)
 		assert.ErrorIs(t, err, ErrParticipantExists)
 	})
 
@@ -88,13 +88,13 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Создать и добавить первое приглашение
 		inv1, err := NewInvitation(chiefID, recipientID)
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv1)
+		err = chat.AddInvitation(inv1, nil)
 		require.NoError(t, err)
 
 		//  Создать и добавить второе приглашение
 		inv2, err := NewInvitation(chiefID, recipientID)
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv2)
+		err = chat.AddInvitation(inv2, nil)
 		assert.ErrorIs(t, err, ErrUserIsAlreadyInvited)
 	})
 
@@ -107,9 +107,35 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Создать и добавить приглашение
 		inv, err := NewInvitation(chiefID, uuid.New())
 		require.NoError(t, err)
-		err = chat.AddInvitation(inv)
+		err = chat.AddInvitation(inv, nil)
 		assert.NoError(t, err)
 		assert.Contains(t, chat.Invitations, inv)
+	})
+
+	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
+		// Создать чат
+		chiefID := uuid.New()
+		chat, _ := NewChat("chatName", chiefID)
+
+		// Создать приглашение
+		inv, _ := NewInvitation(chiefID, uuid.New())
+
+		// Инициализировать буфер событий
+		eventsBuf := new(events.Buffer)
+
+		// Добавить приглашение
+		err := chat.AddInvitation(inv, eventsBuf)
+		assert.NoError(t, err)
+
+		// Проверить, что события созданы
+		require.Len(t, eventsBuf.Events(), 1)
+		invitationAdded := eventsBuf.Events()[0].(EventInvitationAdded)
+		// Содержит нужных получателей
+		assert.Contains(t, invitationAdded.Recipients, chat.ChiefID)
+		assert.Contains(t, invitationAdded.Recipients, inv.RecipientID)
+		assert.Contains(t, invitationAdded.Recipients, inv.SubjectID)
+		// Содержит нужное приглашение
+		assert.Equal(t, inv, invitationAdded.Invitation)
 	})
 }
 
@@ -132,7 +158,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
-		_ = chat.AddInvitation(inv)
+		_ = chat.AddInvitation(inv, nil)
 
 		// Удалить приглашение
 		err := chat.RemoveInvitation(inv.ID, nil)
@@ -147,7 +173,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
-		_ = chat.AddInvitation(inv)
+		_ = chat.AddInvitation(inv, nil)
 
 		// Инициализировать буфер событий
 		eventsBuf := new(events.Buffer)
@@ -178,7 +204,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
-		_ = chat.AddInvitation(inv)
+		_ = chat.AddInvitation(inv, nil)
 
 		// Проверка наличия приглашения по ID
 		assert.True(t, chat.HasInvitation(inv.ID))
@@ -192,7 +218,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
-		_ = chat.AddInvitation(inv)
+		_ = chat.AddInvitation(inv, nil)
 
 		// Получение приглашения по ID
 		found, err := chat.Invitation(inv.ID)
@@ -208,7 +234,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, recipientID)
-		_ = chat.AddInvitation(inv)
+		_ = chat.AddInvitation(inv, nil)
 
 		// Проверка наличия приглашения по получателю
 		assert.True(t, chat.HasInvitationWithRecipient(recipientID))

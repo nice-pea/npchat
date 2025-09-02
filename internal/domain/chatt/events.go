@@ -13,6 +13,13 @@ type EventInvitationRemoved struct {
 	Invitation Invitation
 }
 
+// EventInvitationAdded описывает событие добавления приглашения
+type EventInvitationAdded struct {
+	CreatedIn  time.Time
+	Recipients []uuid.UUID
+	Invitation Invitation
+}
+
 // EventParticipantAdded описывает событие добавления участника
 type EventParticipantAdded struct {
 	CreatedIn   time.Time
@@ -27,4 +34,12 @@ type EventParticipantRemoved struct {
 	Recipients  []uuid.UUID
 	ChatID      uuid.UUID
 	Participant Participant
+}
+
+// EventChatNameUpdated описывает событие обновления названия чата
+type EventChatNameUpdated struct {
+	CreatedIn  time.Time
+	Recipients []uuid.UUID
+	ChatID     uuid.UUID
+	Name       string
 }

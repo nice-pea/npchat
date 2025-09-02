@@ -63,7 +63,7 @@ func TestEvents(t *testing.T) {
 	// Выполнить запрос
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Отменить запрос через некоторое время
@@ -104,6 +104,6 @@ func rndDirtyEvent() any {
 		Age  int    `fake:"{number:0,100}"`
 		Sex  string `fake:"{gender}"`
 	}
-	gofakeit.Struct(&e)
+	_ = gofakeit.Struct(&e)
 	return e
 }

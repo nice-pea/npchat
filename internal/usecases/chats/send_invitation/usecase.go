@@ -7,6 +7,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 var (
@@ -40,7 +41,8 @@ type Out struct {
 }
 
 type SendInvitationUsecase struct {
-	Repo chatt.Repository
+	Repo          chatt.Repository
+	EventConsumer events.Consumer
 }
 
 // SendInvitation отправляет приглашения пользователю от участника чата
@@ -61,8 +63,11 @@ func (c *SendInvitationUsecase) SendInvitation(in In) (Out, error) {
 		return Out{}, err
 	}
 
+	// Инициализировать буфер событий
+	eventsBuf := new(events.Buffer)
+
 	// Добавить приглашение в чат
-	if err = chat.AddInvitation(inv); err != nil {
+	if err = chat.AddInvitation(inv, eventsBuf); err != nil {
 		return Out{}, err
 	}
 
@@ -70,6 +75,9 @@ func (c *SendInvitationUsecase) SendInvitation(in In) (Out, error) {
 	if err = c.Repo.Upsert(chat); err != nil {
 		return Out{}, err
 	}
+
+	// Отправить собранные события
+	c.EventConsumer.Consume(eventsBuf.Events())
 
 	return Out{
 		Invitation: inv,
