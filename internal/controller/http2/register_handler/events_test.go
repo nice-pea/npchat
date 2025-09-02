@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"log"
+	"math/rand/v2"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -23,9 +25,7 @@ import (
 var (
 	mockSession = sessionn.Session{
 		ID:     uuid.New(),
-		Status: sessionn.StatusNew,
 		UserID: uuid.New(),
-		Name:   "name",
 	}
 )
 
@@ -43,33 +43,35 @@ func TestEvents(t *testing.T) {
 	// Регистрация обработчика
 	Events(fiberApp, mockSessionFinder, mockEventListener{})
 
+	// Выбор порта
+	port := strconv.Itoa(int(rand.Int32N(65535-49152) + 49152))
 	// Запуск сервера
-	go func() { assert.NoError(t, fiberApp.Listen("localhost:8418")) }()
+	go func() { assert.NoError(t, fiberApp.Listen(":"+port)) }()
+	// Отложить остановку сервера
+	defer assert.NoError(t, fiberApp.Shutdown())
 	// Задержка чтобы сервер успел запуститься
 	time.Sleep(time.Millisecond * 5)
 
 	// Контекст для корректной отмены запроса
 	ctx, cancel := context.WithCancel(context.Background())
 
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:8418/events", nil)
+	// Создать запрос
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+port+"/events", nil)
 	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer 123")
 
 	// Выполнить запрос
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Отменить запрос через некоторое время
-	time.AfterFunc(time.Millisecond*5, func() {
-		cancel()
-	})
-
-	var receivedEvents int
+	time.AfterFunc(time.Millisecond*5, cancel)
 
 	// Читаем данные из потока.
 	// Каждая итерация выполняется после вызова w.Flush() в обработчике
+	var receivedEvents int
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		receivedEvents++
@@ -80,9 +82,6 @@ func TestEvents(t *testing.T) {
 	// На этом моменте запрос остановлен контекстом
 	assert.False(t, scanner.Scan())
 	assert.ErrorIs(t, scanner.Err(), context.Canceled)
-	// Остановить сервер
-	assert.NoError(t, fiberApp.Shutdown())
-
 }
 
 type mockEventListener struct{}
