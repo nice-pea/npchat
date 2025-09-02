@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -31,17 +30,51 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 				return nil
 			})
 
-		go func() { assert.NoError(t, server.Listen("localhost:8419")) }()
-		defer server.Shutdown()
-		time.Sleep(time.Millisecond * 10)
-
-		req, err := http.NewRequest("GET", "http://localhost:8419/", nil)
+		req, err := http.NewRequest("GET", "/", nil)
 		require.NoError(t, err)
 		req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
 
-		_, err = http.DefaultClient.Do(req)
+		resp, err := server.Test(req)
 		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
+	// t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
+	// 	uc := mockUsecasesForRequireAuthorizedSession{}
+
+	// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
+	// 	server.Get(
+	// 		"/", RequireAuthorizedSession(uc),
+	// 		func(ctx *fiber.Ctx) error {
+	// 			session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+	// 			require.True(t, ok)
+	// 			require.Equal(t, mockSession, session)
+	// 			log.Println(session)
+	// 			return nil
+	// 		})
+
+	// 	req, err := http.NewRequest("GET", "/", nil)
+	// 	require.NoError(t, err)
+	// 	req.Header.Set("asd", "Bearer "+mockSession.AccessToken.Token)
+
+	// 	_, err = server.Test(req)
+	// 	require.NoError(t, err)
+	// })
+	// t.Run("отсутствие заголовка Authorization - ошибка 401", func(t *testing.T) {
+	// 	uc := mockUsecasesForRequireAuthorizedSession{}
+
+	// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
+	// 	server.Get("/", RequireAuthorizedSession(uc))
+
+	// 	req, err := http.NewRequest("GET", "/", nil)
+	// 	require.NoError(t, err)
+	// 	// Не устанавливаем заголовок Authorization
+
+	// 	resp, err := server.Test(req)
+	// 	require.NoError(t, err)
+	// 	defer resp.Body.Close()
+
+	// 	require.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
+	// })
 	// t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
 	// 	knownToken := mockSession.AccessToken.Token
 	// 	uc := mockUsecasesForRequireAuthorizedSession{}
