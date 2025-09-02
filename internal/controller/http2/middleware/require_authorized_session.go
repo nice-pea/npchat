@@ -15,8 +15,8 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession) fiber.Hand
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
-		token, _ := strings.CutPrefix(header, "Bearer ")
-		if token == "" {
+		token, found := strings.CutPrefix(header, "Bearer ")
+		if token == "" || !found {
 			return fiber.ErrUnauthorized
 		}
 
