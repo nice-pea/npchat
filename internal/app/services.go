@@ -56,10 +56,12 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo: rr.sessions,
 		},
 		AcceptInvitationUsecase: &acceptInvitation.AcceptInvitationUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		CancelInvitationUsecase: &cancelInvitation.CancelInvitationUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		ChatInvitationsUsecase: &chatInvitations.ChatInvitationsUsecase{
 			Repo: rr.chats,
@@ -71,10 +73,12 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo: rr.chats,
 		},
 		DeleteMemberUsecase: &deleteMember.DeleteMemberUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		LeaveChatUsecase: &leaveChat.LeaveChatUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		MyChatsUsecase: &myChats.MyChatsUsecase{
 			Repo: rr.chats,
@@ -83,10 +87,12 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo: rr.chats,
 		},
 		SendInvitationUsecase: &sendInvitation.SendInvitationUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		UpdateNameUsecase: &updateName.UpdateNameUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		BasicAuthRegistrationUsecase: &basicAuthRegistration.BasicAuthRegistrationUsecase{
 			Repo:         rr.users,

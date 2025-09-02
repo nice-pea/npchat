@@ -1,4 +1,4 @@
-package userEventsBus
+package eventsBus
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
-type UserEventsBus struct {
+type EventsBus struct {
 	listeners []listener
 }
 
@@ -21,7 +21,7 @@ type listener struct {
 	f         func(event any)
 }
 
-func (u *UserEventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
+func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
 	// Проверить, что слушатель ещё не зарегистрирован
 	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l listener) bool {
 		return l.userID == userID && l.sessionID == sessionID
@@ -50,7 +50,7 @@ func (u *UserEventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID 
 	}
 }
 
-func (u *UserEventsBus) Consume(ee []any) {
+func (u *EventsBus) Consume(ee []any) {
 	for _, event := range ee {
 		eventHead, ok := event.(events.Head)
 		if !ok {
@@ -71,13 +71,13 @@ func (u *UserEventsBus) Consume(ee []any) {
 	}
 }
 
-func (u *UserEventsBus) Close() {
+func (u *EventsBus) Close() {
 	for _, l := range u.listeners {
 		l.err <- errors.New("сервер закрыт")
 	}
 }
 
-func (u *UserEventsBus) Cancel(sessionID uuid.UUID) {
+func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	i := slices.IndexFunc(u.listeners, func(l listener) bool {
 		return l.sessionID == sessionID
 	})

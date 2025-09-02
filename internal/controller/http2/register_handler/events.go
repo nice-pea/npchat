@@ -18,7 +18,7 @@ import (
 // Events регистрирует обработчик для получения потока событий.
 //
 // Метод: GET /events
-func Events(router *fiber.App, uc UsecasesForEvents, eventListener eventListener) {
+func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener) {
 	router.Get(
 		"/events",
 		recover2.New(),
@@ -67,6 +67,6 @@ type UsecasesForEvents interface {
 	middleware.UsecasesForRequireAuthorizedSession
 }
 
-type eventListener interface {
+type EventListener interface {
 	Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error
 }
