@@ -20,6 +20,8 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember) {
 	}
 	router.Delete(
 		"/chats/:chatID/members",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
@@ -40,8 +42,6 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

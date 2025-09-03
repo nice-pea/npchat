@@ -15,6 +15,8 @@ import (
 func ChatMembers(router *fiber.App, uc UsecasesForChatMembers) {
 	router.Get(
 		"/chats/:chatID/members",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			input := chatMembers.In{
 				SubjectID: Session(context).UserID,
@@ -28,8 +30,6 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

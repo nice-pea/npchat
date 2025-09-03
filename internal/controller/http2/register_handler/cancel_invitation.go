@@ -15,6 +15,8 @@ import (
 func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation) {
 	router.Post(
 		"/invitations/:invitationID/cancel",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			input := cancelInvitation.In{
 				SubjectID:    Session(context).UserID,
@@ -28,8 +30,6 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

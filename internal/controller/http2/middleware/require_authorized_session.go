@@ -34,7 +34,7 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession) fiber.Hand
 		// Сохранить сессию в контекст
 		ctx.Locals(CtxKeyUserSession, out.Sessions[0])
 
-		return nil
+		return ctx.Next()
 	}
 }
 

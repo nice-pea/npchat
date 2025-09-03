@@ -21,6 +21,8 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation) {
 	}
 	router.Post(
 		"/invitations",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
@@ -41,8 +43,6 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 
