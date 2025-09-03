@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"sync"
 
 	"github.com/google/uuid"
 
@@ -13,6 +14,7 @@ import (
 type EventsBus struct {
 	listeners []listener
 	closed    bool
+	mu        sync.RWMutex
 }
 
 type listener struct {
@@ -27,11 +29,13 @@ func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid
 	if u.closed {
 		return errors.New("events bus is closed")
 	}
+	u.mu.Lock()
 	// Проверить, что слушатель ещё не зарегистрирован
 	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l listener) bool {
 		return l.userID == userID && l.sessionID == sessionID
 	})
 	if sessionAlreadyListen {
+		u.mu.Unlock()
 		return errors.New("session already listen events")
 	}
 
@@ -46,6 +50,7 @@ func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid
 		f:         f,
 		err:       errChan,
 	})
+	u.mu.Unlock()
 
 	select {
 	case <-ctx.Done():
@@ -60,6 +65,9 @@ func (u *EventsBus) Consume(ee []any) {
 	if u.closed {
 		return
 	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
 
 	for _, event := range ee {
 		eventHead, ok := event.(events.Head)
@@ -89,6 +97,9 @@ func (u *EventsBus) Close() {
 
 	// Установить флаг closed
 	u.closed = true
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
 
 	// Отправить ошибку всем слушателям
 	for _, l := range u.listeners {
