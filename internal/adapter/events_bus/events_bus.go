@@ -12,6 +12,7 @@ import (
 
 type EventsBus struct {
 	listeners []listener
+	closed    bool
 }
 
 type listener struct {
@@ -22,6 +23,10 @@ type listener struct {
 }
 
 func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
+	// Проверить, что сервер не закрыт
+	if u.closed {
+		return errors.New("events bus is closed")
+	}
 	// Проверить, что слушатель ещё не зарегистрирован
 	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l listener) bool {
 		return l.userID == userID && l.sessionID == sessionID
@@ -51,6 +56,11 @@ func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid
 }
 
 func (u *EventsBus) Consume(ee []any) {
+	// Выйти, если сервер уже закрыт
+	if u.closed {
+		return
+	}
+
 	for _, event := range ee {
 		eventHead, ok := event.(events.Head)
 		if !ok {
@@ -72,12 +82,29 @@ func (u *EventsBus) Consume(ee []any) {
 }
 
 func (u *EventsBus) Close() {
+	// Выйти, если сервер уже закрыт
+	if u.closed {
+		return
+	}
+
+	// Установить флаг closed
+	u.closed = true
+
+	// Отправить ошибку всем слушателям
 	for _, l := range u.listeners {
 		l.err <- errors.New("сервер закрыт")
 	}
+	// Очистить список
+	u.listeners = nil
 }
 
 func (u *EventsBus) Cancel(sessionID uuid.UUID) {
+	// Выйти, если сервер уже закрыт
+	if u.closed {
+		return
+	}
+
+	// Найти слушателя по сессии
 	i := slices.IndexFunc(u.listeners, func(l listener) bool {
 		return l.sessionID == sessionID
 	})
@@ -85,8 +112,10 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 		return
 	}
 
+	// Отправить ошибку
 	u.listeners[i].err <- errors.New("принудительно отменен")
 
+	// Удалить слушателя
 	u.listeners = slices.DeleteFunc(u.listeners, func(l listener) bool {
 		return l.sessionID == sessionID
 	})
