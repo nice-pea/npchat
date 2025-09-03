@@ -1,8 +1,8 @@
-.github
+**/.github
 bin
 infra
-.gitignore
-.containerignore
+**/.gitignore
+**/.containerignore
 Containerfile
 LICENSE
 Makefile
