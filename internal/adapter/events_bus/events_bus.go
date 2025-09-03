@@ -54,6 +54,13 @@ func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid
 
 	select {
 	case <-ctx.Done():
+		u.mu.Lock()
+		// Удалить слушателя
+		u.listeners = slices.DeleteFunc(u.listeners, func(l listener) bool {
+			return l.sessionID == sessionID
+		})
+		u.mu.Unlock()
+
 		return ctx.Err()
 	case err := <-errChan:
 		return err
