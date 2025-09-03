@@ -15,6 +15,8 @@ import (
 func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations) {
 	router.Get(
 		"/invitations",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			input := receivedInvitations.In{
 				SubjectID: Session(context).UserID,
@@ -27,8 +29,6 @@ func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

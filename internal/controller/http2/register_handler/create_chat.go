@@ -19,6 +19,8 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 	}
 	router.Post(
 		"/chats",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
@@ -38,8 +40,6 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

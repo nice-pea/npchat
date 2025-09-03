@@ -62,6 +62,7 @@ func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassw
 	}
 	router.Post(
 		"/auth/password/registration",
+		recover2.New(),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
@@ -83,7 +84,6 @@ func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassw
 
 			return context.JSON(out)
 		},
-		recover2.New(),
 	)
 }
 

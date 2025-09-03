@@ -15,6 +15,8 @@ import (
 func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation) {
 	router.Post(
 		"/invitations/:invitationID/accept",
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc),
 		func(context *fiber.Ctx) error {
 			input := acceptInvitation.In{
 				SubjectID:    Session(context).UserID,
@@ -28,8 +30,6 @@ func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation) {
 
 			return context.JSON(out)
 		},
-		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
 	)
 }
 

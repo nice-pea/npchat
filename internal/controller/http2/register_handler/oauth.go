@@ -22,6 +22,7 @@ import (
 func OAuthInitRegistration(router *fiber.App, uc UsecasesForOAuthInitRegistration) {
 	router.Get(
 		"/oauth/:provider/registration",
+		recover2.New(),
 		func(context *fiber.Ctx) error {
 			// Формируем входные данные для инициализации OAuth-регистрации
 			input := initOAuthRegistration.In{
@@ -58,6 +59,7 @@ type UsecasesForOAuthInitRegistration interface {
 func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCompleteRegistrationCallback) {
 	router.Get(
 		"/oauth/:provider/registration/callback",
+		recover2.New(),
 		func(context *fiber.Ctx) error {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
@@ -92,6 +94,7 @@ type UsecasesForOAuthCompleteRegistrationCallback interface {
 func OAuthInitLogin(router *fiber.App, uc UsecasesForOAuthInitLogin) {
 	router.Get(
 		"/oauth/:provider/login",
+		recover2.New(),
 		func(context *fiber.Ctx) error {
 			input := initOAuthLogin.In{
 				Provider: context.Params("provider"), // Получаем имя провайдера из URL
@@ -111,7 +114,6 @@ func OAuthInitLogin(router *fiber.App, uc UsecasesForOAuthInitLogin) {
 			// Возвращаем команду редиректа на сторону провайдера
 			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
 		},
-		recover2.New(),
 	)
 }
 
@@ -128,6 +130,7 @@ type UsecasesForOAuthInitLogin interface {
 func OAuthCompleteLoginCallback(router *fiber.App, uc UsecasesForOAuthCompleteLoginCallback) {
 	router.Get(
 		"/oauth/:provider/login/callback",
+		recover2.New(),
 		func(context *fiber.Ctx) error {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
 			if err := validateOAuthCookie(context); err != nil {
@@ -146,7 +149,6 @@ func OAuthCompleteLoginCallback(router *fiber.App, uc UsecasesForOAuthCompleteLo
 
 			return context.JSON(out)
 		},
-		recover2.New(),
 	)
 }
 
