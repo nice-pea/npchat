@@ -12,7 +12,6 @@ import (
 )
 
 func Test_EventsBus(t *testing.T) {
-
 	// id сессии + id пользователя уникальный ключ для
 	t.Run("сессия не может начать второе прослушивание, если уже есть активное", func(t *testing.T) {
 		b := new(EventsBus)
