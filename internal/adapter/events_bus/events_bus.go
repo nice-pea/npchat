@@ -69,6 +69,15 @@ func (u *EventsBus) Consume(ee []any) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
+	// Пара событие + слушатель, для удобной отправки
+	type forHandling struct {
+		listener listener
+		event    any
+	}
+
+	// Одномерный список из события и их получателей
+	var le []forHandling
+
 	for _, event := range ee {
 		eventHead, ok := event.(events.Head)
 		if !ok {
@@ -82,11 +91,26 @@ func (u *EventsBus) Consume(ee []any) {
 			})
 		})
 
-		// Отправить событие получателям
+		// Собрать события и их получателей к отправке
 		for _, r := range recipients {
-			r.f(event)
+			le = append(le, forHandling{listener: r, event: event})
 		}
 	}
+
+	// Инициализация waitgroup для асинхронной отправки
+	var wg sync.WaitGroup
+	wg.Add(len(le))
+
+	// Отправить событие получателям
+	for _, packet := range le {
+		go func() {
+			defer wg.Done()
+			packet.listener.f(packet.event)
+		}()
+	}
+
+	// Ожидать завершения обработки событий слушателями
+	wg.Wait()
 }
 
 func (u *EventsBus) Close() {
