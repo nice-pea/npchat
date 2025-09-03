@@ -115,6 +115,9 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 		return
 	}
 
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
 	// Найти слушателя по сессии
 	i := slices.IndexFunc(u.listeners, func(l listener) bool {
 		return l.sessionID == sessionID
