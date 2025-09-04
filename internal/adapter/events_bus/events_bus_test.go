@@ -1,12 +1,13 @@
 package eventsBus
 
 import (
-	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,22 +20,18 @@ func Test_EventsBus(t *testing.T) {
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		ctx, cancel := context.WithCancel(context.Background())
-		go func() {
-			err := b.Listen(ctx, userID, sessionID, func(event any) {})
-			require.ErrorIs(t, err, context.Canceled)
-		}()
-		time.Sleep(time.Millisecond)
+		_, err := b.AddListener(userID, sessionID, nil)
+		require.NoError(t, err)
 
-		err := b.Listen(context.Background(), userID, sessionID, func(event any) {})
+		_, err = b.AddListener(userID, sessionID, nil)
 		require.Error(t, err)
-		cancel()
 	})
 
 	t.Run("в сессии будут приходить только события направляемые пользователям", func(t *testing.T) {
 		b := new(EventsBus)
 		// Счетчик событий
 		eventsCountByUserID := map[uuid.UUID]int{}
+		var mu sync.RWMutex
 		// Пользователи
 		userIDs := []uuid.UUID{
 			uuid.New(),
@@ -49,18 +46,17 @@ func Test_EventsBus(t *testing.T) {
 		}
 
 		// Запустить прослушивание
-		ctx, cancel := context.WithCancel(context.Background())
 		for _, userID := range userIDs {
-			go b.Listen(ctx, userID, userID, func(event any) {
+			_, err := b.AddListener(userID, userID, func(event any, _ error) {
+				mu.Lock()
 				eventsCountByUserID[userID]++
+				mu.Unlock()
 			})
+			require.NoError(t, err)
 		}
-		time.Sleep(time.Millisecond)
 
 		// Отправить события
 		b.Consume(events)
-		// Отменить прослушивание
-		cancel()
 
 		// Проверить количество полученных событий каждым пользователем
 		assert.Equal(t, 1, eventsCountByUserID[userIDs[0]])
@@ -75,45 +71,70 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := b.Listen(context.Background(), userID, sessionID, func(event any) {})
-			require.Error(t, err)
-		}()
+		_, err := b.AddListener(userID, sessionID, func(event any, err error) {})
+		require.NoError(t, err)
 		time.Sleep(time.Millisecond)
 
 		// Отменить сессию
 		b.Cancel(sessionID)
 		// Проверить список просшушиваний
-		assert.Empty(t, b.listeners)
-		wg.Wait()
+		assert.Empty(t, b.activeListeners())
 	})
 
-	t.Run("закрытие сервера отменить все прослушивания и не будет принимать новые", func(t *testing.T) {
+	t.Run("закрытие сервера удалит всех слушателей и не будет принимать новых", func(t *testing.T) {
 		b := new(EventsBus)
 
 		// Запустить много слушаетелй
-		wg := sync.WaitGroup{}
-		wg.Add(100)
 		for range 100 {
-			go func() {
-				defer wg.Done()
-				err := b.Listen(context.Background(), uuid.New(), uuid.New(), func(event any) {})
-				require.Error(t, err)
-			}()
+			_, err := b.AddListener(uuid.New(), uuid.New(), func(event any, err error) {})
+			require.NoError(t, err)
 		}
 
 		// Закрыть сервер
 		b.Close()
 		// Попытаться запустить нового слушателя
-		err := b.Listen(context.Background(), uuid.New(), uuid.New(), func(event any) {})
+		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
 		require.Error(t, err)
-		// Дождаться когда все слушатели завершат работу
-		wg.Wait()
 		// Убедиться что список слушателей пуст
-		assert.Empty(t, b.listeners)
+		assert.Empty(t, b.activeListeners())
+	})
+
+	t.Run("слушатель может отменить прослушивание", func(t *testing.T) {
+		b := new(EventsBus)
+
+		var removeListeners []func()
+
+		receivedEvents := new(atomic.Int32)
+		listenerIDs := lo.RepeatBy(100, func(_ int) uuid.UUID {
+			return uuid.New()
+		})
+
+		// Запустить много слушаетелй
+		for _, id := range listenerIDs {
+			rl, err := b.AddListener(id, id, func(event any, err error) {
+				receivedEvents.Add(1)
+			})
+			require.NoError(t, err)
+			removeListeners = append(removeListeners, rl)
+		}
+
+		// Отправить событие
+		b.Consume([]any{dummyEvent{recipients: listenerIDs}})
+		// Убедиться что все слушатели получили событие
+		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
+
+		// Удалить слушателей
+		for _, removeListener := range removeListeners {
+			removeListener()
+		}
+
+		// Отправить событие
+		b.Consume([]any{dummyEvent{recipients: listenerIDs}})
+		// Убедиться что никто не обработал событие
+		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
+
+		// Проверить что список слушателей пуст
+		assert.Empty(t, b.activeListeners())
 	})
 }
 

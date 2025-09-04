@@ -1,70 +1,58 @@
 package eventsBus
 
 import (
-	"context"
 	"errors"
 	"slices"
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 
 	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 type EventsBus struct {
-	listeners []listener
+	listeners []*listener
 	closed    bool
 	mu        sync.RWMutex
 }
 
 type listener struct {
-	err       chan<- error
-	userID    uuid.UUID
-	sessionID uuid.UUID
-	f         func(event any)
+	listeningIsOver bool
+	userID          uuid.UUID
+	sessionID       uuid.UUID
+	f               func(event any, err error)
 }
 
-func (u *EventsBus) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
+func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed {
-		return errors.New("events bus is closed")
+		return nil, errors.New("events bus is closed")
 	}
+
 	u.mu.Lock()
+	defer u.mu.Unlock()
+
 	// Проверить, что слушатель ещё не зарегистрирован
-	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l listener) bool {
+	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l *listener) bool {
 		return l.userID == userID && l.sessionID == sessionID
 	})
 	if sessionAlreadyListen {
-		u.mu.Unlock()
-		return errors.New("session already listen events")
+		return nil, errors.New("session already listen events")
 	}
 
-	errChan := make(chan error)
-	defer close(errChan)
-
-	// Добавить слушателя
-	u.listeners = append(u.listeners, listener{
-		// ctx:       ctx,
+	listener := &listener{
 		userID:    userID,
 		sessionID: sessionID,
 		f:         f,
-		err:       errChan,
-	})
-	u.mu.Unlock()
-
-	select {
-	case <-ctx.Done():
-		u.mu.Lock()
-		// Удалить слушателя
-		u.listeners = slices.DeleteFunc(u.listeners, func(l listener) bool {
-			return l.sessionID == sessionID
-		})
-		u.mu.Unlock()
-
-		return ctx.Err()
-	case err := <-errChan:
-		return err
 	}
+	// Добавить слушателя
+	u.listeners = append(u.listeners, listener)
+
+	return func() {
+		// Пометить слушателя как окончившего слушать события
+		listener.listeningIsOver = true
+	}, nil
 }
 
 func (u *EventsBus) Consume(ee []any) {
@@ -76,9 +64,14 @@ func (u *EventsBus) Consume(ee []any) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
+	// Очистить слушателей, которые отменили подписки
+	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
+		return l.listeningIsOver
+	})
+
 	// Пара событие + слушатель, для удобной отправки
 	type forHandling struct {
-		listener listener
+		listener *listener
 		event    any
 	}
 
@@ -92,8 +85,8 @@ func (u *EventsBus) Consume(ee []any) {
 		}
 
 		// Найти получателей события
-		recipients := slices.DeleteFunc(u.listeners, func(l listener) bool {
-			return !slices.ContainsFunc(eventHead.Recipients(), func(userID uuid.UUID) bool {
+		recipients := lo.Filter(u.listeners, func(l *listener, _ int) bool {
+			return slices.ContainsFunc(eventHead.Recipients(), func(userID uuid.UUID) bool {
 				return l.userID == userID
 			})
 		})
@@ -112,7 +105,7 @@ func (u *EventsBus) Consume(ee []any) {
 	for _, packet := range le {
 		go func() {
 			defer wg.Done()
-			packet.listener.f(packet.event)
+			packet.listener.f(packet.event, nil)
 		}()
 	}
 
@@ -132,10 +125,21 @@ func (u *EventsBus) Close() {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
+	// Инициализация waitgroup для асинхронной отмены
+	var wg sync.WaitGroup
+	wg.Add(len(u.listeners))
+
 	// Отправить ошибку всем слушателям
-	for _, l := range u.listeners {
-		l.err <- errors.New("сервер закрыт")
+	for _, listener := range u.listeners {
+		go func() {
+			defer wg.Done()
+			listener.f(nil, errors.New("сервер закрыт"))
+		}()
 	}
+
+	// Ожидать завершения обработки ошибки слушателями
+	wg.Wait()
+
 	// Очистить список
 	u.listeners = nil
 }
@@ -150,18 +154,26 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	defer u.mu.Unlock()
 
 	// Найти слушателя по сессии
-	i := slices.IndexFunc(u.listeners, func(l listener) bool {
-		return l.sessionID == sessionID
+	i := slices.IndexFunc(u.listeners, func(l *listener) bool {
+		return l.sessionID == sessionID && !l.listeningIsOver
 	})
 	if i == -1 {
 		return
 	}
 
 	// Отправить ошибку
-	u.listeners[i].err <- errors.New("принудительно отменен")
+	u.listeners[i].f(nil, errors.New("принудительно отменен"))
 
 	// Удалить слушателя
-	u.listeners = slices.DeleteFunc(u.listeners, func(l listener) bool {
+	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
 		return l.sessionID == sessionID
+	})
+}
+
+func (u *EventsBus) activeListeners() []*listener {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+	return slices.DeleteFunc(u.listeners, func(l *listener) bool {
+		return l.listeningIsOver
 	})
 }
