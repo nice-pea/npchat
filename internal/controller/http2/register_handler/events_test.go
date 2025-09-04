@@ -86,16 +86,13 @@ func TestEvents(t *testing.T) {
 
 type mockEventListener struct{}
 
-func (m mockEventListener) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, eventHandler func(event any)) error {
-	for {
-		select {
-		case <-ctx.Done():
-			log.Print("Event Listener получил сигнал завершения контекста из http-обработчика")
-			return ctx.Err()
-		default:
-			eventHandler(rndDirtyEvent())
+func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
+	go func() {
+		for {
+			f(rndDirtyEvent(), nil)
 		}
-	}
+	}()
+	return func() {}, nil
 }
 
 func rndDirtyEvent() any {
