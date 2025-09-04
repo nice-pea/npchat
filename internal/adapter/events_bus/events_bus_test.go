@@ -27,6 +27,35 @@ func Test_EventsBus(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("после отмены прослушивания, можно подписаться заново", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Запустить прослушивание
+		removeListener, err := b.AddListener(userID, sessionID, nil)
+		require.NoError(t, err)
+
+		// Отменить прослушивание со стороны подписчикаы
+		removeListener()
+
+		// Запустить прослушивание
+		_, err = b.AddListener(userID, sessionID, func(event any, err error) {
+			// Ошибка об отмене прослушивания сервером
+			require.Error(t, err)
+			require.Nil(t, event)
+		})
+		require.NoError(t, err)
+
+		// Отменить прослушивание со стороны сервера
+		b.Cancel(sessionID)
+
+		// Запустить прослушивание
+		_, err = b.AddListener(userID, sessionID, nil)
+		require.NoError(t, err)
+	})
+
 	t.Run("в сессии будут приходить только события направляемые пользователям", func(t *testing.T) {
 		b := new(EventsBus)
 		// Счетчик событий
@@ -128,13 +157,13 @@ func Test_EventsBus(t *testing.T) {
 			removeListener()
 		}
 
+		// Проверить что список слушателей пуст
+		assert.Empty(t, b.activeListeners())
+
 		// Отправить событие
 		b.Consume([]any{dummyEvent{recipients: listenerIDs}})
 		// Убедиться что никто не обработал событие
 		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
-
-		// Проверить что список слушателей пуст
-		assert.Empty(t, b.activeListeners())
 	})
 }
 

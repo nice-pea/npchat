@@ -65,24 +65,29 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 				}()
 
 				for {
+					var errFprint error
 					select {
 					case event := <-eventsChan:
 						// Отправлять события как json
 						b, _ := json.Marshal(event)
-						fmt.Fprint(w, formatSSEMessage("event", string(b)))
+						_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
 					case err := <-errorsChan:
 						// Отправлять ошибки
-						fmt.Fprint(w, formatSSEMessage("error", err.Error()))
+						_, errFprint = fmt.Fprint(w, formatSSEMessage("error", err.Error()))
 					case <-keepAliveTickler.C:
 						// Отправлять keepalive
-						fmt.Fprint(w, formatSSEMessage("keepalive", ""))
+						_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
 					case <-reqCtxDone:
+						return
+					}
+					if errFprint != nil {
+						slog.Warn("Events: fasthttp.StreamWriter: fmt.Fprint: " + errFprint.Error())
 						return
 					}
 
 					// Отправить данные во writer и очистить буфер
 					if err := w.Flush(); err != nil {
-						slog.Warn("Events: w.Flush: " + err.Error())
+						slog.Warn("Events: fasthttp.StreamWriter: w.Flush: " + err.Error())
 						return
 					}
 				}

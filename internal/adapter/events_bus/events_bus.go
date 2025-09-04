@@ -12,18 +12,20 @@ import (
 )
 
 type EventsBus struct {
-	listeners []*listener
-	closed    bool
-	mu        sync.RWMutex
+	listeners []*listener // Список слушателей
+	closed    bool        // Признак окончания работы системы
+	mu        sync.Mutex  // Синхронизация доступа к listeners
 }
 
+// listener представляет собой слушателя (подписчика) событий
 type listener struct {
-	listeningIsOver bool
-	userID          uuid.UUID
-	sessionID       uuid.UUID
-	f               func(event any, err error)
+	listeningIsOver bool                       // Признак отмены подписки, со стороны слушателя
+	userID          uuid.UUID                  // ID пользователя
+	sessionID       uuid.UUID                  // ID сессии
+	f               func(event any, err error) // Обработчик событий
 }
 
+// AddListener регистрирует обработчик событий
 func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed {
@@ -35,7 +37,9 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 
 	// Проверить, что слушатель ещё не зарегистрирован
 	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l *listener) bool {
-		return l.userID == userID && l.sessionID == sessionID
+		return l.userID == userID &&
+			l.sessionID == sessionID &&
+			!l.listeningIsOver
 	})
 	if sessionAlreadyListen {
 		return nil, errors.New("session already listen events")
@@ -55,6 +59,7 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 	}, nil
 }
 
+// Consume рассылает события слушателям
 func (u *EventsBus) Consume(ee []any) {
 	// Выйти, если сервер уже закрыт
 	if u.closed {
@@ -113,6 +118,7 @@ func (u *EventsBus) Consume(ee []any) {
 	wg.Wait()
 }
 
+// Close завершает работу системы
 func (u *EventsBus) Close() {
 	// Выйти, если сервер уже закрыт
 	if u.closed {
@@ -144,6 +150,7 @@ func (u *EventsBus) Close() {
 	u.listeners = nil
 }
 
+// Cancel отменяет подписку слушателя (удаляет его из списка)
 func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	// Выйти, если сервер уже закрыт
 	if u.closed {
@@ -170,10 +177,11 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	})
 }
 
+// activeListeners возвращает активных слушателей
 func (u *EventsBus) activeListeners() []*listener {
-	u.mu.RLock()
-	defer u.mu.RUnlock()
-	return slices.DeleteFunc(u.listeners, func(l *listener) bool {
-		return l.listeningIsOver
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	return lo.Filter(u.listeners, func(l *listener, _ int) bool {
+		return !l.listeningIsOver
 	})
 }
