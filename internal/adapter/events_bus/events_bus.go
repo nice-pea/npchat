@@ -164,23 +164,26 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	}
 
 	u.listenersMutex.Lock()
-	defer u.listenersMutex.Unlock()
 
 	// Найти слушателя по сессии
 	i := slices.IndexFunc(u.listeners, func(l *listener) bool {
 		return l.sessionID == sessionID && !l.listeningIsOver
 	})
 	if i == -1 {
+		u.listenersMutex.Unlock()
 		return
 	}
-
-	// Отправить ошибку
-	u.listeners[i].f(nil, ErrListenerForciblyCanceled)
+	target := u.listeners[i]
 
 	// Удалить слушателя
 	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
 		return l.sessionID == sessionID
 	})
+
+	u.listenersMutex.Unlock()
+
+	// Отправить ошибку
+	target.f(nil, ErrListenerForciblyCanceled)
 }
 
 // activeListeners возвращает активных слушателей
