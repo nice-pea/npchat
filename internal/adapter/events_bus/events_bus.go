@@ -11,6 +11,12 @@ import (
 	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
+var (
+	ErrBusClosed                = errors.New("шина событий закрыта")
+	ErrDuplicateSession         = errors.New("сессия уже прослушивает события")
+	ErrListenerForciblyCanceled = errors.New("принудительно отменен")
+)
+
 type EventsBus struct {
 	listeners []*listener // Список слушателей
 	closed    bool        // Признак окончания работы системы
@@ -29,7 +35,7 @@ type listener struct {
 func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed {
-		return nil, errors.New("events bus is closed")
+		return nil, ErrBusClosed
 	}
 
 	u.mu.Lock()
@@ -42,7 +48,7 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 			!l.listeningIsOver
 	})
 	if sessionAlreadyListen {
-		return nil, errors.New("session already listen events")
+		return nil, ErrDuplicateSession
 	}
 
 	listener := &listener{
@@ -139,7 +145,7 @@ func (u *EventsBus) Close() {
 	for _, listener := range u.listeners {
 		go func() {
 			defer wg.Done()
-			listener.f(nil, errors.New("сервер закрыт"))
+			listener.f(nil, ErrBusClosed)
 		}()
 	}
 
@@ -169,7 +175,7 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	}
 
 	// Отправить ошибку
-	u.listeners[i].f(nil, errors.New("принудительно отменен"))
+	u.listeners[i].f(nil, ErrListenerForciblyCanceled)
 
 	// Удалить слушателя
 	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {

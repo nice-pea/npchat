@@ -24,7 +24,7 @@ func Test_EventsBus(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = b.AddListener(userID, sessionID, nil)
-		require.Error(t, err)
+		require.ErrorIs(t, err, ErrDuplicateSession)
 	})
 
 	t.Run("после отмены прослушивания, можно подписаться заново", func(t *testing.T) {
@@ -43,7 +43,7 @@ func Test_EventsBus(t *testing.T) {
 		// Запустить прослушивание
 		_, err = b.AddListener(userID, sessionID, func(event any, err error) {
 			// Ошибка об отмене прослушивания сервером
-			require.Error(t, err)
+			require.ErrorIs(t, err, ErrListenerForciblyCanceled)
 			require.Nil(t, event)
 		})
 		require.NoError(t, err)
@@ -123,7 +123,7 @@ func Test_EventsBus(t *testing.T) {
 		b.Close()
 		// Попытаться запустить нового слушателя
 		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
-		require.Error(t, err)
+		require.ErrorIs(t, err, ErrBusClosed)
 		// Убедиться что список слушателей пуст
 		assert.Empty(t, b.activeListeners())
 	})
