@@ -75,12 +75,21 @@ func (u *EventsBus) Consume(ee []any) {
 	}
 
 	u.mu.Lock()
-	defer u.mu.Unlock()
 
 	// Очистить слушателей, которые отменили подписки
 	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
 		return l.listeningIsOver
 	})
+
+	// Снимок активных слушателей
+	snapshot := append([]*listener(nil), u.listeners...)
+
+	u.mu.Unlock()
+
+	// Выйти, если нет активных слушателей
+	if len(snapshot) == 0 {
+		return
+	}
 
 	// Пара событие + слушатель, для удобной отправки
 	type forHandling struct {
@@ -98,7 +107,7 @@ func (u *EventsBus) Consume(ee []any) {
 		}
 
 		// Найти получателей события
-		recipients := lo.Filter(u.listeners, func(l *listener, _ int) bool {
+		recipients := lo.Filter(snapshot, func(l *listener, _ int) bool {
 			return slices.ContainsFunc(eventHead.Recipients(), func(userID uuid.UUID) bool {
 				return l.userID == userID
 			})
