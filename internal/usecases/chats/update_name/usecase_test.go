@@ -34,17 +34,19 @@ func (suite *testSuite) newCreateInputRandom() createChat.In {
 
 // Test_Chats_UpdateName тестирует обновления названия чата
 func (suite *testSuite) Test_Chats_UpdateName() {
-	usecase := &UpdateNameUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: mockEvents.NewConsumer(suite.T()),
-	}
-	createChatUsecase := createChat.CreateChatUsecase{
-		Repo: suite.RR.Chats,
-	}
 	// Настройка мока
-	usecase.EventConsumer.(*mockEvents.Consumer).
+	eventConsumer := mockEvents.NewConsumer(suite.T())
+	eventConsumer.
 		On("Consume", mock.Anything).
 		Return()
+	usecase := &UpdateNameUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: eventConsumer,
+	}
+	createChatUsecase := createChat.CreateChatUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: eventConsumer,
+	}
 
 	suite.Run("только существующий чат можно обновить", func() {
 		input := In{
