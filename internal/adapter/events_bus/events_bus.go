@@ -4,6 +4,7 @@ import (
 	"errors"
 	"slices"
 	"sync"
+	"sync/atomic"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -18,9 +19,9 @@ var (
 )
 
 type EventsBus struct {
-	listeners []*listener // Список слушателей
-	closed    bool        // Признак окончания работы системы
-	mu        sync.Mutex  // Синхронизация доступа к listeners
+	listeners      []*listener // Список слушателей
+	listenersMutex sync.Mutex  // Синхронизация доступа к listeners
+	closed         atomic.Bool // Признак окончания работы системы
 }
 
 // listener представляет собой слушателя (подписчика) событий
@@ -34,12 +35,12 @@ type listener struct {
 // AddListener регистрирует обработчик событий
 func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
-	if u.closed {
+	if u.closed.Load() {
 		return nil, ErrBusClosed
 	}
 
-	u.mu.Lock()
-	defer u.mu.Unlock()
+	u.listenersMutex.Lock()
+	defer u.listenersMutex.Unlock()
 
 	// Проверить, что слушатель ещё не зарегистрирован
 	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l *listener) bool {
@@ -60,31 +61,22 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 	u.listeners = append(u.listeners, listener)
 
 	return func() {
-		u.mu.Lock()
+		u.listenersMutex.Lock()
 		// Пометить слушателя как окончившего слушать события
 		listener.listeningIsOver = true
-		u.mu.Unlock()
+		u.listenersMutex.Unlock()
 	}, nil
 }
 
 // Consume рассылает события слушателям
 func (u *EventsBus) Consume(ee []any) {
 	// Выйти, если сервер уже закрыт
-	if u.closed {
+	if u.closed.Load() {
 		return
 	}
 
-	u.mu.Lock()
-
-	// Очистить слушателей, которые отменили подписки
-	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
-		return l.listeningIsOver
-	})
-
 	// Снимок активных слушателей
-	snapshot := append([]*listener(nil), u.listeners...)
-
-	u.mu.Unlock()
+	snapshot := u.activeListeners()
 
 	// Выйти, если нет активных слушателей
 	if len(snapshot) == 0 {
@@ -138,22 +130,19 @@ func (u *EventsBus) Consume(ee []any) {
 // Close завершает работу системы
 func (u *EventsBus) Close() {
 	// Выйти, если сервер уже закрыт
-	if u.closed {
+	if !u.closed.CompareAndSwap(false, true) {
 		return
 	}
 
-	// Установить флаг closed
-	u.closed = true
-
-	u.mu.Lock()
-	defer u.mu.Unlock()
+	// Снимок активных слушателей
+	snapshot := u.activeListeners()
 
 	// Инициализация waitgroup для асинхронной отмены
 	var wg sync.WaitGroup
-	wg.Add(len(u.listeners))
+	wg.Add(len(snapshot))
 
-	// Отправить ошибку всем слушателям
-	for _, listener := range u.listeners {
+	// Отправить ошибку всем активным слушателям
+	for _, listener := range snapshot {
 		go func() {
 			defer wg.Done()
 			listener.f(nil, ErrBusClosed)
@@ -170,12 +159,12 @@ func (u *EventsBus) Close() {
 // Cancel отменяет подписку слушателя (удаляет его из списка)
 func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	// Выйти, если сервер уже закрыт
-	if u.closed {
+	if u.closed.Load() {
 		return
 	}
 
-	u.mu.Lock()
-	defer u.mu.Unlock()
+	u.listenersMutex.Lock()
+	defer u.listenersMutex.Unlock()
 
 	// Найти слушателя по сессии
 	i := slices.IndexFunc(u.listeners, func(l *listener) bool {
@@ -196,8 +185,8 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 
 // activeListeners возвращает активных слушателей
 func (u *EventsBus) activeListeners() []*listener {
-	u.mu.Lock()
-	defer u.mu.Unlock()
+	u.listenersMutex.Lock()
+	defer u.listenersMutex.Unlock()
 	return lo.Filter(u.listeners, func(l *listener, _ int) bool {
 		return !l.listeningIsOver
 	})
