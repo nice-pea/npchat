@@ -26,14 +26,14 @@ type EventsBus struct {
 
 // listener представляет собой слушателя (подписчика) событий
 type listener struct {
-	listeningIsOver bool                       // Признак отмены подписки, со стороны слушателя
-	userID          uuid.UUID                  // ID пользователя
-	sessionID       uuid.UUID                  // ID сессии
-	f               func(event any, err error) // Обработчик событий
+	listeningIsOver bool                                // Признак отмены подписки, со стороны слушателя
+	userID          uuid.UUID                           // ID пользователя
+	sessionID       uuid.UUID                           // ID сессии
+	f               func(event events.Event, err error) // Обработчик событий
 }
 
 // AddListener регистрирует обработчик событий
-func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
+func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed.Load() {
 		return nil, ErrBusClosed
@@ -69,7 +69,7 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 }
 
 // Consume рассылает события слушателям
-func (u *EventsBus) Consume(ee []any) {
+func (u *EventsBus) Consume(ee []events.Event) {
 	// Выйти, если сервер уже закрыт
 	if u.closed.Load() {
 		return
@@ -86,21 +86,16 @@ func (u *EventsBus) Consume(ee []any) {
 	// Пара событие + слушатель, для удобной отправки
 	type forHandling struct {
 		listener *listener
-		event    any
+		event    events.Event
 	}
 
 	// Одномерный список из события и их получателей
 	var le []forHandling
 
 	for _, event := range ee {
-		eventHead, ok := event.(events.Head)
-		if !ok {
-			continue
-		}
-
 		// Найти получателей события
 		recipients := lo.Filter(snapshot, func(l *listener, _ int) bool {
-			return slices.ContainsFunc(eventHead.Recipients(), func(userID uuid.UUID) bool {
+			return slices.ContainsFunc(event.Recipients, func(userID uuid.UUID) bool {
 				return l.userID == userID
 			})
 		})
@@ -145,7 +140,7 @@ func (u *EventsBus) Close() {
 	for _, listener := range snapshot {
 		go func() {
 			defer wg.Done()
-			listener.f(nil, ErrBusClosed)
+			listener.f(events.Event{}, ErrBusClosed)
 		}()
 	}
 
@@ -185,7 +180,7 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	u.listenersMutex.Unlock()
 
 	// Отправить ошибку
-	target.f(nil, ErrListenerForciblyCanceled)
+	target.f(events.Event{}, ErrListenerForciblyCanceled)
 }
 
 // activeListeners возвращает активных слушателей

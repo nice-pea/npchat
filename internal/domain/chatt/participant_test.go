@@ -104,14 +104,14 @@ func TestChat_AddParticipant(t *testing.T) {
 		// Проверить список опубликованных событий
 		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Удаленного
-		participantAdded := eventsBuf.Events()[0].(EventParticipantAdded)
+		participantAdded := eventsBuf.Events()[0]
 		// Содержит нужных получателей
-		assert.Contains(t, participantAdded.Recipients(), chat.ChiefID)
-		assert.Contains(t, participantAdded.Recipients(), participant.UserID)
+		assert.Contains(t, participantAdded.Recipients, chat.ChiefID)
+		assert.Contains(t, participantAdded.Recipients, participant.UserID)
 		// Связано с чатом
-		assert.Equal(t, chat.ID, participantAdded.ChatID)
+		assert.Equal(t, chat.ID, participantAdded.Data["chat_id"].(uuid.UUID))
 		// Содержит нужного участника
-		assert.Equal(t, participant, participantAdded.Participant)
+		assert.Equal(t, participant, participantAdded.Data["participant"].(Participant))
 	})
 }
 
@@ -182,13 +182,13 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		// Проверить список опубликованных событий
 		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Удаленного
-		participantRemoved := eventsBuf.Events()[0].(EventParticipantRemoved)
+		participantRemoved := eventsBuf.Events()[0]
 		// Содержит нужных получателей
-		assert.Contains(t, participantRemoved.Recipients(), chat.ChiefID)
-		assert.Contains(t, participantRemoved.Recipients(), participant.UserID)
+		assert.Contains(t, participantRemoved.Recipients, chat.ChiefID)
+		assert.Contains(t, participantRemoved.Recipients, participant.UserID)
 		// Связано с чатом
-		assert.Equal(t, chat.ID, participantRemoved.ChatID)
+		assert.Equal(t, chat.ID, participantRemoved.Data["chat_id"].(uuid.UUID))
 		// Содержит нужного участника
-		assert.Equal(t, participant, participantRemoved.Participant)
+		assert.Equal(t, participant, participantRemoved.Data["participant"].(Participant))
 	})
 }

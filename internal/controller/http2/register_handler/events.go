@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Events регистрирует обработчик для получения потока событий.
@@ -30,11 +31,11 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 			// Канал для обработки ошибок в отдельной горутине
 			errorsChan := make(chan error)
 
-			removeListener, err := eventListener.AddListener(session.UserID, session.ID, func(event any, err error) {
+			removeListener, err := eventListener.AddListener(session.UserID, session.ID, func(event events.Event, err error) {
 				if err != nil {
 					errorsChan <- err
 				}
-				if event != nil {
+				if event.Type != "" {
 					eventsChan <- event
 				}
 			})
@@ -120,5 +121,5 @@ type UsecasesForEvents interface {
 }
 
 type EventListener interface {
-	AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error)
+	AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error)
 }

@@ -5,6 +5,7 @@
 package mockEvents
 
 import (
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -36,8 +37,8 @@ func (_m *Consumer) EXPECT() *Consumer_Expecter {
 }
 
 // Consume provides a mock function for the type Consumer
-func (_mock *Consumer) Consume(events []any) {
-	_mock.Called(events)
+func (_mock *Consumer) Consume(events1 []events.Event) {
+	_mock.Called(events1)
 	return
 }
 
@@ -47,16 +48,16 @@ type Consumer_Consume_Call struct {
 }
 
 // Consume is a helper method to define mock.On call
-//   - events []any
-func (_e *Consumer_Expecter) Consume(events interface{}) *Consumer_Consume_Call {
-	return &Consumer_Consume_Call{Call: _e.mock.On("Consume", events)}
+//   - events1 []events.Event
+func (_e *Consumer_Expecter) Consume(events1 interface{}) *Consumer_Consume_Call {
+	return &Consumer_Consume_Call{Call: _e.mock.On("Consume", events1)}
 }
 
-func (_c *Consumer_Consume_Call) Run(run func(events []any)) *Consumer_Consume_Call {
+func (_c *Consumer_Consume_Call) Run(run func(events1 []events.Event)) *Consumer_Consume_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 []any
+		var arg0 []events.Event
 		if args[0] != nil {
-			arg0 = args[0].([]any)
+			arg0 = args[0].([]events.Event)
 		}
 		run(
 			arg0,
@@ -70,7 +71,7 @@ func (_c *Consumer_Consume_Call) Return() *Consumer_Consume_Call {
 	return _c
 }
 
-func (_c *Consumer_Consume_Call) RunAndReturn(run func(events []any)) *Consumer_Consume_Call {
+func (_c *Consumer_Consume_Call) RunAndReturn(run func(events1 []events.Event)) *Consumer_Consume_Call {
 	_c.Run(run)
 	return _c
 }

@@ -53,17 +53,10 @@ func (c *Chat) AddInvitation(invitation Invitation, eventsBuf *events.Buffer) er
 		return ErrUserIsAlreadyInvited
 	}
 
-	// Добавить событие
-	eventsBuf.AddSafety(EventInvitationAdded{
-		Head: events.NewHead([]uuid.UUID{
-			c.ChiefID,
-			invitation.RecipientID,
-			invitation.SubjectID,
-		}),
-		Invitation: invitation,
-	})
-
 	c.Invitations = append(c.Invitations, invitation)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventInvitationAdded(invitation))
 
 	return nil
 }
@@ -80,18 +73,13 @@ func (c *Chat) RemoveInvitation(id uuid.UUID, eventsBuf *events.Buffer) error {
 		return i.ID == id
 	})
 
-	// Добавить событие
-	eventsBuf.AddSafety(EventInvitationRemoved{
-		Head: events.NewHead([]uuid.UUID{
-			c.ChiefID,
-			c.Invitations[i].RecipientID,
-			c.Invitations[i].SubjectID,
-		}),
-		Invitation: c.Invitations[i],
-	})
+	removedInvitation := c.Invitations[i]
 
 	// Удалить приглашение из списка
 	c.Invitations = slices.Delete(c.Invitations, i, i+1)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventInvitationRemoved(removedInvitation))
 
 	return nil
 }

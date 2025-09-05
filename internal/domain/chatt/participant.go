@@ -54,15 +54,13 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID, eventsBuf *events.Buffer) err
 		return p.UserID == userID
 	})
 
-	// Добавить событие
-	eventsBuf.AddSafety(EventParticipantRemoved{
-		Head:        events.NewHead(userIDs(c.Participants)),
-		ChatID:      c.ID,
-		Participant: c.Participants[i],
-	})
+	removedParticipant := c.Participants[i]
 
 	// Удалить участника
 	c.Participants = slices.Delete(c.Participants, i, i+1)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventParticipantRemoved(removedParticipant))
 
 	return nil
 }
@@ -83,11 +81,7 @@ func (c *Chat) AddParticipant(p Participant, eventsBuf *events.Buffer) error {
 	c.Participants = append(c.Participants, p)
 
 	// Добавить событие
-	eventsBuf.AddSafety(EventParticipantAdded{
-		Head:        events.NewHead(userIDs(c.Participants)),
-		ChatID:      c.ID,
-		Participant: p,
-	})
+	eventsBuf.AddSafety(c.NewEventParticipantAdded(p))
 
 	return nil
 }

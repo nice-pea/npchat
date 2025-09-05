@@ -8,6 +8,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
@@ -133,11 +134,11 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 			EventConsumer: mockEvents.NewConsumer(suite.T()),
 		}
 		// Настройка мока
-		var consumedEvents []any
+		var consumedEvents []events.Event
 		usecase.EventConsumer.(*mockEvents.Consumer).
 			On("Consume", mock.Anything).
 			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]any)...)
+				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
 			}).
 			Return()
 
@@ -160,6 +161,6 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		suite.Zero(out)
 
 		// Проверить список опубликованных событий
-		suite.True(serviceSuite.HasElementOfType[chatt.EventInvitationRemoved](consumedEvents))
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemovedType)
 	})
 }

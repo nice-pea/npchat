@@ -38,10 +38,8 @@ func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, er
 		Invitations: nil,
 	}
 
-	eventsBuf.AddSafety(EventChatCreated{
-		Head:   events.NewHead(userIDs(chat.Participants)),
-		ChatID: chat.ID,
-	})
+	// Добавить событие
+	eventsBuf.AddSafety(chat.NewEventChatCreated())
 
 	return chat, nil
 }
@@ -54,11 +52,8 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 
 	c.Name = name
 
-	eventsBuf.AddSafety(EventChatNameUpdated{
-		Head:   events.NewHead(userIDs(c.Participants)),
-		ChatID: c.ID,
-		Name:   c.Name,
-	})
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventChatNameUpdated())
 
 	return nil
 }

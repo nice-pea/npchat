@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -20,6 +21,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
 
@@ -272,4 +274,11 @@ func HasElementOfType[T any](e []any) bool {
 		}
 	}
 	return false
+}
+
+func (suite *Suite) AssertHasEventType(ee []events.Event, eventType string) {
+	suite.T().Helper()
+	suite.True(slices.ContainsFunc(ee, func(e events.Event) bool {
+		return e.Type == eventType
+	}))
 }

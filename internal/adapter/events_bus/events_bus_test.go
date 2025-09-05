@@ -10,6 +10,8 @@ import (
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 func Test_EventsBus(t *testing.T) {
@@ -41,10 +43,10 @@ func Test_EventsBus(t *testing.T) {
 		removeListener()
 
 		// Запустить прослушивание
-		_, err = b.AddListener(userID, sessionID, func(event any, err error) {
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {
 			// Ошибка об отмене прослушивания сервером
 			require.ErrorIs(t, err, ErrListenerForciblyCanceled)
-			require.Nil(t, event)
+			require.Zero(t, event)
 		})
 		require.NoError(t, err)
 
@@ -68,15 +70,15 @@ func Test_EventsBus(t *testing.T) {
 			uuid.New(),
 		}
 		// Отправляемые события
-		events := []any{
-			dummyEvent{recipients: []uuid.UUID{userIDs[0], userIDs[1], userIDs[2]}},
-			dummyEvent{recipients: []uuid.UUID{userIDs[1], userIDs[2]}},
-			dummyEvent{recipients: []uuid.UUID{userIDs[2]}},
+		eventsForSend := []events.Event{
+			events.Event{Recipients: []uuid.UUID{userIDs[0], userIDs[1], userIDs[2]}},
+			events.Event{Recipients: []uuid.UUID{userIDs[1], userIDs[2]}},
+			events.Event{Recipients: []uuid.UUID{userIDs[2]}},
 		}
 
 		// Запустить прослушивание
 		for _, userID := range userIDs {
-			_, err := b.AddListener(userID, userID, func(event any, _ error) {
+			_, err := b.AddListener(userID, userID, func(event events.Event, _ error) {
 				mu.Lock()
 				eventsCountByUserID[userID]++
 				mu.Unlock()
@@ -85,7 +87,7 @@ func Test_EventsBus(t *testing.T) {
 		}
 
 		// Отправить события
-		b.Consume(events)
+		b.Consume(eventsForSend)
 
 		// Проверить количество полученных событий каждым пользователем
 		assert.Equal(t, 1, eventsCountByUserID[userIDs[0]])
@@ -100,7 +102,7 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		_, err := b.AddListener(userID, sessionID, func(event any, err error) {})
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {})
 		require.NoError(t, err)
 		time.Sleep(time.Millisecond)
 
@@ -115,7 +117,7 @@ func Test_EventsBus(t *testing.T) {
 
 		// Запустить много слушаетелй
 		for range 100 {
-			_, err := b.AddListener(uuid.New(), uuid.New(), func(event any, err error) {})
+			_, err := b.AddListener(uuid.New(), uuid.New(), func(event events.Event, err error) {})
 			require.NoError(t, err)
 		}
 
@@ -140,7 +142,7 @@ func Test_EventsBus(t *testing.T) {
 
 		// Запустить много слушаетелй
 		for _, id := range listenerIDs {
-			rl, err := b.AddListener(id, id, func(event any, err error) {
+			rl, err := b.AddListener(id, id, func(event events.Event, err error) {
 				receivedEvents.Add(1)
 			})
 			require.NoError(t, err)
@@ -148,7 +150,7 @@ func Test_EventsBus(t *testing.T) {
 		}
 
 		// Отправить событие
-		b.Consume([]any{dummyEvent{recipients: listenerIDs}})
+		b.Consume([]events.Event{events.Event{Recipients: listenerIDs}})
 		// Убедиться что все слушатели получили событие
 		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
 
@@ -157,24 +159,12 @@ func Test_EventsBus(t *testing.T) {
 			removeListener()
 		}
 
-		// Проверить что список слушателей пуст
+		// Проверить что список слsушателей пуст
 		assert.Empty(t, b.activeListeners())
 
 		// Отправить событие
-		b.Consume([]any{dummyEvent{recipients: listenerIDs}})
+		b.Consume([]events.Event{events.Event{Recipients: listenerIDs}})
 		// Убедиться что никто не обработал событие
 		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
 	})
-}
-
-type dummyEvent struct {
-	recipients []uuid.UUID
-}
-
-func (e dummyEvent) CreatedIn() time.Time {
-	return time.Time{}
-}
-
-func (e dummyEvent) Recipients() []uuid.UUID {
-	return e.recipients
 }

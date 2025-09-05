@@ -5,8 +5,6 @@
 package mockRegisterHandler
 
 import (
-	"context"
-
 	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -38,71 +36,76 @@ func (_m *EventListener) EXPECT() *EventListener_Expecter {
 	return &EventListener_Expecter{mock: &_m.Mock}
 }
 
-// Listen provides a mock function for the type EventListener
-func (_mock *EventListener) Listen(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error {
-	ret := _mock.Called(ctx, userID, sessionID, f)
+// AddListener provides a mock function for the type EventListener
+func (_mock *EventListener) AddListener(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error)) (func(), error) {
+	ret := _mock.Called(userID, sessionID, f)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Listen")
+		panic("no return value specified for AddListener")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, func(event any)) error); ok {
-		r0 = returnFunc(ctx, userID, sessionID, f)
-	} else {
-		r0 = ret.Error(0)
+	var r0 func()
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event any, err error)) (func(), error)); ok {
+		return returnFunc(userID, sessionID, f)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event any, err error)) func()); ok {
+		r0 = returnFunc(userID, sessionID, f)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(func())
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(uuid.UUID, uuid.UUID, func(event any, err error)) error); ok {
+		r1 = returnFunc(userID, sessionID, f)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
-// EventListener_Listen_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Listen'
-type EventListener_Listen_Call struct {
+// EventListener_AddListener_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddListener'
+type EventListener_AddListener_Call struct {
 	*mock.Call
 }
 
-// Listen is a helper method to define mock.On call
-//   - ctx context.Context
+// AddListener is a helper method to define mock.On call
 //   - userID uuid.UUID
 //   - sessionID uuid.UUID
-//   - f func(event any)
-func (_e *EventListener_Expecter) Listen(ctx interface{}, userID interface{}, sessionID interface{}, f interface{}) *EventListener_Listen_Call {
-	return &EventListener_Listen_Call{Call: _e.mock.On("Listen", ctx, userID, sessionID, f)}
+//   - f func(event any, err error)
+func (_e *EventListener_Expecter) AddListener(userID interface{}, sessionID interface{}, f interface{}) *EventListener_AddListener_Call {
+	return &EventListener_AddListener_Call{Call: _e.mock.On("AddListener", userID, sessionID, f)}
 }
 
-func (_c *EventListener_Listen_Call) Run(run func(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any))) *EventListener_Listen_Call {
+func (_c *EventListener_AddListener_Call) Run(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error))) *EventListener_AddListener_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
+		var arg0 uuid.UUID
 		if args[0] != nil {
-			arg0 = args[0].(context.Context)
+			arg0 = args[0].(uuid.UUID)
 		}
 		var arg1 uuid.UUID
 		if args[1] != nil {
 			arg1 = args[1].(uuid.UUID)
 		}
-		var arg2 uuid.UUID
+		var arg2 func(event any, err error)
 		if args[2] != nil {
-			arg2 = args[2].(uuid.UUID)
-		}
-		var arg3 func(event any)
-		if args[3] != nil {
-			arg3 = args[3].(func(event any))
+			arg2 = args[2].(func(event any, err error))
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
-			arg3,
 		)
 	})
 	return _c
 }
 
-func (_c *EventListener_Listen_Call) Return(err error) *EventListener_Listen_Call {
-	_c.Call.Return(err)
+func (_c *EventListener_AddListener_Call) Return(removeListener func(), err error) *EventListener_AddListener_Call {
+	_c.Call.Return(removeListener, err)
 	return _c
 }
 
-func (_c *EventListener_Listen_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, f func(event any)) error) *EventListener_Listen_Call {
+func (_c *EventListener_AddListener_Call) RunAndReturn(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error)) (func(), error)) *EventListener_AddListener_Call {
 	_c.Call.Return(run)
 	return _c
 }

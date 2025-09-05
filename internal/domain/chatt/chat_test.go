@@ -70,10 +70,10 @@ func TestNewChat(t *testing.T) {
 		// Проверить список опубликованных событий
 		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Созданного чата
-		chatCreated := eventsBuf.Events()[0].(EventChatCreated)
+		chatCreated := eventsBuf.Events()[0]
 		// Содержит нужных получателей
-		assert.Contains(t, chatCreated.Recipients(), chat.ChiefID)
+		assert.Contains(t, chatCreated.Recipients, chat.ChiefID)
 		// Связано с чатом
-		assert.Equal(t, chat.ID, chatCreated.ChatID)
+		assert.Equal(t, chat.ID, chatCreated.Data["chat_id"].(uuid.UUID))
 	})
 }

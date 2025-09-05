@@ -18,6 +18,7 @@ import (
 
 	mockRegisterHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler/mocks"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
@@ -83,7 +84,7 @@ func TestEvents(t *testing.T) {
 
 type mockEventListener struct{}
 
-func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event any, err error)) (removeListener func(), err error) {
+func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	go func() {
 		for {
 			f(rndDirtyEvent(), nil)
@@ -93,12 +94,15 @@ func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event
 	return func() {}, nil
 }
 
-func rndDirtyEvent() any {
-	var e struct {
-		Name string `fake:"{name}"`
-		Age  int    `fake:"{number:0,100}"`
-		Sex  string `fake:"{gender}"`
+func rndDirtyEvent() events.Event {
+	return events.Event{
+		Type:       "dirty",
+		CreatedIn:  time.Now(),
+		Recipients: []uuid.UUID{uuid.New()},
+		Data: map[string]any{
+			"name": gofakeit.Name(),
+			"age":  gofakeit.Number(1, 100),
+			"sex":  gofakeit.Gender(),
+		},
 	}
-	_ = gofakeit.Struct(&e)
-	return e
 }

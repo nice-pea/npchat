@@ -8,24 +8,24 @@ package events
 // Buffer представляет структуру для удобного хранения событий
 // перед отправкой потребителю
 type Buffer struct {
-	events []any
+	events []Event
 }
 
 // Add добавляет событие в буфер
-func (ee *Buffer) Add(event any) {
-	ee.events = append(ee.events, event)
+func (b *Buffer) Add(event Event) {
+	b.events = append(b.events, event)
 }
 
 // AddSafety добавляет событие в буфер.
 // Если буфер nil, то ничего не делает
-func (ee *Buffer) AddSafety(event any) {
-	if ee == nil {
+func (b *Buffer) AddSafety(event Event) {
+	if b == nil {
 		return
 	}
-	ee.events = append(ee.events, event)
+	b.Add(event)
 }
 
 // Events возвращает список событий
-func (ee *Buffer) Events() []any {
-	return ee.events
+func (b *Buffer) Events() []Event {
+	return b.events
 }
