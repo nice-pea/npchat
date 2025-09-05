@@ -22,15 +22,15 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	sel := bqb.New("SELECT u.* FROM users u")
 	where := bqb.Optional("WHERE")
 
-	needJoinOAuthUsers := filter.OAuthUserID != "" || filter.OAuthProvider != ""
-	if needJoinOAuthUsers {
+	needJoinOauthUsers := filter.OauthUserID != "" || filter.OauthProvider != ""
+	if needJoinOauthUsers {
 		sel = sel.Space("LEFT JOIN oauth_users o ON u.id = o.user_id")
 	}
-	if filter.OAuthUserID != "" {
-		where = where.And("o.user_id = ?", filter.OAuthUserID)
+	if filter.OauthUserID != "" {
+		where = where.And("o.user_id = ?", filter.OauthUserID)
 	}
-	if filter.OAuthProvider != "" {
-		where = where.And("o.provider = ?", filter.OAuthProvider)
+	if filter.OauthProvider != "" {
+		where = where.And("o.provider = ?", filter.OauthProvider)
 	}
 
 	if filter.ID != uuid.Nil {
@@ -65,7 +65,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	}
 
 	// Найти oauth пользователей для пользователей
-	var oauthUsers []dbOAuthUser
+	var oauthUsers []dbOauthUser
 	if err := r.DB().Select(&oauthUsers, `
 		SELECT *
 		FROM oauth_users
@@ -75,7 +75,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 	}
 
 	// Создать карту, где ключ это ID пользователя, а значение это список его oauth пользователей
-	oauthUsersMap := make(map[string][]dbOAuthUser, len(users))
+	oauthUsersMap := make(map[string][]dbOauthUser, len(users))
 	for _, u := range oauthUsers {
 		oauthUsersMap[u.UserID] = append(oauthUsersMap[u.UserID], u)
 	}
@@ -125,7 +125,7 @@ func (r *UserrRepository) upsert(user userr.User) error {
 	if _, err := r.DB().NamedExec(`
 		INSERT INTO oauth_users(id, user_id, provider, email, name, picture, access_token, token_type, refresh_token, expiry) 
 		VALUES (:id, :user_id, :provider, :email, :name, :picture, :access_token, :token_type, :refresh_token, :expiry)
-	`, toDBOAuthUsers(user)); err != nil {
+	`, toDBOauthUsers(user)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
 
@@ -156,12 +156,12 @@ func toDBUser(user userr.User) dbUser {
 	}
 }
 
-func toDomainUser(user dbUser, oauthUsers []dbOAuthUser) userr.User {
+func toDomainUser(user dbUser, oauthUsers []dbOauthUser) userr.User {
 	return userr.User{
 		ID:            uuid.MustParse(user.ID),
 		Name:          user.Name,
 		Nick:          user.Nick,
-		OpenAuthUsers: toDomainOAuthUsers(oauthUsers),
+		OpenAuthUsers: toDomainOauthUsers(oauthUsers),
 		BasicAuth: userr.BasicAuth{
 			Login:    user.Login,
 			Password: user.Password,
@@ -169,7 +169,7 @@ func toDomainUser(user dbUser, oauthUsers []dbOAuthUser) userr.User {
 	}
 }
 
-func toDomainUsers(users []dbUser, oauthUsers map[string][]dbOAuthUser) []userr.User {
+func toDomainUsers(users []dbUser, oauthUsers map[string][]dbOauthUser) []userr.User {
 	domainUsers := make([]userr.User, len(users))
 	for i, u := range users {
 		domainUsers[i] = toDomainUser(u, oauthUsers[u.ID])
@@ -178,7 +178,7 @@ func toDomainUsers(users []dbUser, oauthUsers map[string][]dbOAuthUser) []userr.
 	return domainUsers
 }
 
-type dbOAuthUser struct {
+type dbOauthUser struct {
 	ID           string    `db:"id"`
 	UserID       string    `db:"user_id"`
 	Provider     string    `db:"provider"`
@@ -191,10 +191,10 @@ type dbOAuthUser struct {
 	Expiry       time.Time `db:"expiry"`
 }
 
-func toDBOAuthUsers(user userr.User) []dbOAuthUser {
-	dbUsers := make([]dbOAuthUser, len(user.OpenAuthUsers))
+func toDBOauthUsers(user userr.User) []dbOauthUser {
+	dbUsers := make([]dbOauthUser, len(user.OpenAuthUsers))
 	for i, oauthUser := range user.OpenAuthUsers {
-		dbUsers[i] = dbOAuthUser{
+		dbUsers[i] = dbOauthUser{
 			ID:           oauthUser.ID,
 			UserID:       user.ID.String(),
 			Provider:     oauthUser.Provider,
@@ -211,7 +211,7 @@ func toDBOAuthUsers(user userr.User) []dbOAuthUser {
 	return dbUsers
 }
 
-func toDomainOAuthUsers(users []dbOAuthUser) []userr.OpenAuthUser {
+func toDomainOauthUsers(users []dbOauthUser) []userr.OpenAuthUser {
 	domainUsers := make([]userr.OpenAuthUser, len(users))
 	for i, u := range users {
 		domainUsers[i] = userr.OpenAuthUser{

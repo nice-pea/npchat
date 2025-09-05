@@ -1,4 +1,4 @@
-package oauth_provider
+package oauthProvider
 
 import (
 	"context"
@@ -14,37 +14,37 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-// GitHub представляет собой структуру для работы с OAuth2 аутентификацией через GitHub.
-type GitHub struct {
-	config *oauth2.Config // Конфигурация OAuth2 для GitHub
+// Github представляет собой структуру для работы с Oauth2 аутентификацией через Github.
+type Github struct {
+	config *oauth2.Config // Конфигурация Oauth2 для Github
 }
 
-type GitHubConfig struct {
-	ClientID     string // Идентификатор клиента для OAuth2
-	ClientSecret string // Секрет клиента для OAuth2
+type GithubConfig struct {
+	ClientID     string // Идентификатор клиента для Oauth2
+	ClientSecret string // Секрет клиента для Oauth2
 	RedirectURL  string // URL для перенаправления после аутентификации
 }
 
-func NewGitHub(cfg GitHubConfig) *GitHub {
-	return &GitHub{
+func NewGithub(cfg GithubConfig) *Github {
+	return &Github{
 		config: &oauth2.Config{
 			ClientID:     cfg.ClientID,
 			ClientSecret: cfg.ClientSecret,
-			Endpoint:     github.Endpoint, // Использует конечную точку GitHub для OAuth2
+			Endpoint:     github.Endpoint, // Использует конечную точку Github для Oauth2
 			RedirectURL:  cfg.RedirectURL,
 			Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
 		},
 	}
 }
 
-// Name возвращает имя провайдера OAuth.
-func (o *GitHub) Name() string {
+// Name возвращает имя провайдера Oauth.
+func (o *Github) Name() string {
 	return "github"
 }
 
-// Exchange обменивает код авторизации на токен OAuth.
-func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
-	// Обменять кода авторизации на токен OAuth
+// Exchange обменивает код авторизации на токен Oauth.
+func (o *Github) Exchange(code string) (userr.OpenAuthToken, error) {
+	// Обменять кода авторизации на токен Oauth
 	token, err := o.config.Exchange(context.Background(), code)
 	if err != nil {
 		return userr.OpenAuthToken{}, err // Возвращает ошибку, если обмен не удался
@@ -60,13 +60,13 @@ func (o *GitHub) Exchange(code string) (userr.OpenAuthToken, error) {
 
 const githubGetUserUrl = "https://api.github.com/user"
 
-// User получает информацию о пользователе GitHub, используя токен OAuth.
-func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
+// User получает информацию о пользователе Github, используя токен Oauth.
+func (o *Github) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token.AccessToken}, // Создает HTTP-клиент с токеном доступа
 	))
 
-	// Сделать запрос на GitHub для получения информации о пользователе
+	// Сделать запрос на Github для получения информации о пользователе
 	response, err := client.Get(githubGetUserUrl)
 	if err != nil {
 		return userr.OpenAuthUser{}, err
@@ -107,6 +107,6 @@ func (o *GitHub) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
-func (o *GitHub) AuthorizationURL(state string) string {
+func (o *Github) AuthorizationURL(state string) string {
 	return o.config.AuthCodeURL(state)
 }

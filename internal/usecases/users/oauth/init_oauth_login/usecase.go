@@ -1,4 +1,4 @@
-package initOAuthLogin
+package initOauthLogin
 
 import (
 	"errors"
@@ -11,21 +11,21 @@ var (
 	ErrUnauthorizedChatsView = errors.New("нельзя просматривать чужой список чатов")
 )
 
-// In представляет собой параметры инициализации входа через OAuth.
+// In представляет собой параметры инициализации входа через Oauth.
 type In struct {
-	Provider string // Имя провайдера OAuth
+	Provider string // Имя провайдера Oauth
 }
 
-// Out представляет собой результат инициализации входа через OAuth.
+// Out представляет собой результат инициализации входа через Oauth.
 type Out struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-type InitOAuthLoginUsecase struct {
+type InitOauthLoginUsecase struct {
 }
 
-// InitOAuthLogin инициализирует процесс входа пользователя через OAuth.
-func (u *InitOAuthLoginUsecase) InitOAuthLogin(in In) (Out, error) {
+// InitOauthLogin инициализирует процесс входа пользователя через Oauth.
+func (u *InitOauthLoginUsecase) InitOauthLogin(in In) (Out, error) {
 	// TODO
 	return Out{}, nil
 }

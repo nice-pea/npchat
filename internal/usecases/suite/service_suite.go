@@ -35,10 +35,10 @@ type Suite struct {
 		Users    userr.Repository
 	}
 	Adapters struct {
-		Oauth oauth.OAuthProvider
+		Oauth oauth.OauthProvider
 	}
-	MockOAuthTokens map[string]userr.OpenAuthToken
-	MockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
+	MockOauthTokens map[string]userr.OpenAuthToken
+	MockOauthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
 var (
@@ -105,21 +105,21 @@ func (suite *Suite) SetupTest() {
 	suite.RR.Sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
-	suite.MockOAuthUsers = suite.GenerateMockUsers()
-	suite.MockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOAuthUsers))
-	for token := range suite.MockOAuthUsers {
-		suite.MockOAuthTokens[RandomString(13)] = token
+	suite.MockOauthUsers = suite.GenerateMockUsers()
+	suite.MockOauthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOauthUsers))
+	for token := range suite.MockOauthUsers {
+		suite.MockOauthTokens[RandomString(13)] = token
 	}
 	suite.Adapters.Oauth = &oauthProvider.Mock{
 		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
-			token, ok := suite.MockOAuthTokens[code]
+			token, ok := suite.MockOauthTokens[code]
 			if !ok {
 				return userr.OpenAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
 		},
 		UserFunc: func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-			user, ok := suite.MockOAuthUsers[token]
+			user, ok := suite.MockOauthUsers[token]
 			if !ok {
 				return userr.OpenAuthUser{}, errors.New("user not found")
 			}
@@ -213,8 +213,8 @@ func RandomString(n int) string {
 	return string(b)
 }
 
-// RandomOAuthToken генерирует случайный OAuthToken
-func (suite *Suite) RandomOAuthToken() userr.OpenAuthToken {
+// RandomOauthToken генерирует случайный OauthToken
+func (suite *Suite) RandomOauthToken() userr.OpenAuthToken {
 	t, err := userr.NewOpenAuthToken(
 		RandomString(32), // AccessToken
 		"Bearer",         // TokenType
@@ -227,8 +227,8 @@ func (suite *Suite) RandomOAuthToken() userr.OpenAuthToken {
 	return t
 }
 
-// Генерация случайного OAuthUser
-func (suite *Suite) RandomOAuthUser() userr.OpenAuthUser {
+// Генерация случайного OauthUser
+func (suite *Suite) RandomOauthUser() userr.OpenAuthUser {
 	u, err := userr.NewOpenAuthUser(
 		RandomString(21),                                      // ID
 		(&oauthProvider.Mock{}).Name(),                        // Provider
@@ -247,8 +247,8 @@ func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUs
 	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
 	for i := 0; i < 10; i++ {
-		token := suite.RandomOAuthToken()
-		user := suite.RandomOAuthUser()
+		token := suite.RandomOauthToken()
+		user := suite.RandomOauthUser()
 		tokenToUser[token] = user
 	}
 

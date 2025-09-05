@@ -1,4 +1,4 @@
-package initOAuthRegistration
+package initOauthRegistration
 
 import (
 	"errors"
@@ -12,9 +12,9 @@ var (
 	ErrInvalidProvider = errors.New("некорректное значение Provider")
 )
 
-// In представляет собой параметры инициализации регистрации OAuth.
+// In представляет собой параметры инициализации регистрации Oauth.
 type In struct {
-	Provider string // Имя провайдера OAuth
+	Provider string // Имя провайдера Oauth
 }
 
 // Validate валидирует значение параметра провайдера.
@@ -26,23 +26,23 @@ func (in In) Validate() error {
 	return nil // Возвращает nil, если параметры валидны
 }
 
-// Out представляет собой результат инициализации регистрации OAuth.
+// Out представляет собой результат инициализации регистрации Oauth.
 type Out struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-type InitOAuthRegistrationUsecase struct {
-	Providers oauth.OAuthProviders
+type InitOauthRegistrationUsecase struct {
+	Providers oauth.OauthProviders
 }
 
-// InitOAuthRegistration инициализирует процесс регистрации пользователя через OAuth.
-func (u *InitOAuthRegistrationUsecase) InitOAuthRegistration(in In) (Out, error) {
+// InitOauthRegistration инициализирует процесс регистрации пользователя через Oauth.
+func (u *InitOauthRegistrationUsecase) InitOauthRegistration(in In) (Out, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return Out{}, err
 	}
 
-	// Определить провайдера OAuth
+	// Определить провайдера Oauth
 	provider, err := u.Providers.Provider(in.Provider)
 	if err != nil {
 		return Out{}, err

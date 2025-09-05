@@ -1,4 +1,4 @@
-package completeOAuthRegistration
+package completeOauthRegistration
 
 import (
 	"testing"
@@ -21,11 +21,11 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_OAuth_CompleteRegistration() {
-	usecase := &CompleteOAuthRegistrationUsecase{
+func (suite *testSuite) Test_Oauth_CompleteRegistration() {
+	usecase := &CompleteOauthRegistrationUsecase{
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,
-		Providers:    oauth.OAuthProviders{},
+		Providers:    oauth.OauthProviders{},
 	}
 	usecase.Providers.Add(suite.Adapters.Oauth)
 
@@ -34,7 +34,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: "",
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidUserCode)
 		suite.Zero(out)
 	})
@@ -44,7 +44,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: "",
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
 	})
@@ -54,7 +54,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: uuid.NewString(),
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.ErrorIs(err, ErrWrongUserCode)
 		suite.Zero(out)
 	})
@@ -62,21 +62,21 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("Provider должен быть известен в сервисе", func() {
 		// Завершить регистрацию
 		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: "unknownProvider",
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
-		suite.ErrorIs(err, oauth.ErrUnknownOAuthProvider)
+		out, err := usecase.CompleteOauthRegistration(input)
+		suite.ErrorIs(err, oauth.ErrUnknownOauthProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("после регистрации будет создан пользователь", func() {
 		// Завершить регистрацию
 		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -88,16 +88,16 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	})
 
 	suite.Run("после регистрации будет создан метод авторизации", func() {
-		pCode := maps.Keys(suite.MockOAuthTokens)[0]
-		pToken := suite.MockOAuthTokens[pCode]
-		pUser := suite.MockOAuthUsers[pToken]
+		pCode := maps.Keys(suite.MockOauthTokens)[0]
+		pToken := suite.MockOauthTokens[pCode]
+		pUser := suite.MockOauthUsers[pToken]
 
 		// Завершить регистрацию
 		input := In{
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -115,10 +115,10 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	suite.Run("после регистрации будет создана сессия", func() {
 		// Завершить регистрацию
 		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -131,14 +131,14 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 	})
 
 	suite.Run("невозможно дважды зарегистрироваться на одного пользователя провайдера", func() {
-		pCode := maps.Keys(suite.MockOAuthTokens)[0]
+		pCode := maps.Keys(suite.MockOauthTokens)[0]
 
 		// Завершить регистрацию
 		input := In{
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.CompleteOauthRegistration(input)
 		suite.Require().NoError(err)
 		suite.NotZero(out)
 
@@ -147,7 +147,7 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err = usecase.CompleteOAuthRegistration(input)
+		out, err = usecase.CompleteOauthRegistration(input)
 		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
 		suite.Zero(out)
 	})

@@ -58,8 +58,8 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases, eventListener registerH
 	registerHandler.Events(r, uc, eventListener)
 
 	// OAuth /oauth
-	registerHandler.OAuthInitRegistration(r, uc)
-	registerHandler.OAuthCompleteRegistrationCallback(r, uc)
+	registerHandler.OauthInitRegistration(r, uc)
+	registerHandler.OauthCompleteRegistrationCallback(r, uc)
 
 	// Аутентификация /auth
 	registerHandler.LoginByPassword(r, uc)

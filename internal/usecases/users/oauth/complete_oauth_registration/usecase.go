@@ -1,4 +1,4 @@
-package completeOAuthRegistration
+package completeOauthRegistration
 
 import (
 	"errors"
@@ -10,15 +10,15 @@ import (
 
 var (
 	ErrInvalidProvider              = errors.New("некорректное значение Provider")
-	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь OAuth-провайдера уже связан с пользователем")
+	ErrProvidersUserIsAlreadyLinked = errors.New("пользователь Oauth-провайдера уже связан с пользователем")
 	ErrInvalidUserCode              = errors.New("некорректное значение UserCode")
 	ErrWrongUserCode                = errors.New("неправильный UserCode")
 )
 
-// In представляет собой структуру для входных данных завершения регистрации OAuth.
+// In представляет собой структуру для входных данных завершения регистрации Oauth.
 type In struct {
 	UserCode string // Код пользователя, полученный от провайдера
-	Provider string // Имя провайдера OAuth
+	Provider string // Имя провайдера Oauth
 }
 
 // Validate валидирует значение каждого параметра.
@@ -33,26 +33,26 @@ func (in In) Validate() error {
 	return nil // Возвращает nil, если все параметры валидны
 }
 
-// Out представляет собой результат завершения регистрации OAuth.
+// Out представляет собой результат завершения регистрации Oauth.
 type Out struct {
 	Session sessionn.Session // Сессия пользователя
 	User    userr.User       // Пользователь
 }
 
-type CompleteOAuthRegistrationUsecase struct {
+type CompleteOauthRegistrationUsecase struct {
 	Repo         userr.Repository
-	Providers    oauth.OAuthProviders
+	Providers    oauth.OauthProviders
 	SessionsRepo sessionn.Repository // Репозиторий сессий пользователей
 }
 
-// CompleteOAuthRegistration завершает процесс регистрации пользователя через OAuth.
-func (u *CompleteOAuthRegistrationUsecase) CompleteOAuthRegistration(in In) (Out, error) {
+// CompleteOauthRegistration завершает процесс регистрации пользователя через Oauth.
+func (u *CompleteOauthRegistrationUsecase) CompleteOauthRegistration(in In) (Out, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return Out{}, err
 	}
 
-	// Определить провайдера OAuth
+	// Определить провайдера Oauth
 	provider, err := u.Providers.Provider(in.Provider)
 	if err != nil {
 		return Out{}, err
@@ -72,7 +72,7 @@ func (u *CompleteOAuthRegistrationUsecase) CompleteOAuthRegistration(in In) (Out
 	if err != nil {
 		return Out{}, err
 	}
-	// Добавить пользователя в список связей для аутентификации по OAuth
+	// Добавить пользователя в список связей для аутентификации по Oauth
 	if err = user.AddOpenAuthUser(openAuthUser); err != nil {
 		return Out{}, err
 	}
@@ -82,8 +82,8 @@ func (u *CompleteOAuthRegistrationUsecase) CompleteOAuthRegistration(in In) (Out
 	if err = u.Repo.InTransaction(func(txRepo userr.Repository) error {
 		// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
 		if conflictUsers, err := u.Repo.List(userr.Filter{
-			OAuthUserID:   openAuthUser.ID,
-			OAuthProvider: in.Provider,
+			OauthUserID:   openAuthUser.ID,
+			OauthProvider: in.Provider,
 		}); err != nil {
 			return err // Возвращает ошибку, если запрос к репозиторию не удался
 		} else if len(conflictUsers) != 0 {

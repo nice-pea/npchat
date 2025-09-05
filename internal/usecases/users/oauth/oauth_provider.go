@@ -7,38 +7,38 @@ import (
 )
 
 var (
-	ErrUnknownOAuthProvider = errors.New("неизвестный OAuth провайдер")
+	ErrUnknownOauthProvider = errors.New("неизвестный Oauth провайдер")
 )
 
-// OAuthProvider определяет интерфейс для работы с провайдерами OAuth.
-type OAuthProvider interface {
-	// Exchange обменивает код авторизации на токен OAuth
+// OauthProvider определяет интерфейс для работы с провайдерами Oauth.
+type OauthProvider interface {
+	// Exchange обменивает код авторизации на токен Oauth
 	Exchange(code string) (userr.OpenAuthToken, error)
 
-	// User возвращает информацию о пользователе провайдера, используя токен OAuth
+	// User возвращает информацию о пользователе провайдера, используя токен Oauth
 	User(token userr.OpenAuthToken) (userr.OpenAuthUser, error)
 
 	// AuthorizationURL возвращает URL для авторизации.
 	// Параметр state используется для предотвращения CSRF-атаки, Должен быть уникальной случайной строкой
 	AuthorizationURL(state string) string
 
-	// Name возвращает имя провайдера OAuth
+	// Name возвращает имя провайдера Oauth
 	Name() string
 }
 
-// OAuthProviders представляет собой карту провайдеров OAuth, где ключом является имя провайдера.
-type OAuthProviders map[string]OAuthProvider
+// OauthProviders представляет собой карту провайдеров Oauth, где ключом является имя провайдера.
+type OauthProviders map[string]OauthProvider
 
-func (o OAuthProviders) Add(p OAuthProvider) {
+func (o OauthProviders) Add(p OauthProvider) {
 	o[p.Name()] = p
 }
 
-// provider возвращает провайдера OAuth по его имени
-func (o OAuthProviders) Provider(provider string) (OAuthProvider, error) {
+// provider возвращает провайдера Oauth по его имени
+func (o OauthProviders) Provider(provider string) (OauthProvider, error) {
 	p, ok := o[provider]
 	// Проверить, существует ли провайдер в карте
 	if !ok || p == nil {
-		return nil, ErrUnknownOAuthProvider
+		return nil, ErrUnknownOauthProvider
 	}
 
 	return p, nil
