@@ -87,6 +87,7 @@ func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event
 	go func() {
 		for {
 			f(rndDirtyEvent(), nil)
+			time.Sleep(time.Millisecond)
 		}
 	}()
 	return func() {}, nil
