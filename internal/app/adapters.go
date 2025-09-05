@@ -9,24 +9,24 @@ import (
 )
 
 type adapters struct {
-	oauthProviders oauth.OAuthProviders
+	oauthProviders oauth.Providers
 	eventBus       *eventsBus.EventsBus
 }
 
-func (a *adapters) OauthProviders() oauth.OauthProviders {
+func (a *adapters) OauthProviders() oauth.Providers {
 	return a.oauthProviders
 }
 
 func initAdapters(cfg Config) *adapters {
-	oauthProviders := oauth.OauthProviders{}
+	oauthProviders := oauth.Providers{}
 	if cfg.OauthGoogle != (oauthProvider.GoogleConfig{}) {
 		oauthProviders.Add(oauthProvider.NewGoogle(cfg.OauthGoogle))
 		slog.Info("Подключен Oauth провайдер Google")
 	}
-	if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
-		oauthProviders.Add(oauthProvider.NewGithub(cfg.OauthGithub))
-		slog.Info("Подключен Oauth провайдер Github")
-	}
+	// if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
+	// 	oauthProviders.Add(oauthProvider.NewGithub(cfg.OauthGithub))
+	// 	slog.Info("Подключен Oauth провайдер Github")
+	// }
 
 	return &adapters{
 		oauthProviders: oauthProviders,

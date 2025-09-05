@@ -35,7 +35,7 @@ type Suite struct {
 		Users    userr.Repository
 	}
 	Adapters struct {
-		Oauth oauth.OauthProvider
+		Oauth oauth.Provider
 	}
 	MockOauthTokens map[string]userr.OpenAuthToken
 	MockOauthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser

@@ -16,9 +16,9 @@ import (
 	basicAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_login"
 	basicAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_registration"
 	completeOauthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_login"
-	completeOauthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
+	oauthComplete "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
 	initOauthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_login"
-	initOauthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_registration"
+	oauthAuthorize "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_registration"
 )
 
 type usecasesBase struct {
@@ -44,8 +44,8 @@ type usecasesBase struct {
 
 	*basicAuthRegistration.BasicAuthRegistrationUsecase
 	*basicAuthLogin.BasicAuthLoginUsecase
-	*initOauthRegistration.InitOauthRegistrationUsecase
-	*completeOauthRegistration.CompleteOauthRegistrationUsecase
+	*oauthAuthorize.OauthAuthorizeUsecase
+	*oauthComplete.OauthCompleteUsecase
 	*initOauthLogin.InitOauthLoginUsecase
 	*completeOauthLogin.CompleteOauthLoginUsecase
 }
@@ -103,10 +103,10 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo:         rr.users,
 			SessionsRepo: rr.sessions,
 		},
-		InitOauthRegistrationUsecase: &initOauthRegistration.InitOauthRegistrationUsecase{
+		OauthAuthorizeUsecase: &oauthAuthorize.OauthAuthorizeUsecase{
 			Providers: aa.oauthProviders,
 		},
-		CompleteOauthRegistrationUsecase: &completeOauthRegistration.CompleteOauthRegistrationUsecase{
+		OauthCompleteUsecase: &oauthComplete.OauthCompleteUsecase{
 			Repo:         rr.users,
 			Providers:    aa.oauthProviders,
 			SessionsRepo: rr.sessions,

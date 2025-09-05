@@ -12,15 +12,14 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-// Google представляет собой структуру для работы с Oauth2 аутентификацией через Google.
+// Google представляет собой структуру для работы с Oauth аутентификацией через Google.
 type Google struct {
-	config *oauth2.Config // Конфигурация Oauth2 для Google
+	config *oauth2.Config // Конфигурация Oauth для Google
 }
 
 type GoogleConfig struct {
-	ClientID     string // Идентификатор клиента для Oauth2
-	ClientSecret string // Секрет клиента для Oauth2
-	RedirectURL  string // URL для перенаправления после аутентификации
+	ClientID     string // Идентификатор клиента для Oauth
+	ClientSecret string // Секрет клиента для Oauth
 }
 
 func NewGoogle(cfg GoogleConfig) *Google {
@@ -28,8 +27,7 @@ func NewGoogle(cfg GoogleConfig) *Google {
 		config: &oauth2.Config{
 			ClientID:     cfg.ClientID,     // Идентификатор клиента
 			ClientSecret: cfg.ClientSecret, // Секрет клиента
-			Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth2
-			RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
+			Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth
 			Scopes: []string{
 				"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
 				"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
@@ -61,20 +59,20 @@ func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 
 // User получает информацию о пользователе Google, используя токен Oauth.
 func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-	const getUser = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-	// Выполняет GET-запрос для получения информации о пользователе
-	response, err := http.Get(getUser + token.AccessToken)
+	// Выполить GET-запрос для получения информации о пользователе
+	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		return userr.OpenAuthUser{}, err // Возвращает ошибку, если запрос не удался
 	}
 
-	defer func() { _ = response.Body.Close() }() // Закрывает тело ответа после завершения работы с ним
-	data, err := io.ReadAll(response.Body)       // Читает данные из тела ответа
+	// Прочитать данные ответ
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return userr.OpenAuthUser{}, err // Возвращает ошибку, если чтение не удалось
 	}
+	_ = response.Body.Close()
 
-	// Сложить данные в структуру ответа
+	// Сложить ответ в структуру
 	var googleUser struct {
 		ID      string `json:"id"`      // Идентификатор пользователя
 		Email   string `json:"email"`   // Электронная почта пользователя
@@ -96,6 +94,11 @@ func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
-func (o *Google) AuthorizationURL(state string) string {
-	return o.config.AuthCodeURL(state) // Генерирует URL для авторизации
+func (o *Google) AuthorizationURL(state string, callback string) string {
+	// Копировать конфигурацию
+	config := *o.config
+	// Установить URL перенаправления
+	config.RedirectURL = callback
+	// Сгенерировать URL
+	return config.AuthCodeURL(state)
 }

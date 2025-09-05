@@ -1,4 +1,4 @@
-package initOauthRegistration
+package oauthAuthorize
 
 import (
 	"net/url"
@@ -19,14 +19,14 @@ func Test_TestSuite(t *testing.T) {
 }
 
 func (suite *testSuite) Test_Oauth_InitRegistration() {
-	usecase := &InitOauthRegistrationUsecase{
-		Providers: oauth.OauthProviders{},
+	usecase := &OauthAuthorizeUsecase{
+		Providers: oauth.Providers{},
 	}
 	usecase.Providers.Add(suite.Adapters.Oauth)
 
 	suite.Run("Provider обязательное поле", func() {
 		// Инициализация регистрации
-		out, err := usecase.InitOauthRegistration(In{
+		out, err := usecase.OauthAuthorize(In{
 			Provider: "",
 		})
 		suite.ErrorIs(err, ErrInvalidProvider)
@@ -38,14 +38,14 @@ func (suite *testSuite) Test_Oauth_InitRegistration() {
 		input := In{
 			Provider: "unknownProvider",
 		}
-		out, err := usecase.InitOauthRegistration(input)
+		out, err := usecase.OauthAuthorize(input)
 		suite.ErrorIs(err, oauth.ErrUnknownOauthProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
-		out, err := usecase.InitOauthRegistration(In{
+		out, err := usecase.OauthAuthorize(In{
 			Provider: suite.Adapters.Oauth.Name(),
 		})
 		suite.NoError(err)

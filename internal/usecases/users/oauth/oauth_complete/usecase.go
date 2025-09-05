@@ -1,4 +1,4 @@
-package completeOauthRegistration
+package oauthComplete
 
 import (
 	"errors"
@@ -39,14 +39,14 @@ type Out struct {
 	User    userr.User       // Пользователь
 }
 
-type CompleteOauthRegistrationUsecase struct {
+type OauthCompleteUsecase struct {
 	Repo         userr.Repository
-	Providers    oauth.OauthProviders
+	Providers    oauth.Providers
 	SessionsRepo sessionn.Repository // Репозиторий сессий пользователей
 }
 
-// CompleteOauthRegistration завершает процесс регистрации пользователя через Oauth.
-func (u *CompleteOauthRegistrationUsecase) CompleteOauthRegistration(in In) (Out, error) {
+// OauthComplete завершает процесс регистрации пользователя через Oauth.
+func (u *OauthCompleteUsecase) OauthComplete(in In) (Out, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return Out{}, err

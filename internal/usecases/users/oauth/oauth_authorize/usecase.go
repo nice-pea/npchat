@@ -1,7 +1,8 @@
-package initOauthRegistration
+package oauthAuthorize
 
 import (
 	"errors"
+	"net/url"
 
 	"github.com/google/uuid"
 
@@ -9,18 +10,24 @@ import (
 )
 
 var (
-	ErrInvalidProvider = errors.New("некорректное значение Provider")
+	ErrInvalidProvider         = errors.New("некорректное значение Provider")
+	ErrInvalidCompleteCallback = errors.New("некорректное значение CompleteCallback")
 )
 
 // In представляет собой параметры инициализации регистрации Oauth.
 type In struct {
-	Provider string // Имя провайдера Oauth
+	Provider         string // Имя провайдера Oauth
+	CompleteCallback string // URL для перенаправления после авторизации
 }
 
 // Validate валидирует значение параметра провайдера.
 func (in In) Validate() error {
 	if in.Provider == "" {
 		return ErrInvalidProvider
+	}
+
+	if _, err := url.Parse(in.CompleteCallback); err != nil {
+		return ErrInvalidCompleteCallback
 	}
 
 	return nil // Возвращает nil, если параметры валидны
@@ -31,12 +38,12 @@ type Out struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
 }
 
-type InitOauthRegistrationUsecase struct {
-	Providers oauth.OauthProviders
+type OauthAuthorizeUsecase struct {
+	Providers oauth.Providers
 }
 
-// InitOauthRegistration инициализирует процесс регистрации пользователя через Oauth.
-func (u *InitOauthRegistrationUsecase) InitOauthRegistration(in In) (Out, error) {
+// OauthAuthorize инициализирует процесс регистрации пользователя через Oauth.
+func (u *OauthAuthorizeUsecase) OauthAuthorize(in In) (Out, error) {
 	// Валидировать параметры
 	if err := in.Validate(); err != nil {
 		return Out{}, err
@@ -50,6 +57,6 @@ func (u *InitOauthRegistrationUsecase) InitOauthRegistration(in In) (Out, error)
 
 	// Генерирует URL для перенаправления на страницу авторизации провайдера
 	return Out{
-		RedirectURL: provider.AuthorizationURL(uuid.NewString()),
+		RedirectURL: provider.AuthorizationURL(uuid.NewString(), in.CompleteCallback),
 	}, nil
 }
