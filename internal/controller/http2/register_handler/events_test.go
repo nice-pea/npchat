@@ -45,12 +45,9 @@ func TestEvents(t *testing.T) {
 	// Запуск сервера
 	listener, err := net.Listen("tcp", ":")
 	require.NoError(t, err)
-	defer listener.Close()
 	go func() { assert.NoError(t, fiberApp.Listener(listener)) }()
 	// Отложить остановку сервера
 	defer assert.NoError(t, fiberApp.Shutdown())
-	// Задержка чтобы сервер успел запуститься
-	time.Sleep(time.Millisecond * 5)
 
 	// Контекст для корректной отмены запроса
 	ctx, cancel := context.WithCancel(context.Background())
