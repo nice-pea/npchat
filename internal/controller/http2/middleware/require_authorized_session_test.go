@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"testing"
@@ -17,81 +18,141 @@ import (
 
 func Test_RequireAuthorizedSession(t *testing.T) {
 	log.Print("тест RequireAuthorizedSession")
-	t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
-		uc := mockUsecasesForRequireAuthorizedSession{}
+	t.Run("sessions", func(t *testing.T) {
+		t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{
+				FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
+					return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
+				},
+			}
 
-		server := fiber.New(fiber.Config{DisableStartupMessage: true})
-		server.Get(
-			"/", RequireAuthorizedSession(uc),
-			func(ctx *fiber.Ctx) error {
-				session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
-				require.True(t, ok)
-				require.Equal(t, mockSession, session)
-				return nil
-			})
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get(
+				"/", RequireAuthorizedSession(uc),
+				func(ctx *fiber.Ctx) error {
+					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					require.True(t, ok)
+					require.Equal(t, mockSession, session)
+					return nil
+				})
 
-		req, err := http.NewRequest("GET", "/", nil)
-		require.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
 
-		resp, err := server.Test(req)
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+		})
+
+		t.Run("не передан или с ошибкой в ключе заголовока - вернет StatusUnauthorized (401)", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get("/", RequireAuthorizedSession(uc))
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorizati1on", "Bearer "+mockSession.AccessToken.Token)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
+		t.Run("FindSessions вернет ошибку StatusInternalServerError (500)", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{
+				FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
+					return findSession.Out{}, errors.New("БД отключена")
+				},
+			}
+
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get("/", RequireAuthorizedSession(uc))
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		})
+		t.Run("сессия не найдена - 401", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{
+				FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
+					return findSession.Out{}, nil
+				},
+			}
+
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get("/", RequireAuthorizedSession(uc))
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
+		t.Run("неправильный формат заголовка - 401", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get("/", RequireAuthorizedSession(uc))
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "InvalidFormat "+mockSession.AccessToken.Token)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
+		t.Run("пустой токен после Bearer - 401", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get("/", RequireAuthorizedSession(uc))
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer ")
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
 	})
-	// t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
-	// 	uc := mockUsecasesForRequireAuthorizedSession{}
+	t.Run("JWT", func(t *testing.T) {
+		// t.Run("сохраненную JWT можно прочитать", func(t *testing.T) {
+		// 	uc := mockUsecasesForRequireAuthorizedSession{
+		// 		FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
+		// 			return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
+		// 		},
+		// 	}
 
-	// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
-	// 	server.Get(
-	// 		"/", RequireAuthorizedSession(uc),
-	// 		func(ctx *fiber.Ctx) error {
-	// 			session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
-	// 			require.True(t, ok)
-	// 			require.Equal(t, mockSession, session)
-	// 			log.Println(session)
-	// 			return nil
-	// 		})
+		// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
+		// 	server.Get(
+		// 		"/", RequireAuthorizedSession(uc),
+		// 		func(ctx *fiber.Ctx) error {
+		// 			session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+		// 			require.True(t, ok)
+		// 			require.Equal(t, mockSession, session)
+		// 			return nil
+		// 		})
 
-	// 	req, err := http.NewRequest("GET", "/", nil)
-	// 	require.NoError(t, err)
-	// 	req.Header.Set("asd", "Bearer "+mockSession.AccessToken.Token)
+		// 	req, err := http.NewRequest("GET", "/", nil)
+		// 	require.NoError(t, err)
+		// 	req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
 
-	// 	_, err = server.Test(req)
-	// 	require.NoError(t, err)
-	// })
-	// t.Run("отсутствие заголовка Authorization - ошибка 401", func(t *testing.T) {
-	// 	uc := mockUsecasesForRequireAuthorizedSession{}
-
-	// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
-	// 	server.Get("/", RequireAuthorizedSession(uc))
-
-	// 	req, err := http.NewRequest("GET", "/", nil)
-	// 	require.NoError(t, err)
-	// 	// Не устанавливаем заголовок Authorization
-
-	// 	resp, err := server.Test(req)
-	// 	require.NoError(t, err)
-	// 	defer resp.Body.Close()
-
-	// 	require.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
-	// })
-	// t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
-	// 	knownToken := mockSession.AccessToken.Token
-	// 	uc := mockUsecasesForRequireAuthorizedSession{}
-	// 	mw := RequireAuthorizedSession(&uc)
-
-	// 	ctx := new(fiber.Ctx)
-	// 	ctx.Set("Authorization", "Bearer "+knownToken)
-	// 	mw(ctx)
-
-	// 	sessionFromLocals := ctx.Locals(CtxKeyUserSession, sessionn.Session{})
-	// 	require.IsType(t, sessionn.Session{}, sessionFromLocals)
-	// 	session := sessionFromLocals.(sessionn.Session)
-	// 	assert.Equal(t, mockSession, session)
-	// })
+		// 	resp, err := server.Test(req)
+		// 	require.NoError(t, err)
+		// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+		// })
+	})
 }
 
-type mockUsecasesForRequireAuthorizedSession struct{}
+type mockUsecasesForRequireAuthorizedSession struct {
+	FindSessionsFunc func(findSession.In) (findSession.Out, error)
+}
 
 var (
 	mockSession = sessionn.Session{
@@ -106,7 +167,8 @@ var (
 )
 
 func (m mockUsecasesForRequireAuthorizedSession) FindSessions(in findSession.In) (findSession.Out, error) {
-	return findSession.Out{
-		Sessions: []sessionn.Session{mockSession},
-	}, nil
+	if m.FindSessionsFunc != nil {
+		return m.FindSessionsFunc(in)
+	}
+	return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
 }
