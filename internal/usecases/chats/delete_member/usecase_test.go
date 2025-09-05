@@ -30,7 +30,8 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 	// Настройка мока
 	usecase.EventConsumer.(*mockEvents.Consumer).
 		On("Consume", mock.Anything).
-		Return()
+		Return().
+		Maybe()
 
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника

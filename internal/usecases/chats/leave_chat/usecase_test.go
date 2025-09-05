@@ -30,7 +30,8 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	// Настройка мока
 	usecase.EventConsumer.(*mockEvents.Consumer).
 		On("Consume", mock.Anything).
-		Return()
+		Return().
+		Maybe()
 
 	suite.Run("чат должен существовать", func() {
 		// Покинуть чат

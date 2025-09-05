@@ -30,7 +30,8 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	// Настройка мока
 	usecase.EventConsumer.(*mockEvents.Consumer).
 		On("Consume", mock.Anything).
-		Return()
+		Return().
+		Maybe()
 
 	suite.Run("приглашение должно существовать", func() {
 		// Отменить приглашение

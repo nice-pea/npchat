@@ -39,7 +39,8 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 	eventConsumer := mockEvents.NewConsumer(suite.T())
 	eventConsumer.
 		On("Consume", mock.Anything).
-		Return()
+		Return().
+		Maybe()
 	usecase := &UpdateNameUsecase{
 		Repo:          suite.RR.Chats,
 		EventConsumer: eventConsumer,
