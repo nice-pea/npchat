@@ -11,17 +11,17 @@ type Head interface {
 	Recipients() []uuid.UUID
 }
 
-func NewHead(recipients []uuid.UUID) head {
+func NewHead(recipients []uuid.UUID) Head {
 	return head{
 		createdIn:  time.Now(),
-		cecipients: recipients,
+		recipients: recipients,
 	}
 }
 
 // head описывает событие
 type head struct {
 	createdIn  time.Time
-	cecipients []uuid.UUID
+	recipients []uuid.UUID
 }
 
 func (h head) CreatedIn() time.Time {
@@ -29,5 +29,5 @@ func (h head) CreatedIn() time.Time {
 }
 
 func (h head) Recipients() []uuid.UUID {
-	return h.cecipients
+	return h.recipients
 }
