@@ -153,7 +153,9 @@ func (u *EventsBus) Close() {
 	wg.Wait()
 
 	// Очистить список
+	u.listenersMutex.Lock()
 	u.listeners = nil
+	u.listenersMutex.Unlock()
 }
 
 // Cancel отменяет подписку слушателя (удаляет его из списка)

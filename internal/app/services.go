@@ -70,7 +70,8 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo: rr.chats,
 		},
 		CreateChatUsecase: &createChat.CreateChatUsecase{
-			Repo: rr.chats,
+			Repo:          rr.chats,
+			EventConsumer: aa.eventBus,
 		},
 		DeleteMemberUsecase: &deleteMember.DeleteMemberUsecase{
 			Repo:          rr.chats,

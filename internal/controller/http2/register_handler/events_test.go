@@ -42,7 +42,7 @@ func TestEvents(t *testing.T) {
 	// Регистрация обработчика
 	Events(fiberApp, mockSessionFinder, mockEventListener{})
 
-	// Запуск сервера
+	// Запуск сервера на свободном локальном порту
 	listener, err := net.Listen("tcp", ":")
 	require.NoError(t, err)
 	go func() { assert.NoError(t, fiberApp.Listener(listener)) }()
