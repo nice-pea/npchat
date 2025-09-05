@@ -49,7 +49,7 @@ func TestNewInvitation(t *testing.T) {
 func TestChat_AddInvitation(t *testing.T) {
 	t.Run("нельзя добавить приглашение от не участника чата", func(t *testing.T) {
 		// Создать чат
-		chat, err := NewChat("chatName", uuid.New())
+		chat, err := NewChat("chatName", uuid.New(), nil)
 		require.NoError(t, err)
 
 		// Создать и добавить первое приглашение
@@ -62,7 +62,7 @@ func TestChat_AddInvitation(t *testing.T) {
 	t.Run("нельзя пригласить существующего участника", func(t *testing.T) {
 		// Создать чат
 		chief := uuid.New()
-		chat, err := NewChat("test", chief)
+		chat, err := NewChat("test", chief, nil)
 		require.NoError(t, err)
 
 		// Создать и добавить участника
@@ -82,7 +82,7 @@ func TestChat_AddInvitation(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
 		recipientID := uuid.New()
-		chat, err := NewChat("chatName", chiefID)
+		chat, err := NewChat("chatName", chiefID, nil)
 		require.NoError(t, err)
 
 		// Создать и добавить первое приглашение
@@ -101,7 +101,7 @@ func TestChat_AddInvitation(t *testing.T) {
 	t.Run("успешное добавление приглашения", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, err := NewChat("chatName", chiefID)
+		chat, err := NewChat("chatName", chiefID, nil)
 		require.NoError(t, err)
 
 		// Создать и добавить приглашение
@@ -115,7 +115,7 @@ func TestChat_AddInvitation(t *testing.T) {
 	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
@@ -143,7 +143,7 @@ func TestChat_AddInvitation(t *testing.T) {
 func TestChat_RemoveInvitation(t *testing.T) {
 	t.Run("нельзя удалить несуществующее приглашение", func(t *testing.T) {
 		// Создать чат
-		chat, err := NewChat("chatName", uuid.New())
+		chat, err := NewChat("chatName", uuid.New(), nil)
 		require.NoError(t, err)
 
 		// Удалить приглашение
@@ -154,7 +154,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 	t.Run("успешное удаление приглашения", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
@@ -169,7 +169,7 @@ func TestChat_RemoveInvitation(t *testing.T) {
 	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
@@ -200,7 +200,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 	t.Run("проверка наличия приглашения", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
@@ -214,7 +214,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 	t.Run("получение приглашения по ID", func(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, uuid.New())
@@ -230,7 +230,7 @@ func TestChat_InvitationMethods(t *testing.T) {
 		// Создать чат
 		chiefID := uuid.New()
 		recipientID := uuid.New()
-		chat, _ := NewChat("chatName", chiefID)
+		chat, _ := NewChat("chatName", chiefID, nil)
 
 		// Создать и добавить приглашение
 		inv, _ := NewInvitation(chiefID, recipientID)

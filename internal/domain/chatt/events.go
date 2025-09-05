@@ -38,3 +38,9 @@ type EventChatNameUpdated struct {
 	ChatID uuid.UUID
 	Name   string
 }
+
+// EventChatCreated описывает событие создания чата
+type EventChatCreated struct {
+	events.Head
+	ChatID uuid.UUID
+}

@@ -20,7 +20,7 @@ type Chat struct {
 }
 
 // NewChat создает новый чат.
-func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
+func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, error) {
 	if err := ValidateChatName(name); err != nil {
 		return Chat{}, err
 	}
@@ -28,7 +28,7 @@ func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 		return Chat{}, errors.Join(err, ErrInvalidChiefID)
 	}
 
-	return Chat{
+	chat := Chat{
 		ID:      uuid.New(),
 		Name:    name,
 		ChiefID: chiefID,
@@ -36,7 +36,14 @@ func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 			{UserID: chiefID}, // Главный администратор
 		},
 		Invitations: nil,
-	}, nil
+	}
+
+	eventsBuf.AddSafety(EventChatCreated{
+		Head:   events.NewHead(userIDs(chat.Participants)),
+		ChatID: chat.ID,
+	})
+
+	return chat, nil
 }
 
 // UpdateName изменяет название чата.

@@ -30,7 +30,7 @@ func TestNewParticipant(t *testing.T) {
 func TestChat_AddParticipant(t *testing.T) {
 	t.Run("добавление участника в чат", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.New())
+		chat, err := NewChat("test chat", uuid.New(), nil)
 		require.NoError(t, err)
 
 		// Создаем нового участника
@@ -48,7 +48,7 @@ func TestChat_AddParticipant(t *testing.T) {
 
 	t.Run("нельзя добавить уже существующего участника", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.New())
+		chat, err := NewChat("test chat", uuid.New(), nil)
 		require.NoError(t, err)
 
 		// Создаем участника
@@ -67,7 +67,7 @@ func TestChat_AddParticipant(t *testing.T) {
 
 	t.Run("нельзя добавить если есть приглашение к этому участнику", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.New())
+		chat, err := NewChat("test chat", uuid.New(), nil)
 		require.NoError(t, err)
 
 		userID := uuid.New()
@@ -88,7 +88,7 @@ func TestChat_AddParticipant(t *testing.T) {
 	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
 		// Создаем чат
 		chiefID := uuid.New()
-		chat, err := NewChat("test chat", chiefID)
+		chat, err := NewChat("test chat", chiefID, nil)
 		require.NoError(t, err)
 
 		// Инициализировать буфер событий
@@ -120,7 +120,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 	t.Run("удаление участника из чата", func(t *testing.T) {
 		// Создаем чат
 		chiefID := uuid.New()
-		chat, err := NewChat("test chat", chiefID)
+		chat, err := NewChat("test chat", chiefID, nil)
 		require.NoError(t, err)
 
 		// Создаем и добавляем участника
@@ -140,7 +140,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 
 	t.Run("нельзя удалить несуществующего участника", func(t *testing.T) {
 		// Создаем чат
-		chat, err := NewChat("test chat", uuid.New())
+		chat, err := NewChat("test chat", uuid.New(), nil)
 		require.NoError(t, err)
 
 		// Удаляем участника (несуществующего)
@@ -151,7 +151,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 	t.Run("нельзя удалить главного администратора", func(t *testing.T) {
 		// Создаем чат
 		chiefID := uuid.New()
-		chat, err := NewChat("test chat", chiefID)
+		chat, err := NewChat("test chat", chiefID, nil)
 		require.NoError(t, err)
 
 		// Удаляем участника (главного администратора)
@@ -162,7 +162,7 @@ func TestChat_RemoveParticipant(t *testing.T) {
 	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
 		// Создаем чат
 		chiefID := uuid.New()
-		chat, err := NewChat("test chat", chiefID)
+		chat, err := NewChat("test chat", chiefID, nil)
 		require.NoError(t, err)
 
 		// Создаем и добавляем участника

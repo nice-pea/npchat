@@ -232,7 +232,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 
 // rndChat создает случайный экземпляр чата
 func rndChat(t *testing.T) chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	require.NoError(t, err)
 
 	return chat

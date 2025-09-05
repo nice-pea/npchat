@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -30,8 +32,13 @@ func (suite *testSuite) newCreateInputRandom() In {
 // Test_Chats_CreateChat тестирует создание чата
 func (suite *testSuite) Test_Chats_CreateChat() {
 	usecase := &CreateChatUsecase{
-		Repo: suite.RR.Chats,
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
+	// Настройка мока
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return()
 
 	suite.Run("выходящие совпадают с заданными", func() {
 		// Создать чат
@@ -107,5 +114,32 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 		suite.NoError(err)
 		// Количество чатов равно количеству созданных
 		suite.Len(chats, chatsAllCount)
+	})
+
+	suite.Run("после завершения операции, будут созданы события", func() {
+		// Новый экземпляр usecase
+		usecase := &CreateChatUsecase{
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
+		}
+		// Настройка мока
+		var consumedEvents []any
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
+			Run(func(args mock.Arguments) {
+				consumedEvents = append(consumedEvents, args.Get(0).([]any)...)
+			}).
+			Return()
+
+		// Создать чат
+		out, err := usecase.CreateChat(In{
+			ChiefUserID: uuid.New(),
+			Name:        "name",
+		})
+		suite.Require().NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить список опубликованных событий
+		suite.True(serviceSuite.HasElementOfType[chatt.EventChatCreated](consumedEvents))
 	})
 }

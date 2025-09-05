@@ -162,7 +162,7 @@ func (suite *Suite) UpsertChat(chat chatt.Chat) chatt.Chat {
 
 // RndChat создает случайный чат
 func (suite *Suite) RndChat() chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	suite.Require().NoError(err)
 
 	return chat
