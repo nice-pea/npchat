@@ -60,8 +60,10 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event any, e
 	u.listeners = append(u.listeners, listener)
 
 	return func() {
+		u.mu.Lock()
 		// Пометить слушателя как окончившего слушать события
 		listener.listeningIsOver = true
+		u.mu.Unlock()
 	}, nil
 }
 
