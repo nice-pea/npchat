@@ -4,9 +4,8 @@ import (
 	"bufio"
 	"context"
 	"log"
-	"math/rand/v2"
+	"net"
 	"net/http"
-	"strconv"
 	"testing"
 	"time"
 
@@ -43,10 +42,11 @@ func TestEvents(t *testing.T) {
 	// Регистрация обработчика
 	Events(fiberApp, mockSessionFinder, mockEventListener{})
 
-	// Выбор порта
-	port := strconv.Itoa(int(rand.Int32N(65535-49152) + 49152))
 	// Запуск сервера
-	go func() { assert.NoError(t, fiberApp.Listen(":"+port)) }()
+	listener, err := net.Listen("tcp", ":")
+	require.NoError(t, err)
+	defer listener.Close()
+	go func() { assert.NoError(t, fiberApp.Listener(listener)) }()
 	// Отложить остановку сервера
 	defer assert.NoError(t, fiberApp.Shutdown())
 	// Задержка чтобы сервер успел запуститься
@@ -56,7 +56,7 @@ func TestEvents(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Создать запрос
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+port+"/events", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://"+listener.Addr().String()+"/events", nil)
 	require.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer 123")
 
