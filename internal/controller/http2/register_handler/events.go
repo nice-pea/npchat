@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/google/uuid"
-	"github.com/valyala/fasthttp"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
@@ -52,7 +51,7 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 			ctx.Set("Content-Type", "text/event-stream")
 			ctx.Set("Cache-Control", "no-cache")
 			ctx.Set("Connection", "keep-alive")
-			ctx.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
+			ctx.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 				// Таймер для отправки keepalive
 				keepAliveTickler := time.NewTicker(time.Second * 5)
 
@@ -81,17 +80,19 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 						return
 					}
 					if errFprint != nil {
-						slog.Warn("Events: fasthttp.StreamWriter: fmt.Fprint: " + errFprint.Error())
+						slog.Warn("Events: SetBodyStreamWriter: fmt.Fprint: " + errFprint.Error())
 						return
 					}
 
 					// Отправить данные во writer и очистить буфер
 					if err := w.Flush(); err != nil {
-						slog.Warn("Events: fasthttp.StreamWriter: w.Flush: " + err.Error())
+						if err.Error() != "connection closed" {
+							slog.Warn("Events: SetBodyStreamWriter: w.Flush: " + err.Error())
+						}
 						return
 					}
 				}
-			}))
+			})
 
 			return nil
 		},
