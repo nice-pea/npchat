@@ -8,10 +8,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	createChat "github.com/nice-pea/npchat/internal/usecases/chats/create_chat"
+	"github.com/nice-pea/npchat/internal/usecases/events"
+	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -32,11 +35,19 @@ func (suite *testSuite) newCreateInputRandom() createChat.In {
 
 // Test_Chats_UpdateName тестирует обновления названия чата
 func (suite *testSuite) Test_Chats_UpdateName() {
+	// Настройка мока
+	eventConsumer := mockEvents.NewConsumer(suite.T())
+	eventConsumer.
+		On("Consume", mock.Anything).
+		Return().
+		Maybe()
 	usecase := &UpdateNameUsecase{
-		Repo: suite.RR.Chats,
+		Repo:          suite.RR.Chats,
+		EventConsumer: eventConsumer,
 	}
 	createChatUsecase := createChat.CreateChatUsecase{
-		Repo: suite.RR.Chats,
+		Repo:          suite.RR.Chats,
+		EventConsumer: eventConsumer,
 	}
 
 	suite.Run("только существующий чат можно обновить", func() {
@@ -76,7 +87,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(createdOut)
-		// Попытаться изменить название от имени случайного пользователя
+		// Изменить название от имени администратора
 		input := In{
 			SubjectID: createdOut.Chat.ChiefID,
 			ChatID:    createdOut.Chat.ID,
@@ -96,6 +107,40 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			suite.Equal(input.ChatID, chats[0].ID)
 			suite.Equal(input.NewName, chats[0].Name)
 		}
+	})
+
+	suite.Run("после завершения операции, будут созданы события", func() {
+		// Новый экземпляр usecase
+		usecase := &UpdateNameUsecase{
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
+		}
+		// Настройка мока
+		var consumedEvents []events.Event
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
+			Run(func(args mock.Arguments) {
+				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
+			}).
+			Return()
+
+			// Создать чат
+		inputChatCreate := suite.newCreateInputRandom()
+		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(createdOut)
+		// Изменить название от имени администратора
+		input := In{
+			SubjectID: createdOut.Chat.ChiefID,
+			ChatID:    createdOut.Chat.ID,
+			NewName:   "newName",
+		}
+		out, err := usecase.UpdateName(input)
+		suite.Require().NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить список опубликованных событий
+		suite.AssertHasEventType(consumedEvents, chatt.EventChatNameUpdatedType)
 	})
 }
 

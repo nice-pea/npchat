@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Chat представляет собой агрегат чата.
@@ -19,7 +20,7 @@ type Chat struct {
 }
 
 // NewChat создает новый чат.
-func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
+func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, error) {
 	if err := ValidateChatName(name); err != nil {
 		return Chat{}, err
 	}
@@ -27,7 +28,7 @@ func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 		return Chat{}, errors.Join(err, ErrInvalidChiefID)
 	}
 
-	return Chat{
+	chat := Chat{
 		ID:      uuid.New(),
 		Name:    name,
 		ChiefID: chiefID,
@@ -35,16 +36,32 @@ func NewChat(name string, chiefID uuid.UUID) (Chat, error) {
 			{UserID: chiefID}, // Главный администратор
 		},
 		Invitations: nil,
-	}, nil
+	}
+
+	// Добавить событие
+	eventsBuf.AddSafety(chat.NewEventChatCreated())
+
+	return chat, nil
 }
 
 // UpdateName изменяет название чата.
-func (c *Chat) UpdateName(name string) error {
+func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	if err := ValidateChatName(name); err != nil {
 		return err
 	}
 
 	c.Name = name
 
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventChatNameUpdated())
+
 	return nil
+}
+
+func userIDs(participants []Participant) []uuid.UUID {
+	userIDs := make([]uuid.UUID, len(participants))
+	for i, p := range participants {
+		userIDs[i] = p.UserID
+	}
+	return userIDs
 }

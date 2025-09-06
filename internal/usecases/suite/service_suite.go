@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -20,6 +21,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
 
@@ -162,7 +164,7 @@ func (suite *Suite) UpsertChat(chat chatt.Chat) chatt.Chat {
 
 // RndChat создает случайный чат
 func (suite *Suite) RndChat() chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	suite.Require().NoError(err)
 
 	return chat
@@ -179,14 +181,14 @@ func (suite *Suite) NewParticipant(userID uuid.UUID) chatt.Participant {
 func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
-	suite.Require().NoError(chat.AddParticipant(p))
+	suite.Require().NoError(chat.AddParticipant(p, nil))
 
 	return p
 }
 
 // AddParticipant добавляет участника в чат
 func (suite *Suite) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
-	suite.Require().NoError(chat.AddParticipant(p))
+	suite.Require().NoError(chat.AddParticipant(p, nil))
 }
 
 // NewInvitation создает новое приглашение
@@ -198,7 +200,7 @@ func (suite *Suite) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invita
 
 // AddInvitation добавляет приглашение в чат
 func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
-	suite.Require().NoError(chat.AddInvitation(i))
+	suite.Require().NoError(chat.AddInvitation(i, nil))
 }
 
 // RandomString генерирует случайную строку
@@ -262,4 +264,21 @@ func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
 	err = user.AddBasicAuth(ba)
 	suite.Require().NoError(err)
 	return user
+}
+
+// HasElementOfType возвращает true, если в срезе есть элемент заданного типа
+func HasElementOfType[T any](e []any) bool {
+	for _, e := range e {
+		if _, ok := e.(T); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (suite *Suite) AssertHasEventType(ee []events.Event, eventType string) {
+	suite.T().Helper()
+	suite.True(slices.ContainsFunc(ee, func(e events.Event) bool {
+		return e.Type == eventType
+	}))
 }

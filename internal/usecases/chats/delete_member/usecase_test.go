@@ -4,9 +4,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
+	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -21,8 +24,14 @@ func Test_TestSuite(t *testing.T) {
 // Test_Members_DeleteMember тестирует удаление участника чата
 func (suite *testSuite) Test_Members_DeleteMember() {
 	usecase := &DeleteMemberUsecase{
-		Repo: suite.RR.Chats,
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
+	// Настройка мока
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return().
+		Maybe()
 
 	suite.Run("нельзя удалить самого себя", func() {
 		// Удалить участника
@@ -119,5 +128,40 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		suite.Require().NoError(err)
 		// Чатов с таким пользователем нет
 		suite.Empty(chats)
+	})
+
+	suite.Run("после завершения операции, будут созданы события", func() {
+		// Новый экземпляр usecase
+		usecase := &DeleteMemberUsecase{
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
+		}
+		// Настройка мока
+		var consumedEvents []events.Event
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
+			Run(func(args mock.Arguments) {
+				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
+			}).
+			Return()
+
+		// Создать чат
+		chat := suite.RndChat()
+		// Создать участника для удаления
+		participant := suite.AddRndParticipant(&chat)
+		// Сохранить чат
+		suite.UpsertChat(chat)
+		// Удалить участника
+		input := In{
+			SubjectID: chat.ChiefID,
+			ChatID:    chat.ID,
+			UserID:    participant.UserID,
+		}
+		out, err := usecase.DeleteMember(input)
+		suite.Require().NoError(err)
+		suite.Zero(out)
+
+		// Проверить список опубликованных событий
+		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemovedType)
 	})
 }

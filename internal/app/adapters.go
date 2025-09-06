@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/nice-pea/npchat/internal/adapter"
+	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
@@ -11,6 +12,7 @@ import (
 type adapters struct {
 	oauthProviders oauth.OAuthProviders
 	discovery      adapter.ServiceDiscovery
+	eventBus       *eventsBus.EventsBus
 }
 
 func (a *adapters) Discovery() adapter.ServiceDiscovery {
@@ -38,5 +40,6 @@ func initAdapters(cfg Config) *adapters {
 	return &adapters{
 		oauthProviders: oauthProviders,
 		discovery:      discovery,
+		eventBus:       new(eventsBus.EventsBus),
 	}
 }

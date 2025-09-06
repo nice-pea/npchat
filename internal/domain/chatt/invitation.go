@@ -5,6 +5,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Invitation представляет собой отправленное приглашение в чат.
@@ -36,7 +37,7 @@ func NewInvitation(subjectID, recipientID uuid.UUID) (Invitation, error) {
 }
 
 // AddInvitation добавляет приглашение в чат
-func (c *Chat) AddInvitation(invitation Invitation) error {
+func (c *Chat) AddInvitation(invitation Invitation, eventsBuf *events.Buffer) error {
 	// Проверить является ли subject участником чата
 	if !c.HasParticipant(invitation.SubjectID) {
 		return ErrSubjectIsNotMember
@@ -54,20 +55,31 @@ func (c *Chat) AddInvitation(invitation Invitation) error {
 
 	c.Invitations = append(c.Invitations, invitation)
 
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventInvitationAdded(invitation))
+
 	return nil
 }
 
 // RemoveInvitation удаляет приглашение из чата
-func (c *Chat) RemoveInvitation(id uuid.UUID) error {
+func (c *Chat) RemoveInvitation(id uuid.UUID, eventsBuf *events.Buffer) error {
 	// Убедиться, что приглашение существует
 	if !c.HasInvitation(id) {
 		return ErrInvitationNotExists
 	}
 
-	// Удалить приглашение из списка
-	c.Invitations = slices.DeleteFunc(c.Invitations, func(i Invitation) bool {
+	// Найти индекс приглашения
+	i := slices.IndexFunc(c.Invitations, func(i Invitation) bool {
 		return i.ID == id
 	})
+
+	removedInvitation := c.Invitations[i]
+
+	// Удалить приглашение из списка
+	c.Invitations = slices.Delete(c.Invitations, i, i+1)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventInvitationRemoved(removedInvitation))
 
 	return nil
 }

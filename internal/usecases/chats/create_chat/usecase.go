@@ -7,6 +7,7 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 var (
@@ -39,7 +40,8 @@ type Out struct {
 }
 
 type CreateChatUsecase struct {
-	Repo chatt.Repository
+	Repo          chatt.Repository
+	EventConsumer events.Consumer
 }
 
 // CreateChat создает новый чат и участника для главного администратора - пользователя, который создал этот чат
@@ -48,7 +50,10 @@ func (c *CreateChatUsecase) CreateChat(in In) (Out, error) {
 		return Out{}, err
 	}
 
-	chat, err := chatt.NewChat(in.Name, in.ChiefUserID)
+	// Инициализировать буфер событий
+	eventsBuf := new(events.Buffer)
+
+	chat, err := chatt.NewChat(in.Name, in.ChiefUserID, eventsBuf)
 	if err != nil {
 		return Out{}, err
 	}
@@ -57,6 +62,9 @@ func (c *CreateChatUsecase) CreateChat(in In) (Out, error) {
 	if err := c.Repo.Upsert(chat); err != nil {
 		return Out{}, err
 	}
+
+	// Отправить собранные события
+	c.EventConsumer.Consume(eventsBuf.Events())
 
 	return Out{
 		Chat: chat,

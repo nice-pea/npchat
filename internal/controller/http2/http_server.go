@@ -19,11 +19,11 @@ type Config struct {
 }
 
 // RunHttpServer запускает http сервер до момента отмена контекста
-func RunHttpServer(ctx context.Context, uc RequiredUsecases, cfg Config) error {
+func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener registerHandler.EventListener, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
-	registerHandlers(fiberApp, uc)
+	registerHandlers(fiberApp, uc, eventListener)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -46,7 +46,7 @@ func RunHttpServer(ctx context.Context, uc RequiredUsecases, cfg Config) error {
 }
 
 // registerHandlers регистрирует обработчики
-func registerHandlers(r *fiber.App, uc RequiredUsecases) {
+func registerHandlers(r *fiber.App, uc RequiredUsecases, eventListener registerHandler.EventListener) {
 	// Подключение middleware для логирования
 	r.Use(logger.New(logger.Config{
 		TimeFormat: "2006-01-02 15:04:05",
@@ -54,6 +54,8 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases) {
 
 	// Служебные
 	registerHandler.Ping(r)
+
+	registerHandler.Events(r, uc, eventListener)
 
 	// OAuth /oauth
 	registerHandler.OAuthInitRegistration(r, uc)

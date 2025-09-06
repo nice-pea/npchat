@@ -7,6 +7,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/nice-pea/npchat/internal/domain"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
 // Participant представляет собой участника чата.
@@ -37,7 +38,7 @@ func (c *Chat) HasParticipant(userID uuid.UUID) bool {
 }
 
 // RemoveParticipant удаляет участника из чата.
-func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
+func (c *Chat) RemoveParticipant(userID uuid.UUID, eventsBuf *events.Buffer) error {
 	// Убедиться, что участник не является главным администратором
 	if userID == c.ChiefID {
 		return ErrCannotRemoveChief
@@ -48,16 +49,24 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID) error {
 		return ErrParticipantNotExists
 	}
 
-	// Удалить участника из списка
-	c.Participants = slices.DeleteFunc(c.Participants, func(p Participant) bool {
+	// Найти индекс участника
+	i := slices.IndexFunc(c.Participants, func(p Participant) bool {
 		return p.UserID == userID
 	})
+
+	removedParticipant := c.Participants[i]
+
+	// Удалить участника
+	c.Participants = slices.Delete(c.Participants, i, i+1)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventParticipantRemoved(removedParticipant))
 
 	return nil
 }
 
 // AddParticipant добавляет участника в чат.
-func (c *Chat) AddParticipant(p Participant) error {
+func (c *Chat) AddParticipant(p Participant, eventsBuf *events.Buffer) error {
 	// Проверить является ли subject участником чата
 	if c.HasParticipant(p.UserID) {
 		return ErrParticipantExists
@@ -68,7 +77,11 @@ func (c *Chat) AddParticipant(p Participant) error {
 		return ErrUserIsAlreadyInvited
 	}
 
+	// Добавить участника
 	c.Participants = append(c.Participants, p)
+
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventParticipantAdded(p))
 
 	return nil
 }

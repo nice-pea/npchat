@@ -4,9 +4,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	"github.com/nice-pea/npchat/internal/usecases/events"
+	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -21,8 +24,14 @@ func Test_TestSuite(t *testing.T) {
 // Test_Invitations_SendChatInvitation тестирует отправку приглашения
 func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	usecase := &SendInvitationUsecase{
-		Repo: suite.RR.Chats,
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
+	// Настройка мока
+	usecase.EventConsumer.(*mockEvents.Consumer).
+		On("Consume", mock.Anything).
+		Return().
+		Maybe()
 
 	suite.Run("чат должен существовать", func() {
 		// Отправить приглашение
@@ -154,5 +163,42 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		for _, createdInvitation := range invitationsCreated {
 			suite.Contains(chats[0].Invitations, createdInvitation)
 		}
+	})
+
+	suite.Run("после завершения операции, будут созданы события", func() {
+		// Новый экземпляр usecase
+		usecase := &SendInvitationUsecase{
+			Repo:          suite.RR.Chats,
+			EventConsumer: mockEvents.NewConsumer(suite.T()),
+		}
+		// Настройка мока
+		var consumedEvents []events.Event
+		usecase.EventConsumer.(*mockEvents.Consumer).
+			On("Consume", mock.Anything).
+			Run(func(args mock.Arguments) {
+				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
+			}).
+			Return()
+
+		// Создать чат
+		chat := suite.RndChat()
+		// Сохранить чат
+		suite.UpsertChat(chat)
+		// Создать участника
+		participant := suite.AddRndParticipant(&chat)
+		// Сохранить чат
+		suite.UpsertChat(chat)
+		// Отправить приглашение
+		input := In{
+			ChatID:    chat.ID,
+			SubjectID: participant.UserID,
+			UserID:    uuid.New(),
+		}
+		out, err := usecase.SendInvitation(input)
+		suite.NoError(err)
+		suite.Require().NotZero(out)
+
+		// Проверить список опубликованных событий
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationAddedType)
 	})
 }

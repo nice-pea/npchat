@@ -26,3 +26,6 @@ run:
 build:
 	echo "Running npchat main package..."
 	CGO_ENABLED=0 GOOS=linux go build -o bin/npchat cmd/npchat/main.go
+
+genmock:
+	go run github.com/vektra/mockery/v3@v3.5.4

@@ -153,7 +153,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 			const expectedCount = 10
 			for range expectedCount {
 				chat := rndChat(t)
-				err := chat.AddParticipant(rndp)
+				err := chat.AddParticipant(rndp, nil)
 				require.NoError(t, err)
 				upsertChat(t, r, chat)
 			}
@@ -232,7 +232,7 @@ func TestRepository(t *testing.T, newRepository func() chatt.Repository) {
 
 // rndChat создает случайный экземпляр чата
 func rndChat(t *testing.T) chatt.Chat {
-	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New())
+	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	require.NoError(t, err)
 
 	return chat
@@ -257,12 +257,12 @@ func rndParticipant(t *testing.T) chatt.Participant {
 func addRndParticipant(t *testing.T, chat *chatt.Chat) {
 	p, err := chatt.NewParticipant(uuid.New())
 	require.NoError(t, err)
-	require.NoError(t, chat.AddParticipant(p))
+	require.NoError(t, chat.AddParticipant(p, nil))
 }
 
 // addRndInv добавляет случайное приглашение в чат
 func addRndInv(t *testing.T, chat *chatt.Chat) {
 	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.New())
 	require.NoError(t, err)
-	require.NoError(t, chat.AddInvitation(inv))
+	require.NoError(t, chat.AddInvitation(inv, nil))
 }

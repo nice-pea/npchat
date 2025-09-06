@@ -31,7 +31,7 @@ func Run(ctx context.Context, cfg Config) error {
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
-		return http2.RunHttpServer(ctx, uc, cfg.Http2)
+		return http2.RunHttpServer(ctx, uc, aa.eventBus, cfg.Http2)
 	})
 
 	return g.Wait()
