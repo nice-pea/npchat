@@ -122,31 +122,77 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		})
 	})
 	t.Run("JWT", func(t *testing.T) {
-		// t.Run("сохраненную JWT можно прочитать", func(t *testing.T) {
-		// 	uc := mockUsecasesForRequireAuthorizedSession{
-		// 		FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
-		// 			return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
-		// 		},
-		// 	}
+		t.Run("валидный JWT", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
 
-		// 	server := fiber.New(fiber.Config{DisableStartupMessage: true})
-		// 	server.Get(
-		// 		"/", RequireAuthorizedSession(uc),
-		// 		func(ctx *fiber.Ctx) error {
-		// 			session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
-		// 			require.True(t, ok)
-		// 			require.Equal(t, mockSession, session)
-		// 			return nil
-		// 		})
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get(
+				"/", RequireAuthorizedSession(uc),
+				func(ctx *fiber.Ctx) error {
+					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					require.True(t, ok)
+					require.Equal(t, mockSession, session)
+					return nil
+				})
 
-		// 	req, err := http.NewRequest("GET", "/", nil)
-		// 	require.NoError(t, err)
-		// 	req.Header.Set("Authorization", "Bearer "+mockSession.AccessToken.Token)
+			jwTocken := ""
 
-		// 	resp, err := server.Test(req)
-		// 	require.NoError(t, err)
-		// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-		// })
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "JWT "+jwTocken)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+		})
+		t.Run("истекший JWT", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get(
+				"/", RequireAuthorizedSession(uc),
+				func(ctx *fiber.Ctx) error {
+					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					require.True(t, ok)
+					require.Equal(t, mockSession, session)
+					return nil
+				})
+
+			jwTocken := ""
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "JWT "+jwTocken)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
+		t.Run("не верной подписи JWT", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get(
+				"/", RequireAuthorizedSession(uc),
+				func(ctx *fiber.Ctx) error {
+					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					require.True(t, ok)
+					require.Equal(t, mockSession, session)
+					return nil
+				})
+
+			jwTocken := ""
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "JWT "+jwTocken)
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
+		
+
 	})
 }
 
@@ -171,4 +217,8 @@ func (m mockUsecasesForRequireAuthorizedSession) FindSessions(in findSession.In)
 		return m.FindSessionsFunc(in)
 	}
 	return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
+}
+
+func CreateJWT() string {
+	return ""
 }
