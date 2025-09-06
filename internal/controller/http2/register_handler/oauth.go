@@ -30,7 +30,7 @@ func OauthAuthorize(router *fiber.App, uc UsecasesForOauthAuthorize) {
 			// Формируем входные данные для инициализации Oauth-регистрации
 			input := oauthAuthorize.In{
 				Provider:         ctx.Params("provider"), // Получаем имя провайдера из URL
-				CompleteCallback: ctx.Get("Origin") + "/oauth/" + ctx.Params("provider") + "/complete",
+				CompleteCallback: ctx.Get("Origin") + "/oauth/" + ctx.Params("provider") + "/callback",
 			}
 
 			// Инициируем Oauth-процесс регистрации у сервиса

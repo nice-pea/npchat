@@ -12,10 +12,10 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
@@ -23,6 +23,7 @@ import (
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
+	mockOauth "github.com/nice-pea/npchat/internal/usecases/users/oauth/mocks"
 )
 
 type Suite struct {
@@ -110,25 +111,28 @@ func (suite *Suite) SetupTest() {
 	for token := range suite.MockOauthUsers {
 		suite.MockOauthTokens[RandomString(13)] = token
 	}
-	suite.Adapters.Oauth = &oauthProvider.Mock{
-		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
+	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
+	suite.Adapters.Oauth.(*mockOauth.Provider).
+		On("ExchangeFunc", mock.Anything).Maybe().
+		Return(func(code string) (userr.OpenAuthToken, error) {
 			token, ok := suite.MockOauthTokens[code]
 			if !ok {
 				return userr.OpenAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
-		},
-		UserFunc: func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
+		}).
+		On("UserFunc", mock.Anything).Maybe().
+		Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 			user, ok := suite.MockOauthUsers[token]
 			if !ok {
 				return userr.OpenAuthUser{}, errors.New("user not found")
 			}
 			return user, nil
-		},
-		AuthorizationURLFunc: func(state string) string {
+		}).
+		On("AuthorizationURLFunc", mock.Anything).Maybe().
+		Return(func(state string) string {
 			return "https://provider.com/o/oauth2/auth?code=somecode&state=" + state
-		},
-	}
+		})
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
@@ -230,12 +234,12 @@ func (suite *Suite) RandomOauthToken() userr.OpenAuthToken {
 // Генерация случайного OauthUser
 func (suite *Suite) RandomOauthUser() userr.OpenAuthUser {
 	u, err := userr.NewOpenAuthUser(
-		RandomString(21),                                      // ID
-		(&oauthProvider.Mock{}).Name(),                        // Provider
-		RandomString(8)+"@example.com",                        // Email
-		RandomString(6)+" "+RandomString(7),                   // Name
+		RandomString(21),                    // ID
+		"mock",                              // Provider
+		RandomString(8)+"@example.com",      // Email
+		RandomString(6)+" "+RandomString(7), // Name
 		"https://example.com/avatar/"+RandomString(10)+".png", // Picture
-		userr.OpenAuthToken{},                                 // Token
+		userr.OpenAuthToken{}, // Token
 	)
 	suite.Require().NoError(err)
 
