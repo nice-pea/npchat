@@ -30,17 +30,17 @@ services:
       - "--pgsql-dsn"
       - "${PGSQL_DSN}"
       - "--oauth-google-key"
-      - "${OAUTH_GOOGLE_CLIENT_ID}"
+      - "${OAUTH_GOOGLE_KEY}"
       - "--oauth-google-secret"
-      - "${OAUTH_GOOGLE_CLIENT_SECRET}"
+      - "${OAUTH_GOOGLE_SECRET}"
       - "--oauth-google-callback"
-      - "${OAUTH_GOOGLE_CALLBACK_URL}"
+      - "${OAUTH_GOOGLE_CALLBACK}"
       - "--oauth-github-key"
-      - "${OAUTH_GITHUB_CLIENT_ID}"
+      - "${OAUTH_GITHUB_KEY}"
       - "--oauth-github-secret"
-      - "${OAUTH_GITHUB_CLIENT_SECRET}"
+      - "${OAUTH_GITHUB_SECRET}"
       - "--oauth-github-callback"
-      - "${OAUTH_GITHUB_CALLBACK_URL}"
+      - "${OAUTH_GITHUB_CALLBACK}"
 
   test.npchat:
     container_name: npc.test.npchat
