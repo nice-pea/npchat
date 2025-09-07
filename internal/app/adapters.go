@@ -23,10 +23,10 @@ func initAdapters(cfg Config) *adapters {
 		oauthProviders.Add(oauthProvider.NewGoogle(cfg.OauthGoogle))
 		slog.Info("Подключен Oauth провайдер Google")
 	}
-	// if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
-	// 	oauthProviders.Add(oauthProvider.NewGithub(cfg.OauthGithub))
-	// 	slog.Info("Подключен Oauth провайдер Github")
-	// }
+	if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
+		oauthProviders.Add(oauthProvider.NewGithub(cfg.OauthGithub))
+		slog.Info("Подключен Oauth провайдер Github")
+	}
 
 	return &adapters{
 		oauthProviders: oauthProviders,

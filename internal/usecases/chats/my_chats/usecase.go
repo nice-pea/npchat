@@ -11,7 +11,6 @@ import (
 
 var (
 	ErrInvalidSubjectID      = errors.New("некорректное значение SubjectID")
-	ErrInvalidName           = errors.New("некорректное значение Name")
 	ErrInvalidUserID         = errors.New("некорректное значение UserID")
 	ErrUnauthorizedChatsView = errors.New("нельзя просматривать чужой список чатов")
 )

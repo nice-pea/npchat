@@ -3,6 +3,7 @@ package oauthProvider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -61,10 +62,20 @@ func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 
 // User получает информацию о пользователе Google, используя токен Oauth.
 func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-	// Выполить GET-запрос для получения информации о пользователе
-	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token.AccessToken},
+	))
+
+	// Сделать запрос для получения информации о пользователе
+	response, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return userr.OpenAuthUser{}, err // Возвращает ошибку, если запрос не удался
+		return userr.OpenAuthUser{}, err
+	}
+	defer func() { _ = response.Body.Close() }()
+
+	// Проверить код ответа
+	if response.StatusCode != http.StatusOK {
+		return userr.OpenAuthUser{}, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 	}
 
 	// Прочитать данные ответ

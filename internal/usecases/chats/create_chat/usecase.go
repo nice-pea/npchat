@@ -11,10 +11,8 @@ import (
 )
 
 var (
-	ErrInvalidSubjectID = errors.New("некорректное значение SubjectID")
-	ErrInvalidChatID    = errors.New("некорректное значение ChatID")
-	ErrInvalidChiefID   = errors.New("некорректное значение ChiefID")
-	ErrInvalidName      = errors.New("некорректное значение Name")
+	ErrInvalidChiefID = errors.New("некорректное значение ChiefID")
+	ErrInvalidName    = errors.New("некорректное значение Name")
 )
 
 // In входящие параметры

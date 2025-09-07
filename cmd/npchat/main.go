@@ -96,16 +96,21 @@ func initCliCommand() *cli.Command {
 				Usage:       "URL для перенаправления после аутентификации OAuth Google",
 			},
 			// Github
-			// &cli.StringFlag{
-			// 	Name:        "oauth-github-key",
-			// 	Destination: &cfg.OauthGithub.ClientID,
-			// 	Usage:       "ID клиента Oauth Github",
-			// },
-			// &cli.StringFlag{
-			// 	Name:        "oauth-github-secret",
-			// 	Destination: &cfg.OauthGithub.ClientSecret,
-			// 	Usage:       "Секрет клиента Oauth Github",
-			// },
+			&cli.StringFlag{
+				Name:        "oauth-github-key",
+				Destination: &cfg.OauthGithub.ClientID,
+				Usage:       "ID клиента Oauth Github",
+			},
+			&cli.StringFlag{
+				Name:        "oauth-github-secret",
+				Destination: &cfg.OauthGithub.ClientSecret,
+				Usage:       "Секрет клиента Oauth Github",
+			},
+			&cli.StringFlag{
+				Name:        "oauth-github-callback",
+				Destination: &cfg.OauthGithub.RedirectURL,
+				Usage:       "URL для перенаправления после аутентификации OAuth Github",
+			},
 		},
 	}
 }

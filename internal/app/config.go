@@ -11,5 +11,5 @@ type Config struct {
 	Http2       http2.Config
 	LogLevel    string
 	OauthGoogle oauthProvider.GoogleConfig
-	// OauthGithub oauthProvider.GithubConfig
+	OauthGithub oauthProvider.GithubConfig
 }

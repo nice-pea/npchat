@@ -10,12 +10,9 @@ import (
 )
 
 var (
-	ErrInvitationNotExists   = errors.New("приглашения не существует")
-	ErrInvalidSubjectID      = errors.New("некорректное значение SubjectID")
-	ErrInvalidInvitationID   = errors.New("некорректное значение InvitationID")
-	ErrSubjectIsNotMember    = errors.New("subject user не является участником чата")
-	ErrSubjectUserNotAllowed = errors.New("у пользователя нет прав на это действие")
-	ErrInvalidChatID         = errors.New("некорректное значение ChatID")
+	ErrInvalidSubjectID   = errors.New("некорректное значение SubjectID")
+	ErrSubjectIsNotMember = errors.New("subject user не является участником чата")
+	ErrInvalidChatID      = errors.New("некорректное значение ChatID")
 )
 
 // ChatInvitationsIn параметры для запроса приглашений конкретного чата

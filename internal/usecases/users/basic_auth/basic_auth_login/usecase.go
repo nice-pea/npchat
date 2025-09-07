@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	ErrInvalidProvider             = errors.New("некорректное значение Provider")
 	ErrInvalidLogin                = errors.New("некорректное значение BasicAuthLogin")
 	ErrInvalidPassword             = errors.New("некорректное значение Password")
 	ErrLoginOrPasswordDoesNotMatch = errors.New("не совпадает BasicAuthLogin или Password")

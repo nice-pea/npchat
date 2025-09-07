@@ -12,7 +12,7 @@ import (
 	oauthComplete "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_complete"
 )
 
-// OauthAuthorize регистрирует обработчик, инициирующий процесс регистрации через Oauth.
+// OauthAuthorize регистрирует обработчик, инициирующий процесс входа через Oauth.
 // Перенаправляет пользователя на страницу авторизации провайдера.
 // Данный обработчик не требует аутентификации.
 //
@@ -49,7 +49,7 @@ type UsecasesForOauthAuthorize interface {
 	OauthAuthorize(oauthAuthorize.In) (oauthAuthorize.Out, error)
 }
 
-// OauthCallback регистрирует обработчик, завершающий регистрацию через Oauth.
+// OauthCallback регистрирует обработчик, завершающий вход через Oauth.
 // Обрабатывает callback от провайдера после успешной авторизации.
 // Данный обработчик не требует аутентификации.
 //
@@ -84,12 +84,14 @@ type UsecasesForOauthCallback interface {
 	OauthComplete(oauthComplete.In) (oauthComplete.Out, error)
 }
 
-// oauthCookieName — имя куки, в которую сохраняется параметр state для защиты от CSRF
-const oauthCookieName = "oauthState"
+// oauthCookieName возвращает имя куки, в которую сохраняется параметр state для защиты от CSRF
+func oauthCookieName(ctx *fiber.Ctx) string {
+	return ctx.Params("provider") + "-oauthState"
+}
 
 // setOauthCookie устанавливает куку с параметром state из строки редиректа
-func setOauthCookie(context *fiber.Ctx, redirectURL string) error {
-	// Парсим URL, чтобы получить query-параметры
+func setOauthCookie(ctx *fiber.Ctx, redirectURL string) error {
+	// Разбираем URL, чтобы получить query-параметры
 	parsedUrl, err := url.Parse(redirectURL)
 	if err != nil {
 		return err
@@ -99,13 +101,13 @@ func setOauthCookie(context *fiber.Ctx, redirectURL string) error {
 	state := parsedUrl.Query().Get("state")
 
 	// Устанавливаем куку с этим значением
-	context.Cookie(&fiber.Cookie{
-		Name:     oauthCookieName,
+	ctx.Cookie(&fiber.Cookie{
+		Name:     oauthCookieName(ctx),
 		Value:    state,
-		Expires:  time.Now().Add(time.Hour), // Кука живёт 1 час
-		HTTPOnly: true,                      // Защита от XSS
-		Secure:   true,                      // Только по HTTPS
-		Path:     "/",                       // Доступна по всему домену
+		Expires:  time.Now().Add(time.Minute * 3), // Время жизни кука
+		HTTPOnly: true,                            // Защита от XSS
+		Secure:   true,                            // Только по HTTPS
+		Path:     "/",                             // Доступна по всему домену
 	})
 
 	return nil
@@ -116,9 +118,9 @@ var errWrongState = errors.New("неправильный state")
 
 // validateOauthCookie проверяет, что значение 'state' в запросе совпадает с тем, что было сохранено в куке.
 // Это защищает от CSRF-атак.
-func validateOauthCookie(context *fiber.Ctx) error {
+func validateOauthCookie(ctx *fiber.Ctx) error {
 	// Получаем куку с именем oauthState
-	oauthState := context.Cookies(oauthCookieName)
+	oauthState := ctx.Cookies(oauthCookieName(ctx))
 
 	if oauthState == "" {
 		// Если куки нет — возвращаем ошибку несоответствия state
@@ -126,7 +128,7 @@ func validateOauthCookie(context *fiber.Ctx) error {
 	}
 
 	// Сравниваем значение state из запроса с тем, что храним в куке
-	if context.Query("state") != oauthState {
+	if ctx.Query("state") != oauthState {
 		return errWrongState
 	}
 
