@@ -24,29 +24,42 @@ func (suite *testSuite) Test_OauthAuthorize() {
 	}
 	usecase.Providers.Add(suite.Adapters.Oauth)
 
-	suite.Run("Provider обязательное поле", func() {
-		// Инициализация регистрации
+	suite.Run("Provider обязательные поля, должен быть известен в сервисе", func() {
 		out, err := usecase.OauthAuthorize(In{
-			Provider: "",
+			Provider:         "",
+			CompleteCallback: "http://callback.ab",
 		})
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
+
+		out, err = usecase.OauthAuthorize(In{
+			Provider: "unknownProvider",
+		})
+		suite.ErrorIs(err, oauth.ErrUnknownOauthProvider)
+		suite.Zero(out)
 	})
 
-	suite.Run("Provider должен быть известен в сервисе", func() {
-		// Инициализация регистрации
-		input := In{
-			Provider: "unknownProvider",
-		}
-		out, err := usecase.OauthAuthorize(input)
-		suite.ErrorIs(err, oauth.ErrUnknownOauthProvider)
+	suite.Run("CompleteCallback должен быть корректным url", func() {
+		out, err := usecase.OauthAuthorize(In{
+			Provider:         suite.Adapters.Oauth.Name(),
+			CompleteCallback: "",
+		})
+		suite.ErrorIs(err, ErrInvalidCompleteCallback)
+		suite.Zero(out)
+
+		out, err = usecase.OauthAuthorize(In{
+			Provider:         suite.Adapters.Oauth.Name(),
+			CompleteCallback: "adf[o",
+		})
+		suite.ErrorIs(err, ErrInvalidCompleteCallback)
 		suite.Zero(out)
 	})
 
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
 		out, err := usecase.OauthAuthorize(In{
-			Provider: suite.Adapters.Oauth.Name(),
+			Provider:         suite.Adapters.Oauth.Name(),
+			CompleteCallback: "http://callback.ab",
 		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
@@ -61,5 +74,8 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		// Есть query-параметр state
 		code := parsedUrl.Query().Get("code")
 		suite.NotZero(code)
+		// Есть query-параметр redirect_uri
+		ru := parsedUrl.Query().Get("redirect_uri")
+		suite.NotZero(ru)
 	})
 }

@@ -26,7 +26,8 @@ func (in In) Validate() error {
 		return ErrInvalidProvider
 	}
 
-	if _, err := url.Parse(in.CompleteCallback); err != nil {
+	u, err := url.Parse(in.CompleteCallback)
+	if err != nil || u.Scheme == "" || u.Host == "" {
 		return ErrInvalidCompleteCallback
 	}
 

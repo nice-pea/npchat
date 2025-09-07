@@ -67,6 +67,35 @@ func (u *OauthCompleteUsecase) OauthComplete(in In) (Out, error) {
 		return Out{}, err
 	}
 
+	// Определить, надо ли создавать пользователя
+	user, userIsExists, err := u.userIfExists(openAuthUser)
+	if err != nil {
+		return Out{}, err
+	}
+
+	// Зарегистрировать либо авторизовать пользователя
+	if userIsExists {
+		return u.login(user)
+	} else {
+		return u.registration(openAuthUser)
+	}
+}
+
+func (u *OauthCompleteUsecase) userIfExists(openAuthUser userr.OpenAuthUser) (userr.User, bool, error) {
+	user, err := userr.Find(u.Repo, userr.Filter{
+		OauthUserID:   openAuthUser.ID,
+		OauthProvider: openAuthUser.Provider,
+	})
+	if errors.Is(err, userr.ErrUserNotExists) {
+		return userr.User{}, false, nil
+	} else if err != nil {
+		return userr.User{}, false, err
+	}
+
+	return user, true, nil
+}
+
+func (u *OauthCompleteUsecase) registration(openAuthUser userr.OpenAuthUser) (Out, error) {
 	// Создать пользователя
 	user, err := userr.NewUser(openAuthUser.Name, "")
 	if err != nil {
@@ -83,7 +112,7 @@ func (u *OauthCompleteUsecase) OauthComplete(in In) (Out, error) {
 		// Проверить, не связан ли пользователь провайдера с каким-нибудь нашим пользователем
 		if conflictUsers, err := u.Repo.List(userr.Filter{
 			OauthUserID:   openAuthUser.ID,
-			OauthProvider: in.Provider,
+			OauthProvider: openAuthUser.Provider,
 		}); err != nil {
 			return err // Возвращает ошибку, если запрос к репозиторию не удался
 		} else if len(conflictUsers) != 0 {
@@ -109,6 +138,22 @@ func (u *OauthCompleteUsecase) OauthComplete(in In) (Out, error) {
 		return Out{}, err
 	}
 
+	return Out{
+		Session: session,
+		User:    user,
+	}, nil
+}
+
+func (u *OauthCompleteUsecase) login(user userr.User) (Out, error) {
+	// Создать сессию для пользователя
+	sessionName := "todo: [название модели телефона / название браузера]"
+	session, err := sessionn.NewSession(user.ID, sessionName, sessionn.StatusVerified)
+	if err != nil {
+		return Out{}, err
+	}
+	if err = u.SessionsRepo.Upsert(session); err != nil {
+		return Out{}, err
+	}
 	return Out{
 		Session: session,
 		User:    user,

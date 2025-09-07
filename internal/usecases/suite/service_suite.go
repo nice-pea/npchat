@@ -106,11 +106,6 @@ func (suite *Suite) SetupTest() {
 	suite.RR.Sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
-	suite.MockOauthUsers = suite.GenerateMockUsers()
-	suite.MockOauthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOauthUsers))
-	for token := range suite.MockOauthUsers {
-		suite.MockOauthTokens[RandomString(13)] = token
-	}
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 	suite.Adapters.Oauth.(*mockOauth.Provider).
 		On("Name", mock.Anything).Maybe().
@@ -133,8 +128,18 @@ func (suite *Suite) SetupTest() {
 		}).
 		On("AuthorizationURL", mock.Anything, mock.Anything).Maybe().
 		Return(func(state string, callback string) string {
-			return "https://provider.com/o/oauth2/auth?code=somecode&state=" + state
+			return "https://provider.com/o/oauth2/auth?" +
+				"code=someCode" +
+				"&state=" + state +
+				"&redirect_uri=" + callback
 		})
+
+	// Тестовые пользователи и токены
+	suite.MockOauthUsers = suite.GenerateMockUsers()
+	suite.MockOauthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOauthUsers))
+	for token := range suite.MockOauthUsers {
+		suite.MockOauthTokens[RandomString(13)] = token
+	}
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
@@ -236,12 +241,12 @@ func (suite *Suite) RandomOauthToken() userr.OpenAuthToken {
 // Генерация случайного OauthUser
 func (suite *Suite) RandomOauthUser() userr.OpenAuthUser {
 	u, err := userr.NewOpenAuthUser(
-		RandomString(21),                    // ID
-		"mock",                              // Provider
-		RandomString(8)+"@example.com",      // Email
-		RandomString(6)+" "+RandomString(7), // Name
+		RandomString(21),                                      // ID
+		suite.Adapters.Oauth.Name(),                           // Provider
+		RandomString(8)+"@example.com",                        // Email
+		RandomString(6)+" "+RandomString(7),                   // Name
 		"https://example.com/avatar/"+RandomString(10)+".png", // Picture
-		userr.OpenAuthToken{}, // Token
+		userr.OpenAuthToken{},                                 // Token
 	)
 	suite.Require().NoError(err)
 
