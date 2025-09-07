@@ -126,12 +126,11 @@ func (suite *Suite) SetupTest() {
 			}
 			return user, nil
 		}).
-		On("AuthorizationURL", mock.Anything, mock.Anything).Maybe().
-		Return(func(state string, callback string) string {
+		On("AuthorizationURL", mock.Anything).Maybe().
+		Return(func(state string) string {
 			return "https://provider.com/o/oauth2/auth?" +
 				"code=someCode" +
-				"&state=" + state +
-				"&redirect_uri=" + callback
+				"&state=" + state
 		})
 
 	// Тестовые пользователи и токены

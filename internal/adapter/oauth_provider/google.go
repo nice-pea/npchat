@@ -20,6 +20,7 @@ type Google struct {
 type GoogleConfig struct {
 	ClientID     string // Идентификатор клиента для Oauth
 	ClientSecret string // Секрет клиента для Oauth
+	RedirectURL  string // URL для перенаправления после аутентификации
 }
 
 func NewGoogle(cfg GoogleConfig) *Google {
@@ -28,6 +29,7 @@ func NewGoogle(cfg GoogleConfig) *Google {
 			ClientID:     cfg.ClientID,     // Идентификатор клиента
 			ClientSecret: cfg.ClientSecret, // Секрет клиента
 			Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth
+			RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
 			Scopes: []string{
 				"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
 				"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
@@ -94,11 +96,7 @@ func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 }
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
-func (o *Google) AuthorizationURL(state string, callback string) string {
-	// Копировать конфигурацию
-	config := *o.config
-	// Установить URL перенаправления
-	config.RedirectURL = callback
+func (o *Google) AuthorizationURL(state string) string {
 	// Сгенерировать URL
-	return config.AuthCodeURL(state)
+	return o.config.AuthCodeURL(state)
 }

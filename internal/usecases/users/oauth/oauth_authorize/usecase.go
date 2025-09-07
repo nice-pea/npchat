@@ -2,7 +2,6 @@ package oauthAuthorize
 
 import (
 	"errors"
-	"net/url"
 
 	"github.com/google/uuid"
 
@@ -16,8 +15,7 @@ var (
 
 // In представляет собой параметры инициализации регистрации Oauth.
 type In struct {
-	Provider         string // Имя провайдера Oauth
-	CompleteCallback string // URL для перенаправления после авторизации
+	Provider string // Имя провайдера Oauth
 }
 
 // Validate валидирует значение параметра провайдера.
@@ -25,12 +23,6 @@ func (in In) Validate() error {
 	if in.Provider == "" {
 		return ErrInvalidProvider
 	}
-
-	u, err := url.Parse(in.CompleteCallback)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return ErrInvalidCompleteCallback
-	}
-
 	return nil // Возвращает nil, если параметры валидны
 }
 
@@ -58,6 +50,6 @@ func (u *OauthAuthorizeUsecase) OauthAuthorize(in In) (Out, error) {
 
 	// Генерирует URL для перенаправления на страницу авторизации провайдера
 	return Out{
-		RedirectURL: provider.AuthorizationURL(uuid.NewString(), in.CompleteCallback),
+		RedirectURL: provider.AuthorizationURL(uuid.NewString()),
 	}, nil
 }

@@ -22,9 +22,7 @@ type Provider interface {
 	//
 	// Параметр state используется для предотвращения CSRF-атаки.
 	// Должен быть уникальной случайной строкой
-	//
-	// Параметр callback представляет собой URL для перенаправления после аутентификации
-	AuthorizationURL(state string, callback string) string
+	AuthorizationURL(state string) string
 
 	// Name возвращает имя провайдера Oauth
 	Name() string

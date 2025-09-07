@@ -13,7 +13,7 @@ import (
 )
 
 // OauthAuthorize регистрирует обработчик, инициирующий процесс регистрации через Oauth.
-// Редиректит пользователя на страницу авторизации провайдера.
+// Перенаправляет пользователя на страницу авторизации провайдера.
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/authorize
@@ -22,15 +22,9 @@ func OauthAuthorize(router *fiber.App, uc UsecasesForOauthAuthorize) {
 		"/oauth/:provider/authorize",
 		recover2.New(),
 		func(ctx *fiber.Ctx) error {
-			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
-			if err := validateOauthCookie(ctx); err != nil {
-				return err
-			}
-
 			// Формируем входные данные для инициализации Oauth-регистрации
 			input := oauthAuthorize.In{
-				Provider:         ctx.Params("provider"), // Получаем имя провайдера из URL
-				CompleteCallback: ctx.Get("Origin") + "/oauth/" + ctx.Params("provider") + "/callback",
+				Provider: ctx.Params("provider"), // Получаем имя провайдера из URL
 			}
 
 			// Инициируем Oauth-процесс регистрации у сервиса

@@ -90,6 +90,11 @@ func initCliCommand() *cli.Command {
 				Destination: &cfg.OauthGoogle.ClientSecret,
 				Usage:       "Секрет клиента Oauth Google",
 			},
+			&cli.StringFlag{
+				Name:        "oauth-google-callback",
+				Destination: &cfg.OauthGoogle.RedirectURL,
+				Usage:       "URL для перенаправления после аутентификации OAuth Google",
+			},
 			// Github
 			// &cli.StringFlag{
 			// 	Name:        "oauth-github-key",
