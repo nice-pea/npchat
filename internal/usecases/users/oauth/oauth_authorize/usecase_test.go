@@ -26,8 +26,7 @@ func (suite *testSuite) Test_OauthAuthorize() {
 
 	suite.Run("Provider обязательные поля, должен быть известен в сервисе", func() {
 		out, err := usecase.OauthAuthorize(In{
-			Provider:         "",
-			CompleteCallback: "http://callback.ab",
+			Provider: "",
 		})
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
@@ -39,27 +38,10 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		suite.Zero(out)
 	})
 
-	suite.Run("CompleteCallback должен быть корректным url", func() {
-		out, err := usecase.OauthAuthorize(In{
-			Provider:         suite.Adapters.Oauth.Name(),
-			CompleteCallback: "",
-		})
-		suite.ErrorIs(err, ErrInvalidCompleteCallback)
-		suite.Zero(out)
-
-		out, err = usecase.OauthAuthorize(In{
-			Provider:         suite.Adapters.Oauth.Name(),
-			CompleteCallback: "adf[o",
-		})
-		suite.ErrorIs(err, ErrInvalidCompleteCallback)
-		suite.Zero(out)
-	})
-
 	suite.Run("инициализация вернет валидный url", func() {
 		// Инициализация регистрации
 		out, err := usecase.OauthAuthorize(In{
-			Provider:         suite.Adapters.Oauth.Name(),
-			CompleteCallback: "http://callback.ab",
+			Provider: suite.Adapters.Oauth.Name(),
 		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
@@ -74,8 +56,5 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		// Есть query-параметр state
 		code := parsedUrl.Query().Get("code")
 		suite.NotZero(code)
-		// Есть query-параметр redirect_uri
-		ru := parsedUrl.Query().Get("redirect_uri")
-		suite.NotZero(ru)
 	})
 }

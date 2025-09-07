@@ -37,16 +37,16 @@ func (_m *Provider) EXPECT() *Provider_Expecter {
 }
 
 // AuthorizationURL provides a mock function for the type Provider
-func (_mock *Provider) AuthorizationURL(state string, callback string) string {
-	ret := _mock.Called(state, callback)
+func (_mock *Provider) AuthorizationURL(state string) string {
+	ret := _mock.Called(state)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AuthorizationURL")
 	}
 
 	var r0 string
-	if returnFunc, ok := ret.Get(0).(func(string, string) string); ok {
-		r0 = returnFunc(state, callback)
+	if returnFunc, ok := ret.Get(0).(func(string) string); ok {
+		r0 = returnFunc(state)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
@@ -60,24 +60,18 @@ type Provider_AuthorizationURL_Call struct {
 
 // AuthorizationURL is a helper method to define mock.On call
 //   - state string
-//   - callback string
-func (_e *Provider_Expecter) AuthorizationURL(state interface{}, callback interface{}) *Provider_AuthorizationURL_Call {
-	return &Provider_AuthorizationURL_Call{Call: _e.mock.On("AuthorizationURL", state, callback)}
+func (_e *Provider_Expecter) AuthorizationURL(state interface{}) *Provider_AuthorizationURL_Call {
+	return &Provider_AuthorizationURL_Call{Call: _e.mock.On("AuthorizationURL", state)}
 }
 
-func (_c *Provider_AuthorizationURL_Call) Run(run func(state string, callback string)) *Provider_AuthorizationURL_Call {
+func (_c *Provider_AuthorizationURL_Call) Run(run func(state string)) *Provider_AuthorizationURL_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
 			arg0 = args[0].(string)
 		}
-		var arg1 string
-		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
 		run(
 			arg0,
-			arg1,
 		)
 	})
 	return _c
@@ -88,7 +82,7 @@ func (_c *Provider_AuthorizationURL_Call) Return(s string) *Provider_Authorizati
 	return _c
 }
 
-func (_c *Provider_AuthorizationURL_Call) RunAndReturn(run func(state string, callback string) string) *Provider_AuthorizationURL_Call {
+func (_c *Provider_AuthorizationURL_Call) RunAndReturn(run func(state string) string) *Provider_AuthorizationURL_Call {
 	_c.Call.Return(run)
 	return _c
 }
