@@ -46,7 +46,7 @@ var (
 	pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
 )
 
-// newPgsqlExternalFactory создает фабрику репозиториев  для тестирования, реализованных с помощью подключения к postgres по DSN
+// newPgsqlExternalFactory создает фабрику репозиториев для тестирования, реализованных с помощью подключения к postgres по DSN
 func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
 	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
 		DSN: dsn,
@@ -56,12 +56,12 @@ func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factor
 	return factory, func() { _ = factory.Close() }
 }
 
-// newPgsqlContainerFactory создает фабрику репозиториев  для тестирования, реализованных с помощью postgres контейнеров
+// newPgsqlContainerFactory создает фабрику репозиториев для тестирования, реализованных с помощью postgres контейнеров
 func (suite *Suite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, closer func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Поиск скрптов с миграциями
+	// Поиск скриптов с миграциями
 	_, b, _, _ := runtime.Caller(0)
 	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.up.sql")
 	migrations, err := filepath.Glob(migrationsDir)
@@ -113,7 +113,9 @@ func (suite *Suite) SetupTest() {
 	}
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 	suite.Adapters.Oauth.(*mockOauth.Provider).
-		On("ExchangeFunc", mock.Anything).Maybe().
+		On("Name", mock.Anything).Maybe().
+		Return("mock").
+		On("Exchange", mock.Anything).Maybe().
 		Return(func(code string) (userr.OpenAuthToken, error) {
 			token, ok := suite.MockOauthTokens[code]
 			if !ok {
@@ -121,7 +123,7 @@ func (suite *Suite) SetupTest() {
 			}
 			return token, nil
 		}).
-		On("UserFunc", mock.Anything).Maybe().
+		On("User", mock.Anything).Maybe().
 		Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 			user, ok := suite.MockOauthUsers[token]
 			if !ok {
@@ -129,8 +131,8 @@ func (suite *Suite) SetupTest() {
 			}
 			return user, nil
 		}).
-		On("AuthorizationURLFunc", mock.Anything).Maybe().
-		Return(func(state string) string {
+		On("AuthorizationURL", mock.Anything, mock.Anything).Maybe().
+		Return(func(state string, callback string) string {
 			return "https://provider.com/o/oauth2/auth?code=somecode&state=" + state
 		})
 }
@@ -141,7 +143,7 @@ func (suite *Suite) TearDownSubTest() {
 	suite.Require().NoError(err)
 }
 
-// TearDownSubTest выполняется после каждого подтеста, связанного с suite
+// TearDownTest выполняется после каждого подтеста, связанного с suite
 func (suite *Suite) TearDownTest() {
 	suite.factoryCloser()
 }
