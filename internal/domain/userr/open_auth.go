@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// OpenAuthUser представляет собой пользователем OAuth провайдера.
+// OpenAuthUser представляет собой пользователем Oauth провайдера.
 type OpenAuthUser struct {
 	ID       string        // ID пользователя провайдером
 	Provider string        // Провайдер, которому принадлежит пользователь
@@ -18,7 +18,7 @@ type OpenAuthUser struct {
 	Token    OpenAuthToken // Токен для аутентификации
 }
 
-// NewOpenAuthUser создает нового пользователем OAuth провайдера.
+// NewOpenAuthUser создает нового пользователем Oauth провайдера.
 func NewOpenAuthUser(id string, provider string, email string, name string, picture string, token OpenAuthToken) (OpenAuthUser, error) {
 	if id == "" {
 		return OpenAuthUser{}, errors.New("id is required")
@@ -50,7 +50,7 @@ func NewOpenAuthUser(id string, provider string, email string, name string, pict
 	}, nil
 }
 
-// OpenAuthToken представляет собой OAuth токен.
+// OpenAuthToken представляет собой Oauth токен.
 type OpenAuthToken struct {
 	// AccessToken это токен, который авторизует и аутентифицирует запросы.
 	AccessToken string
@@ -70,7 +70,7 @@ type OpenAuthToken struct {
 	Expiry time.Time
 }
 
-// NewOpenAuthToken создает новый OAuth токен.
+// NewOpenAuthToken создает новый Oauth токен.
 func NewOpenAuthToken(accessToken string, tokenType string, refreshToken string, expiry time.Time) (OpenAuthToken, error) {
 	if accessToken == "" {
 		return OpenAuthToken{}, errors.New("accessToken is required")

@@ -2,196 +2,118 @@ package register_handler
 
 import (
 	"errors"
-	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
-	completeOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_login"
-	completeOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
-	initOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_login"
-	initOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_registration"
+	oauthAuthorize "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_authorize"
+	oauthComplete "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_complete"
 )
 
-// OAuthInitRegistration регистрирует обработчик, инициирующий процесс регистрации через OAuth.
-// Редиректит пользователя на страницу авторизации провайдера.
+// OauthAuthorize регистрирует обработчик, инициирующий процесс входа через Oauth.
+// Перенаправляет пользователя на страницу авторизации провайдера.
 // Данный обработчик не требует аутентификации.
 //
-// Метод: GET /oauth/{provider}/registration
-func OAuthInitRegistration(router *fiber.App, uc UsecasesForOAuthInitRegistration) {
+// Метод: GET /oauth/{provider}/authorize
+func OauthAuthorize(router *fiber.App, uc UsecasesForOauthAuthorize) {
 	router.Get(
-		"/oauth/:provider/registration",
+		"/oauth/:provider/authorize",
 		recover2.New(),
-		func(context *fiber.Ctx) error {
-			// Формируем входные данные для инициализации OAuth-регистрации
-			input := initOAuthRegistration.In{
-				Provider: context.Params("provider"), // Получаем имя провайдера из URL
+		func(ctx *fiber.Ctx) error {
+			// Формируем входные данные для инициализации Oauth-регистрации
+			input := oauthAuthorize.In{
+				Provider: ctx.Params("provider"), // Получаем имя провайдера из URL
 			}
 
-			// Инициируем OAuth-процесс регистрации у сервиса
-			out, err := uc.InitOAuthRegistration(input)
+			// Инициируем Oauth-процесс регистрации у сервиса
+			out, err := uc.OauthAuthorize(input)
 			if err != nil {
 				return err
 			}
 
-			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
-			if err = setOAuthCookie(context, out.RedirectURL); err != nil {
-				return err
-			}
+			// Сохраняем state в куке для последующей проверки безопасности
+			setOauthCookie(ctx, out.State)
 
 			// Возвращаем команду редиректа на сторону провайдера
-			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
+			return ctx.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
 		},
 	)
 }
 
-// UsecasesForOAuthInitRegistration определяет интерфейс для доступа к сценариям использования бизнес-логики
-type UsecasesForOAuthInitRegistration interface {
-	InitOAuthRegistration(initOAuthRegistration.In) (initOAuthRegistration.Out, error)
+// UsecasesForOauthAuthorize определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForOauthAuthorize interface {
+	OauthAuthorize(oauthAuthorize.In) (oauthAuthorize.Out, error)
 }
 
-// OAuthCompleteRegistrationCallback регистрирует обработчик, завершающий регистрацию через OAuth.
+// OauthCallback регистрирует обработчик, завершающий вход через Oauth.
 // Обрабатывает callback от провайдера после успешной авторизации.
 // Данный обработчик не требует аутентификации.
 //
-// Метод: GET /oauth/{provider}/registration/callback
-func OAuthCompleteRegistrationCallback(router *fiber.App, uc UsecasesForOAuthCompleteRegistrationCallback) {
+// Метод: GET /oauth/{provider}/callback
+func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback) {
 	router.Get(
-		"/oauth/:provider/registration/callback",
+		"/oauth/:provider/callback",
 		recover2.New(),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
-			if err := validateOAuthCookie(context); err != nil {
+			if err := validateOauthCookie(ctx); err != nil {
 				return err
 			}
+			// Удалить куку
+			clearOauthCookie(ctx)
 
-			input := completeOAuthRegistration.In{
-				UserCode: context.Query("code"),
-				Provider: context.Params("provider"),
+			input := oauthComplete.In{
+				UserCode: ctx.Query("code"),
+				Provider: ctx.Params("provider"),
 			}
 
-			out, err := uc.CompleteOAuthRegistration(input)
+			out, err := uc.OauthComplete(input)
 			if err != nil {
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }
 
-// UsecasesForOAuthCompleteRegistrationCallback определяет интерфейс для доступа к сценариям использования бизнес-логики
-type UsecasesForOAuthCompleteRegistrationCallback interface {
-	CompleteOAuthRegistration(completeOAuthRegistration.In) (completeOAuthRegistration.Out, error)
+// UsecasesForOauthCallback определяет интерфейс для доступа к сценариям использования бизнес-логики
+type UsecasesForOauthCallback interface {
+	OauthComplete(oauthComplete.In) (oauthComplete.Out, error)
 }
 
-// OAuthInitLogin регистрирует обработчик, инициирующий процесс входа через OAuth.
-// Редиректит пользователя на страницу авторизации провайдера.
-// Данный обработчик не требует аутентификации.
-//
-// Метод: GET /oauth/{provider}/login
-func OAuthInitLogin(router *fiber.App, uc UsecasesForOAuthInitLogin) {
-	router.Get(
-		"/oauth/:provider/login",
-		recover2.New(),
-		func(context *fiber.Ctx) error {
-			input := initOAuthLogin.In{
-				Provider: context.Params("provider"), // Получаем имя провайдера из URL
-			}
-
-			// Инициируем OAuth-процесс входа у сервиса
-			out, err := uc.InitOAuthLogin(input)
-			if err != nil {
-				return err
-			}
-
-			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
-			if err = setOAuthCookie(context, out.RedirectURL); err != nil {
-				return err
-			}
-
-			// Возвращаем команду редиректа на сторону провайдера
-			return context.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
-		},
-	)
+// oauthCookieName возвращает имя куки, в которую сохраняется параметр state для защиты от CSRF
+func oauthCookieName(ctx *fiber.Ctx) string {
+	return ctx.Params("provider") + "-oauthState"
 }
 
-// UsecasesForOAuthInitLogin определяет интерфейс для доступа к сценариям использования бизнес-логики
-type UsecasesForOAuthInitLogin interface {
-	InitOAuthLogin(initOAuthLogin.In) (initOAuthLogin.Out, error)
+// clearOauthCookie очищает одноразовую state-куку
+func clearOauthCookie(ctx *fiber.Ctx) {
+	ctx.ClearCookie(oauthCookieName(ctx))
 }
 
-// OAuthCompleteLoginCallback регистрирует обработчик, завершающий процесс входа через OAuth.
-// Обрабатывает callback от провайдера после успешной авторизации.
-// Данный обработчик не требует аутентификации.
-//
-// Метод: GET /oauth/{provider}/login/callback
-func OAuthCompleteLoginCallback(router *fiber.App, uc UsecasesForOAuthCompleteLoginCallback) {
-	router.Get(
-		"/oauth/:provider/login/callback",
-		recover2.New(),
-		func(context *fiber.Ctx) error {
-			// Проверяем, что запрос пришёл из доверенного источника через сравнение state
-			if err := validateOAuthCookie(context); err != nil {
-				return err
-			}
-
-			input := completeOAuthLogin.In{
-				UserCode: context.Query("code"),
-				Provider: context.Params("provider"),
-			}
-
-			out, err := uc.CompleteOAuthLogin(input)
-			if err != nil {
-				return err
-			}
-
-			return context.JSON(out)
-		},
-	)
-}
-
-// UsecasesForOAuthCompleteLoginCallback определяет интерфейс для доступа к сценариям использования бизнес-логики
-type UsecasesForOAuthCompleteLoginCallback interface {
-	CompleteOAuthLogin(completeOAuthLogin.In) (completeOAuthLogin.Out, error)
-}
-
-// oauthCookieName — имя куки, в которую сохраняется параметр state для защиты от CSRF
-const oauthCookieName = "oauthState"
-
-// setOAuthCookie устанавливает куку с параметром state из строки редиректа
-func setOAuthCookie(context *fiber.Ctx, redirectURL string) error {
-	// Парсим URL, чтобы получить query-параметры
-	parsedUrl, err := url.Parse(redirectURL)
-	if err != nil {
-		return err
-	}
-
-	// Получаем значение state из URL
-	state := parsedUrl.Query().Get("state")
-
+// setOauthCookie устанавливает куку с параметром state
+func setOauthCookie(ctx *fiber.Ctx, state string) {
 	// Устанавливаем куку с этим значением
-	context.Cookie(&fiber.Cookie{
-		Name:     oauthCookieName,
+	ctx.Cookie(&fiber.Cookie{
+		Name:     oauthCookieName(ctx),
 		Value:    state,
-		Expires:  time.Now().Add(time.Hour), // Кука живёт 1 час
-		HTTPOnly: true,                      // Защита от XSS
-		Secure:   true,                      // Только по HTTPS
-		Path:     "/",                       // Доступна по всему домену
+		Expires:  time.Now().Add(time.Minute * 15), // Время жизни кука
+		HTTPOnly: true,                             // Защита от XSS
+		Secure:   true,                             // Только по HTTPS
+		Path:     "/",                              // Доступна по всему домену
 	})
-
-	return nil
 }
 
 // errWrongState — ошибка, возникающая при несовпадении значения state в куке и запросе
 var errWrongState = errors.New("неправильный state")
 
-// validateOAuthCookie проверяет, что значение 'state' в запросе совпадает с тем, что было сохранено в куке.
+// validateOauthCookie проверяет, что значение 'state' в запросе совпадает с тем, что было сохранено в куке.
 // Это защищает от CSRF-атак.
-func validateOAuthCookie(context *fiber.Ctx) error {
+func validateOauthCookie(ctx *fiber.Ctx) error {
 	// Получаем куку с именем oauthState
-	oauthState := context.Cookies(oauthCookieName)
+	oauthState := ctx.Cookies(oauthCookieName(ctx))
 
 	if oauthState == "" {
 		// Если куки нет — возвращаем ошибку несоответствия state
@@ -199,7 +121,7 @@ func validateOAuthCookie(context *fiber.Ctx) error {
 	}
 
 	// Сравниваем значение state из запроса с тем, что храним в куке
-	if context.Query("state") != oauthState {
+	if ctx.Query("state") != oauthState {
 		return errWrongState
 	}
 

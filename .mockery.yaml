@@ -6,6 +6,7 @@ recursive: True
 pkgname: "mock{{.SrcPackageName | camelcase | firstUpper }}"
 template: testify
 packages:
-  github.com/nice-pea/npchat/internal/controller/http2/middleware: 
-  github.com/nice-pea/npchat/internal/controller/http2/register_handler: 
-  github.com/nice-pea/npchat/internal/usecases/events: 
+  github.com/nice-pea/npchat/internal/controller/http2/middleware:
+  github.com/nice-pea/npchat/internal/controller/http2/register_handler:
+  github.com/nice-pea/npchat/internal/usecases/events:
+  github.com/nice-pea/npchat/internal/usecases/users/oauth:

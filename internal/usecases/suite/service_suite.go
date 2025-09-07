@@ -12,10 +12,10 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
@@ -23,6 +23,7 @@ import (
 	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
+	mockOauth "github.com/nice-pea/npchat/internal/usecases/users/oauth/mocks"
 )
 
 type Suite struct {
@@ -35,17 +36,17 @@ type Suite struct {
 		Users    userr.Repository
 	}
 	Adapters struct {
-		Oauth oauth.OAuthProvider
+		Oauth oauth.Provider
 	}
-	MockOAuthTokens map[string]userr.OpenAuthToken
-	MockOAuthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
+	MockOauthTokens map[string]userr.OpenAuthToken
+	MockOauthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
 var (
 	pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
 )
 
-// newPgsqlExternalFactory создает фабрику репозиториев  для тестирования, реализованных с помощью подключения к postgres по DSN
+// newPgsqlExternalFactory создает фабрику репозиториев для тестирования, реализованных с помощью подключения к postgres по DSN
 func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
 	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
 		DSN: dsn,
@@ -55,12 +56,12 @@ func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factor
 	return factory, func() { _ = factory.Close() }
 }
 
-// newPgsqlContainerFactory создает фабрику репозиториев  для тестирования, реализованных с помощью postgres контейнеров
+// newPgsqlContainerFactory создает фабрику репозиториев для тестирования, реализованных с помощью postgres контейнеров
 func (suite *Suite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, closer func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Поиск скрптов с миграциями
+	// Поиск скриптов с миграциями
 	_, b, _, _ := runtime.Caller(0)
 	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.up.sql")
 	migrations, err := filepath.Glob(migrationsDir)
@@ -105,29 +106,38 @@ func (suite *Suite) SetupTest() {
 	suite.RR.Sessions = suite.factory.NewSessionnRepository()
 
 	// Инициализация адаптеров
-	suite.MockOAuthUsers = suite.GenerateMockUsers()
-	suite.MockOAuthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOAuthUsers))
-	for token := range suite.MockOAuthUsers {
-		suite.MockOAuthTokens[RandomString(13)] = token
-	}
-	suite.Adapters.Oauth = &oauthProvider.Mock{
-		ExchangeFunc: func(code string) (userr.OpenAuthToken, error) {
-			token, ok := suite.MockOAuthTokens[code]
+	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
+	suite.Adapters.Oauth.(*mockOauth.Provider).
+		On("Name", mock.Anything).Maybe().
+		Return("mock").
+		On("Exchange", mock.Anything).Maybe().
+		Return(func(code string) (userr.OpenAuthToken, error) {
+			token, ok := suite.MockOauthTokens[code]
 			if !ok {
 				return userr.OpenAuthToken{}, errors.New("token not found")
 			}
 			return token, nil
-		},
-		UserFunc: func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-			user, ok := suite.MockOAuthUsers[token]
+		}).
+		On("User", mock.Anything).Maybe().
+		Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
+			user, ok := suite.MockOauthUsers[token]
 			if !ok {
 				return userr.OpenAuthUser{}, errors.New("user not found")
 			}
 			return user, nil
-		},
-		AuthorizationURLFunc: func(state string) string {
-			return "https://provider.com/o/oauth2/auth?code=somecode&state=" + state
-		},
+		}).
+		On("AuthorizationURL", mock.Anything).Maybe().
+		Return(func(state string) string {
+			return "https://provider.com/o/oauth2/auth?" +
+				"code=someCode" +
+				"&state=" + state
+		})
+
+	// Тестовые пользователи и токены
+	suite.MockOauthUsers = suite.GenerateMockUsers()
+	suite.MockOauthTokens = make(map[string]userr.OpenAuthToken, len(suite.MockOauthUsers))
+	for token := range suite.MockOauthUsers {
+		suite.MockOauthTokens[RandomString(13)] = token
 	}
 }
 
@@ -137,7 +147,7 @@ func (suite *Suite) TearDownSubTest() {
 	suite.Require().NoError(err)
 }
 
-// TearDownSubTest выполняется после каждого подтеста, связанного с suite
+// TearDownTest выполняется после каждого подтеста, связанного с suite
 func (suite *Suite) TearDownTest() {
 	suite.factoryCloser()
 }
@@ -213,8 +223,8 @@ func RandomString(n int) string {
 	return string(b)
 }
 
-// RandomOAuthToken генерирует случайный OAuthToken
-func (suite *Suite) RandomOAuthToken() userr.OpenAuthToken {
+// RandomOauthToken генерирует случайный OauthToken
+func (suite *Suite) RandomOauthToken() userr.OpenAuthToken {
 	t, err := userr.NewOpenAuthToken(
 		RandomString(32), // AccessToken
 		"Bearer",         // TokenType
@@ -227,11 +237,11 @@ func (suite *Suite) RandomOAuthToken() userr.OpenAuthToken {
 	return t
 }
 
-// Генерация случайного OAuthUser
-func (suite *Suite) RandomOAuthUser() userr.OpenAuthUser {
+// Генерация случайного OauthUser
+func (suite *Suite) RandomOauthUser() userr.OpenAuthUser {
 	u, err := userr.NewOpenAuthUser(
 		RandomString(21),                                      // ID
-		(&oauthProvider.Mock{}).Name(),                        // Provider
+		suite.Adapters.Oauth.Name(),                           // Provider
 		RandomString(8)+"@example.com",                        // Email
 		RandomString(6)+" "+RandomString(7),                   // Name
 		"https://example.com/avatar/"+RandomString(10)+".png", // Picture
@@ -247,8 +257,8 @@ func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUs
 	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
 	for i := 0; i < 10; i++ {
-		token := suite.RandomOAuthToken()
-		user := suite.RandomOAuthUser()
+		token := suite.RandomOauthToken()
+		user := suite.RandomOauthUser()
 		tokenToUser[token] = user
 	}
 

@@ -15,10 +15,8 @@ import (
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 	basicAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_login"
 	basicAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_registration"
-	completeOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_login"
-	completeOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/complete_oauth_registration"
-	initOAuthLogin "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_login"
-	initOAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/oauth/init_oauth_registration"
+	oauthAuthorize "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_authorize"
+	oauthComplete "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_complete"
 )
 
 type usecasesBase struct {
@@ -44,10 +42,8 @@ type usecasesBase struct {
 
 	*basicAuthRegistration.BasicAuthRegistrationUsecase
 	*basicAuthLogin.BasicAuthLoginUsecase
-	*initOAuthRegistration.InitOAuthRegistrationUsecase
-	*completeOAuthRegistration.CompleteOAuthRegistrationUsecase
-	*initOAuthLogin.InitOAuthLoginUsecase
-	*completeOAuthLogin.CompleteOAuthLoginUsecase
+	*oauthAuthorize.OauthAuthorizeUsecase
+	*oauthComplete.OauthCompleteUsecase
 }
 
 func initUsecases(rr *repositories, aa *adapters) usecasesBase {
@@ -103,15 +99,13 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo:         rr.users,
 			SessionsRepo: rr.sessions,
 		},
-		InitOAuthRegistrationUsecase: &initOAuthRegistration.InitOAuthRegistrationUsecase{
+		OauthAuthorizeUsecase: &oauthAuthorize.OauthAuthorizeUsecase{
 			Providers: aa.oauthProviders,
 		},
-		CompleteOAuthRegistrationUsecase: &completeOAuthRegistration.CompleteOAuthRegistrationUsecase{
+		OauthCompleteUsecase: &oauthComplete.OauthCompleteUsecase{
 			Repo:         rr.users,
 			Providers:    aa.oauthProviders,
 			SessionsRepo: rr.sessions,
 		},
-		InitOAuthLoginUsecase:     &initOAuthLogin.InitOAuthLoginUsecase{},
-		CompleteOAuthLoginUsecase: &completeOAuthLogin.CompleteOAuthLoginUsecase{},
 	}
 }

@@ -3,43 +3,33 @@ package app
 import (
 	"log/slog"
 
-	"github.com/nice-pea/npchat/internal/adapter"
 	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
 
 type adapters struct {
-	oauthProviders oauth.OAuthProviders
-	discovery      adapter.ServiceDiscovery
+	oauthProviders oauth.Providers
 	eventBus       *eventsBus.EventsBus
 }
 
-func (a *adapters) Discovery() adapter.ServiceDiscovery {
-	return a.discovery
-}
-
-func (a *adapters) OAuthProviders() oauth.OAuthProviders {
+func (a *adapters) OauthProviders() oauth.Providers {
 	return a.oauthProviders
 }
 
 func initAdapters(cfg Config) *adapters {
-	discovery := &adapter.ServiceDiscoveryBase{
-		Debug: true,
+	oauthProviders := oauth.Providers{}
+	if cfg.OauthGoogle != (oauthProvider.GoogleConfig{}) {
+		oauthProviders.Add(oauthProvider.NewGoogle(cfg.OauthGoogle))
+		slog.Info("Подключен Oauth провайдер Google")
 	}
-	oauthProviders := oauth.OAuthProviders{}
-	if cfg.OAuthGoogle != (oauthProvider.GoogleConfig{}) {
-		oauthProviders.Add(oauthProvider.NewGoogle(cfg.OAuthGoogle))
-		slog.Info("Подключен OAuth провайдер Google")
-	}
-	if cfg.OAuthGitHub != (oauthProvider.GitHubConfig{}) {
-		oauthProviders.Add(oauthProvider.NewGitHub(cfg.OAuthGitHub))
-		slog.Info("Подключен OAuth провайдер GitHub")
+	if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
+		oauthProviders.Add(oauthProvider.NewGithub(cfg.OauthGithub))
+		slog.Info("Подключен Oauth провайдер Github")
 	}
 
 	return &adapters{
 		oauthProviders: oauthProviders,
-		discovery:      discovery,
 		eventBus:       new(eventsBus.EventsBus),
 	}
 }

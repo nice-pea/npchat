@@ -46,7 +46,7 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			assert.Equal(t, expected, fromRepo[0])
 		})
 
-		t.Run("с фильтром по OAuthUserID вернутся, имеющие связь с пользователем oauth провайдера", func(t *testing.T) {
+		t.Run("с фильтром по OauthUserID вернутся, имеющие связь с пользователем oauth провайдера", func(t *testing.T) {
 			r := newRepository()
 			// Создать много
 			users := upsertRndUsers(t, r, 10)
@@ -54,7 +54,7 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			expected := common.RndElem(users)
 			// Получить список
 			fromRepo, err := r.List(userr.Filter{
-				OAuthUserID: expected.OpenAuthUsers[0].ID,
+				OauthUserID: expected.OpenAuthUsers[0].ID,
 			})
 			// Сравнить ожидания и результат
 			assert.NoError(t, err)
@@ -62,7 +62,7 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			assert.Equal(t, expected, fromRepo[0])
 		})
 
-		t.Run("с фильтром по OAuthProvider вернутся, имеющие связь с oauth провайдером", func(t *testing.T) {
+		t.Run("с фильтром по OauthProvider вернутся, имеющие связь с oauth провайдером", func(t *testing.T) {
 			r := newRepository()
 			// Создать много
 			users := upsertRndUsers(t, r, 10)
@@ -70,7 +70,7 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			expected := common.RndElem(users)
 			// Получить список
 			fromRepo, err := r.List(userr.Filter{
-				OAuthProvider: expected.OpenAuthUsers[0].Provider,
+				OauthProvider: expected.OpenAuthUsers[0].Provider,
 			})
 			// Сравнить ожидания и результат
 			assert.NoError(t, err)
@@ -120,8 +120,8 @@ func TestRepository(t *testing.T, newRepository func() userr.Repository) {
 			// Получить список
 			fromRepo, err := r.List(userr.Filter{
 				//ID:                expected.ID,
-				OAuthUserID:       expected.OpenAuthUsers[0].ID,
-				OAuthProvider:     expected.OpenAuthUsers[0].Provider,
+				OauthUserID:       expected.OpenAuthUsers[0].ID,
+				OauthProvider:     expected.OpenAuthUsers[0].Provider,
 				BasicAuthLogin:    expected.BasicAuth.Login,
 				BasicAuthPassword: expected.BasicAuth.Password,
 			})

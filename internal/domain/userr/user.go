@@ -13,7 +13,7 @@ type User struct {
 	Nick string    // Ник пользователя
 
 	BasicAuth     BasicAuth      // Данные для аутентификации по логину и паролю
-	OpenAuthUsers []OpenAuthUser // Связи для аутентификации по OAuth
+	OpenAuthUsers []OpenAuthUser // Связи для аутентификации по Oauth
 }
 
 // NewUser создает нового пользователя с указанным именем и ником.
@@ -36,7 +36,7 @@ func NewUser(name string, nick string) (User, error) {
 	}, nil
 }
 
-// AddOpenAuthUser добавляет нового пользователя в список связей для аутентификации по OAuth.
+// AddOpenAuthUser добавляет нового пользователя в список связей для аутентификации по Oauth.
 func (u *User) AddOpenAuthUser(newOpenAuthUser OpenAuthUser) error {
 	for _, ou := range u.OpenAuthUsers {
 		if ou.Provider == newOpenAuthUser.Provider {

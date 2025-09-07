@@ -35,4 +35,5 @@ var (
 	ErrNickInvalidChars       = fmt.Errorf("ник содержит недопустимые символы")
 	ErrNickNoLetters          = fmt.Errorf("ник должен содержать хотя бы одну букву или цифру")
 	ErrPasswordContainsSpaces = fmt.Errorf("пароль не может содержать пробелы")
+	ErrUserNotExists          = errors.New("пользователя не существует")
 )

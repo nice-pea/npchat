@@ -1,8 +1,9 @@
-package oauth_provider
+package oauthProvider
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -12,14 +13,14 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/userr"
 )
 
-// Google представляет собой структуру для работы с OAuth2 аутентификацией через Google.
+// Google представляет собой структуру для работы с Oauth аутентификацией через Google.
 type Google struct {
-	config *oauth2.Config // Конфигурация OAuth2 для Google
+	config *oauth2.Config // Конфигурация Oauth для Google
 }
 
 type GoogleConfig struct {
-	ClientID     string // Идентификатор клиента для OAuth2
-	ClientSecret string // Секрет клиента для OAuth2
+	ClientID     string // Идентификатор клиента для Oauth
+	ClientSecret string // Секрет клиента для Oauth
 	RedirectURL  string // URL для перенаправления после аутентификации
 }
 
@@ -28,7 +29,7 @@ func NewGoogle(cfg GoogleConfig) *Google {
 		config: &oauth2.Config{
 			ClientID:     cfg.ClientID,     // Идентификатор клиента
 			ClientSecret: cfg.ClientSecret, // Секрет клиента
-			Endpoint:     google.Endpoint,  // Использует конечную точку Google для OAuth2
+			Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth
 			RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
 			Scopes: []string{
 				"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
@@ -38,14 +39,14 @@ func NewGoogle(cfg GoogleConfig) *Google {
 	}
 }
 
-// Name возвращает имя провайдера OAuth.
+// Name возвращает имя провайдера Oauth.
 func (o *Google) Name() string {
 	return "google"
 }
 
-// Exchange обменивает код авторизации на токен OAuth.
+// Exchange обменивает код авторизации на токен Oauth.
 func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
-	// Обменять код авторизации на токен OAuth
+	// Обменять код авторизации на токен Oauth
 	token, err := o.config.Exchange(context.Background(), code)
 	if err != nil {
 		return userr.OpenAuthToken{}, err
@@ -59,22 +60,32 @@ func (o *Google) Exchange(code string) (userr.OpenAuthToken, error) {
 	)
 }
 
-// User получает информацию о пользователе Google, используя токен OAuth.
+// User получает информацию о пользователе Google, используя токен Oauth.
 func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-	const getUser = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-	// Выполняет GET-запрос для получения информации о пользователе
-	response, err := http.Get(getUser + token.AccessToken)
+	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token.AccessToken},
+	))
+
+	// Сделать запрос для получения информации о пользователе
+	response, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return userr.OpenAuthUser{}, err // Возвращает ошибку, если запрос не удался
+		return userr.OpenAuthUser{}, err
+	}
+	defer func() { _ = response.Body.Close() }()
+
+	// Проверить код ответа
+	if response.StatusCode != http.StatusOK {
+		return userr.OpenAuthUser{}, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 	}
 
-	defer func() { _ = response.Body.Close() }() // Закрывает тело ответа после завершения работы с ним
-	data, err := io.ReadAll(response.Body)       // Читает данные из тела ответа
+	// Прочитать данные ответ
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return userr.OpenAuthUser{}, err // Возвращает ошибку, если чтение не удалось
 	}
+	_ = response.Body.Close()
 
-	// Сложить данные в структуру ответа
+	// Сложить ответ в структуру
 	var googleUser struct {
 		ID      string `json:"id"`      // Идентификатор пользователя
 		Email   string `json:"email"`   // Электронная почта пользователя
@@ -97,5 +108,6 @@ func (o *Google) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 
 // AuthorizationURL генерирует URL для авторизации с использованием кода состояния.
 func (o *Google) AuthorizationURL(state string) string {
-	return o.config.AuthCodeURL(state) // Генерирует URL для авторизации
+	// Сгенерировать URL
+	return o.config.AuthCodeURL(state)
 }

@@ -81,35 +81,35 @@ func initCliCommand() *cli.Command {
 			},
 			// Google
 			&cli.StringFlag{
-				Name:        "oauth-google-client-id",
-				Destination: &cfg.OAuthGoogle.ClientID,
-				Usage:       "ID клиента OAuth Google",
+				Name:        "oauth-google-key",
+				Destination: &cfg.OauthGoogle.ClientID,
+				Usage:       "ID клиента Oauth Google",
 			},
 			&cli.StringFlag{
-				Name:        "oauth-google-client-secret",
-				Destination: &cfg.OAuthGoogle.ClientSecret,
-				Usage:       "Секрет клиента OAuth Google",
+				Name:        "oauth-google-secret",
+				Destination: &cfg.OauthGoogle.ClientSecret,
+				Usage:       "Секрет клиента Oauth Google",
 			},
 			&cli.StringFlag{
-				Name:        "oauth-google-callback-url",
-				Destination: &cfg.OAuthGoogle.RedirectURL,
+				Name:        "oauth-google-callback",
+				Destination: &cfg.OauthGoogle.RedirectURL,
 				Usage:       "URL для перенаправления после аутентификации OAuth Google",
 			},
-			// GitHub
+			// Github
 			&cli.StringFlag{
-				Name:        "oauth-github-client-id",
-				Destination: &cfg.OAuthGitHub.ClientID,
-				Usage:       "ID клиента OAuth GitHub",
+				Name:        "oauth-github-key",
+				Destination: &cfg.OauthGithub.ClientID,
+				Usage:       "ID клиента Oauth Github",
 			},
 			&cli.StringFlag{
-				Name:        "oauth-github-client-secret",
-				Destination: &cfg.OAuthGitHub.ClientSecret,
-				Usage:       "Секрет клиента OAuth GitHub",
+				Name:        "oauth-github-secret",
+				Destination: &cfg.OauthGithub.ClientSecret,
+				Usage:       "Секрет клиента Oauth Github",
 			},
 			&cli.StringFlag{
-				Name:        "oauth-github-callback-url",
-				Destination: &cfg.OAuthGitHub.RedirectURL,
-				Usage:       "URL для перенаправления после аутентификации OAuth GitHub",
+				Name:        "oauth-github-callback",
+				Destination: &cfg.OauthGithub.RedirectURL,
+				Usage:       "URL для перенаправления после аутентификации OAuth Github",
 			},
 		},
 	}

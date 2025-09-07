@@ -15,10 +15,8 @@ type RequiredUsecases interface {
 	register_handler.UsecasesForLeaveChat
 	register_handler.UsecasesForMyChats
 	register_handler.UsecasesForMyInvitations
-	register_handler.UsecasesForOAuthInitRegistration
-	register_handler.UsecasesForOAuthCompleteRegistrationCallback
-	register_handler.UsecasesForOAuthInitLogin
-	register_handler.UsecasesForOAuthCompleteLoginCallback
+	register_handler.UsecasesForOauthAuthorize
+	register_handler.UsecasesForOauthCallback
 	register_handler.UsecasesForSendInvitation
 	register_handler.UsecasesForUpdateName
 }

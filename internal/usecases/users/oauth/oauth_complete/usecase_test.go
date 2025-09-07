@@ -1,4 +1,4 @@
-package completeOAuthRegistration
+package oauthComplete
 
 import (
 	"testing"
@@ -21,62 +21,57 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_OAuth_CompleteRegistration() {
-	usecase := &CompleteOAuthRegistrationUsecase{
+func (suite *testSuite) Test_OauthComplete() {
+	usecase := &OauthCompleteUsecase{
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,
-		Providers:    oauth.OAuthProviders{},
+		Providers:    oauth.Providers{},
 	}
 	usecase.Providers.Add(suite.Adapters.Oauth)
 
 	suite.Run("UserCode обязательное поле", func() {
-		input := In{
+		out, err := usecase.OauthComplete(In{
 			UserCode: "",
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.ErrorIs(err, ErrInvalidUserCode)
 		suite.Zero(out)
 	})
 
 	suite.Run("Provider обязательное поле", func() {
-		input := In{
+		out, err := usecase.OauthComplete(In{
 			UserCode: uuid.NewString(),
 			Provider: "",
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.ErrorIs(err, ErrInvalidProvider)
 		suite.Zero(out)
 	})
 
 	suite.Run("ошибка если у провайдера не совпадет UserCode", func() {
-		input := In{
+		out, err := usecase.OauthComplete(In{
 			UserCode: uuid.NewString(),
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.ErrorIs(err, ErrWrongUserCode)
 		suite.Zero(out)
 	})
 
 	suite.Run("Provider должен быть известен в сервисе", func() {
 		// Завершить регистрацию
-		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+		out, err := usecase.OauthComplete(In{
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: "unknownProvider",
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
-		suite.ErrorIs(err, oauth.ErrUnknownOAuthProvider)
+		})
+		suite.ErrorIs(err, oauth.ErrUnknownOauthProvider)
 		suite.Zero(out)
 	})
 
-	suite.Run("после регистрации будет создан пользователь", func() {
+	suite.Run("если пользователя не существует, он будет создан", func() {
 		// Завершить регистрацию
-		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+		out, err := usecase.OauthComplete(In{
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -87,17 +82,17 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		suite.True(out.User.Equal(users[0]))
 	})
 
-	suite.Run("после регистрации будет создан метод авторизации", func() {
-		pCode := maps.Keys(suite.MockOAuthTokens)[0]
-		pToken := suite.MockOAuthTokens[pCode]
-		pUser := suite.MockOAuthUsers[pToken]
+	suite.Run("новый пользователь будет иметь метод авторизации", func() {
+		pCode := maps.Keys(suite.MockOauthTokens)[0]
+		pToken := suite.MockOauthTokens[pCode]
+		pUser := suite.MockOauthUsers[pToken]
 
 		// Завершить регистрацию
 		input := In{
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
 		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		out, err := usecase.OauthComplete(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -112,13 +107,12 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		suite.Equal(input.Provider, oauthUser.Provider)
 	})
 
-	suite.Run("после регистрации будет создана сессия", func() {
+	suite.Run("для нового пользователя будет создана сессия", func() {
 		// Завершить регистрацию
-		input := In{
-			UserCode: maps.Keys(suite.MockOAuthTokens)[0],
+		out, err := usecase.OauthComplete(In{
+			UserCode: maps.Keys(suite.MockOauthTokens)[0],
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 
@@ -130,25 +124,33 @@ func (suite *testSuite) Test_OAuth_CompleteRegistration() {
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 	})
 
-	suite.Run("невозможно дважды зарегистрироваться на одного пользователя провайдера", func() {
-		pCode := maps.Keys(suite.MockOAuthTokens)[0]
+	suite.Run("последующие попытки авторизации того же пользователя, будут создавать новые сессии", func() {
+		pCode := maps.Keys(suite.MockOauthTokens)[0]
 
 		// Завершить регистрацию
-		input := In{
+		out1, err := usecase.OauthComplete(In{
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err := usecase.CompleteOAuthRegistration(input)
+		})
 		suite.Require().NoError(err)
-		suite.NotZero(out)
+		suite.NotZero(out1)
 
 		// Завершить регистрацию, с UserCode связанным с тем же пользователем провайдера
-		input = In{
+		out2, err := usecase.OauthComplete(In{
 			UserCode: pCode,
 			Provider: suite.Adapters.Oauth.Name(),
-		}
-		out, err = usecase.CompleteOAuthRegistration(input)
-		suite.Error(err, ErrProvidersUserIsAlreadyLinked)
-		suite.Zero(out)
+		})
+		suite.Require().NoError(err)
+		suite.NotZero(out2)
+
+		sessions, err := suite.RR.Sessions.List(sessionn.Filter{})
+		suite.NoError(err)
+		suite.Require().Len(sessions, 2)
+		// После первого входа (регистрации)
+		suite.EqualSessions(out1.Session, sessions[0])
+		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
+		// После второго входа
+		suite.EqualSessions(out2.Session, sessions[1])
+		suite.Equal(sessionn.StatusVerified, sessions[1].Status)
 	})
 }
