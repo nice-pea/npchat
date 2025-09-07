@@ -28,7 +28,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
 			server.Get(
-				"/", RequireAuthorizedSession(uc),
+				"/", RequireAuthorizedSession(uc, nil),
 				func(ctx *fiber.Ctx) error {
 					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
 					require.True(t, ok)
@@ -48,7 +48,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		t.Run("не передан или с ошибкой в ключе заголовока - вернет StatusUnauthorized (401)", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
-			server.Get("/", RequireAuthorizedSession(uc))
+			server.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -66,7 +66,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			}
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
-			server.Get("/", RequireAuthorizedSession(uc))
+			server.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -84,7 +84,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			}
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
-			server.Get("/", RequireAuthorizedSession(uc))
+			server.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -97,7 +97,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		t.Run("неправильный формат заголовка - 401", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
-			server.Get("/", RequireAuthorizedSession(uc))
+			server.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -110,7 +110,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		t.Run("пустой токен после Bearer - 401", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
-			server.Get("/", RequireAuthorizedSession(uc))
+			server.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -124,18 +124,22 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 	t.Run("JWT", func(t *testing.T) {
 		t.Run("валидный JWT", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
+			mtm := mockTokenManager{}
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
 			server.Get(
-				"/", RequireAuthorizedSession(uc),
+				"/", RequireAuthorizedSession(uc, mtm),
 				func(ctx *fiber.Ctx) error {
-					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					userid, ok := ctx.Locals("UserID").(string)
 					require.True(t, ok)
-					require.Equal(t, mockSession, session)
+					require.Equal(t, mockParseJWT.UserID, userid)
+					sessionid, ok := ctx.Locals("SessionID").(string)
+					require.True(t, ok)
+					require.Equal(t, mockParseJWT.SessionID, sessionid)
 					return nil
 				})
 
-			jwTocken := ""
+			jwTocken := "31132"
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -147,18 +151,21 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		})
 		t.Run("истекший JWT", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
+			mtm := mockTokenManager{
+				ParseFunc: func(token string) (OutJWT, error) {
+					return OutJWT{}, errors.New("JWT истекший")
+				},
+			}
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
 			server.Get(
-				"/", RequireAuthorizedSession(uc),
+				"/", RequireAuthorizedSession(uc, mtm),
 				func(ctx *fiber.Ctx) error {
-					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
-					require.True(t, ok)
-					require.Equal(t, mockSession, session)
+					assert.Fail(t, "unreachable code")
 					return nil
 				})
 
-			jwTocken := ""
+			jwTocken := "123.456.789"
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -170,18 +177,21 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		})
 		t.Run("не верной подписи JWT", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
+			mtm := mockTokenManager{
+				ParseFunc: func(token string) (OutJWT, error) {
+					return OutJWT{}, errors.New("invalid signature")
+				},
+			}
 
 			server := fiber.New(fiber.Config{DisableStartupMessage: true})
 			server.Get(
-				"/", RequireAuthorizedSession(uc),
+				"/", RequireAuthorizedSession(uc, mtm),
 				func(ctx *fiber.Ctx) error {
-					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
-					require.True(t, ok)
-					require.Equal(t, mockSession, session)
+					assert.Fail(t, "unreachable code")
 					return nil
 				})
 
-			jwTocken := ""
+			jwTocken := "123.456.789"
 
 			req, err := http.NewRequest("GET", "/", nil)
 			require.NoError(t, err)
@@ -191,7 +201,26 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 		})
-		
+		t.Run("пустое значение jwt токена", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
+			mtm := mockTokenManager{}
+
+			server := fiber.New(fiber.Config{DisableStartupMessage: true})
+			server.Get(
+				"/", RequireAuthorizedSession(uc, mtm),
+				func(ctx *fiber.Ctx) error {
+					assert.Fail(t, "unreachable code")
+					return nil
+				})
+
+			req, err := http.NewRequest("GET", "/", nil)
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "JWT ")
+
+			resp, err := server.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
 
 	})
 }
@@ -219,6 +248,20 @@ func (m mockUsecasesForRequireAuthorizedSession) FindSessions(in findSession.In)
 	return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
 }
 
-func CreateJWT() string {
-	return ""
+type mockTokenManager struct {
+	ParseFunc func(token string) (OutJWT, error)
+}
+
+var (
+	mockParseJWT = OutJWT{
+		UserID:    "1234",
+		SessionID: "5678",
+	}
+)
+
+func (m mockTokenManager) Parse(token string) (OutJWT, error) {
+	if m.ParseFunc != nil {
+		return m.ParseFunc(token)
+	}
+	return mockParseJWT, nil
 }
