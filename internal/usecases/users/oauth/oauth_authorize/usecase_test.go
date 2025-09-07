@@ -57,4 +57,14 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		code := parsedUrl.Query().Get("code")
 		suite.NotZero(code)
 	})
+
+	suite.Run("инициализация вернет случайную строку в state", func() {
+		// Инициализация регистрации
+		out, err := usecase.OauthAuthorize(In{
+			Provider: suite.Adapters.Oauth.Name(),
+		})
+		suite.NoError(err)
+		suite.Require().NotZero(out)
+		suite.NotEmpty(out.State)
+	})
 }

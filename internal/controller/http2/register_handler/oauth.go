@@ -2,7 +2,6 @@ package register_handler
 
 import (
 	"errors"
-	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +33,7 @@ func OauthAuthorize(router *fiber.App, uc UsecasesForOauthAuthorize) {
 			}
 
 			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
-			if err = setOauthCookie(ctx, out.RedirectURL); err != nil {
+			if err = setOauthCookie(ctx, out.State); err != nil {
 				return err
 			}
 
@@ -91,30 +90,13 @@ func oauthCookieName(ctx *fiber.Ctx) string {
 	return ctx.Params("provider") + "-oauthState"
 }
 
-// Очистить одноразовую state-куку
+// clearOauthCookie очищает одноразовую state-куку
 func clearOauthCookie(ctx *fiber.Ctx) {
-	ctx.Cookie(&fiber.Cookie{
-		Name:     oauthCookieName(ctx),
-		Value:    "",
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-		HTTPOnly: true,
-		Secure:   true,
-		Path:     "/",
-	})
+	ctx.ClearCookie(oauthCookieName(ctx))
 }
 
-// setOauthCookie устанавливает куку с параметром state из строки редиректа
-func setOauthCookie(ctx *fiber.Ctx, redirectURL string) error {
-	// Разбираем URL, чтобы получить query-параметры
-	parsedUrl, err := url.Parse(redirectURL)
-	if err != nil {
-		return err
-	}
-
-	// Получаем значение state из URL
-	state := parsedUrl.Query().Get("state")
-
+// setOauthCookie устанавливает куку с параметром state
+func setOauthCookie(ctx *fiber.Ctx, state string) error {
 	// Устанавливаем куку с этим значением
 	ctx.Cookie(&fiber.Cookie{
 		Name:     oauthCookieName(ctx),

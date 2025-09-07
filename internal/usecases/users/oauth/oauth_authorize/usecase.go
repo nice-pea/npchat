@@ -28,6 +28,7 @@ func (in In) Validate() error {
 // Out представляет собой результат инициализации регистрации Oauth.
 type Out struct {
 	RedirectURL string // URL для перенаправления на страницу авторизации провайдера
+	State       string // Сгенерированная случайная строка для использования в предотвращении CSRF-атаки
 }
 
 type OauthAuthorizeUsecase struct {
@@ -47,8 +48,10 @@ func (u *OauthAuthorizeUsecase) OauthAuthorize(in In) (Out, error) {
 		return Out{}, err
 	}
 
-	// Генерирует URL для перенаправления на страницу авторизации провайдера
+	state := uuid.NewString()
 	return Out{
-		RedirectURL: provider.AuthorizationURL(uuid.NewString()),
+		// Генерирует URL для перенаправления на страницу авторизации провайдера
+		RedirectURL: provider.AuthorizationURL(state),
+		State:       state,
 	}, nil
 }
