@@ -147,7 +147,7 @@ func (suite *testSuite) Test_OauthComplete() {
 		suite.NoError(err)
 		suite.Require().Len(sessions, 2)
 		// После первого входа (регистрации)
-		suite.EqualSessions(out2.Session, sessions[0])
+		suite.EqualSessions(out1.Session, sessions[0])
 		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
 		// После второго входа
 		suite.EqualSessions(out2.Session, sessions[1])

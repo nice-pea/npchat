@@ -27,7 +27,7 @@ func (r *UserrRepository) List(filter userr.Filter) ([]userr.User, error) {
 		sel = sel.Space("LEFT JOIN oauth_users o ON u.id = o.user_id")
 	}
 	if filter.OauthUserID != "" {
-		where = where.And("o.user_id = ?", filter.OauthUserID)
+		where = where.And("o.id = ?", filter.OauthUserID)
 	}
 	if filter.OauthProvider != "" {
 		where = where.And("o.provider = ?", filter.OauthProvider)

@@ -68,13 +68,13 @@ func (u *OauthCompleteUsecase) OauthComplete(in In) (Out, error) {
 	}
 
 	// Определить, надо ли создавать пользователя
-	user, userIsExists, err := u.userIfExists(openAuthUser)
+	user, isUserExists, err := u.userIfExists(openAuthUser)
 	if err != nil {
 		return Out{}, err
 	}
 
 	// Зарегистрировать либо авторизовать пользователя
-	if userIsExists {
+	if isUserExists {
 		return u.login(user)
 	} else {
 		return u.registration(openAuthUser)
