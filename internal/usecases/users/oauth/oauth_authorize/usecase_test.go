@@ -66,5 +66,15 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		suite.NoError(err)
 		suite.Require().NotZero(out)
 		suite.NotEmpty(out.State)
+
+		// Повторная инициализация даёт новый state
+		out2, err := usecase.OauthAuthorize(In{
+			Provider: suite.Adapters.Oauth.Name(),
+		})
+		suite.NoError(err)
+		suite.Require().NotZero(out2)
+		suite.NotEmpty(out2.State)
+
+		suite.NotEqual(out.State, out2.State)
 	})
 }
