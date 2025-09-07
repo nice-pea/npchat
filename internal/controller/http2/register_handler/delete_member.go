@@ -41,7 +41,7 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember) {
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, nil),
 	)
 }
 
