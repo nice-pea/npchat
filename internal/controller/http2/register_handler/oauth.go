@@ -63,6 +63,8 @@ func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback) {
 			if err := validateOauthCookie(ctx); err != nil {
 				return err
 			}
+			// Удалить куку
+			clearOauthCookie(ctx)
 
 			input := oauthComplete.In{
 				UserCode: ctx.Query("code"),
@@ -89,6 +91,19 @@ func oauthCookieName(ctx *fiber.Ctx) string {
 	return ctx.Params("provider") + "-oauthState"
 }
 
+// Очистить одноразовую state-куку
+func clearOauthCookie(ctx *fiber.Ctx) {
+	ctx.Cookie(&fiber.Cookie{
+		Name:     oauthCookieName(ctx),
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HTTPOnly: true,
+		Secure:   true,
+		Path:     "/",
+	})
+}
+
 // setOauthCookie устанавливает куку с параметром state из строки редиректа
 func setOauthCookie(ctx *fiber.Ctx, redirectURL string) error {
 	// Разбираем URL, чтобы получить query-параметры
@@ -104,10 +119,10 @@ func setOauthCookie(ctx *fiber.Ctx, redirectURL string) error {
 	ctx.Cookie(&fiber.Cookie{
 		Name:     oauthCookieName(ctx),
 		Value:    state,
-		Expires:  time.Now().Add(time.Minute * 3), // Время жизни кука
-		HTTPOnly: true,                            // Защита от XSS
-		Secure:   true,                            // Только по HTTPS
-		Path:     "/",                             // Доступна по всему домену
+		Expires:  time.Now().Add(time.Minute * 15), // Время жизни кука
+		HTTPOnly: true,                             // Защита от XSS
+		Secure:   true,                             // Только по HTTPS
+		Path:     "/",                              // Доступна по всему домену
 	})
 
 	return nil
