@@ -23,7 +23,7 @@ type Provider interface {
 	// Параметр state используется для предотвращения CSRF-атаки.
 	// Должен быть уникальной случайной строкой
 	//
-	// Параметр callback представляет  собой URL для перенаправления после аутентификации
+	// Параметр callback представляет собой URL для перенаправления после аутентификации
 	AuthorizationURL(state string, callback string) string
 
 	// Name возвращает имя провайдера Oauth
@@ -37,7 +37,7 @@ func (o Providers) Add(p Provider) {
 	o[p.Name()] = p
 }
 
-// provider возвращает провайдера Oauth по его имени
+// Provider возвращает провайдера Oauth по его имени
 func (o Providers) Provider(provider string) (Provider, error) {
 	p, ok := o[provider]
 	// Проверить, существует ли провайдер в карте

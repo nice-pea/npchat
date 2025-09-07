@@ -6,6 +6,7 @@ package mockRegisterHandler
 
 import (
 	"github.com/google/uuid"
+	"github.com/nice-pea/npchat/internal/usecases/events"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -37,7 +38,7 @@ func (_m *EventListener) EXPECT() *EventListener_Expecter {
 }
 
 // AddListener provides a mock function for the type EventListener
-func (_mock *EventListener) AddListener(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error)) (func(), error) {
+func (_mock *EventListener) AddListener(userID uuid.UUID, sessionID uuid.UUID, f func(event events.Event, err error)) (func(), error) {
 	ret := _mock.Called(userID, sessionID, f)
 
 	if len(ret) == 0 {
@@ -46,17 +47,17 @@ func (_mock *EventListener) AddListener(userID uuid.UUID, sessionID uuid.UUID, f
 
 	var r0 func()
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event any, err error)) (func(), error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event events.Event, err error)) (func(), error)); ok {
 		return returnFunc(userID, sessionID, f)
 	}
-	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event any, err error)) func()); ok {
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, uuid.UUID, func(event events.Event, err error)) func()); ok {
 		r0 = returnFunc(userID, sessionID, f)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(func())
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(uuid.UUID, uuid.UUID, func(event any, err error)) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(uuid.UUID, uuid.UUID, func(event events.Event, err error)) error); ok {
 		r1 = returnFunc(userID, sessionID, f)
 	} else {
 		r1 = ret.Error(1)
@@ -72,12 +73,12 @@ type EventListener_AddListener_Call struct {
 // AddListener is a helper method to define mock.On call
 //   - userID uuid.UUID
 //   - sessionID uuid.UUID
-//   - f func(event any, err error)
+//   - f func(event events.Event, err error)
 func (_e *EventListener_Expecter) AddListener(userID interface{}, sessionID interface{}, f interface{}) *EventListener_AddListener_Call {
 	return &EventListener_AddListener_Call{Call: _e.mock.On("AddListener", userID, sessionID, f)}
 }
 
-func (_c *EventListener_AddListener_Call) Run(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error))) *EventListener_AddListener_Call {
+func (_c *EventListener_AddListener_Call) Run(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event events.Event, err error))) *EventListener_AddListener_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 uuid.UUID
 		if args[0] != nil {
@@ -87,9 +88,9 @@ func (_c *EventListener_AddListener_Call) Run(run func(userID uuid.UUID, session
 		if args[1] != nil {
 			arg1 = args[1].(uuid.UUID)
 		}
-		var arg2 func(event any, err error)
+		var arg2 func(event events.Event, err error)
 		if args[2] != nil {
-			arg2 = args[2].(func(event any, err error))
+			arg2 = args[2].(func(event events.Event, err error))
 		}
 		run(
 			arg0,
@@ -105,7 +106,7 @@ func (_c *EventListener_AddListener_Call) Return(removeListener func(), err erro
 	return _c
 }
 
-func (_c *EventListener_AddListener_Call) RunAndReturn(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event any, err error)) (func(), error)) *EventListener_AddListener_Call {
+func (_c *EventListener_AddListener_Call) RunAndReturn(run func(userID uuid.UUID, sessionID uuid.UUID, f func(event events.Event, err error)) (func(), error)) *EventListener_AddListener_Call {
 	_c.Call.Return(run)
 	return _c
 }

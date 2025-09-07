@@ -21,7 +21,7 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_Oauth_CompleteRegistration() {
+func (suite *testSuite) Test_OauthComplete() {
 	usecase := &OauthCompleteUsecase{
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,

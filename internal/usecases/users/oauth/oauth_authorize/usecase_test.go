@@ -18,7 +18,7 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_Oauth_InitRegistration() {
+func (suite *testSuite) Test_OauthAuthorize() {
 	usecase := &OauthAuthorizeUsecase{
 		Providers: oauth.Providers{},
 	}
