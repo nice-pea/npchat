@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	ErrInvalidProvider         = errors.New("некорректное значение Provider")
-	ErrInvalidCompleteCallback = errors.New("некорректное значение CompleteCallback")
+	ErrInvalidProvider = errors.New("некорректное значение Provider")
 )
 
 // In представляет собой параметры инициализации регистрации Oauth.
