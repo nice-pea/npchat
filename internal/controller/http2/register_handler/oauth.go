@@ -32,10 +32,8 @@ func OauthAuthorize(router *fiber.App, uc UsecasesForOauthAuthorize) {
 				return err
 			}
 
-			// Сохраняем параметр state из URL в куке для последующей проверки безопасности
-			if err = setOauthCookie(ctx, out.State); err != nil {
-				return err
-			}
+			// Сохраняем state в куке для последующей проверки безопасности
+			setOauthCookie(ctx, out.State)
 
 			// Возвращаем команду редиректа на сторону провайдера
 			return ctx.Redirect(out.RedirectURL, fiber.StatusTemporaryRedirect)
@@ -96,7 +94,7 @@ func clearOauthCookie(ctx *fiber.Ctx) {
 }
 
 // setOauthCookie устанавливает куку с параметром state
-func setOauthCookie(ctx *fiber.Ctx, state string) error {
+func setOauthCookie(ctx *fiber.Ctx, state string) {
 	// Устанавливаем куку с этим значением
 	ctx.Cookie(&fiber.Cookie{
 		Name:     oauthCookieName(ctx),
@@ -106,8 +104,6 @@ func setOauthCookie(ctx *fiber.Ctx, state string) error {
 		Secure:   true,                             // Только по HTTPS
 		Path:     "/",                              // Доступна по всему домену
 	})
-
-	return nil
 }
 
 // errWrongState — ошибка, возникающая при несовпадении значения state в куке и запросе
