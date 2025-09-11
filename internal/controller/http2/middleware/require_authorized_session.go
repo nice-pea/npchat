@@ -8,10 +8,19 @@ import (
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
-const CtxKeyUserSession = "userSession"
+const (
+	CtxKeyUserSession = "userSession"
+	CtxKeyUserID      = "UserID"
+	CtxKeySessionID   = "SessionID"
+)
+
+const (
+	SessionToken = "SessionToken"
+	Bearer       = "Bearer"
+)
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm UsecasesForRequireAuthorizedParseJWT) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JWTParser) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -25,21 +34,23 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm Usecase
 		token := parts[1]
 
 		switch authType {
-		case "Bearer":
-			out, err := bearer(uc, token)
+		case SessionToken:
+			out, err := findSessionf(uc, token)
 			if err != nil {
 				return err
 			}
 			// Сохранить сессию в контекст
-			ctx.Locals(CtxKeyUserSession, out.Sessions[0])
-
-		case "JWT":
+			session := out.Sessions[0]
+			ctx.Locals(CtxKeyUserSession, session)
+			ctx.Locals(CtxKeyUserID, session.UserID)
+			ctx.Locals(CtxKeySessionID, session.ID)
+		case Bearer:
 			out, err := parseJwt(tm, token)
 			if err != nil {
 				return err
 			}
-			ctx.Locals("UserID", out.UserID)
-			ctx.Locals("SessionID", out.SessionID)
+			ctx.Locals(CtxKeyUserID, out.UserID)
+			ctx.Locals(CtxKeySessionID, out.SessionID)
 
 		default:
 			return fiber.ErrUnauthorized
@@ -54,7 +65,7 @@ type UsecasesForRequireAuthorizedSession interface {
 	FindSessions(findSession.In) (findSession.Out, error)
 }
 
-func bearer(uc UsecasesForRequireAuthorizedSession, token string) (findSession.Out, error) {
+func findSessionf(uc UsecasesForRequireAuthorizedSession, token string) (findSession.Out, error) {
 	// Найти сессию по токену
 	out, err := uc.FindSessions(findSession.In{
 		Token: token,
@@ -74,11 +85,11 @@ type OutJWT struct {
 	SessionID string
 }
 
-type UsecasesForRequireAuthorizedParseJWT interface {
+type JWTParser interface {
 	Parse(token string) (OutJWT, error)
 }
 
-func parseJwt(ucjwt UsecasesForRequireAuthorizedParseJWT, token string) (OutJWT, error) {
+func parseJwt(ucjwt JWTParser, token string) (OutJWT, error) {
 	out, err := ucjwt.Parse(token)
 	if err != nil {
 		return OutJWT{}, fiber.ErrUnauthorized
