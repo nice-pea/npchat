@@ -1,97 +1,105 @@
 package jwt
 
 import (
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_JWTC_Create(t *testing.T) {
+func Test_JWTC_Issue(t *testing.T) {
 	t.Run("uid и sid могут содержать любые строковые данные", func(t *testing.T) {
-		jwtC := NewJWTCreator("secret", 2*time.Minute)
+		jwtC := NewJWTCreator("secret")
 
 		tests := []struct {
-			uid string
-			sid string
+			name   string
+			claims map[string]any
 		}{
 			{
-				uid: "",
-				sid: "",
+				"claims может иметь пустые параметры",
+				map[string]any{
+					"UserID":    "",
+					"SessionID": "",
+				},
 			},
 			{
-				uid: "флыыфжвлфывджл в 1лш21лд4л124 лл12д4лд214лл241",
-				sid: strings.Repeat("a", 51),
+				"claims может иметь любые параметры",
+				map[string]any{
+					"UserID": "asfjkjasfjasfl;klfsaklfklsasakfl;kflsa",
+					"itakoe": "123456789",
+				},
 			},
 			{
-				uid: "    ",
-				sid: " 1 2 3 ",
-			},
-			{
-				uid: "fakj35jkl1jkj1k2jlk412",
-				sid: "aflklkrflk;1k;124kkl;124l24",
+				"claims может быть пустым",
+				map[string]any{},
 			},
 		}
 		for _, tt := range tests {
-			token, err := jwtC.Create(tt.uid, tt.sid)
-			assert.NoError(t, err)
-			assert.NotZero(t, token)
-
+			t.Run(tt.name, func(t *testing.T) {
+				token, err := jwtC.Issue(tt.claims)
+				assert.NoError(t, err)
+				assert.NotZero(t, token)
+			})
 		}
 	})
-	t.Run("jwt токены созданные с одинковыми даными, созданные в разные промежутки времени - неравны", func(t *testing.T) {
-		jwtC := NewJWTCreator("secret", 2*time.Minute)
-		var (
-			uid = "123"
-			sid = "123"
-		)
-		t1, _ := jwtC.Create(uid, sid)
-		time.Sleep(1 * time.Second)
-		t2, _ := jwtC.Create(uid, sid)
-		assert.NotEqual(t, t1, t2)
-	})
-	t.Run("jwt токены созданные с одинковыми даными и в одно время - равны", func(t *testing.T) {
-		jwtC := NewJWTCreator("secret", 2*time.Minute)
-		var (
-			uid = "123"
-			sid = "123"
-		)
-		t1, _ := jwtC.Create(uid, sid)
-		t2, _ := jwtC.Create(uid, sid)
-		assert.Equal(t, t1, t2)
-	})
+
 	t.Run("jwt токены созданные с одинковыми даными но с разными ttl - неравны", func(t *testing.T) {
 		var (
-			uid = "123"
-			sid = "123"
+			claims1 = map[string]any{
+				"UserID":    "123",
+				"SessionID": "123",
+				"exp":       time.Now().Add(2 * time.Second).Unix(),
+			}
+			claims2 = map[string]any{
+				"UserID":    "123",
+				"SessionID": "123",
+				"exp":       time.Now().Add(1 * time.Second).Unix(),
+			}
 		)
-		jwtC := NewJWTCreator("secret", 2*time.Minute)
-		t1, _ := jwtC.Create(uid, sid)
 
-		jwtC = NewJWTCreator("secret", 3*time.Minute)
-		t2, _ := jwtC.Create(uid, sid)
+		jwtC := NewJWTCreator("secret")
+		t1, _ := jwtC.Issue(claims1)
+		t2, _ := jwtC.Issue(claims2)
 		assert.NotEqual(t, t1, t2)
 	})
 	t.Run("jwt токены созданные с разными secret - неравны", func(t *testing.T) {
-		var (
-			uid = "123"
-			sid = "123"
-		)
-		jwtC := NewJWTCreator("secret1", 2*time.Minute)
-		t1, _ := jwtC.Create(uid, sid)
+		var claims = map[string]any{
+			"UserID":    "123",
+			"SessionID": "123",
+		}
+		jwtC := NewJWTCreator("secret1")
+		t1, _ := jwtC.Issue(claims)
 
-		jwtC = NewJWTCreator("secret2", 2*time.Minute)
-		t2, _ := jwtC.Create(uid, sid)
+		jwtC = NewJWTCreator("secret2")
+		t2, _ := jwtC.Issue(claims)
 		assert.NotEqual(t, t1, t2)
 	})
 	t.Run("jwt токены созданные с zero secret - невалидны", func(t *testing.T) {
-		var (
-			uid = "123"
-			sid = "123"
-		)
-		jwtC := NewJWTCreator("", 2*time.Minute)
-		_, err := jwtC.Create(uid, sid)
+		var claims = map[string]any{
+			"UserID":    "123",
+			"SessionID": "123",
+		}
+		jwtC := NewJWTCreator("")
+		token, err := jwtC.Issue(claims)
 		assert.Error(t, err)
+		assert.Zero(t, token)
+	})
+
+	t.Run("jwt токены созданные с разными даными - неравны", func(t *testing.T) {
+		var (
+			claims1 = map[string]any{
+				"UserID":    "123",
+				"SessionID": "123",
+			}
+			claims2 = map[string]any{
+				"UserID":    "123",
+				"SessionID": "1234",
+			}
+		)
+
+		jwtC := NewJWTCreator("secret")
+		t1, _ := jwtC.Issue(claims1)
+		t2, _ := jwtC.Issue(claims2)
+		assert.NotEqual(t, t1, t2)
 	})
 }
