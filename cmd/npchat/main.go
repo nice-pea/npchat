@@ -111,6 +111,11 @@ func initCliCommand() *cli.Command {
 				Destination: &cfg.OauthGithub.RedirectURL,
 				Usage:       "URL для перенаправления после аутентификации OAuth Github",
 			},
+			&cli.StringFlag{
+				Name:        "jwt-secret",
+				Destination: &cfg.Secret,
+				Usage:       "Секрет jwt подписи",
+			},
 		},
 	}
 }

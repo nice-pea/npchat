@@ -12,11 +12,11 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /chats/{chatID}/members
-func ChatMembers(router *fiber.App, uc UsecasesForChatMembers) {
+func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jparser middleware.JWTParser) {
 	router.Get(
 		"/chats/:chatID/members",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := chatMembers.In{
 				SubjectID: Session(context).UserID,
@@ -30,6 +30,8 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers) {
 
 			return context.JSON(out)
 		},
+		recover2.New(),
+		middleware.RequireAuthorizedSession(uc, jparser),
 	)
 }
 

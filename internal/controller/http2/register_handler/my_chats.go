@@ -12,11 +12,11 @@ import (
 // Данный обработчик доступен только авторизованным пользователям.
 //
 // Метод: GET /chats
-func MyChats(router *fiber.App, uc UsecasesForMyChats) {
+func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JWTParser) {
 	router.Get(
 		"/chats",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := myChats.In{
 				SubjectID: Session(context).UserID,

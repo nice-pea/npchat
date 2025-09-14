@@ -12,11 +12,11 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats/{chatID}/leave
-func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat) {
+func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jparser middleware.JWTParser) {
 	router.Post(
 		"/chats/:chatID/leave",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := leaveChat.In{
 				SubjectID: Session(context).UserID,
