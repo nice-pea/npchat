@@ -31,6 +31,13 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
+func customClaimsToOutJWT(cc CustomClaims) OutJWT {
+	return OutJWT{
+		UserID:    cc.UserID,
+		SessionID: cc.SessionID,
+	}
+}
+
 func (p *JWTParser) Parse(token string) (OutJWT, error) {
 	// create a Verifier (HMAC in this example)
 	key := []byte(p.secret)
@@ -62,8 +69,5 @@ func (p *JWTParser) Parse(token string) (OutJWT, error) {
 	if !isValidTime {
 		return OutJWT{}, ErrTimeOut
 	}
-	return OutJWT{
-		UserID:    newClaims.UserID,
-		SessionID: newClaims.SessionID,
-	}, nil
+	return customClaimsToOutJWT(newClaims), nil
 }
