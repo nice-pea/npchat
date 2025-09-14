@@ -1,4 +1,4 @@
-package jwtCreator
+package jwt_create
 
 import (
 	"testing"

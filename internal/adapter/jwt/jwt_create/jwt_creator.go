@@ -1,12 +1,8 @@
-package jwtCreator
+package jwt_create
 
 import (
 	"github.com/cristalhq/jwt/v5"
 )
-
-type JwtIssuer interface {
-	Issue(claims map[string]any) (string, error)
-}
 
 type JWTC struct {
 	secret string
