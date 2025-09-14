@@ -1,4 +1,4 @@
-package jwt
+package jwtCreator
 
 import (
 	"github.com/cristalhq/jwt/v5"
@@ -18,9 +18,7 @@ func NewJWTCreator(secret string) JWTC {
 	}
 }
 
-
-
-// создает jwt на основе claims 
+// создает jwt на основе claims
 func (c *JWTC) Issue(claims map[string]any) (string, error) {
 	// создаем Signer
 	key := []byte(c.secret)
