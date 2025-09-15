@@ -31,7 +31,7 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser mid
 			}
 
 			input := sendInvitation.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 				ChatID:    rb.ChatID,
 				UserID:    rb.UserID,
 			}

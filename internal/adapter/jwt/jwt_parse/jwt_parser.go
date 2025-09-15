@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
+
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
 
@@ -62,8 +63,7 @@ func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
 		return middleware.OutJwt{}, err
 	}
 	// verify claims as you wish
-	var isValidTime bool = newClaims.IsValidAt(time.Now())
-	if !isValidTime {
+	if !newClaims.IsValidAt(time.Now()) {
 		return middleware.OutJwt{}, ErrTimeOut
 	}
 	return customClaimsToOutJWT(newClaims), nil

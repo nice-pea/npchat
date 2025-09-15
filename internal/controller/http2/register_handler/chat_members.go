@@ -19,7 +19,7 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jparser middlewar
 		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := chatMembers.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 				ChatID:    ParamsUUID(context, "chatID"),
 			}
 

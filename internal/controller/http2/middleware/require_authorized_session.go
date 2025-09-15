@@ -9,9 +9,8 @@ import (
 )
 
 const (
-	CtxKeyUserSession = "userSession"
-	CtxKeyUserID      = "UserID"
-	CtxKeySessionID   = "SessionID"
+	CtxKeyUserID    = "UserID"
+	CtxKeySessionID = "SessionID"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 )
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JwtParser) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, jwtparser JwtParser) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -44,7 +43,7 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JwtPars
 			ctx.Locals(CtxKeyUserID, session.UserID)
 			ctx.Locals(CtxKeySessionID, session.ID)
 		case Bearer:
-			out, err := parseJwt(tm, token)
+			out, err := parseJwt(jwtparser, token)
 			if err != nil {
 				return err
 			}

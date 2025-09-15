@@ -4,10 +4,8 @@ import (
 	"log/slog"
 
 	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
-	"github.com/nice-pea/npchat/internal/adapter"
 	jwtIssuer "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_create"
 	jwtParser "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_parse"
-
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )

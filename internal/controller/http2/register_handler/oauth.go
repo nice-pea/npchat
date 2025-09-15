@@ -78,7 +78,10 @@ func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback, issuer JwtIss
 				return err
 			}
 
-			return ctx.JSON(out)
+			return ctx.JSON(fiber.Map{
+				"Out": out,
+				"Jwt": token,
+			})
 		},
 	)
 }

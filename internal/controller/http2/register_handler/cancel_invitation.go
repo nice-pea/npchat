@@ -19,7 +19,7 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jparser
 		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := cancelInvitation.In{
-				SubjectID:    Session(context).UserID,
+				SubjectID:    UserID(context),
 				InvitationID: ParamsUUID(context, "invitationID"),
 			}
 

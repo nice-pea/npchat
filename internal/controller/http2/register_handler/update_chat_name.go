@@ -29,7 +29,7 @@ func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jparser middlew
 			}
 
 			input := updateName.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 				ChatID:    ParamsUUID(context, "chatID"),
 				NewName:   rb.NewName,
 			}

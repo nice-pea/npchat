@@ -19,7 +19,7 @@ func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jparser middleware.Jw
 		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := leaveChat.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 				ChatID:    ParamsUUID(context, "chatID"),
 			}
 

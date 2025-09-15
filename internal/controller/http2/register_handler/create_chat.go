@@ -29,7 +29,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jparser middleware.
 			}
 
 			input := createChat.In{
-				ChiefUserID: Session(context).UserID,
+				ChiefUserID: UserID(context),
 				Name:        rb.Name,
 			}
 

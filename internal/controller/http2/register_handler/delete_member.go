@@ -30,7 +30,7 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jparser middlew
 			}
 
 			input := deleteMember.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 				ChatID:    ParamsUUID(context, "chatID"),
 				UserID:    rb.UserID,
 			}

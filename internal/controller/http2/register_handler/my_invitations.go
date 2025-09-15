@@ -19,7 +19,7 @@ func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations, jparser middl
 		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := receivedInvitations.In{
-				SubjectID: Session(context).UserID,
+				SubjectID: UserID(context),
 			}
 
 			out, err := uc.ReceivedInvitations(input)

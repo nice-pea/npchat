@@ -19,7 +19,7 @@ type Config struct {
 }
 
 // RunHttpServer запускает http сервер до момента отмена контекста
-func RunHttpServer(ctx context.Context, uc RequiredUsecases, jwtutils RequiredJwt, eventListener registerHandler.EventListener, cfg Config) error {
+func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener registerHandler.EventListener, jwtutils RequiredJwt, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
