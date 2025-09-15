@@ -1,4 +1,4 @@
-package jwtСreate
+package jwtСreater
 
 import (
 	"testing"
