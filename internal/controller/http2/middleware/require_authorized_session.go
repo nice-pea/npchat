@@ -41,7 +41,6 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JWTPars
 			}
 			// Сохранить сессию в контекст
 			session := out.Sessions[0]
-			ctx.Locals(CtxKeyUserSession, session)
 			ctx.Locals(CtxKeyUserID, session.UserID)
 			ctx.Locals(CtxKeySessionID, session.ID)
 		case Bearer:

@@ -18,7 +18,7 @@ import (
 
 func Test_RequireAuthorizedSession(t *testing.T) {
 	t.Run("sessions", func(t *testing.T) {
-		t.Run("сохраненную сессию можно прочитать", func(t *testing.T) {
+		t.Run("сохраненную SessionID и UserID можно прочитать", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{
 				FindSessionsFunc: func(in findSession.In) (findSession.Out, error) {
 					return findSession.Out{Sessions: []sessionn.Session{mockSession}}, nil
@@ -29,9 +29,13 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			fiberApp.Get(
 				"/", RequireAuthorizedSession(uc, nil),
 				func(ctx *fiber.Ctx) error {
-					session, ok := ctx.Locals(CtxKeyUserSession).(sessionn.Session)
+					sessionId, ok := ctx.Locals(CtxKeySessionID).(uuid.UUID)
 					require.True(t, ok)
-					require.Equal(t, mockSession, session)
+					userId, ok := ctx.Locals(CtxKeyUserID).(uuid.UUID)
+					require.True(t, ok)
+
+					require.Equal(t, mockSession.ID, sessionId)
+					require.Equal(t, mockSession.UserID, userId)
 					return nil
 				})
 
