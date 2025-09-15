@@ -1,4 +1,4 @@
-package jwtСreater
+package jwtIssuer
 
 import (
 	"time"
