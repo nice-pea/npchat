@@ -15,6 +15,7 @@ import (
 type adapters struct {
 	oauthProviders oauth.Providers
 	eventBus       *eventsBus.EventsBus
+	jwtUtils       JwtUtils
 }
 
 func (a *adapters) OauthProviders() oauth.Providers {
@@ -35,17 +36,18 @@ func initAdapters(cfg Config) *adapters {
 	return &adapters{
 		oauthProviders: oauthProviders,
 		eventBus:       new(eventsBus.EventsBus),
+		jwtUtils:       initJwtUtils(cfg.JwtSecret),
 	}
 }
 
-type JWTUtils struct {
+type JwtUtils struct {
 	*jwtParser.JWTParser
 	*jwtIssuer.Issuer
 }
 
-func initJwtUtils(secret string) JWTUtils {
+func initJwtUtils(secret string) JwtUtils {
 
-	return JWTUtils{
+	return JwtUtils{
 		JWTParser: &jwtParser.JWTParser{Secret: []byte(secret)},
 		Issuer:    &jwtIssuer.Issuer{Secret: []byte(secret)},
 	}

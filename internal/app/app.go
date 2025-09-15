@@ -29,12 +29,9 @@ func Run(ctx context.Context, cfg Config) error {
 	// Инициализация сервисов
 	uc := initUsecases(rr, aa)
 
-	// Инициализация jwt Issuer и Parser
-	jwtUtils := initJwtUtils(cfg.JwtSecret)
-
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
-		return http2.RunHttpServer(ctx, uc, aa.eventBus, jwtUtils, cfg.Http2)
+		return http2.RunHttpServer(ctx, uc, aa.eventBus, aa.jwtUtils, cfg.Http2)
 	})
 
 	return g.Wait()
