@@ -15,11 +15,7 @@ type OutJWT struct {
 }
 
 type JWTParser struct {
-	secret string
-}
-
-func NewJWTParser(secret string) JWTParser {
-	return JWTParser{secret}
+	Secret string
 }
 
 var (
@@ -41,7 +37,7 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJWT {
 
 func (p *JWTParser) Parse(token string) (middleware.OutJWT, error) {
 	// create a Verifier (HMAC in this example)
-	key := []byte(p.secret)
+	key := []byte(p.Secret)
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, key)
 
 	if err != nil {

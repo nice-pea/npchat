@@ -59,7 +59,7 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtutils RequiredJwt, e
 
 	// Oauth /oauth
 	registerHandler.OauthAuthorize(r, uc)
-	registerHandler.OauthCallback(r, uc)
+	registerHandler.OauthCallback(r, uc, jwtutils)
 
 	// Аутентификация /auth
 	registerHandler.LoginByPassword(r, uc, jwtutils)

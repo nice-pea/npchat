@@ -40,14 +40,13 @@ func initAdapters(cfg Config) *adapters {
 
 type JWTUtils struct {
 	*jwt_parse.JWTParser
-	*jwt_create.JWTC
+	*jwt_create.Issuer
 }
 
 func initJwtUtils(secret string) JWTUtils {
-	parser := jwt_parse.NewJWTParser(secret)
-	issuer := jwt_create.NewJWTCreator(secret)
+
 	return JWTUtils{
-		JWTParser: &parser,
-		JWTC:      &issuer,
+		JWTParser: &jwt_parse.JWTParser{Secret: secret},
+		Issuer:    &jwt_create.Issuer{Secret: secret},
 	}
 }

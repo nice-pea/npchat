@@ -9,7 +9,7 @@ import (
 
 func Test_JWTC_Issue(t *testing.T) {
 	t.Run("uid и sid могут содержать любые строковые данные", func(t *testing.T) {
-		jwtC := NewJWTCreator("secret")
+		jwtC := Issuer{"secret"}
 
 		tests := []struct {
 			name   string
@@ -57,7 +57,7 @@ func Test_JWTC_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := NewJWTCreator("secret")
+		jwtC := Issuer{"secret"}
 		t1, _ := jwtC.Issue(claims1)
 		t2, _ := jwtC.Issue(claims2)
 		assert.NotEqual(t, t1, t2)
@@ -67,10 +67,10 @@ func Test_JWTC_Issue(t *testing.T) {
 			"UserID":    "123",
 			"SessionID": "123",
 		}
-		jwtC := NewJWTCreator("secret1")
+		jwtC := Issuer{"secret1"}
 		t1, _ := jwtC.Issue(claims)
 
-		jwtC = NewJWTCreator("secret2")
+		jwtC = Issuer{"secret2"}
 		t2, _ := jwtC.Issue(claims)
 		assert.NotEqual(t, t1, t2)
 	})
@@ -79,7 +79,7 @@ func Test_JWTC_Issue(t *testing.T) {
 			"UserID":    "123",
 			"SessionID": "123",
 		}
-		jwtC := NewJWTCreator("")
+		jwtC := Issuer{}
 		token, err := jwtC.Issue(claims)
 		assert.Error(t, err)
 		assert.Zero(t, token)
@@ -97,7 +97,7 @@ func Test_JWTC_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := NewJWTCreator("secret")
+		jwtC := Issuer{"secret"}
 		t1, _ := jwtC.Issue(claims1)
 		t2, _ := jwtC.Issue(claims2)
 		assert.NotEqual(t, t1, t2)

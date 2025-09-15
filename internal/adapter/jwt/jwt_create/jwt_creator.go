@@ -4,20 +4,14 @@ import (
 	"github.com/cristalhq/jwt/v5"
 )
 
-type JWTC struct {
-	secret string
-}
-
-func NewJWTCreator(secret string) JWTC {
-	return JWTC{
-		secret,
-	}
+type Issuer struct {
+	Secret string
 }
 
 // создает jwt на основе claims
-func (c *JWTC) Issue(claims map[string]any) (string, error) {
+func (c *Issuer) Issue(claims map[string]any) (string, error) {
 	// создаем Signer
-	key := []byte(c.secret)
+	key := []byte(c.Secret)
 	signer, err := jwt.NewSignerHS(jwt.HS256, key)
 	if err != nil {
 		return "", err
