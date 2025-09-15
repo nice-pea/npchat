@@ -145,36 +145,11 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 		})
-		t.Run("истекший JWT", func(t *testing.T) {
+		t.Run("истекший JWT вернет StatusUnauthorized", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			mtm := mockJWTParser{
 				ParseFunc: func(token string) (OutJWT, error) {
 					return OutJWT{}, errors.New("JWT истекший")
-				},
-			}
-
-			fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
-			fiberApp.Get(
-				"/", RequireAuthorizedSession(uc, mtm),
-				func(ctx *fiber.Ctx) error {
-					assert.Fail(t, "unreachable code")
-					return nil
-				})
-
-			jwTocken := "123.456.789"
-
-			req := httptest.NewRequest("GET", "/", nil)
-			req.Header.Set("Authorization", "Bearer "+jwTocken)
-
-			resp, err := fiberApp.Test(req)
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-		})
-		t.Run("не верной подписи JWT", func(t *testing.T) {
-			uc := mockUsecasesForRequireAuthorizedSession{}
-			mtm := mockJWTParser{
-				ParseFunc: func(token string) (OutJWT, error) {
-					return OutJWT{}, errors.New("invalid signature")
 				},
 			}
 
@@ -222,17 +197,15 @@ type mockUsecasesForRequireAuthorizedSession struct {
 	FindSessionsFunc func(findSession.In) (findSession.Out, error)
 }
 
-var (
-	mockSession = sessionn.Session{
-		ID:     uuid.New(),
-		Status: sessionn.StatusNew,
-		UserID: uuid.New(),
-		Name:   "name",
-		AccessToken: sessionn.Token{
-			Token: "asdasda",
-		},
-	}
-)
+var mockSession = sessionn.Session{
+	ID:     uuid.New(),
+	Status: sessionn.StatusNew,
+	UserID: uuid.New(),
+	Name:   "name",
+	AccessToken: sessionn.Token{
+		Token: "asdasda",
+	},
+}
 
 func (m mockUsecasesForRequireAuthorizedSession) FindSessions(in findSession.In) (findSession.Out, error) {
 	if m.FindSessionsFunc != nil {
@@ -245,12 +218,10 @@ type mockJWTParser struct {
 	ParseFunc func(token string) (OutJWT, error)
 }
 
-var (
-	mockParseJWT = OutJWT{
-		UserID:    "1234",
-		SessionID: "5678",
-	}
-)
+var mockParseJWT = OutJWT{
+	UserID:    "1234",
+	SessionID: "5678",
+}
 
 func (m mockJWTParser) Parse(token string) (OutJWT, error) {
 	if m.ParseFunc != nil {
