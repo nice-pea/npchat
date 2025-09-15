@@ -5,8 +5,8 @@ import (
 
 	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
 	"github.com/nice-pea/npchat/internal/adapter"
-	"github.com/nice-pea/npchat/internal/adapter/jwt/jwt_create"
-	"github.com/nice-pea/npchat/internal/adapter/jwt/jwt_parse"
+	jwtCreate "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_create"
+	jwtParse "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_parse"
 
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
@@ -39,14 +39,14 @@ func initAdapters(cfg Config) *adapters {
 }
 
 type JWTUtils struct {
-	*jwt_parse.JWTParser
-	*jwt_create.Issuer
+	*jwtParse.JWTParser
+	*jwtCreate.Issuer
 }
 
 func initJwtUtils(secret string) JWTUtils {
 
 	return JWTUtils{
-		JWTParser: &jwt_parse.JWTParser{Secret: secret},
-		Issuer:    &jwt_create.Issuer{Secret: secret},
+		JWTParser: &jwtParse.JWTParser{Secret: secret},
+		Issuer:    &jwtCreate.Issuer{Secret: secret},
 	}
 }

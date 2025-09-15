@@ -1,4 +1,4 @@
-package jwt_parse
+package jwtParse
 
 import (
 	"encoding/json"

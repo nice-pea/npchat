@@ -1,4 +1,4 @@
-package jwt_create
+package jwtСreate
 
 import (
 	"github.com/cristalhq/jwt/v5"
