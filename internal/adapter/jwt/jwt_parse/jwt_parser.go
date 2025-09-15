@@ -28,43 +28,43 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func customClaimsToOutJWT(cc CustomClaims) middleware.OutJWT {
-	return middleware.OutJWT{
+func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
+	return middleware.OutJwt{
 		UserID:    cc.UserID,
 		SessionID: cc.SessionID,
 	}
 }
 
-func (p *JWTParser) Parse(token string) (middleware.OutJWT, error) {
+func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
 	// create a Verifier (HMAC in this example)
 
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, p.Secret)
 
 	if err != nil {
-		return middleware.OutJWT{}, err
+		return middleware.OutJwt{}, err
 	}
 
 	// parse and verify a token
 	tokenBytes := []byte(token)
 	newToken, err := jwt.Parse(tokenBytes, verifier)
 	if err != nil {
-		return middleware.OutJWT{}, err
+		return middleware.OutJwt{}, err
 	}
 	// or just verify it's signature
 	err = verifier.Verify(newToken)
 	if err != nil {
-		return middleware.OutJWT{}, err
+		return middleware.OutJwt{}, err
 	}
 	// get Registered claims
 	var newClaims CustomClaims
 	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
 	if errClaims != nil {
-		return middleware.OutJWT{}, err
+		return middleware.OutJwt{}, err
 	}
 	// verify claims as you wish
 	var isValidTime bool = newClaims.IsValidAt(time.Now())
 	if !isValidTime {
-		return middleware.OutJWT{}, ErrTimeOut
+		return middleware.OutJwt{}, ErrTimeOut
 	}
 	return customClaimsToOutJWT(newClaims), nil
 }

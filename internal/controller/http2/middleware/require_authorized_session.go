@@ -20,7 +20,7 @@ const (
 )
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JWTParser) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, tm JwtParser) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -79,19 +79,19 @@ func findSessionf(uc UsecasesForRequireAuthorizedSession, token string) (findSes
 	return out, nil
 }
 
-type OutJWT struct {
+type OutJwt struct {
 	UserID    string
 	SessionID string
 }
 
-type JWTParser interface {
-	Parse(token string) (OutJWT, error)
+type JwtParser interface {
+	Parse(token string) (OutJwt, error)
 }
 
-func parseJwt(ucjwt JWTParser, token string) (OutJWT, error) {
+func parseJwt(ucjwt JwtParser, token string) (OutJwt, error) {
 	out, err := ucjwt.Parse(token)
 	if err != nil {
-		return OutJWT{}, fiber.ErrUnauthorized
+		return OutJwt{}, fiber.ErrUnauthorized
 	}
 
 	return out, nil

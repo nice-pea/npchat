@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/accept
-func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jparser middleware.JWTParser) {
+func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jparser middleware.JwtParser) {
 	router.Post(
 		"/invitations/:invitationID/accept",
 		recover2.New(),

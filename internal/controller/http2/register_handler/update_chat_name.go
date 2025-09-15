@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: PUT /chats/{chatID}/name
-func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jparser middleware.JWTParser) {
+func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jparser middleware.JwtParser) {
 	// Тело запроса для обновления названия чата.
 	type requestBody struct {
 		NewName string `json:"new_name"`

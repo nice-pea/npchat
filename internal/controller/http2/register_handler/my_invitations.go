@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /invitations
-func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations, jparser middleware.JWTParser) {
+func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations, jparser middleware.JwtParser) {
 	router.Get(
 		"/invitations",
 		recover2.New(),

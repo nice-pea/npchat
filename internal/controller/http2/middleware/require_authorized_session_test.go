@@ -148,8 +148,8 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 		t.Run("истекший JWT вернет StatusUnauthorized", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			mtm := mockJWTParser{
-				ParseFunc: func(token string) (OutJWT, error) {
-					return OutJWT{}, errors.New("JWT истекший")
+				ParseFunc: func(token string) (OutJwt, error) {
+					return OutJwt{}, errors.New("Jwt истекший")
 				},
 			}
 
@@ -215,15 +215,15 @@ func (m mockUsecasesForRequireAuthorizedSession) FindSessions(in findSession.In)
 }
 
 type mockJWTParser struct {
-	ParseFunc func(token string) (OutJWT, error)
+	ParseFunc func(token string) (OutJwt, error)
 }
 
-var mockParseJWT = OutJWT{
+var mockParseJWT = OutJwt{
 	UserID:    "1234",
 	SessionID: "5678",
 }
 
-func (m mockJWTParser) Parse(token string) (OutJWT, error) {
+func (m mockJWTParser) Parse(token string) (OutJwt, error) {
 	if m.ParseFunc != nil {
 		return m.ParseFunc(token)
 	}

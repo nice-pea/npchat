@@ -5,7 +5,7 @@ import (
 	"github.com/nice-pea/npchat/internal/controller/http2/register_handler"
 )
 
-type RequiredJWT interface {
+type RequiredJwt interface {
 	register_handler.JwtIssuer
-	middleware.JWTParser
+	middleware.JwtParser
 }

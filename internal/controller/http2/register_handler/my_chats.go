@@ -12,7 +12,7 @@ import (
 // Данный обработчик доступен только авторизованным пользователям.
 //
 // Метод: GET /chats
-func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JWTParser) {
+func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JwtParser) {
 	router.Get(
 		"/chats",
 		recover2.New(),

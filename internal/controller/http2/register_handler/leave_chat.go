@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats/{chatID}/leave
-func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jparser middleware.JWTParser) {
+func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jparser middleware.JwtParser) {
 	router.Post(
 		"/chats/:chatID/leave",
 		recover2.New(),
