@@ -9,7 +9,7 @@ import (
 
 func Test_JWTC_Issue(t *testing.T) {
 	t.Run("uid и sid могут содержать любые строковые данные", func(t *testing.T) {
-		jwtC := Issuer{"secret"}
+		jwtC := Issuer{[]byte("secret")}
 
 		tests := []struct {
 			name   string
@@ -57,7 +57,7 @@ func Test_JWTC_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := Issuer{"secret"}
+		jwtC := Issuer{[]byte("secret")}
 		t1, _ := jwtC.Issue(claims1)
 		t2, _ := jwtC.Issue(claims2)
 		assert.NotEqual(t, t1, t2)
@@ -67,10 +67,10 @@ func Test_JWTC_Issue(t *testing.T) {
 			"UserID":    "123",
 			"SessionID": "123",
 		}
-		jwtC := Issuer{"secret1"}
+		jwtC := Issuer{[]byte("secret1")}
 		t1, _ := jwtC.Issue(claims)
 
-		jwtC = Issuer{"secret2"}
+		jwtC = Issuer{[]byte("secret2")}
 		t2, _ := jwtC.Issue(claims)
 		assert.NotEqual(t, t1, t2)
 	})
@@ -97,7 +97,7 @@ func Test_JWTC_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := Issuer{"secret"}
+		jwtC := Issuer{[]byte("secret")}
 		t1, _ := jwtC.Issue(claims1)
 		t2, _ := jwtC.Issue(claims2)
 		assert.NotEqual(t, t1, t2)

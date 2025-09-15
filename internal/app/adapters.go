@@ -46,7 +46,7 @@ type JWTUtils struct {
 func initJwtUtils(secret string) JWTUtils {
 
 	return JWTUtils{
-		JWTParser: &jwtParse.JWTParser{Secret: secret},
-		Issuer:    &jwtCreate.Issuer{Secret: secret},
+		JWTParser: &jwtParse.JWTParser{Secret: []byte(secret)},
+		Issuer:    &jwtCreate.Issuer{Secret: []byte(secret)},
 	}
 }

@@ -5,14 +5,13 @@ import (
 )
 
 type Issuer struct {
-	Secret string
+	Secret []byte
 }
 
 // создает jwt на основе claims
 func (c *Issuer) Issue(claims map[string]any) (string, error) {
 	// создаем Signer
-	key := []byte(c.Secret)
-	signer, err := jwt.NewSignerHS(jwt.HS256, key)
+	signer, err := jwt.NewSignerHS(jwt.HS256, c.Secret)
 	if err != nil {
 		return "", err
 	}
