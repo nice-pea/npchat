@@ -1,5 +1,7 @@
 package register_handler
 
+import "github.com/nice-pea/npchat/internal/domain/sessionn"
+
 type JwtIssuer interface {
-	Issue(claims map[string]any) (string, error)
+	Issue(session sessionn.Session) (string, error)
 }

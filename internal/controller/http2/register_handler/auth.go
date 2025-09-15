@@ -1,8 +1,6 @@
 package register_handler
 
 import (
-	"time"
-
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
@@ -39,11 +37,7 @@ func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer Jw
 				return err
 			}
 
-			token, err := issuer.Issue(map[string]any{
-				"UserID":    out.User.ID,
-				"SessionID": out.Session.ID,
-				"exp":       time.Now().Add(2 * time.Minute).Unix(),
-			})
+			token, err := issuer.Issue(out.Session)
 
 			if err != nil {
 				// TODO: тут мб если сессии без ошибок создались то не возвращать ошибку

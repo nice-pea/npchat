@@ -51,7 +51,7 @@ type UsecasesForOauthAuthorize interface {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/callback
-func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback) {
+func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback, issuer JwtIssuer) {
 	router.Get(
 		"/oauth/:provider/callback",
 		recover2.New(),
@@ -69,6 +69,11 @@ func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback) {
 			}
 
 			out, err := uc.OauthComplete(input)
+			if err != nil {
+				return err
+			}
+
+			token, err := issuer.Issue(out.Session)
 			if err != nil {
 				return err
 			}
