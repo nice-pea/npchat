@@ -113,7 +113,7 @@ func initCliCommand() *cli.Command {
 			},
 			&cli.StringFlag{
 				Name:        "jwt-secret",
-				Destination: &cfg.Secret,
+				Destination: &cfg.JwtSecret,
 				Usage:       "Секрет jwt подписи",
 			},
 		},

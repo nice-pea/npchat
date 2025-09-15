@@ -30,7 +30,7 @@ func Run(ctx context.Context, cfg Config) error {
 	uc := initUsecases(rr, aa)
 
 	// Инициализация jwt Issuer и Parser
-	jwtUtils := initJwtUtils(cfg.Secret)
+	jwtUtils := initJwtUtils(cfg.JwtSecret)
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
