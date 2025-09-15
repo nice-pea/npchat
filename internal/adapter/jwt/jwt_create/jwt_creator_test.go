@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_JWTC_Issue(t *testing.T) {
+func Test_Issuer_Issue(t *testing.T) {
 	t.Run("session может быть zero value", func(t *testing.T) {
 		jwtC := Issuer{[]byte("secret")}
 
@@ -64,7 +64,7 @@ func Test_JWTC_Issue(t *testing.T) {
 	})
 
 	t.Run("Issue использует только ID и UserID, другие данные игнорируются", func(t *testing.T) {
-
+		// в этом тесте предпологается что jwt создаются в одно время
 		var (
 			ID     = uuid.New()
 			UserID = uuid.New()
@@ -106,5 +106,24 @@ func Test_JWTC_Issue(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, t1, t2)
+	})
+
+	t.Run("Также Issue использует ExpiresAt, в разное время созданные токены не равны", func(t *testing.T) {
+
+		var session = sessionn.Session{
+			ID:     uuid.New(),
+			UserID: uuid.New(),
+		}
+
+		jwtC := Issuer{[]byte("secret")}
+		t1, err := jwtC.Issue(session)
+		require.NoError(t, err)
+
+		time.Sleep(time.Second)
+
+		t2, err := jwtC.Issue(session)
+		require.NoError(t, err)
+
+		assert.NotEqual(t, t1, t2)
 	})
 }
