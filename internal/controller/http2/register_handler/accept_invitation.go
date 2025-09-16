@@ -12,14 +12,14 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/accept
-func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation) {
+func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jparser middleware.JwtParser) {
 	router.Post(
 		"/invitations/:invitationID/accept",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			input := acceptInvitation.In{
-				SubjectID:    Session(context).UserID,
+				SubjectID:    UserID(context),
 				InvitationID: ParamsUUID(context, "invitationID"),
 			}
 

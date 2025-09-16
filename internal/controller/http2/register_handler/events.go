@@ -19,19 +19,18 @@ import (
 // Events регистрирует обработчик для получения потока событий.
 //
 // Метод: GET /events
-func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener) {
+func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener, jwtparser middleware.JwtParser) {
 	router.Get(
 		"/events",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jwtparser),
 		func(ctx *fiber.Ctx) error {
-			session := Session(ctx)
 			// Канал для обработки событий в отдельной горутине
 			eventsChan := make(chan any)
 			// Канал для обработки ошибок в отдельной горутине
 			errorsChan := make(chan error)
 
-			removeListener, err := eventListener.AddListener(session.UserID, session.ID, func(event events.Event, err error) {
+			removeListener, err := eventListener.AddListener(UserID(ctx), SessionID(ctx), func(event events.Event, err error) {
 				if err != nil {
 					errorsChan <- err
 				}

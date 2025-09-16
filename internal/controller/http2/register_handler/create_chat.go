@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats
-func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
+func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jparser middleware.JwtParser) {
 	// Тело запроса для создания чата.
 	type requestBody struct {
 		Name string `json:"name"`
@@ -20,7 +20,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 	router.Post(
 		"/chats",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc),
+		middleware.RequireAuthorizedSession(uc, jparser),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
@@ -29,7 +29,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat) {
 			}
 
 			input := createChat.In{
-				ChiefUserID: Session(context).UserID,
+				ChiefUserID: UserID(context),
 				Name:        rb.Name,
 			}
 

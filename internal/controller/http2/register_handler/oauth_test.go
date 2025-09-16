@@ -75,6 +75,11 @@ func TestOauthAuthorize(t *testing.T) {
 }
 
 func TestOauthCallback(t *testing.T) {
+	mockIssuer := mockRegisterHandler.NewJwtIssuer(t)
+	mockIssuer.
+		On("Issue", mock.Anything).
+		Return("jwt", nil)
+
 	t.Run("успешное выполнение", func(t *testing.T) {
 		fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
 		// Настройка мока
@@ -87,7 +92,7 @@ func TestOauthCallback(t *testing.T) {
 			}, nil)
 
 		// Регистрация обработчика
-		OauthCallback(fiberApp, mockUsecases)
+		OauthCallback(fiberApp, mockUsecases, mockIssuer)
 
 		// Создать запрос
 		req := httptest.NewRequest("GET", "/oauth/someProvider/callback?state=someValue", nil)
@@ -113,7 +118,7 @@ func TestOauthCallback(t *testing.T) {
 		mockUsecases := mockRegisterHandler.NewUsecasesForOauthCallback(t)
 
 		// Регистрация обработчика
-		OauthCallback(fiberApp, mockUsecases)
+		OauthCallback(fiberApp, mockUsecases, mockIssuer)
 
 		// Создать запрос
 		req := httptest.NewRequest("GET", "/oauth/someProvider/callback?state=someValue", nil)
@@ -132,7 +137,7 @@ func TestOauthCallback(t *testing.T) {
 			Return(oauthComplete.Out{}, errors.New("some error"))
 
 		// Регистрация обработчика
-		OauthCallback(fiberApp, mockUsecases)
+		OauthCallback(fiberApp, mockUsecases, mockIssuer)
 
 		// Создать запрос
 		req := httptest.NewRequest("GET", "/oauth/someProvider/callback?state=someValue", nil)

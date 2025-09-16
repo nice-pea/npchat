@@ -12,4 +12,5 @@ type Config struct {
 	LogLevel    string
 	OauthGoogle oauthProvider.GoogleConfig
 	OauthGithub oauthProvider.GithubConfig
+	JwtSecret   string
 }

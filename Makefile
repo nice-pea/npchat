@@ -1,4 +1,4 @@
-.PHONY: test vet lint check run build
+.PHONY: test vet lint check run build genmock
 
 # Get number of CPU cores minus 1 for parallel execution
 CORES := $(shell echo $$(( $$(nproc) - 1 )))

@@ -41,7 +41,7 @@ func TestEvents(t *testing.T) {
 	fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
 
 	// Регистрация обработчика
-	Events(fiberApp, mockSessionFinder, mockEventListener{})
+	Events(fiberApp, mockSessionFinder, mockEventListener{}, nil)
 
 	// Запуск сервера на свободном локальном порту
 	listener, err := net.Listen("tcp", ":")
@@ -56,7 +56,7 @@ func TestEvents(t *testing.T) {
 	// Создать запрос
 	req, err := http.NewRequestWithContext(ctx, "GET", "http://"+listener.Addr().String()+"/events", nil)
 	require.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer 123")
+	req.Header.Set("Authorization", "SessionToken 123")
 
 	// Выполнить запрос
 	resp, err := http.DefaultClient.Do(req)

@@ -5,11 +5,13 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
-	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
-func Session(context *fiber.Ctx) sessionn.Session {
-	return context.Locals(middleware.CtxKeyUserSession).(sessionn.Session)
+func UserID(context *fiber.Ctx) uuid.UUID {
+	return context.Locals(middleware.CtxKeyUserID).(uuid.UUID)
+}
+func SessionID(context *fiber.Ctx) uuid.UUID {
+	return context.Locals(middleware.CtxKeySessionID).(uuid.UUID)
 }
 
 // ParamsUUID возвращает значение из пути запроса как uuid
