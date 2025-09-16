@@ -126,4 +126,17 @@ func Test_Issuer_Issue(t *testing.T) {
 
 		assert.NotEqual(t, t1, t2)
 	})
+	t.Run("Если secret пустой - Issue будет возвращать ошибку", func(t *testing.T) {
+
+		var session = sessionn.Session{
+			ID:     uuid.New(),
+			UserID: uuid.New(),
+		}
+
+		jwtC := Issuer{[]byte("")}
+		token, err := jwtC.Issue(session)
+		require.Error(t, err)
+
+		assert.Zero(t, token)
+	})
 }
