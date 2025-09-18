@@ -112,6 +112,8 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		newVal := time.Now().Add(time.Hour)
 		err = chat.SetLastActiveAt(newVal)
 		assert.NoError(t, err)
-		assert.Equal(t, newVal, chat.LastActiveAt)
+		// Будет обрезано
+		newValTruncated := newVal.Truncate(time.Microsecond)
+		assert.True(t, newValTruncated.Equal(chat.LastActiveAt))
 	})
 }

@@ -67,7 +67,7 @@ func (c *Chat) SetLastActiveAt(lastActiveAt time.Time) error {
 		return ErrNewActiveGreaterThanActual
 	}
 
-	c.LastActiveAt = lastActiveAt
+	c.LastActiveAt = lastActiveAt.In(time.UTC).Truncate(time.Microsecond)
 
 	return nil
 }
