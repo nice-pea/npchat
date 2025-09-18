@@ -61,6 +61,17 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	return nil
 }
 
+// SetLastActiveAt устанавливает новое значение в LastActiveAt
+func (c *Chat) SetLastActiveAt(lastActiveAt time.Time) error {
+	if lastActiveAt.Before(c.LastActiveAt) {
+		return ErrNewActiveGreaterThanActual
+	}
+
+	c.LastActiveAt = lastActiveAt
+
+	return nil
+}
+
 func userIDs(participants []Participant) []uuid.UUID {
 	userIDs := make([]uuid.UUID, len(participants))
 	for i, p := range participants {

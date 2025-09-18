@@ -14,4 +14,5 @@ var (
 	ErrInvitationNotExists                = errors.New("приглашения не существует")
 	ErrSubjectAndRecipientMustBeDifferent = errors.New("subject и recipient не могут быть одним лицом")
 	ErrChatNotExists                      = errors.New("чата с таким ID не существует")
+	ErrNewActiveGreaterThanActual         = errors.New("новое значение LastActiveAt больше текущего")
 )

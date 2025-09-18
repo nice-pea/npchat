@@ -93,3 +93,25 @@ func TestNewChat(t *testing.T) {
 		assert.Empty(t, chat.Invitations)
 	})
 }
+
+func TestChat_SetLastActiveAt(t *testing.T) {
+	t.Run("можно устанавливать только значения больше установленного", func(t *testing.T) {
+		chat, err := NewChat("name", uuid.New(), nil)
+		require.NotZero(t, chat)
+		require.NoError(t, err)
+
+		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour))
+		assert.ErrorIs(t, err, ErrNewActiveGreaterThanActual)
+	})
+
+	t.Run("новое значение будет равно устанавливаемому", func(t *testing.T) {
+		chat, err := NewChat("name", uuid.New(), nil)
+		require.NotZero(t, chat)
+		require.NoError(t, err)
+
+		newVal := time.Now().Add(time.Hour)
+		err = chat.SetLastActiveAt(newVal)
+		assert.NoError(t, err)
+		assert.Equal(t, newVal, chat.LastActiveAt)
+	})
+}
