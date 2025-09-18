@@ -2,6 +2,7 @@ package chatt
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -11,9 +12,10 @@ import (
 
 // Chat представляет собой агрегат чата.
 type Chat struct {
-	ID      uuid.UUID // Уникальный ID чата
-	Name    string    // Название чата
-	ChiefID uuid.UUID // ID главного пользователя чата
+	ID           uuid.UUID // Уникальный ID чата
+	Name         string    // Название чата
+	ChiefID      uuid.UUID // ID главного пользователя чата
+	LastActiveAt time.Time // Время последней активности в чате
 
 	Participants []Participant // Список участников чата
 	Invitations  []Invitation  // Список приглашений в чате
@@ -29,9 +31,10 @@ func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, er
 	}
 
 	chat := Chat{
-		ID:      uuid.New(),
-		Name:    name,
-		ChiefID: chiefID,
+		ID:           uuid.New(),
+		Name:         name,
+		ChiefID:      chiefID,
+		LastActiveAt: time.Now(),
 		Participants: []Participant{
 			{UserID: chiefID}, // Главный администратор
 		},

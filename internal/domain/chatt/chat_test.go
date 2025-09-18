@@ -2,6 +2,7 @@ package chatt
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -75,5 +76,20 @@ func TestNewChat(t *testing.T) {
 		assert.Contains(t, chatCreated.Recipients, chat.ChiefID)
 		// Связано с чатом
 		assert.Equal(t, chat.ID, chatCreated.Data["chat_id"].(uuid.UUID))
+	})
+
+	t.Run("активность в чате равна дате создания", func(t *testing.T) {
+		now1 := time.Now()
+		chat, err := NewChat("name", uuid.New(), nil)
+		now2 := time.Now()
+		require.NotZero(t, chat)
+		require.NoError(t, err)
+
+		// Примерно равна дате создания
+		assert.GreaterOrEqual(t, chat.LastActiveAt, now1)
+		assert.Less(t, chat.LastActiveAt, now2)
+
+		// Приглашений нет
+		assert.Empty(t, chat.Invitations)
 	})
 }
