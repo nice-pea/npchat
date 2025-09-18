@@ -101,7 +101,7 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		require.NoError(t, err)
 
 		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour))
-		assert.ErrorIs(t, err, ErrNewActiveGreaterThanActual)
+		assert.ErrorIs(t, err, ErrNewActiveLessThanActual)
 	})
 
 	t.Run("новое значение будет равно устанавливаемому", func(t *testing.T) {
