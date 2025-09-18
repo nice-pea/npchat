@@ -41,6 +41,8 @@ services:
       - "${OAUTH_GITHUB_SECRET}"
       - "--oauth-github-callback"
       - "${OAUTH_GITHUB_CALLBACK}"
+      - "--jwt-secret"
+      - "${AUTH_JWT_SECRET}"
 
   test.npchat:
     container_name: npc.test.npchat
@@ -61,6 +63,8 @@ services:
       - "postgresql://postgres:postgres@test.pgsql:5432/test_npc_db?sslmode=disable"
       - "--log-level"
       - "debug"
+      - "--jwt-secret"
+      - "qwerty"
 
 # https://github.com/docker-library/docs/blob/master/postgres/README.md
   test.pgsql:
