@@ -2,6 +2,7 @@ package pgsqlRepository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -115,8 +116,8 @@ func (r *ChattRepository) Upsert(chat chatt.Chat) error {
 
 func (r *ChattRepository) upsert(chat chatt.Chat) error {
 	if _, err := r.DB().NamedExec(`
-		INSERT INTO chats(id, name, chief_id) 
-		VALUES (:id, :name, :chief_id)
+		INSERT INTO chats(id, name, chief_id, last_active_at) 
+		VALUES (:id, :name, :chief_id, :last_active_at)
 		ON CONFLICT (id) DO UPDATE SET
 			name=excluded.name,
 			chief_id=excluded.chief_id
@@ -166,16 +167,18 @@ func (r *ChattRepository) InTransaction(fn func(txRepo chatt.Repository) error) 
 }
 
 type dbChat struct {
-	ID      string `db:"id"`
-	Name    string `db:"name"`
-	ChiefID string `db:"chief_id"`
+	ID           string    `db:"id"`
+	Name         string    `db:"name"`
+	ChiefID      string    `db:"chief_id"`
+	LastActiveAt time.Time `db:"last_active_at"`
 }
 
 func toDBChat(chat chatt.Chat) dbChat {
 	return dbChat{
-		ID:      chat.ID.String(),
-		Name:    chat.Name,
-		ChiefID: chat.ChiefID.String(),
+		ID:           chat.ID.String(),
+		Name:         chat.Name,
+		ChiefID:      chat.ChiefID.String(),
+		LastActiveAt: chat.LastActiveAt,
 	}
 }
 
@@ -188,6 +191,7 @@ func toDomainChat(
 		ID:           uuid.MustParse(chat.ID),
 		Name:         chat.Name,
 		ChiefID:      uuid.MustParse(chat.ChiefID),
+		LastActiveAt: chat.LastActiveAt,
 		Participants: toDomainParticipants(participants),
 		Invitations:  toDomainInvitations(invitations),
 	}
