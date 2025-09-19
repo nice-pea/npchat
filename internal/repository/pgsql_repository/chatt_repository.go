@@ -129,7 +129,8 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 		VALUES (:id, :name, :chief_id, :last_active_at)
 		ON CONFLICT (id) DO UPDATE SET
 			name=excluded.name,
-			chief_id=excluded.chief_id
+			chief_id=excluded.chief_id,
+			last_active_at=excluded.last_active_at
 	`, toDBChat(chat)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
