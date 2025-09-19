@@ -224,7 +224,7 @@ func toDomainOauthUsers(users []dbOauthUser) []userr.OpenAuthUser {
 				AccessToken:  u.AccessToken,
 				TokenType:    u.TokenType,
 				RefreshToken: u.RefreshToken,
-				Expiry:       u.Expiry,
+				Expiry:       u.Expiry.In(time.UTC),
 			},
 		}
 	}

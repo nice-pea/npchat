@@ -89,6 +89,7 @@ func (suite *Suite) Test_ChattRepository() {
 }
 
 func (suite *Suite) rndSession() sessionn.Session {
+	suite.T().Helper()
 	session, err := sessionn.NewSession(uuid.New(), gofakeit.UserAgent(), common.RndElem(sessionn.Statuses()))
 	suite.Require().NoError(err)
 
@@ -96,6 +97,7 @@ func (suite *Suite) rndSession() sessionn.Session {
 }
 
 func (suite *Suite) upsertRndSessions(count int) []sessionn.Session {
+	suite.T().Helper()
 	ss := make([]sessionn.Session, count)
 	for i := range ss {
 		ss[i] = suite.rndSession()
@@ -106,6 +108,7 @@ func (suite *Suite) upsertRndSessions(count int) []sessionn.Session {
 }
 
 func (suite *Suite) upsertSession(session sessionn.Session) sessionn.Session {
+	suite.T().Helper()
 	err := suite.RR.Sessions.Upsert(session)
 	suite.Require().NoError(err)
 

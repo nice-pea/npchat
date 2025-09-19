@@ -215,6 +215,7 @@ func (suite *Suite) Test_SessionnRepository() {
 
 // rndChat создает случайный экземпляр чата
 func (suite *Suite) rndChat() chatt.Chat {
+	suite.T().Helper()
 	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	suite.Require().NoError(err)
 
@@ -223,6 +224,7 @@ func (suite *Suite) rndChat() chatt.Chat {
 
 // upsertChat сохраняет чат в репозиторий
 func (suite *Suite) upsertChat(chat chatt.Chat) chatt.Chat {
+	suite.T().Helper()
 	err := suite.RR.Chats.Upsert(chat)
 	suite.Require().NoError(err)
 
@@ -231,6 +233,7 @@ func (suite *Suite) upsertChat(chat chatt.Chat) chatt.Chat {
 
 // rndParticipant создает случайного участника
 func (suite *Suite) rndParticipant() chatt.Participant {
+	suite.T().Helper()
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
 	return p
@@ -238,6 +241,7 @@ func (suite *Suite) rndParticipant() chatt.Participant {
 
 // addRndParticipant добавляет случайного участника в чат
 func (suite *Suite) addRndParticipant(chat *chatt.Chat) {
+	suite.T().Helper()
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
 	suite.Require().NoError(chat.AddParticipant(p, nil))
@@ -245,6 +249,7 @@ func (suite *Suite) addRndParticipant(chat *chatt.Chat) {
 
 // addRndInv добавляет случайное приглашение в чат
 func (suite *Suite) addRndInv(chat *chatt.Chat) {
+	suite.T().Helper()
 	inv, err := chatt.NewInvitation(common.RndElem(chat.Participants).UserID, uuid.New())
 	suite.Require().NoError(err)
 	suite.Require().NoError(chat.AddInvitation(inv, nil))
