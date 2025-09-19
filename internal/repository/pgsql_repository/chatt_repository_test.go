@@ -1,7 +1,6 @@
 package pgsqlRepository
 
 import (
-	"slices"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -150,9 +149,10 @@ func (suite *Suite) Test_ChattRepository() {
 			})
 			suite.NoError(err)
 			suite.Require().Len(chatsFromRepo, limit)
-			slices.Reverse(createdChats)
-			for i, chat := range createdChats[:limit] {
-				suite.Equal(chatsFromRepo[i], chat)
+
+			for i := 0; i < limit; i++ {
+				expectedIdx := len(createdChats) - 1 - i
+				suite.Equal(createdChats[expectedIdx], chatsFromRepo[i])
 			}
 		})
 
