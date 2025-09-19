@@ -63,11 +63,12 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 
 // SetLastActiveAt устанавливает новое значение в LastActiveAt
 func (c *Chat) SetLastActiveAt(lastActiveAt time.Time) error {
-	if lastActiveAt.Before(c.LastActiveAt) {
+	lastActiveAtTruncated := lastActiveAt.In(time.UTC).Truncate(time.Microsecond)
+
+	if lastActiveAtTruncated.Before(c.LastActiveAt) {
 		return ErrNewActiveLessThanActual
 	}
-
-	c.LastActiveAt = lastActiveAt.In(time.UTC).Truncate(time.Microsecond)
+	c.LastActiveAt = lastActiveAtTruncated
 
 	return nil
 }
