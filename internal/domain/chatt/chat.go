@@ -34,7 +34,7 @@ func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, er
 		ID:           uuid.New(),
 		Name:         name,
 		ChiefID:      chiefID,
-		LastActiveAt: time.Now(),
+		LastActiveAt: time.Now().UTC().Truncate(time.Microsecond),
 		Participants: []Participant{
 			{UserID: chiefID}, // Главный администратор
 		},
