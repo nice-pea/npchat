@@ -5,6 +5,7 @@ import (
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/google/uuid"
+
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
@@ -18,7 +19,7 @@ type customClaims struct {
 	jwt.RegisteredClaims
 }
 
-// создает jwt на основе некоторых данных из session
+// Issue создает jwt на основе некоторых данных из session
 func (c *Issuer) Issue(session sessionn.Session) (string, error) {
 	// создаем claims
 	claims := customClaims{

@@ -68,6 +68,12 @@ func initCliCommand() *cli.Command {
 				Required:    true,
 			},
 			&cli.StringFlag{
+				Name:        "jwt-secret",
+				Destination: &cfg.JwtSecret,
+				Usage:       "Секрет jwt подписи",
+				Required:    true,
+			},
+			&cli.StringFlag{
 				Name:        "http-addr",
 				Destination: &cfg.Http2.HttpAddr,
 				Usage:       "Адрес для запуска HTTP сервера",
@@ -110,11 +116,6 @@ func initCliCommand() *cli.Command {
 				Name:        "oauth-github-callback",
 				Destination: &cfg.OauthGithub.RedirectURL,
 				Usage:       "URL для перенаправления после аутентификации OAuth Github",
-			},
-			&cli.StringFlag{
-				Name:        "jwt-secret",
-				Destination: &cfg.JwtSecret,
-				Usage:       "Секрет jwt подписи",
 			},
 		},
 	}
