@@ -8,8 +8,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 )
 
-// TestRepository реализацию репозитория
-func (suite *Suite) TestRepository() {
+func (suite *Suite) Test_SessionnRepository() {
 	suite.Run("List", func() {
 		suite.Run("из пустого репозитория вернется пустой список", func() {
 			chats, err := suite.RR.Chats.List(chatt.Filter{})

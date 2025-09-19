@@ -21,9 +21,6 @@ type Suite struct {
 	factory       *Factory
 	factoryCloser func()
 	RR            struct {
-		//Chats    *ChattRepository
-		//Sessions *SessionnRepository
-		//Users    *UserrRepository
 		Chats    chatt.Repository
 		Sessions sessionn.Repository
 		Users    userr.Repository

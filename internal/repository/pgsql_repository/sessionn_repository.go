@@ -88,11 +88,11 @@ func toDomainSession(session dbSession) sessionn.Session {
 		Status: session.Status,
 		AccessToken: sessionn.Token{
 			Token:  session.AccessToken,
-			Expiry: session.AccessExpiry,
+			Expiry: session.AccessExpiry.In(time.UTC),
 		},
 		RefreshToken: sessionn.Token{
 			Token:  session.RefreshToken,
-			Expiry: session.RefreshExpiry,
+			Expiry: session.RefreshExpiry.In(time.UTC),
 		},
 	}
 }
