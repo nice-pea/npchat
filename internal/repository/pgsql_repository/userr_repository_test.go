@@ -179,7 +179,7 @@ func (suite *Suite) Test_UserrRepository() {
 // rndUser создает случайный экземпляр пользователя
 func (suite *Suite) rndUser() userr.User {
 	suite.T().Helper()
-	u, err := userr.NewUser(gofakeit.Name(), gofakeit.Noun())
+	u, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
 	suite.Require().NoError(err)
 	return u
 }
