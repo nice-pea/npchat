@@ -35,7 +35,7 @@ func NewChat(name string, chiefID uuid.UUID, eventsBuf *events.Buffer) (Chat, er
 		Participants: []Participant{
 			{UserID: chiefID}, // Главный администратор
 		},
-		Invitations: nil,
+		Invitations: []Invitation{},
 	}
 
 	// Добавить событие
