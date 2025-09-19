@@ -1,6 +1,7 @@
 package pgsqlRepository
 
 import (
+	"slices"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -134,6 +135,27 @@ func (suite *Suite) Test_ChattRepository() {
 			suite.True(now.Add(time.Second).Equal(chatsFromRepo[1].LastActiveAt))
 		})
 
+		suite.Run("с limit вернется ограниченное количество элементов", func() {
+			// Создать чаты
+			const limit = 10
+			var createdChats []chatt.Chat
+			for range limit * 2 {
+				createdChats = append(createdChats, suite.upsertChat(suite.rndChat()))
+				time.Sleep(time.Millisecond * 10)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{
+				Limit: limit,
+			})
+			suite.NoError(err)
+			suite.Require().Len(chatsFromRepo, limit)
+			slices.Reverse(createdChats)
+			for i, chat := range createdChats[:limit] {
+				suite.Equal(chatsFromRepo[i], chat)
+			}
+		})
+
 		suite.Run("можно искать по всем фильтрам сразу", func() {
 			// Создать много чатов
 			chats := make([]chatt.Chat, 10)
@@ -153,6 +175,7 @@ func (suite *Suite) Test_ChattRepository() {
 				InvitationRecipientID: expectedChat.Invitations[0].RecipientID,
 				ParticipantID:         expectedChat.Participants[0].UserID,
 				ActiveBefore:          time.Now().Add(time.Second),
+				Limit:                 len(chats),
 			})
 			// Сравнить ожидания и результат
 			suite.NoError(err)

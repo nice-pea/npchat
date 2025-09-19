@@ -20,6 +20,7 @@ type Filter struct {
 	InvitationRecipientID uuid.UUID // Фильтрация по ID получателей приглашения в чат
 	ParticipantID         uuid.UUID // Фильтрация по ID участников в чате
 	ActiveBefore          time.Time // Брать записи где LastActiveAt меньше чем ActiveBefore
+	Limit                 int       // Ограничить количество элементов
 }
 
 // Find возвращает чат либо ошибку ErrChatNotExists

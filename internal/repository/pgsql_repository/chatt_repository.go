@@ -47,7 +47,12 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 		where = where.And("c.last_active_at < ?", filter.ActiveBefore)
 	}
 
-	query, args, err := bqb.New("? ? GROUP BY c.id ORDER BY last_active_at DESC", sel, where).ToPgsql()
+	limit := bqb.New("")
+	if filter.Limit > 0 {
+		limit = limit.Space("LIMIT ?", filter.Limit)
+	}
+
+	query, args, err := bqb.New("? ? GROUP BY c.id ORDER BY last_active_at DESC ?", sel, where, limit).ToPgsql()
 	if err != nil {
 		return nil, fmt.Errorf("bqb.ToPgsql: %w", err)
 	}
@@ -195,7 +200,7 @@ func toDomainChat(
 		ID:           uuid.MustParse(chat.ID),
 		Name:         chat.Name,
 		ChiefID:      uuid.MustParse(chat.ChiefID),
-		LastActiveAt: chat.LastActiveAt,
+		LastActiveAt: chat.LastActiveAt.UTC(),
 		Participants: toDomainParticipants(participants),
 		Invitations:  toDomainInvitations(invitations),
 	}
