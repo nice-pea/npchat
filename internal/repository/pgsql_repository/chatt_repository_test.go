@@ -1,6 +1,8 @@
 package pgsqlRepository
 
 import (
+	"time"
+
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 
@@ -155,6 +157,32 @@ func (suite *Suite) Test_ChattRepository() {
 			// Сравнить ожидания и результат
 			suite.NoError(err)
 			suite.Require().Len(chatsFromRepo, expectedCount)
+		})
+
+		suite.Run("чаты возвращаются в порядке убывания LastActiveAt", func() {
+			// Создать чаты с разными prevActiveAt
+			//var createdChats []chatt.Chat
+			for _, duration := range []time.Duration{
+				time.Hour,
+				time.Second,
+				time.Hour * 2,
+				time.Minute,
+			} {
+				chat := suite.rndChat()
+				_ = chat.SetLastActiveAt(time.Now().Add(duration))
+				suite.upsertChat(chat)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{})
+			// Сравнить ожидания и результат
+			suite.NoError(err)
+
+			prevActiveAt := chatsFromRepo[0].LastActiveAt
+			for _, chat := range chatsFromRepo[1:] {
+				suite.Less(chat.LastActiveAt, prevActiveAt)
+				prevActiveAt = chat.LastActiveAt
+			}
 		})
 	})
 

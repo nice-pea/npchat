@@ -43,7 +43,7 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 		where = where.And("c.id = ?", filter.ID)
 	}
 
-	query, args, err := bqb.New("? ? GROUP BY c.id", sel, where).ToPgsql()
+	query, args, err := bqb.New("? ? GROUP BY c.id ORDER BY last_active_at DESC", sel, where).ToPgsql()
 	if err != nil {
 		return nil, fmt.Errorf("bqb.ToPgsql: %w", err)
 	}
