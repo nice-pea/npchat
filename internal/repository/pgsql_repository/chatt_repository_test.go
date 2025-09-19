@@ -110,6 +110,30 @@ func (suite *Suite) Test_ChattRepository() {
 			suite.Equal(expectedChat, chatsFromRepo[0])
 		})
 
+		suite.Run("с фильтром ActiveBefore вернутся чаты с меньшим LastActiveAt", func() {
+			// Создать чаты с разными LastActiveAt
+			now := time.Now().Truncate(time.Microsecond)
+			for _, duration := range []time.Duration{
+				time.Hour,
+				time.Second,
+				time.Hour * 2,
+				time.Minute,
+			} {
+				chat := suite.rndChat()
+				_ = chat.SetLastActiveAt(now.Add(duration))
+				suite.upsertChat(chat)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{
+				ActiveBefore: now.Add(time.Hour),
+			})
+			suite.NoError(err)
+			suite.Require().Len(chatsFromRepo, 2)
+			suite.True(now.Add(time.Minute).Equal(chatsFromRepo[0].LastActiveAt))
+			suite.True(now.Add(time.Second).Equal(chatsFromRepo[1].LastActiveAt))
+		})
+
 		suite.Run("можно искать по всем фильтрам сразу", func() {
 			// Создать много чатов
 			chats := make([]chatt.Chat, 10)
@@ -128,6 +152,7 @@ func (suite *Suite) Test_ChattRepository() {
 				InvitationID:          expectedChat.Invitations[0].ID,
 				InvitationRecipientID: expectedChat.Invitations[0].RecipientID,
 				ParticipantID:         expectedChat.Participants[0].UserID,
+				ActiveBefore:          time.Now().Add(time.Second),
 			})
 			// Сравнить ожидания и результат
 			suite.NoError(err)
@@ -160,8 +185,7 @@ func (suite *Suite) Test_ChattRepository() {
 		})
 
 		suite.Run("чаты возвращаются в порядке убывания LastActiveAt", func() {
-			// Создать чаты с разными prevActiveAt
-			//var createdChats []chatt.Chat
+			// Создать чаты с разными LastActiveAt
 			for _, duration := range []time.Duration{
 				time.Hour,
 				time.Second,
