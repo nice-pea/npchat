@@ -22,7 +22,7 @@ func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JwtPar
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jparser),
 		func(ctx *fiber.Ctx) error {
-			pageToken, err := decodeKeyset(ctx)
+			keyset, err := decodeKeyset(ctx.Query("page_token"))
 			if err != nil {
 				return err
 			}
@@ -30,14 +30,14 @@ func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JwtPar
 			input := myChats.In{
 				SubjectID: UserID(ctx),
 				UserID:    UserID(ctx),
-				PageToken: pageToken,
+				Keyset:    keyset,
 			}
 
 			out, err := uc.MyChats(input)
 			if err != nil {
 				return err
 			}
-			nextPageToken, err := encodeKeyset(ctx, out.NextKeyset)
+			nextPageToken, err := encodeKeyset(out.NextKeyset)
 			if err != nil {
 				return err
 			}
@@ -56,8 +56,8 @@ type UsecasesForMyChats interface {
 	middleware.UsecasesForRequireAuthorizedSession
 }
 
-func decodeKeyset(ctx *fiber.Ctx) (myChats.Keyset, error) {
-	b, err := base64.StdEncoding.DecodeString(ctx.Query("page_token"))
+func decodeKeyset(pageToken string) (myChats.Keyset, error) {
+	b, err := base64.StdEncoding.DecodeString(pageToken)
 	if err != nil {
 		return myChats.Keyset{}, fmt.Errorf("decode page_token: %w", err)
 	}
@@ -65,7 +65,7 @@ func decodeKeyset(ctx *fiber.Ctx) (myChats.Keyset, error) {
 	return keyset, json.Unmarshal(b, &keyset)
 }
 
-func encodeKeyset(ctx *fiber.Ctx, keyset myChats.Keyset) (string, error) {
+func encodeKeyset(keyset myChats.Keyset) (string, error) {
 	b, err := json.Marshal(keyset)
 	if err != nil {
 		return "", fmt.Errorf("marshal keyset: %w", err)
