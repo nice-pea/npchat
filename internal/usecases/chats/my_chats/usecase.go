@@ -2,6 +2,7 @@ package myChats
 
 import (
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -19,6 +20,7 @@ var (
 type In struct {
 	SubjectID uuid.UUID
 	UserID    uuid.UUID // TODO: удалить
+	Keyset    Keyset
 }
 
 // Validate валидирует значение отдельно каждого параметры
@@ -35,12 +37,19 @@ func (in In) Validate() error {
 
 // Out результат запроса чатов
 type Out struct {
-	Chats []chatt.Chat
+	Chats      []chatt.Chat
+	NextKeyset Keyset
+}
+
+type Keyset struct {
+	ActiveBefore time.Time
 }
 
 type MyChatsUsecase struct {
 	Repo chatt.Repository
 }
+
+const defaultPageSize = 50
 
 // MyChats возвращает список чатов, в которых участвует пользователь
 func (c *MyChatsUsecase) MyChats(in In) (Out, error) {
@@ -58,10 +67,25 @@ func (c *MyChatsUsecase) MyChats(in In) (Out, error) {
 	// Получить список участников с фильтром по пользователю
 	chats, err := c.Repo.List(chatt.Filter{
 		ParticipantID: in.UserID,
+		ActiveBefore:  in.Keyset.ActiveBefore,
+		Limit:         defaultPageSize,
 	})
 	if err != nil {
 		return Out{}, err
 	}
 
-	return Out{Chats: chats}, err
+	return Out{
+		Chats:      chats,
+		NextKeyset: nextKeyset(chats, defaultPageSize),
+	}, err
+}
+
+func nextKeyset(chats []chatt.Chat, pageSize int) Keyset {
+	if len(chats) < pageSize {
+		return Keyset{}
+	}
+
+	return Keyset{
+		ActiveBefore: chats[len(chats)-1].LastActiveAt,
+	}
 }
