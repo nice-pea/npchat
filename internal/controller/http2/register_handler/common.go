@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"log/slog"
