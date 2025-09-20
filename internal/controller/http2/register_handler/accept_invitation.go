@@ -17,10 +17,10 @@ func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jwtPars
 		"/invitations/:invitationID/accept",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			input := acceptInvitation.In{
-				SubjectID:    UserID(context),
-				InvitationID: ParamsUUID(context, "invitationID"),
+				SubjectID:    UserID(ctx),
+				InvitationID: ParamsUUID(ctx, "invitationID"),
 			}
 
 			out, err := uc.AcceptInvitation(input)
@@ -28,7 +28,7 @@ func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jwtPars
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

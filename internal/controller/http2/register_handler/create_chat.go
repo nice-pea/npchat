@@ -21,15 +21,15 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jwtParser middlewar
 		"/chats",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := createChat.In{
-				ChiefUserID: UserID(context),
+				ChiefUserID: UserID(ctx),
 				Name:        rb.Name,
 			}
 
@@ -38,7 +38,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jwtParser middlewar
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

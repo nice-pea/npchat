@@ -17,10 +17,10 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jwtPars
 		"/invitations/:invitationID/cancel",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			input := cancelInvitation.In{
-				SubjectID:    UserID(context),
-				InvitationID: ParamsUUID(context, "invitationID"),
+				SubjectID:    UserID(ctx),
+				InvitationID: ParamsUUID(ctx, "invitationID"),
 			}
 
 			out, err := uc.CancelInvitation(input)
@@ -28,7 +28,7 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jwtPars
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

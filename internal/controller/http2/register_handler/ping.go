@@ -11,8 +11,8 @@ import (
 func Ping(router *fiber.App) {
 	router.Get(
 		"/ping",
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			// Возвращаем простую строку "pong" для подтверждения работоспособности сервера.
-			return context.SendString("pong")
+			return ctx.SendString("pong")
 		})
 }

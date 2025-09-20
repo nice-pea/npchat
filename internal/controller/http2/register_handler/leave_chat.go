@@ -17,10 +17,10 @@ func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jwtParser middleware.
 		"/chats/:chatID/leave",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			input := leaveChat.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 			}
 
 			out, err := uc.LeaveChat(input)
@@ -28,7 +28,7 @@ func LeaveChat(router *fiber.App, uc UsecasesForLeaveChat, jwtParser middleware.
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

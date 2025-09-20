@@ -22,16 +22,16 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jwtParser middl
 		"/chats/:chatID/members",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := deleteMember.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 				UserID:    rb.UserID,
 			}
 
@@ -40,7 +40,7 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jwtParser middl
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

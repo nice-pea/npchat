@@ -17,10 +17,10 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jwtParser middlew
 		"/chats/:chatID/members",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			input := chatMembers.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 			}
 
 			out, err := uc.ChatMembers(input)
@@ -28,7 +28,7 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jwtParser middlew
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),

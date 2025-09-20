@@ -21,16 +21,16 @@ func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jwtParser middl
 		"/chats/:chatID/name",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := updateName.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 				NewName:   rb.NewName,
 			}
 
@@ -39,7 +39,7 @@ func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jwtParser middl
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }
