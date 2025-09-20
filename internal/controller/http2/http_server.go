@@ -46,7 +46,7 @@ func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener regis
 }
 
 // registerHandlers регистрирует обработчики
-func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtutils RequiredJwt, eventListener registerHandler.EventListener) {
+func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtUtils RequiredJwt, eventListener registerHandler.EventListener) {
 	// Подключение middleware для логирования
 	r.Use(logger.New(logger.Config{
 		TimeFormat: "2006-01-02 15:04:05",
@@ -55,32 +55,32 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtutils RequiredJwt, e
 	// Служебные
 	registerHandler.Ping(r)
 
-	registerHandler.Events(r, uc, eventListener, jwtutils)
+	registerHandler.Events(r, uc, eventListener, jwtUtils)
 
 	// Oauth /oauth
 	registerHandler.OauthAuthorize(r, uc)
-	registerHandler.OauthCallback(r, uc, jwtutils)
+	registerHandler.OauthCallback(r, uc, jwtUtils)
 
 	// Аутентификация /auth
-	registerHandler.LoginByPassword(r, uc, jwtutils)
+	registerHandler.LoginByPassword(r, uc, jwtUtils)
 	registerHandler.RegistrationByPassword(r, uc)
 
 	// Чат /chats
-	registerHandler.MyChats(r, uc, jwtutils)
-	registerHandler.CreateChat(r, uc, jwtutils)
-	registerHandler.UpdateChatName(r, uc, jwtutils)
-	registerHandler.LeaveChat(r, uc, jwtutils)
-	registerHandler.ChatMembers(r, uc, jwtutils)
-	registerHandler.ChatInvitations(r, uc, jwtutils)
+	registerHandler.MyChats(r, uc, jwtUtils)
+	registerHandler.CreateChat(r, uc, jwtUtils)
+	registerHandler.UpdateChatName(r, uc, jwtUtils)
+	registerHandler.LeaveChat(r, uc, jwtUtils)
+	registerHandler.ChatMembers(r, uc, jwtUtils)
+	registerHandler.ChatInvitations(r, uc, jwtUtils)
 
 	// Участники /chats//members
-	registerHandler.DeleteMember(r, uc, jwtutils)
+	registerHandler.DeleteMember(r, uc, jwtUtils)
 
 	// Приглашения /invitations
-	registerHandler.MyInvitations(r, uc, jwtutils)
-	registerHandler.SendInvitation(r, uc, jwtutils)
-	registerHandler.AcceptInvitation(r, uc, jwtutils)
-	registerHandler.CancelInvitation(r, uc, jwtutils)
+	registerHandler.MyInvitations(r, uc, jwtUtils)
+	registerHandler.SendInvitation(r, uc, jwtUtils)
+	registerHandler.AcceptInvitation(r, uc, jwtUtils)
+	registerHandler.CancelInvitation(r, uc, jwtUtils)
 }
 
 // fiberErrorHandler разделяет составные ошибки и помещает в body.
