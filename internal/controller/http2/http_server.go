@@ -19,11 +19,11 @@ type Config struct {
 }
 
 // RunHttpServer запускает http сервер до момента отмена контекста
-func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener registerHandler.EventListener, jwtUtils RequiredJwt, cfg Config) error {
+func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener registerHandler.EventListener, requiredJwt RequiredJwt, cfg Config) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
-	registerHandlers(fiberApp, uc, jwtUtils, eventListener)
+	registerHandlers(fiberApp, uc, requiredJwt, eventListener)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -46,7 +46,7 @@ func RunHttpServer(ctx context.Context, uc RequiredUsecases, eventListener regis
 }
 
 // registerHandlers регистрирует обработчики
-func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtUtils RequiredJwt, eventListener registerHandler.EventListener) {
+func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtAuth RequiredJwt, eventListener registerHandler.EventListener) {
 	// Подключение middleware для логирования
 	r.Use(logger.New(logger.Config{
 		TimeFormat: "2006-01-02 15:04:05",
@@ -55,32 +55,32 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtUtils RequiredJwt, e
 	// Служебные
 	registerHandler.Ping(r)
 
-	registerHandler.Events(r, uc, eventListener, jwtUtils)
+	registerHandler.Events(r, uc, eventListener, jwtAuth)
 
 	// Oauth /oauth
 	registerHandler.OauthAuthorize(r, uc)
-	registerHandler.OauthCallback(r, uc, jwtUtils)
+	registerHandler.OauthCallback(r, uc, jwtAuth)
 
 	// Аутентификация /auth
-	registerHandler.LoginByPassword(r, uc, jwtUtils)
-	registerHandler.RegistrationByPassword(r, uc, jwtUtils)
+	registerHandler.LoginByPassword(r, uc, jwtAuth)
+	registerHandler.RegistrationByPassword(r, uc, jwtAuth)
 
 	// Чат /chats
-	registerHandler.MyChats(r, uc, jwtUtils)
-	registerHandler.CreateChat(r, uc, jwtUtils)
-	registerHandler.UpdateChatName(r, uc, jwtUtils)
-	registerHandler.LeaveChat(r, uc, jwtUtils)
-	registerHandler.ChatMembers(r, uc, jwtUtils)
-	registerHandler.ChatInvitations(r, uc, jwtUtils)
+	registerHandler.MyChats(r, uc, jwtAuth)
+	registerHandler.CreateChat(r, uc, jwtAuth)
+	registerHandler.UpdateChatName(r, uc, jwtAuth)
+	registerHandler.LeaveChat(r, uc, jwtAuth)
+	registerHandler.ChatMembers(r, uc, jwtAuth)
+	registerHandler.ChatInvitations(r, uc, jwtAuth)
 
 	// Участники /chats//members
-	registerHandler.DeleteMember(r, uc, jwtUtils)
+	registerHandler.DeleteMember(r, uc, jwtAuth)
 
 	// Приглашения /invitations
-	registerHandler.MyInvitations(r, uc, jwtUtils)
-	registerHandler.SendInvitation(r, uc, jwtUtils)
-	registerHandler.AcceptInvitation(r, uc, jwtUtils)
-	registerHandler.CancelInvitation(r, uc, jwtUtils)
+	registerHandler.MyInvitations(r, uc, jwtAuth)
+	registerHandler.SendInvitation(r, uc, jwtAuth)
+	registerHandler.AcceptInvitation(r, uc, jwtAuth)
+	registerHandler.CancelInvitation(r, uc, jwtAuth)
 }
 
 // fiberErrorHandler разделяет составные ошибки и помещает в body.

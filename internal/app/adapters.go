@@ -14,7 +14,7 @@ import (
 type adapters struct {
 	oauthProviders oauth.Providers
 	eventBus       *eventsBus.EventsBus
-	jwtUtils       jwtUtils
+	jwtAuth        jwtAuth
 }
 
 func (a *adapters) OauthProviders() oauth.Providers {
@@ -33,22 +33,23 @@ func initAdapters(cfg Config) *adapters {
 	}
 
 	// Включить jwt утилиты если конфиг jwt задан
-	var jwt jwtUtils
+	var jwt jwtAuth
 	if cfg.Jwt != (jwt2.Config{}) {
-		jwt = jwtUtils{
+		jwt = jwtAuth{
 			Parser: &jwtParser.Parser{Config: cfg.Jwt},
 			Issuer: &jwtIssuer.Issuer{Config: cfg.Jwt},
 		}
+		slog.Info("Подключена jwt аутентификация")
 	}
 
 	return &adapters{
 		oauthProviders: oauthProviders,
 		eventBus:       new(eventsBus.EventsBus),
-		jwtUtils:       jwt,
+		jwtAuth:        jwt,
 	}
 }
 
-type jwtUtils struct {
+type jwtAuth struct {
 	*jwtParser.Parser
 	*jwtIssuer.Issuer
 }
