@@ -6,11 +6,12 @@ import (
 	"github.com/cristalhq/jwt/v5"
 	"github.com/google/uuid"
 
+	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 type Issuer struct {
-	Secret []byte
+	Config jwt2.Config
 }
 
 type customClaims struct {
@@ -30,17 +31,14 @@ func (c *Issuer) Issue(session sessionn.Session) (string, error) {
 		},
 	}
 
-	// создаем Signer
-	signer, err := jwt.NewSignerHS(jwt.HS256, c.Secret)
+	// Создать подпись
+	signer, err := jwt.NewSignerHS(jwt.HS256, []byte(c.Config.SecretKey))
 	if err != nil {
 		return "", err
 	}
 
-	// создаем Builder
-	builder := jwt.NewBuilder(signer)
-
-	// создаем токен
-	token, err := builder.Build(claims)
+	// Создать токен
+	token, err := jwt.NewBuilder(signer).Build(claims)
 	if err != nil {
 		return "", err
 	}

@@ -68,12 +68,6 @@ func initCliCommand() *cli.Command {
 				Required:    true,
 			},
 			&cli.StringFlag{
-				Name:        "jwt-secret",
-				Destination: &cfg.JwtSecret,
-				Usage:       "Секрет jwt подписи",
-				Required:    true,
-			},
-			&cli.StringFlag{
 				Name:        "http-addr",
 				Destination: &cfg.Http2.HttpAddr,
 				Usage:       "Адрес для запуска HTTP сервера",
@@ -84,6 +78,11 @@ func initCliCommand() *cli.Command {
 				Destination: &cfg.LogLevel,
 				Usage:       "Уровень логирования. Может быть debug, info, warn, error",
 				Value:       app.LogLevelInfo,
+			},
+			&cli.StringFlag{
+				Name:        "jwt-secret",
+				Destination: &cfg.Jwt.SecretKey,
+				Usage:       "Секрет jwt подписи",
 			},
 			// Google
 			&cli.StringFlag{

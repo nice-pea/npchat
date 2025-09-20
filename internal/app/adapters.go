@@ -4,8 +4,9 @@ import (
 	"log/slog"
 
 	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
-	jwtIssuer "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_create"
-	jwtParser "github.com/nice-pea/npchat/internal/adapter/jwt/jwt_parse"
+	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
+	jwtIssuer "github.com/nice-pea/npchat/internal/adapter/jwt/issuer"
+	jwtParser "github.com/nice-pea/npchat/internal/adapter/jwt/parser"
 	oauthProvider "github.com/nice-pea/npchat/internal/adapter/oauth_provider"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 )
@@ -13,7 +14,7 @@ import (
 type adapters struct {
 	oauthProviders oauth.Providers
 	eventBus       *eventsBus.EventsBus
-	jwtUtils       JwtUtils
+	jwtUtils       jwtUtils
 }
 
 func (a *adapters) OauthProviders() oauth.Providers {
@@ -31,22 +32,23 @@ func initAdapters(cfg Config) *adapters {
 		slog.Info("Подключен Oauth провайдер Github")
 	}
 
+	// Включить jwt утилиты если конфиг jwt задан
+	var jwt jwtUtils
+	if cfg.Jwt != (jwt2.Config{}) {
+		jwt = jwtUtils{
+			Parser: &jwtParser.Parser{Config: cfg.Jwt},
+			Issuer: &jwtIssuer.Issuer{Config: cfg.Jwt},
+		}
+	}
+
 	return &adapters{
 		oauthProviders: oauthProviders,
 		eventBus:       new(eventsBus.EventsBus),
-		jwtUtils:       initJwtUtils(cfg.JwtSecret),
+		jwtUtils:       jwt,
 	}
 }
 
-type JwtUtils struct {
-	*jwtParser.JWTParser
+type jwtUtils struct {
+	*jwtParser.Parser
 	*jwtIssuer.Issuer
-}
-
-func initJwtUtils(secret string) JwtUtils {
-
-	return JwtUtils{
-		JWTParser: &jwtParser.JWTParser{Secret: []byte(secret)},
-		Issuer:    &jwtIssuer.Issuer{Secret: []byte(secret)},
-	}
 }

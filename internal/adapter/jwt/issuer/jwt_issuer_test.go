@@ -5,17 +5,19 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
+	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
 func Test_Issuer_Issue(t *testing.T) {
 	t.Run("session может быть zero value", func(t *testing.T) {
-		jwtC := Issuer{[]byte("secret")}
+		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
 
 		session := sessionn.Session{}
-		token, err := jwtC.Issue(session)
+		token, err := issuer.Issue(session)
 		require.NoError(t, err)
 		assert.NotZero(t, token)
 	})
@@ -23,12 +25,12 @@ func Test_Issuer_Issue(t *testing.T) {
 	t.Run("jwt токены созданные с разными secret - неравны", func(t *testing.T) {
 		var session = sessionn.Session{}
 
-		jwtC := Issuer{[]byte("secret1")}
-		t1, err := jwtC.Issue(session)
+		issuer := Issuer{jwt2.Config{SecretKey: "secret1"}}
+		t1, err := issuer.Issue(session)
 		require.NoError(t, err)
 
-		jwtC = Issuer{[]byte("secret2")}
-		t2, err := jwtC.Issue(session)
+		issuer = Issuer{jwt2.Config{SecretKey: "secret2"}}
+		t2, err := issuer.Issue(session)
 		require.NoError(t, err)
 
 		assert.NotEqual(t, t1, t2)
@@ -42,7 +44,7 @@ func Test_Issuer_Issue(t *testing.T) {
 		assert.Zero(t, token)
 	})
 
-	t.Run("jwt токены созданные с разными даными - неравны", func(t *testing.T) {
+	t.Run("jwt токены созданные с разными данными - неравны", func(t *testing.T) {
 		var (
 			session1 = sessionn.Session{
 				ID:     uuid.New(),
@@ -54,10 +56,10 @@ func Test_Issuer_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := Issuer{[]byte("secret")}
-		t1, err := jwtC.Issue(session1)
+		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
+		t1, err := issuer.Issue(session1)
 		require.NoError(t, err)
-		t2, err := jwtC.Issue(session2)
+		t2, err := issuer.Issue(session2)
 		require.NoError(t, err)
 
 		assert.NotEqual(t, t1, t2)
@@ -99,10 +101,10 @@ func Test_Issuer_Issue(t *testing.T) {
 			}
 		)
 
-		jwtC := Issuer{[]byte("secret")}
-		t1, err := jwtC.Issue(session1)
+		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
+		t1, err := issuer.Issue(session1)
 		require.NoError(t, err)
-		t2, err := jwtC.Issue(session2)
+		t2, err := issuer.Issue(session2)
 		require.NoError(t, err)
 
 		assert.Equal(t, t1, t2)
@@ -115,13 +117,13 @@ func Test_Issuer_Issue(t *testing.T) {
 			UserID: uuid.New(),
 		}
 
-		jwtC := Issuer{[]byte("secret")}
-		t1, err := jwtC.Issue(session)
+		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
+		t1, err := issuer.Issue(session)
 		require.NoError(t, err)
 
 		time.Sleep(time.Second)
 
-		t2, err := jwtC.Issue(session)
+		t2, err := issuer.Issue(session)
 		require.NoError(t, err)
 
 		assert.NotEqual(t, t1, t2)
@@ -133,8 +135,8 @@ func Test_Issuer_Issue(t *testing.T) {
 			UserID: uuid.New(),
 		}
 
-		jwtC := Issuer{[]byte("")}
-		token, err := jwtC.Issue(session)
+		issuer := Issuer{jwt2.Config{SecretKey: ""}}
+		token, err := issuer.Issue(session)
 		require.Error(t, err)
 
 		assert.Zero(t, token)
