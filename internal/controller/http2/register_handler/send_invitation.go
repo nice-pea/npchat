@@ -13,7 +13,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations
-func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser middleware.JwtParser) {
+func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jwtParser middleware.JwtParser) {
 	// Тело запроса для отправки приглашения.
 	type requestBody struct {
 		ChatID uuid.UUID `json:"chat_id"`
@@ -22,7 +22,7 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser mid
 	router.Post(
 		"/invitations",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.

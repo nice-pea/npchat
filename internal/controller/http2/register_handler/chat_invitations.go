@@ -12,11 +12,11 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /chats/{chatID}/invitations
-func ChatInvitations(router *fiber.App, uc UsecasesForChatInvitations, jparser middleware.JwtParser) {
+func ChatInvitations(router *fiber.App, uc UsecasesForChatInvitations, jwtParser middleware.JwtParser) {
 	router.Get(
 		"/chats/:chatID/invitations",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(context *fiber.Ctx) error {
 			input := chatInvitations.In{
 				SubjectID: UserID(context),
@@ -31,7 +31,7 @@ func ChatInvitations(router *fiber.App, uc UsecasesForChatInvitations, jparser m
 			return context.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 	)
 }
 

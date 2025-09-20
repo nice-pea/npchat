@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: PUT /chats/{chatID}/name
-func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jparser middleware.JwtParser) {
+func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jwtParser middleware.JwtParser) {
 	// Тело запроса для обновления названия чата.
 	type requestBody struct {
 		NewName string `json:"new_name"`
@@ -20,7 +20,7 @@ func UpdateChatName(router *fiber.App, uc UsecasesForUpdateName, jparser middlew
 	router.Put(
 		"/chats/:chatID/name",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(context *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.

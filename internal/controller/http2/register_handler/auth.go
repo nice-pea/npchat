@@ -12,7 +12,7 @@ import (
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/login
-func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer JwtIssuer) {
+func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, jwtIssuer JwtIssuer) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -37,7 +37,7 @@ func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer Jw
 				return err
 			}
 
-			token, err := issuer.Issue(out.Session)
+			token, err := jwtIssuer.Issue(out.Session)
 
 			if err != nil {
 				// TODO: тут мб если сессии без ошибок создались то не возвращать ошибку

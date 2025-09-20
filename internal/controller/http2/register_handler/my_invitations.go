@@ -12,11 +12,11 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /invitations
-func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations, jparser middleware.JwtParser) {
+func MyInvitations(router *fiber.App, uc UsecasesForMyInvitations, jwtParser middleware.JwtParser) {
 	router.Get(
 		"/invitations",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(context *fiber.Ctx) error {
 			input := receivedInvitations.In{
 				SubjectID: UserID(context),

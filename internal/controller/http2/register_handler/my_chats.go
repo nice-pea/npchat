@@ -16,11 +16,11 @@ import (
 // Данный обработчик доступен только авторизованным пользователям.
 //
 // Метод: GET /chats
-func MyChats(router *fiber.App, uc UsecasesForMyChats, jparser middleware.JwtParser) {
+func MyChats(router *fiber.App, uc UsecasesForMyChats, jwtParser middleware.JwtParser) {
 	router.Get(
 		"/chats",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
 			keyset, err := decodeKeyset(ctx.Query("page_token"))
 			if err != nil {

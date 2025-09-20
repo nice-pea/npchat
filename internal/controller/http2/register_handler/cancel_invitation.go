@@ -12,11 +12,11 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/cancel
-func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jparser middleware.JwtParser) {
+func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jwtParser middleware.JwtParser) {
 	router.Post(
 		"/invitations/:invitationID/cancel",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(context *fiber.Ctx) error {
 			input := cancelInvitation.In{
 				SubjectID:    UserID(context),
