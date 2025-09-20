@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,7 +12,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /chats
-func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jparser middleware.JwtParser) {
+func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jwtParser middleware.JwtParser) {
 	// Тело запроса для создания чата.
 	type requestBody struct {
 		Name string `json:"name"`
@@ -20,16 +20,16 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jparser middleware.
 	router.Post(
 		"/chats",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := createChat.In{
-				ChiefUserID: UserID(context),
+				ChiefUserID: UserID(ctx),
 				Name:        rb.Name,
 			}
 
@@ -38,7 +38,7 @@ func CreateChat(router *fiber.App, uc UsecasesForCreateChat, jparser middleware.
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

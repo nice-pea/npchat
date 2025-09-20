@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,7 +12,7 @@ import (
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/login
-func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer JwtIssuer) {
+func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, jwtIssuer JwtIssuer) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -20,10 +20,10 @@ func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer Jw
 	}
 	router.Post(
 		"/auth/password/login",
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
@@ -37,14 +37,7 @@ func LoginByPassword(router *fiber.App, uc UsecasesForLoginByPassword, issuer Jw
 				return err
 			}
 
-			token, err := issuer.Issue(out.Session)
-
-			if err != nil {
-				// TODO: тут мб если сессии без ошибок создались то не возвращать ошибку
-				return err
-			}
-
-			return context.JSON(LoginByPasswordOut{out, token})
+			return ctx.JSON(loginResultData(out.Session, out.User, jwtIssuer))
 		},
 		recover2.New(),
 	)
@@ -55,7 +48,7 @@ type LoginByPasswordOut struct {
 	Jwt string
 }
 
-// UsecasesForAcceptInvitation определяет интерфейс для доступа к сценариям использования бизнес-логики
+// UsecasesForLoginByPassword определяет интерфейс для доступа к сценариям использования бизнес-логики
 type UsecasesForLoginByPassword interface {
 	BasicAuthLogin(basicAuthLogin.In) (basicAuthLogin.Out, error)
 }
@@ -64,7 +57,7 @@ type UsecasesForLoginByPassword interface {
 // Доступен без предварительной аутентификации (публичная цепочка middleware).
 //
 // Метод: POST /auth/password/registration
-func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassword) {
+func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassword, jwtIssuer JwtIssuer) {
 	// Тело запроса для авторизации по логину и паролю.
 	type requestBody struct {
 		Login    string `json:"login"`
@@ -75,10 +68,10 @@ func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassw
 	router.Post(
 		"/auth/password/registration",
 		recover2.New(),
-		func(context *fiber.Ctx) error {
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
@@ -94,7 +87,7 @@ func RegistrationByPassword(router *fiber.App, uc UsecasesForRegistrationByPassw
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(loginResultData(out.Session, out.User, jwtIssuer))
 		},
 	)
 }

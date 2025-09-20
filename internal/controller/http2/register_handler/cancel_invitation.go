@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,15 +12,15 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/cancel
-func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jparser middleware.JwtParser) {
+func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jwtParser middleware.JwtParser) {
 	router.Post(
 		"/invitations/:invitationID/cancel",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			input := cancelInvitation.In{
-				SubjectID:    UserID(context),
-				InvitationID: ParamsUUID(context, "invitationID"),
+				SubjectID:    UserID(ctx),
+				InvitationID: ParamsUUID(ctx, "invitationID"),
 			}
 
 			out, err := uc.CancelInvitation(input)
@@ -28,7 +28,7 @@ func CancelInvitation(router *fiber.App, uc UsecasesForCancelInvitation, jparser
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

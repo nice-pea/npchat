@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,15 +12,15 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: GET /chats/{chatID}/members
-func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jparser middleware.JwtParser) {
+func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jwtParser middleware.JwtParser) {
 	router.Get(
 		"/chats/:chatID/members",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			input := chatMembers.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 			}
 
 			out, err := uc.ChatMembers(input)
@@ -28,10 +28,10 @@ func ChatMembers(router *fiber.App, uc UsecasesForChatMembers, jparser middlewar
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 	)
 }
 

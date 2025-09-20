@@ -7,6 +7,7 @@ import (
 
 	"github.com/cristalhq/jwt/v5"
 
+	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
 
@@ -15,8 +16,8 @@ type OutJWT struct {
 	SessionID string
 }
 
-type JWTParser struct {
-	Secret []byte
+type Parser struct {
+	Config jwt2.Config
 }
 
 var (
@@ -36,33 +37,31 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	}
 }
 
-func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
-	// create a Verifier (HMAC in this example)
-
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, p.Secret)
-
+// Parse разбирает токен и возвращает данные из него
+func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
+	// Создать валидатор
+	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
 
-	// parse and verify a token
-	tokenBytes := []byte(token)
-	newToken, err := jwt.Parse(tokenBytes, verifier)
+	// Разобрать токен и проверить его
+	newToken, err := jwt.Parse([]byte(token), verifier)
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
-	// or just verify it's signature
-	err = verifier.Verify(newToken)
-	if err != nil {
+	if err = verifier.Verify(newToken); err != nil {
 		return middleware.OutJwt{}, err
 	}
-	// get Registered claims
+
+	// Получить данные из токена
 	var newClaims CustomClaims
 	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
 	if errClaims != nil {
 		return middleware.OutJwt{}, err
 	}
-	// verify claims as you wish
+
+	// Валидация времени жизни токена
 	if !newClaims.IsValidAt(time.Now()) {
 		return middleware.OutJwt{}, ErrTimeOut
 	}

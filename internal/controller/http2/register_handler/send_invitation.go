@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +13,7 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations
-func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser middleware.JwtParser) {
+func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jwtParser middleware.JwtParser) {
 	// Тело запроса для отправки приглашения.
 	type requestBody struct {
 		ChatID uuid.UUID `json:"chat_id"`
@@ -22,16 +22,16 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser mid
 	router.Post(
 		"/invitations",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := sendInvitation.In{
-				SubjectID: UserID(context),
+				SubjectID: UserID(ctx),
 				ChatID:    rb.ChatID,
 				UserID:    rb.UserID,
 			}
@@ -41,7 +41,7 @@ func SendInvitation(router *fiber.App, uc UsecasesForSendInvitation, jparser mid
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

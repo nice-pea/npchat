@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"bufio"
@@ -19,11 +19,11 @@ import (
 // Events регистрирует обработчик для получения потока событий.
 //
 // Метод: GET /events
-func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener, jwtparser middleware.JwtParser) {
+func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener, jwtParser middleware.JwtParser) {
 	router.Get(
 		"/events",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jwtparser),
+		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
 			// Канал для обработки событий в отдельной горутине
 			eventsChan := make(chan any)

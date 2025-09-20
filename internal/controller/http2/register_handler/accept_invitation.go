@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -12,15 +12,15 @@ import (
 // Доступен только авторизованным пользователям.
 //
 // Метод: POST /invitations/{invitationID}/accept
-func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jparser middleware.JwtParser) {
+func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jwtParser middleware.JwtParser) {
 	router.Post(
 		"/invitations/:invitationID/accept",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			input := acceptInvitation.In{
-				SubjectID:    UserID(context),
-				InvitationID: ParamsUUID(context, "invitationID"),
+				SubjectID:    UserID(ctx),
+				InvitationID: ParamsUUID(ctx, "invitationID"),
 			}
 
 			out, err := uc.AcceptInvitation(input)
@@ -28,7 +28,7 @@ func AcceptInvitation(router *fiber.App, uc UsecasesForAcceptInvitation, jparser
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

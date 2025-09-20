@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +13,7 @@ import (
 // Доступен только авторизованным пользователям, которые являются главными администраторами чата.
 //
 // Метод: DELETE /chats/{chatID}/members
-func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jparser middleware.JwtParser) {
+func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jwtParser middleware.JwtParser) {
 	// Тело запроса для удаления участника из чата.
 	type requestBody struct {
 		UserID uuid.UUID `json:"user_id"`
@@ -21,17 +21,17 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jparser middlew
 	router.Delete(
 		"/chats/:chatID/members",
 		recover2.New(),
-		middleware.RequireAuthorizedSession(uc, jparser),
-		func(context *fiber.Ctx) error {
+		middleware.RequireAuthorizedSession(uc, jwtParser),
+		func(ctx *fiber.Ctx) error {
 			var rb requestBody
 			// Декодируем тело запроса в структуру requestBody.
-			if err := context.BodyParser(&rb); err != nil {
+			if err := ctx.BodyParser(&rb); err != nil {
 				return err
 			}
 
 			input := deleteMember.In{
-				SubjectID: UserID(context),
-				ChatID:    ParamsUUID(context, "chatID"),
+				SubjectID: UserID(ctx),
+				ChatID:    ParamsUUID(ctx, "chatID"),
 				UserID:    rb.UserID,
 			}
 
@@ -40,7 +40,7 @@ func DeleteMember(router *fiber.App, uc UsecasesForDeleteMember, jparser middlew
 				return err
 			}
 
-			return context.JSON(out)
+			return ctx.JSON(out)
 		},
 	)
 }

@@ -4,19 +4,19 @@ import "github.com/nice-pea/npchat/internal/controller/http2/register_handler"
 
 // RequiredUsecases определяет интерфейс для доступа к сценариям использования бизнес-логики
 type RequiredUsecases interface {
-	register_handler.UsecasesForAcceptInvitation
-	register_handler.UsecasesForLoginByPassword
-	register_handler.UsecasesForRegistrationByPassword
-	register_handler.UsecasesForCancelInvitation
-	register_handler.UsecasesForChatInvitations
-	register_handler.UsecasesForChatMembers
-	register_handler.UsecasesForCreateChat
-	register_handler.UsecasesForDeleteMember
-	register_handler.UsecasesForLeaveChat
-	register_handler.UsecasesForMyChats
-	register_handler.UsecasesForMyInvitations
-	register_handler.UsecasesForOauthAuthorize
-	register_handler.UsecasesForOauthCallback
-	register_handler.UsecasesForSendInvitation
-	register_handler.UsecasesForUpdateName
+	registerHandler.UsecasesForAcceptInvitation
+	registerHandler.UsecasesForLoginByPassword
+	registerHandler.UsecasesForRegistrationByPassword
+	registerHandler.UsecasesForCancelInvitation
+	registerHandler.UsecasesForChatInvitations
+	registerHandler.UsecasesForChatMembers
+	registerHandler.UsecasesForCreateChat
+	registerHandler.UsecasesForDeleteMember
+	registerHandler.UsecasesForLeaveChat
+	registerHandler.UsecasesForMyChats
+	registerHandler.UsecasesForMyInvitations
+	registerHandler.UsecasesForOauthAuthorize
+	registerHandler.UsecasesForOauthCallback
+	registerHandler.UsecasesForSendInvitation
+	registerHandler.UsecasesForUpdateName
 }

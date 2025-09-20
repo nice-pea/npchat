@@ -1,4 +1,4 @@
-package register_handler
+package registerHandler
 
 import (
 	"errors"
@@ -51,7 +51,7 @@ type UsecasesForOauthAuthorize interface {
 // Данный обработчик не требует аутентификации.
 //
 // Метод: GET /oauth/{provider}/callback
-func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback, issuer JwtIssuer) {
+func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback, jwtIssuer JwtIssuer) {
 	router.Get(
 		"/oauth/:provider/callback",
 		recover2.New(),
@@ -73,15 +73,7 @@ func OauthCallback(router *fiber.App, uc UsecasesForOauthCallback, issuer JwtIss
 				return err
 			}
 
-			token, err := issuer.Issue(out.Session)
-			if err != nil {
-				return err
-			}
-
-			return ctx.JSON(fiber.Map{
-				"Out": out,
-				"Jwt": token,
-			})
+			return ctx.JSON(loginResultData(out.Session, out.User, jwtIssuer))
 		},
 	)
 }
