@@ -56,6 +56,7 @@ type UsecasesForMyChats interface {
 	middleware.UsecasesForRequireAuthorizedSession
 }
 
+// decodeKeyset расшифровывает строку в формате base64 и разбирает ее на Keyset
 func decodeKeyset(pageToken string) (myChats.Keyset, error) {
 	b, err := base64.StdEncoding.DecodeString(pageToken)
 	if err != nil {
@@ -65,6 +66,7 @@ func decodeKeyset(pageToken string) (myChats.Keyset, error) {
 	return keyset, json.Unmarshal(b, &keyset)
 }
 
+// encodeKeyset преобразует keyset в json и кодирует в строку в base64
 func encodeKeyset(keyset myChats.Keyset) (string, error) {
 	b, err := json.Marshal(keyset)
 	if err != nil {
