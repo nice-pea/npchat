@@ -47,13 +47,13 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 		})
 
-		t.Run("не передан или с ошибкой в ключе заголовока - вернет StatusUnauthorized (401)", func(t *testing.T) {
+		t.Run("не передан или с ошибкой в ключе заголовка - вернет StatusUnauthorized (401)", func(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
 			fiberApp.Get("/", RequireAuthorizedSession(uc, nil))
 
 			req := httptest.NewRequest("GET", "/", nil)
-			req.Header.Set("Authorizati1on", "SessionToken "+mockSession.AccessToken.Token)
+			req.Header.Set("qwerty", "SessionToken "+mockSession.AccessToken.Token)
 
 			resp, err := fiberApp.Test(req)
 			require.NoError(t, err)
@@ -130,16 +130,16 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 					userid, ok := ctx.Locals("UserID").(string)
 					require.True(t, ok)
 					require.Equal(t, mockParseJWT.UserID, userid)
-					sessionid, ok := ctx.Locals("SessionID").(string)
+					sessionID, ok := ctx.Locals("SessionID").(string)
 					require.True(t, ok)
-					require.Equal(t, mockParseJWT.SessionID, sessionid)
+					require.Equal(t, mockParseJWT.SessionID, sessionID)
 					return nil
 				})
 
-			jwTocken := "31132"
+			jwtToken := "31132"
 
 			req := httptest.NewRequest("GET", "/", nil)
-			req.Header.Set("Authorization", "Bearer "+jwTocken)
+			req.Header.Set("Authorization", "Bearer "+jwtToken)
 
 			resp, err := fiberApp.Test(req)
 			require.NoError(t, err)
@@ -149,7 +149,7 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			uc := mockUsecasesForRequireAuthorizedSession{}
 			mtm := mockJWTParser{
 				ParseFunc: func(token string) (OutJwt, error) {
-					return OutJwt{}, errors.New("Jwt истекший")
+					return OutJwt{}, errors.New("jwt истекший")
 				},
 			}
 
@@ -161,10 +161,10 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 					return nil
 				})
 
-			jwTocken := "123.456.789"
+			jwtToken := "123.456.789"
 
 			req := httptest.NewRequest("GET", "/", nil)
-			req.Header.Set("Authorization", "Bearer "+jwTocken)
+			req.Header.Set("Authorization", "Bearer "+jwtToken)
 
 			resp, err := fiberApp.Test(req)
 			require.NoError(t, err)
@@ -189,7 +189,23 @@ func Test_RequireAuthorizedSession(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 		})
+		t.Run("если парсер не установлен, то тип jwt поддерживаться не будет", func(t *testing.T) {
+			uc := mockUsecasesForRequireAuthorizedSession{}
 
+			fiberApp := fiber.New(fiber.Config{DisableStartupMessage: true})
+			fiberApp.Get(
+				"/", RequireAuthorizedSession(uc, nil),
+				func(ctx *fiber.Ctx) error { return nil })
+
+			jwtToken := "31132"
+
+			req := httptest.NewRequest("GET", "/", nil)
+			req.Header.Set("Authorization", "Bearer "+jwtToken)
+
+			resp, err := fiberApp.Test(req)
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		})
 	})
 }
 
@@ -203,7 +219,7 @@ var mockSession = sessionn.Session{
 	UserID: uuid.New(),
 	Name:   "name",
 	AccessToken: sessionn.Token{
-		Token: "asdasda",
+		Token: "qwerty",
 	},
 }
 

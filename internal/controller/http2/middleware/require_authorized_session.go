@@ -8,18 +8,20 @@ import (
 	findSession "github.com/nice-pea/npchat/internal/usecases/sessions/find_session"
 )
 
+// Контекстные ключи
 const (
 	CtxKeyUserID    = "UserID"
 	CtxKeySessionID = "SessionID"
 )
 
+// Поддерживаемые типы токенов
 const (
 	SessionToken = "SessionToken"
 	Bearer       = "Bearer"
 )
 
 // RequireAuthorizedSession требует авторизованную сессии
-func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, jwtparser JwtParser) fiber.Handler {
+func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, jwtParser JwtParser) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Прочитать заголовок
 		header := ctx.Get("Authorization")
@@ -32,8 +34,8 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, jwtparser 
 		authType := parts[0]
 		token := parts[1]
 
-		switch authType {
-		case SessionToken:
+		switch {
+		case authType == SessionToken:
 			out, err := findSessionf(uc, token)
 			if err != nil {
 				return err
@@ -42,8 +44,8 @@ func RequireAuthorizedSession(uc UsecasesForRequireAuthorizedSession, jwtparser 
 			session := out.Sessions[0]
 			ctx.Locals(CtxKeyUserID, session.UserID)
 			ctx.Locals(CtxKeySessionID, session.ID)
-		case Bearer:
-			out, err := parseJwt(jwtparser, token)
+		case authType == Bearer && jwtParser != nil:
+			out, err := parseJwt(jwtParser, token)
 			if err != nil {
 				return err
 			}

@@ -63,7 +63,7 @@ func registerHandlers(r *fiber.App, uc RequiredUsecases, jwtUtils RequiredJwt, e
 
 	// Аутентификация /auth
 	registerHandler.LoginByPassword(r, uc, jwtUtils)
-	registerHandler.RegistrationByPassword(r, uc)
+	registerHandler.RegistrationByPassword(r, uc, jwtUtils)
 
 	// Чат /chats
 	registerHandler.MyChats(r, uc, jwtUtils)
