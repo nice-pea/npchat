@@ -1,6 +1,8 @@
 package pgsqlRepository
 
 import (
+	"time"
+
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 
@@ -108,6 +110,52 @@ func (suite *Suite) Test_ChattRepository() {
 			suite.Equal(expectedChat, chatsFromRepo[0])
 		})
 
+		suite.Run("с фильтром ActiveBefore вернутся чаты с меньшим LastActiveAt", func() {
+			// Создать чаты с разными LastActiveAt
+			now := time.Now().Truncate(time.Microsecond)
+			for _, duration := range []time.Duration{
+				time.Hour,
+				time.Second,
+				time.Hour * 2,
+				time.Minute,
+			} {
+				chat := suite.rndChat()
+				_ = chat.SetLastActiveAt(now.Add(duration))
+				suite.upsertChat(chat)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{
+				ActiveBefore: now.Add(time.Hour),
+			})
+			suite.NoError(err)
+			suite.Require().Len(chatsFromRepo, 2)
+			suite.True(now.Add(time.Minute).Equal(chatsFromRepo[0].LastActiveAt))
+			suite.True(now.Add(time.Second).Equal(chatsFromRepo[1].LastActiveAt))
+		})
+
+		suite.Run("с limit вернется ограниченное количество элементов", func() {
+			// Создать чаты
+			const limit = 10
+			var createdChats []chatt.Chat
+			for range limit * 2 {
+				createdChats = append(createdChats, suite.upsertChat(suite.rndChat()))
+				time.Sleep(time.Millisecond * 10)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{
+				Limit: limit,
+			})
+			suite.NoError(err)
+			suite.Require().Len(chatsFromRepo, limit)
+
+			for i := 0; i < limit; i++ {
+				expectedIdx := len(createdChats) - 1 - i
+				suite.Equal(createdChats[expectedIdx], chatsFromRepo[i])
+			}
+		})
+
 		suite.Run("можно искать по всем фильтрам сразу", func() {
 			// Создать много чатов
 			chats := make([]chatt.Chat, 10)
@@ -126,6 +174,8 @@ func (suite *Suite) Test_ChattRepository() {
 				InvitationID:          expectedChat.Invitations[0].ID,
 				InvitationRecipientID: expectedChat.Invitations[0].RecipientID,
 				ParticipantID:         expectedChat.Participants[0].UserID,
+				ActiveBefore:          time.Now().Add(time.Second),
+				Limit:                 len(chats),
 			})
 			// Сравнить ожидания и результат
 			suite.NoError(err)
@@ -155,6 +205,31 @@ func (suite *Suite) Test_ChattRepository() {
 			// Сравнить ожидания и результат
 			suite.NoError(err)
 			suite.Require().Len(chatsFromRepo, expectedCount)
+		})
+
+		suite.Run("чаты возвращаются в порядке убывания LastActiveAt", func() {
+			// Создать чаты с разными LastActiveAt
+			for _, duration := range []time.Duration{
+				time.Hour,
+				time.Second,
+				time.Hour * 2,
+				time.Minute,
+			} {
+				chat := suite.rndChat()
+				_ = chat.SetLastActiveAt(time.Now().Add(duration))
+				suite.upsertChat(chat)
+			}
+
+			// Получить список
+			chatsFromRepo, err := suite.RR.Chats.List(chatt.Filter{})
+			// Сравнить ожидания и результат
+			suite.NoError(err)
+
+			prevActiveAt := chatsFromRepo[0].LastActiveAt
+			for _, chat := range chatsFromRepo[1:] {
+				suite.Less(chat.LastActiveAt, prevActiveAt)
+				prevActiveAt = chat.LastActiveAt
+			}
 		})
 	})
 

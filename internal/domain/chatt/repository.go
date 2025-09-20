@@ -1,6 +1,10 @@
 package chatt
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // Repository представляет собой интерфейс для работы с репозиторием чатов.
 type Repository interface {
@@ -15,6 +19,8 @@ type Filter struct {
 	InvitationID          uuid.UUID // Фильтрация по ID приглашений в чате
 	InvitationRecipientID uuid.UUID // Фильтрация по ID получателей приглашения в чат
 	ParticipantID         uuid.UUID // Фильтрация по ID участников в чате
+	ActiveBefore          time.Time // Брать записи где LastActiveAt меньше чем ActiveBefore
+	Limit                 int       // Ограничить количество элементов
 }
 
 // Find возвращает чат либо ошибку ErrChatNotExists

@@ -43,7 +43,16 @@ func (r *ChattRepository) List(filter chatt.Filter) ([]chatt.Chat, error) {
 		where = where.And("c.id = ?", filter.ID)
 	}
 
-	query, args, err := bqb.New("? ? GROUP BY c.id", sel, where).ToPgsql()
+	if !filter.ActiveBefore.IsZero() {
+		where = where.And("c.last_active_at < ?", filter.ActiveBefore)
+	}
+
+	limit := bqb.New("")
+	if filter.Limit > 0 {
+		limit = limit.Space("LIMIT ?", filter.Limit)
+	}
+
+	query, args, err := bqb.New("? ? GROUP BY c.id ORDER BY last_active_at DESC ?", sel, where, limit).ToPgsql()
 	if err != nil {
 		return nil, fmt.Errorf("bqb.ToPgsql: %w", err)
 	}
@@ -120,7 +129,8 @@ func (r *ChattRepository) upsert(chat chatt.Chat) error {
 		VALUES (:id, :name, :chief_id, :last_active_at)
 		ON CONFLICT (id) DO UPDATE SET
 			name=excluded.name,
-			chief_id=excluded.chief_id
+			chief_id=excluded.chief_id,
+			last_active_at=excluded.last_active_at
 	`, toDBChat(chat)); err != nil {
 		return fmt.Errorf("r.DB().NamedExec: %w", err)
 	}
@@ -191,7 +201,7 @@ func toDomainChat(
 		ID:           uuid.MustParse(chat.ID),
 		Name:         chat.Name,
 		ChiefID:      uuid.MustParse(chat.ChiefID),
-		LastActiveAt: chat.LastActiveAt,
+		LastActiveAt: chat.LastActiveAt.UTC(),
 		Participants: toDomainParticipants(participants),
 		Invitations:  toDomainInvitations(invitations),
 	}
