@@ -10,17 +10,18 @@ import (
 )
 
 // loginResultData возвращает результат регистрации входа в виде Map
-func loginResultData(session sessionn.Session, user userr.User, issuer JwtIssuer) fiber.Map {
+func loginResultData(session sessionn.Session, user userr.User, jwtIssuer JwtIssuer) fiber.Map {
 	data := fiber.Map{
 		"session": session,
 		"user":    user,
 	}
 
-	// Если есть JWT-issuer, то генерируем JWT
-	if issuer != nil {
-		var err error
-		if data["jwt"], err = issuer.Issue(session); err != nil {
+	// Если есть JWT-jwtIssuer, то генерируем JWT
+	if jwtIssuer != nil {
+		if token, err := jwtIssuer.Issue(session); err != nil {
 			slog.Error("Ошибка генерации JWT", "error", err)
+		} else {
+			data["jwt"] = token
 		}
 	}
 
