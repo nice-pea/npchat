@@ -58,6 +58,9 @@ type UsecasesForMyChats interface {
 
 // decodeKeyset расшифровывает строку в формате base64 и разбирает ее на Keyset
 func decodeKeyset(pageToken string) (myChats.Keyset, error) {
+	if pageToken == "" {
+		return myChats.Keyset{}, nil
+	}
 	b, err := base64.StdEncoding.DecodeString(pageToken)
 	if err != nil {
 		return myChats.Keyset{}, fmt.Errorf("decode page_token: %w", err)
@@ -68,6 +71,9 @@ func decodeKeyset(pageToken string) (myChats.Keyset, error) {
 
 // encodeKeyset преобразует keyset в json и кодирует в строку в base64
 func encodeKeyset(keyset myChats.Keyset) (string, error) {
+	if keyset == (myChats.Keyset{}) {
+		return "", nil
+	}
 	b, err := json.Marshal(keyset)
 	if err != nil {
 		return "", fmt.Errorf("marshal keyset: %w", err)
