@@ -124,10 +124,11 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		// Создаем чат
 		chat, err := NewChat("name", uuid.New(), nil)
 		require.NoError(t, err)
+		// Обновляем активность
 		err = chat.SetLastActiveAt(time.Now().Add(time.Hour), eventsBuf)
 		assert.NoError(t, err)
 
-		// Событие Созданного чата
+		// Событие Обновленного чата
 		require.Len(t, eventsBuf.Events(), 1)
 		event := eventsBuf.Events()[0]
 		assert.Equal(t, EventChatUpdated, event.Type)
