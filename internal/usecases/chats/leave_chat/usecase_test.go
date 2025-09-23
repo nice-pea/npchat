@@ -126,7 +126,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		suite.Zero(out)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemovedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemoved)
 	})
 
 	suite.Run("отправленные приглашения участника, отменятся вместе с его выходом", func() {

@@ -124,7 +124,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			}).
 			Return()
 
-			// Создать чат
+		// Создать чат
 		inputChatCreate := suite.newCreateInputRandom()
 		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
 		suite.Require().NoError(err)
@@ -140,7 +140,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 		suite.Require().NotZero(out)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventChatNameUpdatedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventChatUpdated)
 	})
 }
 

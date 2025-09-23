@@ -56,7 +56,7 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	c.Name = name
 
 	// Добавить событие
-	eventsBuf.AddSafety(c.NewEventChatNameUpdated())
+	eventsBuf.AddSafety(c.NewEventChatUpdated())
 
 	return nil
 }
@@ -71,7 +71,7 @@ func (c *Chat) SetLastActiveAt(lastActiveAt time.Time, eventsBuf *events.Buffer)
 	c.LastActiveAt = lastActiveAtTruncated
 
 	// Добавить событие
-	eventsBuf.AddSafety(c.NewEventChatCreated())
+	eventsBuf.AddSafety(c.NewEventChatUpdated())
 
 	return nil
 }
