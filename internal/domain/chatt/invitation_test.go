@@ -134,8 +134,9 @@ func TestChat_AddInvitation(t *testing.T) {
 		assert.Contains(t, invitationAdded.Recipients, chat.ChiefID)
 		assert.Contains(t, invitationAdded.Recipients, inv.RecipientID)
 		assert.Contains(t, invitationAdded.Recipients, inv.SubjectID)
-		// Содержит нужное приглашение
+		// Содержит данные
 		assert.Equal(t, inv, invitationAdded.Data["invitation"].(Invitation))
+		assert.Equal(t, chat, invitationAdded.Data["chat"].(Chat))
 	})
 }
 
@@ -190,8 +191,9 @@ func TestChat_RemoveInvitation(t *testing.T) {
 		assert.Contains(t, invitationRemoved.Recipients, chat.ChiefID)
 		assert.Contains(t, invitationRemoved.Recipients, inv.RecipientID)
 		assert.Contains(t, invitationRemoved.Recipients, inv.SubjectID)
-		// Содержит нужное приглашение
+		// Содержит данные
 		assert.Equal(t, inv, invitationRemoved.Data["invitation"].(Invitation))
+		assert.Equal(t, chat, invitationRemoved.Data["chat"].(Chat))
 	})
 }
 

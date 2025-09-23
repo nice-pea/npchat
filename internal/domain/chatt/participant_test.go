@@ -108,9 +108,8 @@ func TestChat_AddParticipant(t *testing.T) {
 		// Содержит нужных получателей
 		assert.Contains(t, participantAdded.Recipients, chat.ChiefID)
 		assert.Contains(t, participantAdded.Recipients, participant.UserID)
-		// Связано с чатом
-		assert.Equal(t, chat.ID, participantAdded.Data["chat_id"].(uuid.UUID))
-		// Содержит нужного участника
+		// Содержит данные
+		assert.Equal(t, chat, participantAdded.Data["chat"].(Chat))
 		assert.Equal(t, participant, participantAdded.Data["participant"].(Participant))
 	})
 }
@@ -186,9 +185,8 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		// Содержит нужных получателей
 		assert.Contains(t, participantRemoved.Recipients, chat.ChiefID)
 		assert.Contains(t, participantRemoved.Recipients, participant.UserID)
-		// Связано с чатом
-		assert.Equal(t, chat.ID, participantRemoved.Data["chat_id"].(uuid.UUID))
-		// Содержит нужного участника
+		// Содержит данные
+		assert.Equal(t, chat, participantRemoved.Data["chat"].(Chat))
 		assert.Equal(t, participant, participantRemoved.Data["participant"].(Participant))
 	})
 }

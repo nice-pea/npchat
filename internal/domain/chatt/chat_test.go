@@ -74,8 +74,8 @@ func TestNewChat(t *testing.T) {
 		chatCreated := eventsBuf.Events()[0]
 		// Содержит нужных получателей
 		assert.Contains(t, chatCreated.Recipients, chat.ChiefID)
-		// Связано с чатом
-		assert.Equal(t, chat.ID, chatCreated.Data["chat_id"].(uuid.UUID))
+		// Содержит данные
+		assert.Equal(t, chat, chatCreated.Data["chat"].(Chat))
 	})
 
 	t.Run("активность в чате равна дате создания", func(t *testing.T) {
@@ -100,7 +100,7 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		require.NotZero(t, chat)
 		require.NoError(t, err)
 
-		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour))
+		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour), nil)
 		assert.ErrorIs(t, err, ErrNewActiveLessThanActual)
 	})
 
@@ -110,10 +110,30 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		require.NoError(t, err)
 
 		newVal := time.Now().Add(time.Hour)
-		err = chat.SetLastActiveAt(newVal)
+		err = chat.SetLastActiveAt(newVal, nil)
 		assert.NoError(t, err)
 		// Будет обрезано
 		newValTruncated := newVal.Truncate(time.Microsecond)
 		assert.True(t, newValTruncated.Equal(chat.LastActiveAt))
+	})
+
+	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
+		// Инициализировать буфер событий
+		eventsBuf := new(events.Buffer)
+
+		// Создаем чат
+		chat, err := NewChat("name", uuid.New(), nil)
+		require.NoError(t, err)
+		err = chat.SetLastActiveAt(time.Now().Add(time.Hour), eventsBuf)
+		assert.NoError(t, err)
+
+		// Проверить список опубликованных событий
+		require.Len(t, eventsBuf.Events(), 1)
+		// Событие Созданного чата
+		chatActiveUpdated := eventsBuf.Events()[0]
+		// Содержит нужных получателей
+		assert.Contains(t, chatActiveUpdated.Recipients, chat.ChiefID)
+		// Содержит данные
+		assert.Equal(t, chat, chatActiveUpdated.Data["chat"].(Chat))
 	})
 }
