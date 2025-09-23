@@ -120,7 +120,7 @@ func (suite *Suite) Test_ChattRepository() {
 				time.Minute,
 			} {
 				chat := suite.rndChat()
-				_ = chat.SetLastActiveAt(now.Add(duration))
+				_ = chat.SetLastActiveAt(now.Add(duration), nil)
 				suite.upsertChat(chat)
 			}
 
@@ -216,7 +216,7 @@ func (suite *Suite) Test_ChattRepository() {
 				time.Minute,
 			} {
 				chat := suite.rndChat()
-				_ = chat.SetLastActiveAt(time.Now().Add(duration))
+				_ = chat.SetLastActiveAt(time.Now().Add(duration), nil)
 				suite.upsertChat(chat)
 			}
 

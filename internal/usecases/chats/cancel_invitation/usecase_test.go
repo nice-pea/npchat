@@ -162,6 +162,6 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		suite.Zero(out)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemovedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemoved)
 	})
 }

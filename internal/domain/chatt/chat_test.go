@@ -68,14 +68,14 @@ func TestNewChat(t *testing.T) {
 		assert.NotZero(t, chat)
 		assert.NoError(t, err)
 
-		// Проверить список опубликованных событий
-		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Созданного чата
-		chatCreated := eventsBuf.Events()[0]
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventChatCreated, event.Type)
 		// Содержит нужных получателей
-		assert.Contains(t, chatCreated.Recipients, chat.ChiefID)
-		// Связано с чатом
-		assert.Equal(t, chat.ID, chatCreated.Data["chat_id"].(uuid.UUID))
+		assert.Contains(t, event.Recipients, chat.ChiefID)
+		// Содержит данные
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
 	})
 
 	t.Run("активность в чате равна дате создания", func(t *testing.T) {
@@ -100,7 +100,7 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		require.NotZero(t, chat)
 		require.NoError(t, err)
 
-		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour))
+		err = chat.SetLastActiveAt(time.Now().Add(-time.Hour), nil)
 		assert.ErrorIs(t, err, ErrNewActiveLessThanActual)
 	})
 
@@ -110,10 +110,31 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		require.NoError(t, err)
 
 		newVal := time.Now().Add(time.Hour)
-		err = chat.SetLastActiveAt(newVal)
+		err = chat.SetLastActiveAt(newVal, nil)
 		assert.NoError(t, err)
 		// Будет обрезано
 		newValTruncated := newVal.Truncate(time.Microsecond)
 		assert.True(t, newValTruncated.Equal(chat.LastActiveAt))
+	})
+
+	t.Run("после завершения операции, будут созданы события", func(t *testing.T) {
+		// Инициализировать буфер событий
+		eventsBuf := new(events.Buffer)
+
+		// Создаем чат
+		chat, err := NewChat("name", uuid.New(), nil)
+		require.NoError(t, err)
+		// Обновляем активность
+		err = chat.SetLastActiveAt(time.Now().Add(time.Hour), eventsBuf)
+		assert.NoError(t, err)
+
+		// Событие Обновленного чата
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventChatUpdated, event.Type)
+		// Содержит нужных получателей
+		assert.Contains(t, event.Recipients, chat.ChiefID)
+		// Содержит данные
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
 	})
 }

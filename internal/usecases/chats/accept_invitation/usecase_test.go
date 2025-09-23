@@ -111,7 +111,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		suite.Require().NoError(err)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemovedType)
-		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantAddedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemoved)
+		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantAdded)
 	})
 }

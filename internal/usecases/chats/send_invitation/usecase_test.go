@@ -199,6 +199,6 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		suite.Require().NotZero(out)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationAddedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationAdded)
 	})
 }

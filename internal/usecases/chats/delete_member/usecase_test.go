@@ -162,6 +162,6 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		suite.Zero(out)
 
 		// Проверить список опубликованных событий
-		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemovedType)
+		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemoved)
 	})
 }

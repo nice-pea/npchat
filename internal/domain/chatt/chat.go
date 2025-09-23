@@ -56,13 +56,13 @@ func (c *Chat) UpdateName(name string, eventsBuf *events.Buffer) error {
 	c.Name = name
 
 	// Добавить событие
-	eventsBuf.AddSafety(c.NewEventChatNameUpdated())
+	eventsBuf.AddSafety(c.NewEventChatUpdated())
 
 	return nil
 }
 
 // SetLastActiveAt устанавливает новое значение в LastActiveAt
-func (c *Chat) SetLastActiveAt(lastActiveAt time.Time) error {
+func (c *Chat) SetLastActiveAt(lastActiveAt time.Time, eventsBuf *events.Buffer) error {
 	lastActiveAtTruncated := lastActiveAt.In(time.UTC).Truncate(time.Microsecond)
 
 	if lastActiveAtTruncated.Before(c.LastActiveAt) {
@@ -70,13 +70,17 @@ func (c *Chat) SetLastActiveAt(lastActiveAt time.Time) error {
 	}
 	c.LastActiveAt = lastActiveAtTruncated
 
+	// Добавить событие
+	eventsBuf.AddSafety(c.NewEventChatUpdated())
+
 	return nil
 }
 
+// userIDs возвращает список ID пользователей
 func userIDs(participants []Participant) []uuid.UUID {
-	userIDs := make([]uuid.UUID, len(participants))
+	ids := make([]uuid.UUID, len(participants))
 	for i, p := range participants {
-		userIDs[i] = p.UserID
+		ids[i] = p.UserID
 	}
-	return userIDs
+	return ids
 }
