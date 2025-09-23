@@ -68,14 +68,14 @@ func TestNewChat(t *testing.T) {
 		assert.NotZero(t, chat)
 		assert.NoError(t, err)
 
-		// Проверить список опубликованных событий
-		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Созданного чата
-		chatCreated := eventsBuf.Events()[0]
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventChatCreated, event.Type)
 		// Содержит нужных получателей
-		assert.Contains(t, chatCreated.Recipients, chat.ChiefID)
+		assert.Contains(t, event.Recipients, chat.ChiefID)
 		// Содержит данные
-		assert.Equal(t, chat, chatCreated.Data["chat"].(Chat))
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
 	})
 
 	t.Run("активность в чате равна дате создания", func(t *testing.T) {
@@ -127,13 +127,13 @@ func TestChat_SetLastActiveAt(t *testing.T) {
 		err = chat.SetLastActiveAt(time.Now().Add(time.Hour), eventsBuf)
 		assert.NoError(t, err)
 
-		// Проверить список опубликованных событий
-		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Созданного чата
-		chatActiveUpdated := eventsBuf.Events()[0]
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventChatUpdated, event.Type)
 		// Содержит нужных получателей
-		assert.Contains(t, chatActiveUpdated.Recipients, chat.ChiefID)
+		assert.Contains(t, event.Recipients, chat.ChiefID)
 		// Содержит данные
-		assert.Equal(t, chat, chatActiveUpdated.Data["chat"].(Chat))
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
 	})
 }

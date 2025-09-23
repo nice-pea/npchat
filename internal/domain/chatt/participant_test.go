@@ -101,16 +101,16 @@ func TestChat_AddParticipant(t *testing.T) {
 		err = chat.AddParticipant(participant, eventsBuf)
 		require.NoError(t, err)
 
-		// Проверить список опубликованных событий
-		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Удаленного
-		participantAdded := eventsBuf.Events()[0]
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventParticipantAdded, event.Type)
 		// Содержит нужных получателей
-		assert.Contains(t, participantAdded.Recipients, chat.ChiefID)
-		assert.Contains(t, participantAdded.Recipients, participant.UserID)
+		assert.Contains(t, event.Recipients, chat.ChiefID)
+		assert.Contains(t, event.Recipients, participant.UserID)
 		// Содержит данные
-		assert.Equal(t, chat, participantAdded.Data["chat"].(Chat))
-		assert.Equal(t, participant, participantAdded.Data["participant"].(Participant))
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
+		assert.Equal(t, participant, event.Data["participant"].(Participant))
 	})
 }
 
@@ -178,15 +178,15 @@ func TestChat_RemoveParticipant(t *testing.T) {
 		err = chat.RemoveParticipant(userID, eventsBuf)
 		require.NoError(t, err)
 
-		// Проверить список опубликованных событий
-		require.Len(t, eventsBuf.Events(), 1)
 		// Событие Удаленного
-		participantRemoved := eventsBuf.Events()[0]
+		require.Len(t, eventsBuf.Events(), 1)
+		event := eventsBuf.Events()[0]
+		assert.Equal(t, EventParticipantRemoved, event.Type)
 		// Содержит нужных получателей
-		assert.Contains(t, participantRemoved.Recipients, chat.ChiefID)
-		assert.Contains(t, participantRemoved.Recipients, participant.UserID)
+		assert.Contains(t, event.Recipients, chat.ChiefID)
+		assert.Contains(t, event.Recipients, participant.UserID)
 		// Содержит данные
-		assert.Equal(t, chat, participantRemoved.Data["chat"].(Chat))
-		assert.Equal(t, participant, participantRemoved.Data["participant"].(Participant))
+		assert.Equal(t, chat, event.Data["chat"].(Chat))
+		assert.Equal(t, participant, event.Data["participant"].(Participant))
 	})
 }
