@@ -55,12 +55,63 @@ func (suite *testSuite) Test_JWTIssuanceRegistry() {
 			suite.Require().Len(keys, 10)
 
 		})
+		suite.Run("созданная запись живет столкьоже сколько передали в поле Ttl", func() {
+			id := uuid.New()
+			// ставим Ttl в 1 миллисекунду
+			suite.RedisCli.Ttl = time.Millisecond
+			err := suite.RedisCli.RegisterIssueTime(id, time.Now())
+			suite.Require().NoError(err)
+
+			time.Sleep(10 * time.Millisecond)
+			issueTime := suite.getIssueTime(id)
+			suite.Require().Zero(issueTime)
+
+			suite.redisEmpty()
+		})
+		suite.Run("все записи которые Ttl прошел будут удалены из кэша", func() {
+			suite.RedisCli.Ttl = time.Millisecond
+			for range 10 {
+				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
+				suite.Require().NoError(err)
+			}
+			suite.RedisCli.Ttl = time.Minute
+			id := uuid.New()
+			err := suite.RedisCli.RegisterIssueTime(id, time.Now())
+			suite.Require().NoError(err)
+
+			time.Sleep(10 * time.Millisecond)
+
+			keys := suite.redisKeys()
+			suite.Require().Len(keys, 1)
+			suite.Assert().Equal(id.String(), keys[0])
+		})
 
 	})
 	suite.Run("GetIssueTime", func() {
 		// GetIssueTime(sessionID uuid.UUID) (*time.Time, error)
-		suite.Run("из пустого репозитория вернется NULL", func() {
+		suite.Run("если sessionID пустой то вернется ошибка", func() {
+			issueTime, err := suite.RedisCli.GetIssueTime(uuid.UUID{})
+			suite.Require().ErrorIs(err, redisCache.ErrEmptySessionID)
+			suite.Assert().Nil(issueTime)
+		})
+		suite.Run("если с таким sessionID нету значения в кэше то вернется nil, nil", func() {
+			issueTime, err := suite.RedisCli.GetIssueTime(uuid.New())
+			suite.Require().NoError(err)
+			suite.Assert().Nil(issueTime)
+		})
+		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {
+			issueTime, err := suite.RedisCli.GetIssueTime(uuid.New())
+			suite.Require().NoError(err)
+			suite.Assert().Nil(issueTime)
+		})
+		suite.Run("если существует в кэше такой sessionId то вернется его значение", func() {
+			sessionId := uuid.New()
+			issueTime := time.Now()
+			suite.setIssueTime(sessionId, issueTime, time.Second)
 
+			issueTimeRepo, err := suite.RedisCli.GetIssueTime(sessionId)
+			suite.Require().NoError(err)
+			suite.Assert().True(issueTime.Equal(issueTimeRepo))
 		})
 
 	})

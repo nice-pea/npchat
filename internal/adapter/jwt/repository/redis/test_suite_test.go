@@ -2,11 +2,13 @@ package redisCache_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -55,7 +57,7 @@ func (suite *testSuite) newRedisContainer() {
 	})
 
 	suite.Require().NoError(err)
-	suite.RedisCli = redisCache.JWTIssuanceRegistry{redisCli}
+	suite.RedisCli = redisCache.JWTIssuanceRegistry{redisCli, 2 * time.Minute}
 
 }
 
@@ -90,13 +92,16 @@ func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 	var issueTime time.Time
 
 	err := suite.RedisCli.Get(ctx, sessionID.String()).Scan(&issueTime)
-	// res, err := cmd.Result()
-	// suite.Require().NoError(err)
-
-	// issueTime, err := time.Parse(time.Layout, res)
-	suite.Require().NoError(err)
-
+	if !errors.Is(err, redis.Nil) {
+		suite.Require().NoError(err)
+	}
 	return issueTime
+}
+
+func (suite *testSuite) setIssueTime(sessionID uuid.UUID, issueTime time.Time, ttl time.Duration) {
+	ctx := context.Background()
+	err := suite.RedisCli.Set(ctx, sessionID.String(), issueTime, ttl).Err()
+	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) redisEmpty() {

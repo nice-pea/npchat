@@ -11,6 +11,7 @@ import (
 
 type JWTIssuanceRegistry struct {
 	*redis.Client
+	Ttl time.Duration
 }
 
 var (
@@ -26,7 +27,7 @@ func (ir *JWTIssuanceRegistry) RegisterIssueTime(sessionID uuid.UUID, issueTime 
 		return ErrEmptyIssueTime
 	}
 
-	status := ir.Client.Set(context.TODO(), sessionID.String(), issueTime, 2*time.Minute)
+	status := ir.Client.Set(context.TODO(), sessionID.String(), issueTime, ir.Ttl)
 	_, err := status.Result()
 	if err != nil {
 		return err
@@ -34,6 +35,6 @@ func (ir *JWTIssuanceRegistry) RegisterIssueTime(sessionID uuid.UUID, issueTime 
 
 	return nil
 }
-func (ir *JWTIssuanceRegistry) GetIssueTime(sessionID uuid.UUID) (*time.Time, error) {
-	return nil, nil
+func (ir *JWTIssuanceRegistry) GetIssueTime(sessionID uuid.UUID) (time.Time, error) {
+	return time.Time{}, nil
 }
