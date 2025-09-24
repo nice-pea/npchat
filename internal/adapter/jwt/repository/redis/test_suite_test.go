@@ -79,6 +79,7 @@ func (suite *testSuite) TearDownTest() {
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
 	suite.RedisCli.FlushDB(context.Background())
+	suite.RedisCli.Ttl = 2 * time.Minute
 }
 
 // TearDownSuite выполняется после всех тестов

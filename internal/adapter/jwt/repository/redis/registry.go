@@ -36,5 +36,16 @@ func (ir *JWTIssuanceRegistry) RegisterIssueTime(sessionID uuid.UUID, issueTime 
 	return nil
 }
 func (ir *JWTIssuanceRegistry) GetIssueTime(sessionID uuid.UUID) (time.Time, error) {
-	return time.Time{}, nil
+	if sessionID == (uuid.UUID{}) {
+		return time.Time{}, ErrEmptySessionID
+	}
+
+	var issueTime time.Time
+
+	err := ir.Client.Get(context.TODO(), sessionID.String()).Scan(&issueTime)
+	if errors.Is(err, redis.Nil) {
+		return time.Time{}, nil
+
+	}
+	return issueTime, nil
 }

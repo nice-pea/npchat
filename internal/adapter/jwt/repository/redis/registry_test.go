@@ -92,22 +92,17 @@ func (suite *testSuite) Test_JWTIssuanceRegistry() {
 		suite.Run("если sessionID пустой то вернется ошибка", func() {
 			issueTime, err := suite.RedisCli.GetIssueTime(uuid.UUID{})
 			suite.Require().ErrorIs(err, redisCache.ErrEmptySessionID)
-			suite.Assert().Nil(issueTime)
-		})
-		suite.Run("если с таким sessionID нету значения в кэше то вернется nil, nil", func() {
-			issueTime, err := suite.RedisCli.GetIssueTime(uuid.New())
-			suite.Require().NoError(err)
-			suite.Assert().Nil(issueTime)
+			suite.Assert().Zero(issueTime)
 		})
 		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {
 			issueTime, err := suite.RedisCli.GetIssueTime(uuid.New())
 			suite.Require().NoError(err)
-			suite.Assert().Nil(issueTime)
+			suite.Assert().Zero(issueTime)
 		})
 		suite.Run("если существует в кэше такой sessionId то вернется его значение", func() {
 			sessionId := uuid.New()
 			issueTime := time.Now()
-			suite.setIssueTime(sessionId, issueTime, time.Second)
+			suite.setIssueTime(sessionId, issueTime, time.Minute)
 
 			issueTimeRepo, err := suite.RedisCli.GetIssueTime(sessionId)
 			suite.Require().NoError(err)
