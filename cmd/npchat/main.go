@@ -116,6 +116,16 @@ func initCliCommand() *cli.Command {
 				Destination: &cfg.OauthGithub.RedirectURL,
 				Usage:       "URL для перенаправления после аутентификации OAuth Github",
 			},
+			&cli.BoolFlag{
+				Name:        "jwt-VerifyTokenWithAdvancedChecks",
+				Destination: &cfg.JwtConfig.VerifyTokenWithAdvancedChecks,
+				Usage:       "true или false для использованяи продвинутой проверки токена",
+			},
+			&cli.StringFlag{
+				Name:        "jwt-redis-dsn",
+				Destination: &cfg.JwtConfig.RedisDSN,
+				Usage:       "Строка подключения Redis в формате 'redis://<user>:<password>@host:port/db'",
+			},
 		},
 	}
 }

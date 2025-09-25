@@ -77,7 +77,6 @@ func (p *Parser) getClaims(token string) (middleware.OutJwt, error) {
 	return newClaims, nil
 }
 
-
 func (p *JWTParser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 
