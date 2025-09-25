@@ -1,9 +1,12 @@
 package jwtIssuer
 
 import (
+	"encoding/json"
+	"log"
 	"testing"
 	"time"
 
+	"github.com/cristalhq/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -141,4 +144,54 @@ func Test_Issuer_Issue(t *testing.T) {
 
 		assert.Zero(t, token)
 	})
+	t.Run("в jwt запсывается дата создания токена IssuedAt", func(t *testing.T) {
+		secret := []byte("qwerty")
+		var session = sessionn.Session{
+			ID:     uuid.New(),
+			UserID: uuid.New(),
+		}
+		jwtC := Issuer{secret}
+
+		IssuedAtStart := time.Now()
+		token, err := jwtC.Issue(session)
+		IssuedAtEnd := time.Now()
+
+		require.NoError(t, err)
+		claims := parse(t, token, secret)
+		IssuedAt := claims.IssuedAt
+		require.Equal(t, session.ID, claims.SessionID)
+		require.Equal(t, session.UserID, claims.UserID)
+
+		log.Println(IssuedAtStart)
+		log.Println(IssuedAt)
+		log.Println(IssuedAtEnd)
+		require.True(t, IssuedAt.Unix() >= IssuedAtStart.Unix())
+		require.True(t, IssuedAt.Unix() <= IssuedAtEnd.Unix())
+	})
+}
+
+type claims struct {
+	UserID    uuid.UUID
+	SessionID uuid.UUID
+	jwt.RegisteredClaims
+}
+
+func parse(t *testing.T, token string, secret []byte) claims {
+	verifier, err := jwt.NewVerifierHS(jwt.HS256, secret)
+	require.NoError(t, err)
+
+	tokenBytes := []byte(token)
+	newToken, err := jwt.Parse(tokenBytes, verifier)
+	require.NoError(t, err)
+
+	err = verifier.Verify(newToken)
+	require.NoError(t, err)
+
+	var newClaims claims
+	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
+	require.NoError(t, errClaims)
+
+	require.True(t, newClaims.IsValidAt(time.Now()))
+
+	return newClaims
 }
