@@ -22,7 +22,9 @@ type OutJWT struct {
 
 type Parser struct {
 	Config jwt2.Config
-	cache  redisCache.JWTIssuanceRegistry
+
+	VerifyTokenWithAdvancedChecks bool
+	cache                         redisCache.JWTIssuanceRegistry
 }
 
 var (
@@ -43,18 +45,11 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	}
 }
 
-<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
 // Parse разбирает токен и возвращает данные из него
-func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
+func (p *Parser) getClaims(token string) (middleware.OutJwt, error) {
 	// Создать валидатор
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
-=======
-func (p *JWTParser) getClaims(token string) (CustomClaims, error) {
-	// create a Verifier (HMAC in this example)
 
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, p.Secret)
-
->>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
 	if err != nil {
 		return CustomClaims{}, err
 	}
@@ -68,15 +63,7 @@ func (p *JWTParser) getClaims(token string) (CustomClaims, error) {
 		return middleware.OutJwt{}, err
 	}
 
-<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
 	// Получить данные из токена
-=======
-	err = verifier.Verify(newToken)
-	if err != nil {
-		return CustomClaims{}, err
-	}
-	// get Registered claims
->>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
 	var newClaims CustomClaims
 	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
 	if errClaims != nil {
@@ -90,16 +77,10 @@ func (p *JWTParser) getClaims(token string) (CustomClaims, error) {
 	return newClaims, nil
 }
 
-<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
-func (p *Parser) ValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 
-	// create a Verifier (HMAC in this example)
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
-
-=======
-func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
+func (p *JWTParser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
->>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
+
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
@@ -107,7 +88,7 @@ func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
 	return customClaimsToOutJWT(claims), nil
 }
 
-func (p *JWTParser) ParseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
+func (p *JWTParser) parseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 	if err != nil {
 		return middleware.OutJwt{}, err
@@ -131,4 +112,12 @@ func (p *JWTParser) ParseAndValidateJWTWithInvalidation(token string) (middlewar
 
 	return customClaimsToOutJWT(claims), nil
 
+}
+
+func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
+	if p.VerifyTokenWithAdvancedChecks && p.cache.Client != nil {
+		return p.parseAndValidateJWTWithInvalidation(token)
+	}
+
+	return p.parse(token)
 }
