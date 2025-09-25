@@ -46,7 +46,7 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 }
 
 // Parse разбирает токен и возвращает данные из него
-func (p *Parser) getClaims(token string) (middleware.OutJwt, error) {
+func (p *Parser) getClaims(token string) (CustomClaims, error) {
 	// Создать валидатор
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
 
@@ -60,7 +60,7 @@ func (p *Parser) getClaims(token string) (middleware.OutJwt, error) {
 		return CustomClaims{}, err
 	}
 	if err = verifier.Verify(newToken); err != nil {
-		return middleware.OutJwt{}, err
+		return CustomClaims{}, err
 	}
 
 	// Получить данные из токена
@@ -77,7 +77,7 @@ func (p *Parser) getClaims(token string) (middleware.OutJwt, error) {
 	return newClaims, nil
 }
 
-func (p *JWTParser) parse(token string) (middleware.OutJwt, error) {
+func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 
 	if err != nil {
@@ -87,7 +87,7 @@ func (p *JWTParser) parse(token string) (middleware.OutJwt, error) {
 	return customClaimsToOutJWT(claims), nil
 }
 
-func (p *JWTParser) parseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
+func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 	if err != nil {
 		return middleware.OutJwt{}, err
@@ -113,7 +113,7 @@ func (p *JWTParser) parseAndValidateJWTWithInvalidation(token string) (middlewar
 
 }
 
-func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
+func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
 	if p.VerifyTokenWithAdvancedChecks && p.cache.Client != nil {
 		return p.parseAndValidateJWTWithInvalidation(token)
 	}

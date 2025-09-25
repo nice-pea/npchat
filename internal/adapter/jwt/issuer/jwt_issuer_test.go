@@ -145,19 +145,19 @@ func Test_Issuer_Issue(t *testing.T) {
 		assert.Zero(t, token)
 	})
 	t.Run("в jwt запсывается дата создания токена IssuedAt", func(t *testing.T) {
-		secret := []byte("qwerty")
+		secret := "qwerty"
 		var session = sessionn.Session{
 			ID:     uuid.New(),
 			UserID: uuid.New(),
 		}
-		jwtC := Issuer{secret}
+		jwtC := Issuer{jwt2.Config{SecretKey: secret}}
 
 		IssuedAtStart := time.Now()
 		token, err := jwtC.Issue(session)
 		IssuedAtEnd := time.Now()
 
 		require.NoError(t, err)
-		claims := parse(t, token, secret)
+		claims := parse(t, token, []byte(secret))
 		IssuedAt := claims.IssuedAt
 		require.Equal(t, session.ID, claims.SessionID)
 		require.Equal(t, session.UserID, claims.UserID)

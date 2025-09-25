@@ -79,11 +79,6 @@ func initCliCommand() *cli.Command {
 				Usage:       "Уровень логирования. Может быть debug, info, warn, error",
 				Value:       app.LogLevelInfo,
 			},
-			&cli.StringFlag{
-				Name:        "jwt-secret",
-				Destination: &cfg.Jwt.SecretKey,
-				Usage:       "Секрет jwt подписи",
-			},
 			// Google
 			&cli.StringFlag{
 				Name:        "oauth-google-key",
@@ -116,14 +111,20 @@ func initCliCommand() *cli.Command {
 				Destination: &cfg.OauthGithub.RedirectURL,
 				Usage:       "URL для перенаправления после аутентификации OAuth Github",
 			},
+			// Jwt
+			&cli.StringFlag{
+				Name:        "jwt-secret",
+				Destination: &cfg.Jwt.SecretKey,
+				Usage:       "Секрет jwt подписи",
+			},
 			&cli.BoolFlag{
 				Name:        "jwt-VerifyTokenWithAdvancedChecks",
-				Destination: &cfg.JwtConfig.VerifyTokenWithAdvancedChecks,
+				Destination: &cfg.Jwt.VerifyTokenWithAdvancedChecks,
 				Usage:       "true или false для использованяи продвинутой проверки токена",
 			},
 			&cli.StringFlag{
 				Name:        "jwt-redis-dsn",
-				Destination: &cfg.JwtConfig.RedisDSN,
+				Destination: &cfg.Jwt.RedisDSN,
 				Usage:       "Строка подключения Redis в формате 'redis://<user>:<password>@host:port/db'",
 			},
 		},
