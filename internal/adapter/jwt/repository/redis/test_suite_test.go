@@ -10,15 +10,14 @@ import (
 	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
+	redisContainer "github.com/testcontainers/testcontainers-go/modules/redis"
 )
 
 type testSuite struct {
 	suite.Suite
-	cleanUp     func()
-	ExposedAddr string
-	RedisCli    redisCache.JWTIssuanceRegistry
+	cleanUp  func()
+	DSN      string
+	RedisCli redisCache.JWTIssuanceRegistry
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -26,19 +25,10 @@ func Test_TestSuite(t *testing.T) {
 }
 
 func (suite *testSuite) newRedisContainer() {
-
-	req := testcontainers.ContainerRequest{
-		Image:        "redis:8.2.1",
-		ExposedPorts: []string{"6379/tcp"},
-		WaitingFor:   wait.ForLog("Ready to accept connections"),
-	}
-
 	ctx := context.Background()
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	container, err := redisContainer.Run(ctx, "redis:8.2.1")
+	suite.Require().NoError(err)
+	dsn, err := container.ConnectionString(ctx)
 	suite.Require().NoError(err)
 
 	suite.cleanUp = func() {
@@ -46,14 +36,10 @@ func (suite *testSuite) newRedisContainer() {
 		container.Terminate(ctx)
 	}
 
-	// Получаем адрес контейнера
-	endpoint, err := container.Endpoint(ctx, "")
-	suite.Require().NoError(err)
-
-	suite.ExposedAddr = endpoint
+	suite.DSN = dsn
 
 	redisCli, err := redisCache.Init(redisCache.Config{
-		Addr: suite.ExposedAddr,
+		DSN: dsn,
 	})
 
 	suite.Require().NoError(err)

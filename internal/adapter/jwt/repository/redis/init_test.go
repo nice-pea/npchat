@@ -7,7 +7,7 @@ import (
 func (suite *testSuite) Test_Init() {
 	suite.Run("подключение к redis с неверной конфигурацией", func() {
 		cfg := redisCache.Config{
-			Addr: suite.ExposedAddr,
+			DSN: suite.DSN,
 		}
 		cli, err := redisCache.Init(cfg)
 
@@ -25,7 +25,7 @@ func (suite *testSuite) Test_Init() {
 	})
 	suite.Run("подключение к redis с невалидной конфигурацией", func() {
 		cfg := redisCache.Config{
-			Addr:     "241421.46334.14241.61253:253532325",
+			DSN: "241421.46334.14241.61253:253532325",
 		}
 		cli, err := redisCache.Init(cfg)
 

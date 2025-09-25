@@ -8,21 +8,19 @@ import (
 )
 
 type Config struct {
-	Addr     string
-	Password string
-	DB       int
+	DSN string
 }
 
 func Init(cfg Config) (*redis.Client, error) {
+	opt, err := redis.ParseURL(cfg.DSN)
+	if err != nil {
+		return nil, fmt.Errorf("redisCache.Init: %w", err)
+	}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     cfg.Addr,
-		Password: cfg.Password,
-		DB:       cfg.DB,
-	})
+	client := redis.NewClient(opt)
 
 	ctx := context.Background()
-	_, err := client.Ping(ctx).Result()
+	_, err = client.Ping(ctx).Result()
 
 	if err != nil {
 		return nil, fmt.Errorf("redisCache.Init: %w", err)
