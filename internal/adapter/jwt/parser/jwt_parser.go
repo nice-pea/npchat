@@ -43,74 +43,82 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	}
 }
 
+<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
 // Parse разбирает токен и возвращает данные из него
 func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
 	// Создать валидатор
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
+=======
+func (p *JWTParser) getClaims(token string) (CustomClaims, error) {
+	// create a Verifier (HMAC in this example)
+
+	verifier, err := jwt.NewVerifierHS(jwt.HS256, p.Secret)
+
+>>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
 	if err != nil {
-		return middleware.OutJwt{}, err
+		return CustomClaims{}, err
 	}
 
 	// Разобрать токен и проверить его
 	newToken, err := jwt.Parse([]byte(token), verifier)
 	if err != nil {
-		return middleware.OutJwt{}, err
+		return CustomClaims{}, err
 	}
 	if err = verifier.Verify(newToken); err != nil {
 		return middleware.OutJwt{}, err
 	}
 
+<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
 	// Получить данные из токена
+=======
+	err = verifier.Verify(newToken)
+	if err != nil {
+		return CustomClaims{}, err
+	}
+	// get Registered claims
+>>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
 	var newClaims CustomClaims
 	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
 	if errClaims != nil {
-		return middleware.OutJwt{}, err
+		return CustomClaims{}, err
 	}
 
 	// Валидация времени жизни токена
 	if !newClaims.IsValidAt(time.Now()) {
-		return middleware.OutJwt{}, ErrTimeOut
+		return CustomClaims{}, ErrTimeOut
 	}
-	return customClaimsToOutJWT(newClaims), nil
+	return newClaims, nil
 }
 
+<<<<<<< HEAD:internal/adapter/jwt/parser/jwt_parser.go
 func (p *Parser) ValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 
 	// create a Verifier (HMAC in this example)
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
 
+=======
+func (p *JWTParser) Parse(token string) (middleware.OutJwt, error) {
+	claims, err := p.getClaims(token)
+>>>>>>> c6ff310 (вынести код в отдельную функцию):internal/adapter/jwt/jwt_parse/jwt_parser.go
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
 
-	// parse and verify a token
-	tokenBytes := []byte(token)
-	newToken, err := jwt.Parse(tokenBytes, verifier)
+	return customClaimsToOutJWT(claims), nil
+}
+
+func (p *JWTParser) ParseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
+	claims, err := p.getClaims(token)
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
 
-	err = verifier.Verify(newToken)
-	if err != nil {
-		return middleware.OutJwt{}, err
-	}
-	// get Registered claims
-	var newClaims CustomClaims
-	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
-	if errClaims != nil {
-		return middleware.OutJwt{}, err
-	}
-	// verify claims as you wish
-	if !newClaims.IsValidAt(time.Now()) {
-		return middleware.OutJwt{}, ErrTimeOut
-	}
-
-	sessionId, err := uuid.Parse(newClaims.SessionID)
+	sessionId, err := uuid.Parse(claims.SessionID)
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
 
-	issuedAt := newClaims.IssuedAt
+	issuedAt := claims.IssuedAt
 
 	timefromCache, err := p.cache.GetIssueTime(sessionId)
 	if err != nil {
@@ -121,6 +129,6 @@ func (p *Parser) ValidateJWTWithInvalidation(token string) (middleware.OutJwt, e
 		return middleware.OutJwt{}, ErrTokenRevoked
 	}
 
-	return customClaimsToOutJWT(newClaims), nil
+	return customClaimsToOutJWT(claims), nil
 
 }
