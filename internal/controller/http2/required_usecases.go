@@ -19,4 +19,6 @@ type RequiredUsecases interface {
 	registerHandler.UsecasesForOauthCallback
 	registerHandler.UsecasesForSendInvitation
 	registerHandler.UsecasesForUpdateName
+	registerHandler.UsecasesForGetUser
+	registerHandler.UsecasesForMe
 }

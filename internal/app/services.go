@@ -17,6 +17,7 @@ import (
 	basicAuthRegistration "github.com/nice-pea/npchat/internal/usecases/users/basic_auth/basic_auth_registration"
 	oauthAuthorize "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_authorize"
 	oauthComplete "github.com/nice-pea/npchat/internal/usecases/users/oauth/oauth_complete"
+	userProfile "github.com/nice-pea/npchat/internal/usecases/users/user_profile"
 )
 
 type usecasesBase struct {
@@ -44,6 +45,7 @@ type usecasesBase struct {
 	*basicAuthLogin.BasicAuthLoginUsecase
 	*oauthAuthorize.OauthAuthorizeUsecase
 	*oauthComplete.OauthCompleteUsecase
+	*userProfile.UserProfileUsecase
 }
 
 func initUsecases(rr *repositories, aa *adapters) usecasesBase {
@@ -106,6 +108,9 @@ func initUsecases(rr *repositories, aa *adapters) usecasesBase {
 			Repo:         rr.users,
 			Providers:    aa.oauthProviders,
 			SessionsRepo: rr.sessions,
+		},
+		UserProfileUsecase: &userProfile.UserProfileUsecase{
+			Repo: rr.users,
 		},
 	}
 }
