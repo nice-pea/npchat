@@ -14,7 +14,7 @@ import (
 // Метод: GET /chats
 func GetUser(router *fiber.App, uc UsecasesForGetUser, jwtParser middleware.JwtParser) {
 	router.Get(
-		"/users/{id}",
+		"/users/:id",
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
