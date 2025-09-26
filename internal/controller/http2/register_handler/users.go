@@ -5,6 +5,7 @@ import (
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
+	userProfile "github.com/nice-pea/npchat/internal/usecases/users/user_profile"
 )
 
 // GetUser регистрирует HTTP-обработчик для получения информации о пользователе.
@@ -19,7 +20,7 @@ func GetUser(router *fiber.App, uc UsecasesForUserProfile, jwtParser middleware.
 		func(ctx *fiber.Ctx) error {
 			input := userProfile.In{
 				SubjectID: UserID(ctx),
-				UserID:    UserID(ctx),
+				UserID:    ParamsUUID(ctx, "id"),
 			}
 
 			out, err := uc.UserProfile(input)
