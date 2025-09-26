@@ -95,6 +95,9 @@ func registerHandlers(
 	registerHandler.SendInvitation(r, uc, jwtParser)
 	registerHandler.AcceptInvitation(r, uc, jwtParser)
 	registerHandler.CancelInvitation(r, uc, jwtParser)
+
+	// Пользователи /users
+	registerHandler.GetUser(r, uc, jwtParser)
 }
 
 // fiberErrorHandler разделяет составные ошибки и помещает в body.
