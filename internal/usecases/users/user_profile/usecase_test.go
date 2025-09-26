@@ -2,7 +2,6 @@ package userProfile
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	testifySuite "github.com/stretchr/testify/suite"
@@ -23,7 +22,6 @@ func (suite *testSuite) Test_UserProfile() {
 	usecase := &UserProfileUsecase{
 		Repo: suite.RR.Users,
 	}
-	time.Now().IsZero()
 	suite.Run("есть валидация параметров", func() {
 		// Некорректное значение subjectID
 		_, err := usecase.UserProfile(In{UserID: uuid.New()})
