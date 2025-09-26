@@ -28,6 +28,7 @@ func (c *Issuer) Issue(session sessionn.Session) (string, error) {
 		SessionID: session.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(2 * time.Minute)},
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		},
 	}
 

@@ -14,7 +14,7 @@ import (
 func Test_JWTParser_Parse(t *testing.T) {
 	t.Run("валидный jwt можно разобрать и получить данные", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		var (
 			uid = "123"
@@ -35,7 +35,7 @@ func Test_JWTParser_Parse(t *testing.T) {
 	})
 	t.Run("jwt существующий больше exp - невалиден", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		token, err := createJWT(secret, map[string]any{
 			"UserID":    "123",
@@ -51,12 +51,12 @@ func Test_JWTParser_Parse(t *testing.T) {
 	})
 	t.Run("jwt существующий меньше exp - валиден", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		token, err := createJWT(secret, map[string]any{
 			"UserID":    "123",
 			"SessionID": "456",
-			"exp":       time.Now().Add(1000 * time.Millisecond).Unix(),
+			"exp":       time.Now().Add(1000 * time.Second).Unix(),
 		})
 		require.NoError(t, err)
 		time.Sleep(100 * time.Millisecond)
@@ -67,7 +67,7 @@ func Test_JWTParser_Parse(t *testing.T) {
 	})
 	t.Run("jwt существующий больше 2 минут - невалиден", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		//token - истекший jwt токен
 		token := `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiIxMjMiLCJTZXNzaW9uSUQiOiI0NTYiLCJpc3MiOiJucGNoYXQiLCJzdWIiOiJhdXRoZW50aWNhdGlvbiIsImV4cCI6MTc1NzcwMDM2NCwiaWF0IjoxNzU3NzAwMjQ0LCJuYmYiOjE3NTc3MDAyNDR9.kpKiS63GV1XQYapTC9jxAlACoKToOIWISgzvJIVeZ2I`
@@ -79,7 +79,7 @@ func Test_JWTParser_Parse(t *testing.T) {
 
 	t.Run("невалидный jwt", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		token := `adsafs.afsfsa.gsdsddsggd`
 
@@ -89,7 +89,7 @@ func Test_JWTParser_Parse(t *testing.T) {
 	})
 	t.Run("пустой jwt", func(t *testing.T) {
 		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		parser := Parser{Config: jwt2.Config{SecretKey: secret}}
 
 		claims, err := parser.Parse("")
 		assert.Error(t, err)
