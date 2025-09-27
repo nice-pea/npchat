@@ -18,11 +18,16 @@ const (
 )
 
 var (
-	ErrBusClosed                = errors.New("шина событий закрыта")
-	ErrDuplicateSession         = errors.New("сессия уже прослушивает события")
+	// ErrBusClosed возвращается при попытке добавить слушателя к закрытой шине событий
+	ErrBusClosed = errors.New("шина событий закрыта")
+	// ErrDuplicateSession возвращается при попытке создать дублирующуюся подписку для активной сессии
+	ErrDuplicateSession = errors.New("сессия уже прослушивает события")
+	// ErrListenerForciblyCanceled отправляется слушателю при принудительной отмене подписки
 	ErrListenerForciblyCanceled = errors.New("принудительно отменен")
 )
 
+// EventsBus представляет шину событий для управления подписчиками и рассылки событий.
+// Обеспечивает потокобезопасное добавление, удаление слушателей и отправку событий.
 type EventsBus struct {
 	listeners      []*listener // Список слушателей
 	listenersMutex sync.Mutex  // Синхронизация доступа к listeners
@@ -37,7 +42,11 @@ type listener struct {
 	f               func(event events.Event, err error) // Обработчик событий
 }
 
-// AddListener регистрирует обработчик событий
+// AddListener регистрирует обработчик событий для указанного пользователя и сессии.
+// При обнаружении существующей подписки с той же сессией выполняется healthcheck:
+// - если существующий слушатель не отвечает (неактивен), он удаляется и регистрируется новый
+// - если существующий слушатель активен, возвращается ErrDuplicateSession
+// Возвращает функцию для отмены подписки и возможную ошибку.
 func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed.Load() {
@@ -85,7 +94,9 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	}, nil
 }
 
-// Consume рассылает события слушателям
+// Consume рассылает массив событий соответствующим слушателям.
+// Каждое событие отправляется только тем слушателям, чьи userID указаны в списке получателей.
+// Рассылка выполняется асинхронно с ожиданием завершения всех отправок.
 func (u *EventsBus) Consume(ee []events.Event) {
 	// Выйти, если сервер уже закрыт
 	if u.closed.Load() {
@@ -139,7 +150,8 @@ func (u *EventsBus) Consume(ee []events.Event) {
 	wg.Wait()
 }
 
-// Close завершает работу системы
+// Close завершает работу шины событий, отправляя ErrBusClosed всем активным слушателям
+// и очищая список подписчиков. После вызова Close новые подписки не принимаются.
 func (u *EventsBus) Close() {
 	// Выйти, если сервер уже закрыт
 	if !u.closed.CompareAndSwap(false, true) {
@@ -170,7 +182,8 @@ func (u *EventsBus) Close() {
 	u.listenersMutex.Unlock()
 }
 
-// Cancel отменяет подписку слушателя (удаляет его из списка)
+// Cancel принудительно отменяет подписку слушателя по sessionID,
+// отправляя ему ErrListenerForciblyCanceled и удаляя из списка активных подписчиков.
 func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	// Выйти, если сервер уже закрыт
 	if u.closed.Load() {
