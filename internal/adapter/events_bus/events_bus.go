@@ -64,6 +64,9 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	})
 	if existingListenerIndex != -1 {
 		existingListener := u.listeners[existingListenerIndex]
+		if existingListener.f == nil {
+			return nil, ErrDuplicateSession
+		}
 		// Выполнить healthcheck существующего слушателя
 		if !u.healthcheck(existingListener) {
 			// Слушатель не активен, принудительно отменить его
@@ -225,6 +228,9 @@ func (u *EventsBus) activeListeners() []*listener {
 // healthcheck проверяет, является ли слушатель активным
 // отправляя ему тестовое событие с таймаутом
 func (u *EventsBus) healthcheck(l *listener) bool {
+	if l == nil || l.f == nil {
+		return true
+	}
 	// Создать канал для подтверждения получения
 	ack := make(chan struct{}, 1)
 
