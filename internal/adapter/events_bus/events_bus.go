@@ -67,17 +67,39 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 		if existingListener.f == nil {
 			return nil, ErrDuplicateSession
 		}
-		// Выполнить healthcheck существующего слушателя
-		if !u.healthcheck(existingListener) {
-			// Слушатель не активен, принудительно отменить его
-			u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
-				return l.sessionID == sessionID
-			})
-			// Отправить ошибку старому слушателю в отдельной горутине
-			go existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
-		} else {
-			// Слушатель активен, вернуть ошибку дубликата
+		// Отпустить мьютекс для healthcheck, чтобы избежать deadlock
+		u.listenersMutex.Unlock()
+		healthy := u.healthcheck(existingListener)
+		u.listenersMutex.Lock()
+
+		// Повторно проверить, что слушатель всё ещё существует
+		stillExists := slices.IndexFunc(u.listeners, func(l *listener) bool {
+			return l.sessionID == sessionID && !l.listeningIsOver
+		}) != -1
+
+		if healthy || !stillExists {
+			// Слушатель активен или уже удален, вернуть ошибку дубликата
 			return nil, ErrDuplicateSession
+		}
+
+		// Слушатель не активен, собрать всех удаляемых для уведомления
+		toCancel := lo.Filter(u.listeners, func(l *listener, _ int) bool {
+			return l.sessionID == sessionID && !l.listeningIsOver
+		})
+
+		// Удалить всех по сессии
+		u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
+			return l.sessionID == sessionID
+		})
+
+		// Отправить ошибку всем удаленным слушателям в отдельных горутинах (безопасно)
+		for _, l := range toCancel {
+			if l.f != nil {
+				go func(fn func(event events.Event, err error)) {
+					defer func() { recover() }()
+					fn(events.Event{}, ErrListenerForciblyCanceled)
+				}(l.f)
+			}
 		}
 	}
 
@@ -143,10 +165,14 @@ func (u *EventsBus) Consume(ee []events.Event) {
 
 	// Отправить событие получателям
 	for _, packet := range le {
-		go func() {
+		p := packet
+		go func(pkt forHandling) {
 			defer wg.Done()
-			packet.listener.f(packet.event, nil)
-		}()
+			defer func() { recover() }()
+			if pkt.listener.f != nil {
+				pkt.listener.f(pkt.event, nil)
+			}
+		}(p)
 	}
 
 	// Ожидать завершения обработки событий слушателями
@@ -170,10 +196,14 @@ func (u *EventsBus) Close() {
 
 	// Отправить ошибку всем активным слушателям
 	for _, listener := range snapshot {
-		go func() {
+		l := listener
+		go func(lst *listener) {
 			defer wg.Done()
-			listener.f(events.Event{}, ErrBusClosed)
-		}()
+			defer func() { recover() }()
+			if lst.f != nil {
+				lst.f(events.Event{}, ErrBusClosed)
+			}
+		}(l)
 	}
 
 	// Ожидать завершения обработки ошибки слушателями
@@ -195,25 +225,32 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 
 	u.listenersMutex.Lock()
 
-	// Найти слушателя по сессии
-	i := slices.IndexFunc(u.listeners, func(l *listener) bool {
+	// Собрать всех удаляемых слушателей для уведомления
+	toCancel := lo.Filter(u.listeners, func(l *listener, _ int) bool {
 		return l.sessionID == sessionID && !l.listeningIsOver
 	})
-	if i == -1 {
+
+	if len(toCancel) == 0 {
 		u.listenersMutex.Unlock()
 		return
 	}
-	target := u.listeners[i]
 
-	// Удалить слушателя
+	// Удалить всех слушателей по сессии
 	u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
 		return l.sessionID == sessionID
 	})
 
 	u.listenersMutex.Unlock()
 
-	// Отправить ошибку
-	target.f(events.Event{}, ErrListenerForciblyCanceled)
+	// Отправить ошибку всем удаленным слушателям (безопасно)
+	for _, l := range toCancel {
+		if l.f != nil {
+			go func(fn func(event events.Event, err error)) {
+				defer func() { recover() }()
+				fn(events.Event{}, ErrListenerForciblyCanceled)
+			}(l.f)
+		}
+	}
 }
 
 // activeListeners возвращает активных слушателей
