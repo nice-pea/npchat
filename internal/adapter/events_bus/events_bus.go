@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -43,13 +44,25 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	defer u.listenersMutex.Unlock()
 
 	// Проверить, что слушатель ещё не зарегистрирован
-	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l *listener) bool {
+	existingListenerIndex := slices.IndexFunc(u.listeners, func(l *listener) bool {
 		return l.userID == userID &&
 			l.sessionID == sessionID &&
 			!l.listeningIsOver
 	})
-	if sessionAlreadyListen {
-		return nil, ErrDuplicateSession
+	if existingListenerIndex != -1 {
+		existingListener := u.listeners[existingListenerIndex]
+		// Выполнить healthcheck существующего слушателя
+		if !u.healthcheck(existingListener) {
+			// Слушатель не активен, принудительно отменить его
+			u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
+				return l.sessionID == sessionID
+			})
+			// Отправить ошибку старому слушателю в отдельной горутине
+			go existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
+		} else {
+			// Слушатель активен, вернуть ошибку дубликата
+			return nil, ErrDuplicateSession
+		}
 	}
 
 	listener := &listener{
@@ -190,4 +203,31 @@ func (u *EventsBus) activeListeners() []*listener {
 	return lo.Filter(u.listeners, func(l *listener, _ int) bool {
 		return !l.listeningIsOver
 	})
+}
+
+// healthcheck проверяет, является ли слушатель активным
+// отправляя ему тестовое событие с таймаутом
+func (u *EventsBus) healthcheck(l *listener) bool {
+	// Создать канал для подтверждения получения
+	ack := make(chan struct{}, 1)
+
+	// Попытаться отправить тестовое событие слушателю
+	go func() {
+		defer func() {
+			// Восстановиться от паники, если слушатель уже закрыт
+			recover()
+		}()
+		l.f(events.Event{}, nil)
+		ack <- struct{}{}
+	}()
+
+	// Ждать подтверждения с таймаутом
+	select {
+	case <-ack:
+		// Слушатель ответил, он активен
+		return true
+	case <-time.After(100 * time.Millisecond):
+		// Таймаут, слушатель не активен
+		return false
+	}
 }

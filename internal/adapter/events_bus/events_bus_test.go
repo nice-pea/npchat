@@ -168,3 +168,54 @@ func Test_EventsBus(t *testing.T) {
 		assert.Equal(t, len(listenerIDs), int(receivedEvents.Load()))
 	})
 }
+
+func Test_EventsBus_Healthcheck(t *testing.T) {
+	t.Run("при попытке повторной подписки неактивного слушателя, выполняется healthcheck и старый слушатель удаляется", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Создать блокирующийся слушатель (имитация неактивного соединения)
+		blockingListener := func(event events.Event, err error) {
+			// Блокируется на 200ms, что больше таймаута healthcheck (100ms)
+			time.Sleep(200 * time.Millisecond)
+		}
+
+		// Запустить первого слушателя
+		_, err := b.AddListener(userID, sessionID, blockingListener)
+		require.NoError(t, err)
+
+		// Подождать немного, чтобы первый слушатель был добавлен
+		time.Sleep(10 * time.Millisecond)
+
+		// Попытаться запустить второго слушателя с той же сессией
+		// Healthcheck должен обнаружить, что первый слушатель не отвечает
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {})
+		require.NoError(t, err, "второй слушатель должен быть добавлен после неудачного healthcheck")
+	})
+
+	t.Run("при попытке повторной подписки активного слушателя, возвращается ошибка дублирования", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Создать быстрый слушатель (имитация активного соединения)
+		activeListener := func(event events.Event, err error) {
+			// Быстро возвращается
+		}
+
+		// Запустить первого слушателя
+		_, err := b.AddListener(userID, sessionID, activeListener)
+		require.NoError(t, err)
+
+		// Подождать немного
+		time.Sleep(10 * time.Millisecond)
+
+		// Попытаться запустить второго слушателя с той же сессией
+		// Healthcheck должен обнаружить, что первый слушатель активен
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {})
+		require.ErrorIs(t, err, ErrDuplicateSession, "должна быть ошибка дублирования для активного слушателя")
+	})
+}
