@@ -13,6 +13,10 @@ import (
 	"github.com/nice-pea/npchat/internal/usecases/events"
 )
 
+const (
+	healthcheckTimeout = 100 * time.Millisecond
+)
+
 var (
 	ErrBusClosed                = errors.New("шина событий закрыта")
 	ErrDuplicateSession         = errors.New("сессия уже прослушивает события")
@@ -222,11 +226,14 @@ func (u *EventsBus) healthcheck(l *listener) bool {
 	}()
 
 	// Ждать подтверждения с таймаутом
+	timer := time.NewTimer(healthcheckTimeout)
+	defer timer.Stop()
+
 	select {
 	case <-ack:
 		// Слушатель ответил, он активен
 		return true
-	case <-time.After(100 * time.Millisecond):
+	case <-timer.C:
 		// Таймаут, слушатель не активен
 		return false
 	}

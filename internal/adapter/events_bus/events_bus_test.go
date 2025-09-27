@@ -176,23 +176,25 @@ func Test_EventsBus_Healthcheck(t *testing.T) {
 		sessionID := uuid.New()
 		userID := uuid.New()
 
+		// Канал для контроля блокировки слушателя
+		block := make(chan struct{})
 		// Создать блокирующийся слушатель (имитация неактивного соединения)
 		blockingListener := func(event events.Event, err error) {
-			// Блокируется на 200ms, что больше таймаута healthcheck (100ms)
-			time.Sleep(200 * time.Millisecond)
+			// Блокируется до получения сигнала
+			<-block
 		}
 
 		// Запустить первого слушателя
 		_, err := b.AddListener(userID, sessionID, blockingListener)
 		require.NoError(t, err)
 
-		// Подождать немного, чтобы первый слушатель был добавлен
-		time.Sleep(10 * time.Millisecond)
-
 		// Попытаться запустить второго слушателя с той же сессией
 		// Healthcheck должен обнаружить, что первый слушатель не отвечает
 		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {})
 		require.NoError(t, err, "второй слушатель должен быть добавлен после неудачного healthcheck")
+
+		// Разблокировать первого слушателя
+		close(block)
 	})
 
 	t.Run("при попытке повторной подписки активного слушателя, возвращается ошибка дублирования", func(t *testing.T) {
@@ -209,9 +211,6 @@ func Test_EventsBus_Healthcheck(t *testing.T) {
 		// Запустить первого слушателя
 		_, err := b.AddListener(userID, sessionID, activeListener)
 		require.NoError(t, err)
-
-		// Подождать немного
-		time.Sleep(10 * time.Millisecond)
 
 		// Попытаться запустить второго слушателя с той же сессией
 		// Healthcheck должен обнаружить, что первый слушатель активен
