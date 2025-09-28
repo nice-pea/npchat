@@ -27,22 +27,22 @@ func (a *adapters) OauthProviders() oauth.Providers {
 func initAdapters(cfg Config) *adapters {
 	oauthProviders := oauth.Providers{}
 	if cfg.OauthGoogle != (oauthProvider.GoogleConfig{}) {
-		provider := oauthProvider.NewGoogle(cfg.OauthGoogle)
-		if err := provider.CheckAccess(); err != nil {
-			slog.Error("Ошибка проверки доступа к Oauth провайдеру Google", "error", err)
+		provider, err := oauthProvider.NewGoogle(cfg.OauthGoogle)
+		if err != nil {
+			slog.Error("Ошибка инициализации Oauth провайдера Google", "error", err)
 		} else {
+			oauthProviders.Add(provider)
 			slog.Info("Подключен Oauth провайдер Google")
 		}
-		oauthProviders.Add(provider)
 	}
 	if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
-		provider := oauthProvider.NewGithub(cfg.OauthGithub)
-		if err := provider.CheckAccess(); err != nil {
-			slog.Error("Ошибка проверки доступа к Oauth провайдеру Github", "error", err)
+		provider, err := oauthProvider.NewGithub(cfg.OauthGithub)
+		if err != nil {
+			slog.Error("Ошибка инициализации Oauth провайдера Github", "error", err)
 		} else {
+			oauthProviders.Add(provider)
 			slog.Info("Подключен Oauth провайдер Github")
 		}
-		oauthProviders.Add(provider)
 	}
 
 	// Включить jwt аутентификацию, если конфиг jwt задан

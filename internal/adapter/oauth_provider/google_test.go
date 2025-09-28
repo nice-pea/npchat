@@ -14,49 +14,51 @@ func Test_GoogleTestSuite(t *testing.T) {
 	suite.Run(t, new(googleTestSuite))
 }
 
-func (s *googleTestSuite) Test_CheckAccess_ValidConfig() {
-	provider := NewGoogle(GoogleConfig{
-		ClientID:     "test-client-id",
-		ClientSecret: "test-client-secret",
-		RedirectURL:  "http://localhost:8080/callback",
+func (s *googleTestSuite) Test_NewGoogle() {
+	s.Run("валидная конфигурация", func() {
+		provider, err := NewGoogle(GoogleConfig{
+			ClientID:     "test-client-id",
+			ClientSecret: "test-client-secret",
+			RedirectURL:  "http://localhost:8080/callback",
+		})
+
+		s.NoError(err)
+		s.NotNil(provider)
 	})
 
-	err := provider.CheckAccess()
-	s.NoError(err)
-}
+	s.Run("пустой ClientID", func() {
+		provider, err := NewGoogle(GoogleConfig{
+			ClientID:     "",
+			ClientSecret: "test-client-secret",
+			RedirectURL:  "http://localhost:8080/callback",
+		})
 
-func (s *googleTestSuite) Test_CheckAccess_EmptyClientID() {
-	provider := NewGoogle(GoogleConfig{
-		ClientID:     "",
-		ClientSecret: "test-client-secret",
-		RedirectURL:  "http://localhost:8080/callback",
+		s.Error(err)
+		s.Nil(provider)
+		s.Contains(err.Error(), "ClientID не может быть пустым")
 	})
 
-	err := provider.CheckAccess()
-	s.Error(err)
-	s.Contains(err.Error(), "ClientID не может быть пустым")
-}
+	s.Run("пустой ClientSecret", func() {
+		provider, err := NewGoogle(GoogleConfig{
+			ClientID:     "test-client-id",
+			ClientSecret: "",
+			RedirectURL:  "http://localhost:8080/callback",
+		})
 
-func (s *googleTestSuite) Test_CheckAccess_EmptyClientSecret() {
-	provider := NewGoogle(GoogleConfig{
-		ClientID:     "test-client-id",
-		ClientSecret: "",
-		RedirectURL:  "http://localhost:8080/callback",
+		s.Error(err)
+		s.Nil(provider)
+		s.Contains(err.Error(), "ClientSecret не может быть пустым")
 	})
 
-	err := provider.CheckAccess()
-	s.Error(err)
-	s.Contains(err.Error(), "ClientSecret не может быть пустым")
-}
+	s.Run("пустой RedirectURL", func() {
+		provider, err := NewGoogle(GoogleConfig{
+			ClientID:     "test-client-id",
+			ClientSecret: "test-client-secret",
+			RedirectURL:  "",
+		})
 
-func (s *googleTestSuite) Test_CheckAccess_EmptyRedirectURL() {
-	provider := NewGoogle(GoogleConfig{
-		ClientID:     "test-client-id",
-		ClientSecret: "test-client-secret",
-		RedirectURL:  "",
+		s.Error(err)
+		s.Nil(provider)
+		s.Contains(err.Error(), "RedirectURL не может быть пустым")
 	})
-
-	err := provider.CheckAccess()
-	s.Error(err)
-	s.Contains(err.Error(), "RedirectURL не может быть пустым")
 }
