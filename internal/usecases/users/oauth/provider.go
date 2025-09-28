@@ -26,6 +26,9 @@ type Provider interface {
 
 	// Name возвращает имя провайдера Oauth
 	Name() string
+
+	// CheckAccess проверяет доступ к провайдеру Oauth во время инициализации
+	CheckAccess() error
 }
 
 // Providers представляет собой карту провайдеров Oauth, где ключом является имя провайдера.

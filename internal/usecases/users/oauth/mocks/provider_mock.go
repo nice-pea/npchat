@@ -217,6 +217,50 @@ func (_mock *Provider) User(token userr.OpenAuthToken) (userr.OpenAuthUser, erro
 	return r0, r1
 }
 
+// CheckAccess provides a mock function for the type Provider
+func (_mock *Provider) CheckAccess() error {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckAccess")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func() error); ok {
+		r0 = returnFunc()
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Provider_CheckAccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckAccess'
+type Provider_CheckAccess_Call struct {
+	*mock.Call
+}
+
+// CheckAccess is a helper method to define mock.On call
+func (_e *Provider_Expecter) CheckAccess() *Provider_CheckAccess_Call {
+	return &Provider_CheckAccess_Call{Call: _e.mock.On("CheckAccess")}
+}
+
+func (_c *Provider_CheckAccess_Call) Run(run func()) *Provider_CheckAccess_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Provider_CheckAccess_Call) Return(err error) *Provider_CheckAccess_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Provider_CheckAccess_Call) RunAndReturn(run func() error) *Provider_CheckAccess_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Provider_User_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'User'
 type Provider_User_Call struct {
 	*mock.Call

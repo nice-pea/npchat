@@ -108,3 +108,23 @@ func (o *Github) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 func (o *Github) AuthorizationURL(state string) string {
 	return o.config.AuthCodeURL(state)
 }
+
+// CheckAccess проверяет доступ к провайдеру Oauth во время инициализации.
+func (o *Github) CheckAccess() error {
+	if o.config.ClientID == "" {
+		return fmt.Errorf("github oauth: ClientID не может быть пустым")
+	}
+	if o.config.ClientSecret == "" {
+		return fmt.Errorf("github oauth: ClientSecret не может быть пустым")
+	}
+	if o.config.RedirectURL == "" {
+		return fmt.Errorf("github oauth: RedirectURL не может быть пустым")
+	}
+
+	authURL := o.config.AuthCodeURL("test-state")
+	if authURL == "" {
+		return fmt.Errorf("github oauth: не удалось сгенерировать URL авторизации")
+	}
+
+	return nil
+}

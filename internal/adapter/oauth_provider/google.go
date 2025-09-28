@@ -111,3 +111,23 @@ func (o *Google) AuthorizationURL(state string) string {
 	// Сгенерировать URL
 	return o.config.AuthCodeURL(state)
 }
+
+// CheckAccess проверяет доступ к провайдеру Oauth во время инициализации.
+func (o *Google) CheckAccess() error {
+	if o.config.ClientID == "" {
+		return fmt.Errorf("google oauth: ClientID не может быть пустым")
+	}
+	if o.config.ClientSecret == "" {
+		return fmt.Errorf("google oauth: ClientSecret не может быть пустым")
+	}
+	if o.config.RedirectURL == "" {
+		return fmt.Errorf("google oauth: RedirectURL не может быть пустым")
+	}
+
+	authURL := o.config.AuthCodeURL("test-state")
+	if authURL == "" {
+		return fmt.Errorf("google oauth: не удалось сгенерировать URL авторизации")
+	}
+
+	return nil
+}
