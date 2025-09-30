@@ -16,7 +16,7 @@ ENV GOOS=linux
 RUN go build -ldflags "-X main.version=${VERSION} -X main.buildDate=$(date +"%Y-%m-%dT%H:%M:%SZ") -X main.commit=${COMMIT}" -o npchat cmd/npchat/main.go
 
 # Финальный образ
-FROM alpine:latest
+FROM alpine:3.22.1
 WORKDIR /app
 COPY --from=builder /app/npchat ./
 # Для возможности предевать аргументы не указывая исполняемый файл
