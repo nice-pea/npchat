@@ -1,0 +1,33 @@
+name: Собрать образ и отправить в docker-репозиторий
+
+on:
+  push:
+    tags:
+      # Запускать workflow при создании тега начиная с 'v'
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+
+      - name: Собрать docker-образ
+        run: docker build -t ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.ref_name }} -f Containerfile --build-arg VERSION=${{ github.ref_name }} --build-arg COMMIT=${{ github.sha }} .
+
+      - name: Войти в DockerHub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Отправить образ в DockerHub
+        run: docker push ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}
