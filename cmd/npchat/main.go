@@ -18,6 +18,7 @@ import (
 var (
 	version   string
 	buildDate string
+	commit    string
 )
 
 func main() {
@@ -59,7 +60,7 @@ func initCliCommand() *cli.Command {
 		Action: func(ctx context.Context, command *cli.Command) error {
 			return app.Run(ctx, cfg)
 		},
-		Version: fmt.Sprintf("%s (built %s)", version, buildDate),
+		Version: fmt.Sprintf("%s (built %s, commit %s)", version, buildDate, commit),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "pgsql-dsn",

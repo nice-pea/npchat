@@ -1,4 +1,4 @@
-# Build stage
+# Этап сборки исполняемого файла внутри контейнера
 FROM golang:1.24 AS builder
 
 WORKDIR /app
@@ -9,14 +9,17 @@ RUN go mod download
 COPY . .
 
 ARG VERSION="dev"
+ARG COMMIT="unknown"
 
 ENV CGO_ENABLED=0
 ENV GOOS=linux
-RUN go build -ldflags "-X main.version=${VERSION} -X main.buildDate=$(date +"%Y-%m-%dT%H:%M:%SZ")" -o npchat cmd/npchat/main.go
+RUN go build -ldflags "-X main.version=${VERSION} -X main.buildDate=$(date +"%Y-%m-%dT%H:%M:%SZ") -X main.commit=${COMMIT}" -o npchat cmd/npchat/main.go
 
-# Final stage
+# Финальный образ
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/npchat ./
-CMD ["./npchat"]
+# Для возможности предевать аргументы не указывая исполняемый файл
 ENTRYPOINT ["./npchat"]
+# Запуск приложения при старте контейнера
+CMD ["./npchat"]
