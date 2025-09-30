@@ -1,10 +1,13 @@
 **/.github
+**/.idea
+**/.vscode
 bin
 infra
+**/.env.*
 **/.gitignore
 **/.containerignore
+.mockery.yaml
 Containerfile
 LICENSE
 Makefile
 README.md
-server-requests.http
