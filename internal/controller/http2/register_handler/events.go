@@ -2,6 +2,7 @@ package registerHandler
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -42,13 +43,26 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 						return
 					}
 				}
-				// Отправлять только не-healthcheck события
-				if event.Type != "" && event.Type != "healthcheck" {
+				// Отправлять события клиенту
+				if event.Type != "" {
 					select {
 					case eventsChan <- event:
 					case <-reqCtxDone:
 						return
 					}
+				}
+			}, func(ctx context.Context) error {
+				// Healthcheck: попытаться отправить keepalive клиенту
+				select {
+				case eventsChan <- "keepalive":
+					// Успешно отправили, клиент слушает
+					return nil
+				case <-ctx.Done():
+					// Таймаут или отмена, клиент не отвечает
+					return ctx.Err()
+				case <-reqCtxDone:
+					// Запрос завершён, клиент отключился
+					return context.Canceled
 				}
 			})
 			if err != nil {
@@ -73,9 +87,18 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 					var errFprint error
 					select {
 					case event := <-eventsChan:
-						// Отправлять события как json
-						b, _ := json.Marshal(event)
-						_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
+						// Проверить тип события
+						switch v := event.(type) {
+						case events.Event:
+							// Отправлять события как json
+							b, _ := json.Marshal(v)
+							_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
+						case string:
+							// Отправлять keepalive (из healthcheck)
+							if v == "keepalive" {
+								_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
+							}
+						}
 					case err := <-errorsChan:
 						// Отправлять ошибки
 						_, errFprint = fmt.Fprint(w, formatSSEMessage("error", err.Error()))
@@ -126,5 +149,5 @@ type UsecasesForEvents interface {
 }
 
 type EventListener interface {
-	AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error)
+	AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error), healthcheck func(ctx context.Context) error) (removeListener func(), err error)
 }

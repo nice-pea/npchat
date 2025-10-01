@@ -1,6 +1,7 @@
 package eventsBus
 
 import (
+	"context"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -22,10 +23,10 @@ func Test_EventsBus(t *testing.T) {
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		_, err := b.AddListener(userID, sessionID, nil)
+		_, err := b.AddListener(userID, sessionID, nil, nil)
 		require.NoError(t, err)
 
-		_, err = b.AddListener(userID, sessionID, nil)
+		_, err = b.AddListener(userID, sessionID, nil, nil)
 		require.ErrorIs(t, err, ErrDuplicateSession)
 	})
 
@@ -36,7 +37,7 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		removeListener, err := b.AddListener(userID, sessionID, nil)
+		removeListener, err := b.AddListener(userID, sessionID, nil, nil)
 		require.NoError(t, err)
 
 		// Отменить прослушивание со стороны подписчикаы
@@ -47,14 +48,14 @@ func Test_EventsBus(t *testing.T) {
 			// Ошибка об отмене прослушивания сервером
 			require.ErrorIs(t, err, ErrListenerForciblyCanceled)
 			require.Zero(t, event)
-		})
+		}, nil)
 		require.NoError(t, err)
 
 		// Отменить прослушивание со стороны сервера
 		b.Cancel(sessionID)
 
 		// Запустить прослушивание
-		_, err = b.AddListener(userID, sessionID, nil)
+		_, err = b.AddListener(userID, sessionID, nil, nil)
 		require.NoError(t, err)
 	})
 
@@ -64,10 +65,13 @@ func Test_EventsBus(t *testing.T) {
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		// Создать заблокированный слушатель (не обрабатывает события)
+		// Создать слушателя с заблокированным healthcheck
 		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
-			// Заблокировать обработчик навсегда
-			select {}
+			// Обработчик событий
+		}, func(ctx context.Context) error {
+			// Healthcheck заблокирован навсегда (имитация отключенного клиента)
+			<-ctx.Done()
+			return ctx.Err()
 		})
 		require.NoError(t, err)
 
@@ -78,6 +82,9 @@ func Test_EventsBus(t *testing.T) {
 			if event.Type == "test" {
 				eventReceived <- true
 			}
+		}, func(ctx context.Context) error {
+			// Новый healthcheck работает нормально
+			return nil
 		})
 		require.NoError(t, err)
 
@@ -99,15 +106,20 @@ func Test_EventsBus(t *testing.T) {
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		// Создать активный слушатель (быстро обрабатывает события)
+		// Создать активный слушатель с рабочим healthcheck
 		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
-			// Быстро вернуться
+			// Обработчик событий
+		}, func(ctx context.Context) error {
+			// Healthcheck работает нормально (клиент активен)
+			return nil
 		})
 		require.NoError(t, err)
 
 		// Попытаться добавить нового слушателя для той же сессии
 		// Healthcheck должен определить, что старый слушатель активен
-		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {})
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {}, func(ctx context.Context) error {
+			return nil
+		})
 		require.ErrorIs(t, err, ErrDuplicateSession)
 	})
 
@@ -135,7 +147,7 @@ func Test_EventsBus(t *testing.T) {
 				mu.Lock()
 				eventsCountByUserID[userID]++
 				mu.Unlock()
-			})
+			}, nil)
 			require.NoError(t, err)
 		}
 
@@ -155,7 +167,7 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {})
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {}, nil)
 		require.NoError(t, err)
 		time.Sleep(time.Millisecond)
 
@@ -170,14 +182,14 @@ func Test_EventsBus(t *testing.T) {
 
 		// Запустить много слушаетелй
 		for range 100 {
-			_, err := b.AddListener(uuid.New(), uuid.New(), func(event events.Event, err error) {})
+			_, err := b.AddListener(uuid.New(), uuid.New(), func(event events.Event, err error) {}, nil)
 			require.NoError(t, err)
 		}
 
 		// Закрыть сервер
 		b.Close()
 		// Попытаться запустить нового слушателя
-		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
+		_, err := b.AddListener(uuid.New(), uuid.New(), nil, nil)
 		require.ErrorIs(t, err, ErrBusClosed)
 		// Убедиться что список слушателей пуст
 		assert.Empty(t, b.activeListeners())
@@ -197,7 +209,7 @@ func Test_EventsBus(t *testing.T) {
 		for _, id := range listenerIDs {
 			rl, err := b.AddListener(id, id, func(event events.Event, err error) {
 				receivedEvents.Add(1)
-			})
+			}, nil)
 			require.NoError(t, err)
 			removeListeners = append(removeListeners, rl)
 		}

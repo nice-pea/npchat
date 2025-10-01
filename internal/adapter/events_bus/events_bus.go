@@ -32,10 +32,11 @@ type listener struct {
 	userID          uuid.UUID                           // ID пользователя
 	sessionID       uuid.UUID                           // ID сессии
 	f               func(event events.Event, err error) // Обработчик событий
+	healthcheck     func(ctx context.Context) error     // Проверка активности подписчика
 }
 
 // AddListener регистрирует обработчик событий
-func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
+func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error), healthcheck func(ctx context.Context) error) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed.Load() {
 		return nil, ErrBusClosed
@@ -54,9 +55,20 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 		existingListener := u.listeners[existingListenerIndex]
 		u.listenersMutex.Unlock()
 
-		// Выполнить healthcheck существующего слушателя
-		if u.healthcheck(existingListener) {
-			// Слушатель всё ещё активен, нельзя добавить дубликат
+		// Выполнить healthcheck существующего слушателя, если он задан
+		if existingListener.healthcheck != nil {
+			// Создать контекст с таймаутом для healthcheck
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
+
+			// Проверить активность слушателя
+			err := existingListener.healthcheck(ctx)
+			if err == nil {
+				// Слушатель всё ещё активен, нельзя добавить дубликат
+				return nil, ErrDuplicateSession
+			}
+		} else {
+			// Если healthcheck не задан, считаем слушателя активным
 			return nil, ErrDuplicateSession
 		}
 
@@ -70,7 +82,7 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 			go func() {
 				defer func() {
 					// Восстановиться от любой паники
-					recover()
+					_ = recover()
 				}()
 				existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
 			}()
@@ -81,9 +93,10 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	}
 
 	listener := &listener{
-		userID:    userID,
-		sessionID: sessionID,
-		f:         f,
+		userID:      userID,
+		sessionID:   sessionID,
+		f:           f,
+		healthcheck: healthcheck,
 	}
 	// Добавить слушателя
 	u.listeners = append(u.listeners, listener)
@@ -98,46 +111,6 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	}, nil
 }
 
-// healthcheck проверяет, жив ли слушатель, отправляя ему тестовое событие с таймаутом
-func (u *EventsBus) healthcheck(l *listener) bool {
-	// Если callback nil, считаем слушателя живым (но не обрабатывающим события)
-	if l.f == nil {
-		return true
-	}
-
-	// Создать контекст с таймаутом для healthcheck
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-
-	// Буферизованный канал для предотвращения утечки горутины
-	done := make(chan struct{}, 1)
-
-	go func() {
-		defer func() {
-			// Восстановиться от любой паники (например, если каналы закрыты)
-			recover()
-		}()
-
-		// Попытаться отправить healthcheck событие
-		l.f(events.Event{Type: "healthcheck"}, nil)
-
-		// Сигнализировать о завершении
-		select {
-		case done <- struct{}{}:
-		default:
-		}
-	}()
-
-	// Ожидать завершения или таймаута
-	select {
-	case <-done:
-		// Слушатель ответил вовремя, он жив
-		return true
-	case <-ctx.Done():
-		// Таймаут, слушатель считается мёртвым
-		return false
-	}
-}
 
 // Consume рассылает события слушателям
 func (u *EventsBus) Consume(ee []events.Event) {
