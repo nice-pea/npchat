@@ -1,5 +1,5 @@
-run-name: CI/Delivery
-name: Собрать образ и отправить в docker-репозиторий
+# Собрать образ и отправить в docker-репозиторий
+name: CI/Delivery
 
 on:
   push:

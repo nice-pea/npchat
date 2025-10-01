@@ -1,5 +1,5 @@
+# Стянуть образ и запустить docker-контейнер в рабочей среде
 name: CD/Deploy
-run-name: Стянуть образ и запустить docker-контейнер в рабочей среде
 
 on:
   workflow_dispatch:
