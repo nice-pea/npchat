@@ -28,14 +28,14 @@ jobs:
           script: |
             set -e
             NEW_VERSION=${{ github.ref_name }}
-            APP_NAME=npchat
-            PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
+            CONTAINER_NAME=npc.npchat
+            PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
             
             echo "Развертывание npchat:$NEW_VERSION..."
             
             # Останавливаем текущий контейнер
-            docker stop $APP_NAME || true
-            docker rm $APP_NAME || true
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
             
             # Загрузить переменные окружения, чтобы были доступны в docker-compose
             set -o allexport
