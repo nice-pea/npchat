@@ -17,6 +17,7 @@ jobs:
     steps:
       - name: Проверить существование docker-образа
         # Written with gigacode
+        id: check-image
         run: |
           TAG=${{ inputs.tag }}
           IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
@@ -31,7 +32,7 @@ jobs:
             echo "✅ Образ $IMAGE_NAME:$TAG существует."
           fi
 
-      - name: Deploy with rollback
+      - name: Развернуть новый образ
         uses: appleboy/ssh-action@v1.2.2
         # continue-on-error: true
         with:
@@ -41,7 +42,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_IMAGE=${{ github.ref_name }}
+            NEW_IMAGE=${{ inputs.tag }}
             CONTAINER_NAME=npc.npchat
             PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
             
