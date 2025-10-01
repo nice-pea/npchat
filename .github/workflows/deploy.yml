@@ -1,4 +1,4 @@
-name: Запустить docker-контейнер в рабочей среде
+name: Стянуть образ и запустить docker-контейнер в рабочей среде
 
 on:
   workflow_dispatch:
@@ -10,15 +10,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract version
-        id: version
-        run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
       - name: Validate tag
         run: |
-          if [ -z "${{ steps.version.outputs.VERSION }}" ]; then
-            echo "❌ No tag found. This workflow should be triggered by a git tag."
+          if [ -z "${{ github.ref_name }}" ]; then
+            echo "❌ Не найден тег/ветка. Этот workflow может быть запущен только на теге/ветке git."
             exit 1
           fi
 
@@ -32,25 +27,25 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_VERSION=${{ steps.version.outputs.VERSION }}
+            NEW_VERSION=${{ github.ref_name }}
             APP_NAME=npchat
             PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
 
-            echo "Deploying version $NEW_VERSION..."
+            echo "Развертывание npchat:$NEW_VERSION..."
 
-            # Останавливаем текущий контейнер
+          # Останавливаем текущий контейнер
             docker stop $APP_NAME || true
             docker rm $APP_NAME || true
 
-            # Загрузить переменные окружения, чтобы были доступны в docker-compose
+          # Загрузить переменные окружения, чтобы были доступны в docker-compose
             set -o allexport
             source /opt/npchat/.env.production
             set +o allexport
 
-            # Запускаем новый
-            RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/releases/"$NEW_VERSION"/infra/docker-compose.yaml up --wait npc.npchat)
+          # Запускаем новый
+            RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat)
             if [ $? -eq 0 ]; then
-              echo "✅ Deployment of $NEW_VERSION successful."
+              echo "✅ Успешно развернут npchat:$NEW_VERSION ."
               exit 0
             fi
 
@@ -58,8 +53,8 @@ jobs:
 
             # Пытаемся восстановить предыдущий контейнер
             if [ -n "$PREV_VERSION" ]; then
-              echo "🔄 Rolling back to previous version $PREV_VERSION..."
-              IMAGE_TAG=$PREV_VERSION docker compose -f /opt/npchat/releases/"$PREV_VERSION"/infra/docker-compose.yaml up --wait npc.npchat
+              echo "🔄 Откат к npchat:$PREV_VERSION..."
+              IMAGE_TAG=$PREV_VERSION docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat
             fi
         
     

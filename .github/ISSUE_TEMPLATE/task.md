@@ -1,8 +1,9 @@
 ---
 name: Задача
 about: Задача, описывающая обстоятельства и требования
-projects: nice-pea/1
-type: 28303277
+projects: 
+  - nice-pea/1
+type: ⚒️ Chore
 
 ---
 
