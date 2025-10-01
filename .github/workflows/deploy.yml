@@ -66,14 +66,17 @@ jobs:
             
             # Запускаем новый
             if IMAGE_TAG=$NEW_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat; then
-              echo "✅ Успешно развернут $CONTAINER_NAME:$NEW_IMAGE ."
+              echo "✅ Успешно развернут $CONTAINER_NAME:$NEW_IMAGE"
               exit 0
             fi
             
-            echo "❌ Развернуть $CONTAINER_NAME:$NEW_IMAGE не удалось."
+            echo "❌ Развернуть $CONTAINER_NAME:$NEW_IMAGE не удалось"
             
             # Пытаемся восстановить предыдущий контейнер
             if [ -n "$PREV_IMAGE" ]; then
               echo "🔄 Откат к $CONTAINER_NAME:$PREV_IMAGE..."
               IMAGE_TAG=$PREV_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat
+              echo "🆗 Успешно развернута прошлая версия $CONTAINER_NAME:$NEW_IMAGE"
             fi
+            
+            exit 2
