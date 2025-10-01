@@ -34,7 +34,8 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 				if err != nil {
 					errorsChan <- err
 				}
-				if event.Type != "" {
+				// Отправлять только не-healthcheck события
+				if event.Type != "" && event.Type != "healthcheck" {
 					eventsChan <- event
 				}
 			})

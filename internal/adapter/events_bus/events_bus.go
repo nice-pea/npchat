@@ -1,10 +1,12 @@
 package eventsBus
 
 import (
+	"context"
 	"errors"
 	"slices"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -40,16 +42,40 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	}
 
 	u.listenersMutex.Lock()
-	defer u.listenersMutex.Unlock()
 
-	// Проверить, что слушатель ещё не зарегистрирован
-	sessionAlreadyListen := slices.ContainsFunc(u.listeners, func(l *listener) bool {
+	// Найти существующего слушателя для этой сессии
+	existingListenerIndex := slices.IndexFunc(u.listeners, func(l *listener) bool {
 		return l.userID == userID &&
 			l.sessionID == sessionID &&
 			!l.listeningIsOver
 	})
-	if sessionAlreadyListen {
-		return nil, ErrDuplicateSession
+
+	if existingListenerIndex != -1 {
+		existingListener := u.listeners[existingListenerIndex]
+		u.listenersMutex.Unlock()
+
+		// Выполнить healthcheck существующего слушателя
+		if u.healthcheck(existingListener) {
+			// Слушатель всё ещё активен, нельзя добавить дубликат
+			return nil, ErrDuplicateSession
+		}
+
+		// Слушатель мёртв, удалить его
+		u.listenersMutex.Lock()
+		existingListener.listeningIsOver = true
+		u.listenersMutex.Unlock()
+
+		// Отправить ошибку старому слушателю в отдельной горутине
+		go func() {
+			defer func() {
+				// Восстановиться от любой паники
+				recover()
+			}()
+			existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
+		}()
+
+		// Захватить мьютекс снова для добавления нового слушателя
+		u.listenersMutex.Lock()
 	}
 
 	listener := &listener{
@@ -60,12 +86,50 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 	// Добавить слушателя
 	u.listeners = append(u.listeners, listener)
 
+	u.listenersMutex.Unlock()
+
 	return func() {
 		u.listenersMutex.Lock()
 		// Пометить слушателя как окончившего слушать события
 		listener.listeningIsOver = true
 		u.listenersMutex.Unlock()
 	}, nil
+}
+
+// healthcheck проверяет, жив ли слушатель, отправляя ему тестовое событие с таймаутом
+func (u *EventsBus) healthcheck(l *listener) bool {
+	// Создать контекст с таймаутом для healthcheck
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	// Буферизованный канал для предотвращения утечки горутины
+	done := make(chan struct{}, 1)
+
+	go func() {
+		defer func() {
+			// Восстановиться от любой паники (например, если каналы закрыты)
+			recover()
+		}()
+
+		// Попытаться отправить healthcheck событие
+		l.f(events.Event{Type: "healthcheck"}, nil)
+
+		// Сигнализировать о завершении
+		select {
+		case done <- struct{}{}:
+		default:
+		}
+	}()
+
+	// Ожидать завершения или таймаута
+	select {
+	case <-done:
+		// Слушатель ответил вовремя, он жив
+		return true
+	case <-ctx.Done():
+		// Таймаут, слушатель считается мёртвым
+		return false
+	}
 }
 
 // Consume рассылает события слушателям

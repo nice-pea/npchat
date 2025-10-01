@@ -58,6 +58,59 @@ func Test_EventsBus(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("healthcheck позволяет вытеснить неактивного слушателя", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Создать заблокированный слушатель (не обрабатывает события)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			// Заблокировать обработчик навсегда
+			select {}
+		})
+		require.NoError(t, err)
+
+		// Попытаться добавить нового слушателя для той же сессии
+		// Healthcheck должен обнаружить, что старый слушатель не отвечает
+		eventReceived := make(chan bool, 1)
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			if event.Type == "test" {
+				eventReceived <- true
+			}
+		})
+		require.NoError(t, err)
+
+		// Отправить тестовое событие
+		b.Consume([]events.Event{{Type: "test", Recipients: []uuid.UUID{userID}}})
+
+		// Убедиться, что новый слушатель получил событие
+		select {
+		case <-eventReceived:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("новый слушатель не получил событие")
+		}
+	})
+
+	t.Run("healthcheck не вытесняет активного слушателя", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Создать активный слушатель (быстро обрабатывает события)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			// Быстро вернуться
+		})
+		require.NoError(t, err)
+
+		// Попытаться добавить нового слушателя для той же сессии
+		// Healthcheck должен определить, что старый слушатель активен
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {})
+		require.ErrorIs(t, err, ErrDuplicateSession)
+	})
+
 	t.Run("в сессии будут приходить только события направляемые пользователям", func(t *testing.T) {
 		b := new(EventsBus)
 		// Счетчик событий
