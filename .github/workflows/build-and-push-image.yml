@@ -1,3 +1,4 @@
+run-name: CI/Delivery
 name: Собрать образ и отправить в docker-репозиторий
 
 on:
