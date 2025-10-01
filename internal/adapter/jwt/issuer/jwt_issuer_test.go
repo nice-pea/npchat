@@ -41,8 +41,8 @@ func Test_Issuer_Issue(t *testing.T) {
 	t.Run("jwt токены созданные с zero secret - невалидны", func(t *testing.T) {
 		var session = sessionn.Session{}
 
-		jwtC := Issuer{}
-		token, err := jwtC.Issue(session)
+		issuer := Issuer{}
+		token, err := issuer.Issue(session)
 		require.Error(t, err)
 		assert.Zero(t, token)
 	})
@@ -150,23 +150,23 @@ func Test_Issuer_Issue(t *testing.T) {
 			ID:     uuid.New(),
 			UserID: uuid.New(),
 		}
-		jwtC := Issuer{jwt2.Config{SecretKey: secret}}
+		issuer := Issuer{jwt2.Config{SecretKey: secret}}
 
-		IssuedAtStart := time.Now()
-		token, err := jwtC.Issue(session)
-		IssuedAtEnd := time.Now()
+		issuedAtStart := time.Now()
+		token, err := issuer.Issue(session)
+		issuedAtEnd := time.Now()
 
 		require.NoError(t, err)
 		claims := parse(t, token, []byte(secret))
-		IssuedAt := claims.IssuedAt
+		issuedAt := claims.IssuedAt
 		require.Equal(t, session.ID, claims.SessionID)
 		require.Equal(t, session.UserID, claims.UserID)
 
-		log.Println(IssuedAtStart)
-		log.Println(IssuedAt)
-		log.Println(IssuedAtEnd)
-		require.True(t, IssuedAt.Unix() >= IssuedAtStart.Unix())
-		require.True(t, IssuedAt.Unix() <= IssuedAtEnd.Unix())
+		log.Println(issuedAtStart)
+		log.Println(issuedAt)
+		log.Println(issuedAtEnd)
+		require.True(t, issuedAt.Unix() >= issuedAtStart.Unix())
+		require.True(t, issuedAt.Unix() <= issuedAtEnd.Unix())
 	})
 }
 

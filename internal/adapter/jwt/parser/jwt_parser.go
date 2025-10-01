@@ -24,7 +24,7 @@ type Parser struct {
 	Config jwt2.Config
 
 	VerifyTokenWithAdvancedChecks bool
-	cache                         redisCache.JWTIssuanceRegistry
+	Registry                      redisCache.Registry
 }
 
 var (
@@ -99,7 +99,7 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 		return middleware.OutJwt{}, err
 	}
 
-	timefromCache, err := p.cache.GetIssueTime(sessionId)
+	timefromCache, err := p.Registry.IssueTime(sessionId)
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
@@ -118,7 +118,7 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 }
 
 func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
-	if p.VerifyTokenWithAdvancedChecks && p.cache.Client != nil {
+	if p.VerifyTokenWithAdvancedChecks && p.Registry.Cli != nil {
 		return p.parseAndValidateJWTWithInvalidation(token)
 	}
 

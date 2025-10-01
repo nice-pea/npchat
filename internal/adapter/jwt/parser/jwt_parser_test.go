@@ -143,7 +143,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 	suite.Run("если VerifyTokenWithAdvancedChecks == true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
 
 		suite.Parser.VerifyTokenWithAdvancedChecks = true
-		suite.Parser.cache = redisCache.JWTIssuanceRegistry{}
+		suite.Parser.Registry = redisCache.Registry{}
 		var (
 			uid = uuid.New()
 			sid = uuid.New()
@@ -190,7 +190,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 			"iat":       time.Now().Unix(),
 		})
 
-		err := suite.Parser.cache.RegisterIssueTime(sid, time.Now())
+		err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now())
 		suite.Require().NoError(err)
 
 		claims, err := suite.Parser.Parse(token)
@@ -204,7 +204,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 			uid = uuid.New()
 			sid = uuid.New()
 		)
-		err := suite.Parser.cache.RegisterIssueTime(sid, time.Now().Add(time.Hour))
+		err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now().Add(time.Hour))
 		suite.Require().NoError(err)
 
 		token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
@@ -224,7 +224,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 			sid = uuid.New()
 		)
 
-		err := suite.Parser.cache.RegisterIssueTime(sid, time.Now().Add(-time.Hour))
+		err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now().Add(-time.Hour))
 		suite.Require().NoError(err)
 
 		token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
@@ -269,7 +269,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 			"iat":       time.Now().Unix(),
 		})
 
-		err := suite.Parser.cache.RegisterIssueTime(sid, time.Now())
+		err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now())
 		suite.Require().NoError(err)
 
 		time.Sleep(time.Second)

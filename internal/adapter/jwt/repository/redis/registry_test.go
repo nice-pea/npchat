@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (suite *testSuite) Test_JWTIssuanceRegistry() {
+func (suite *testSuite) Test_Registry() {
 	suite.Run("RegisterIssueTime", func() {
 		// RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
 		suite.Run("если sessionID пустой то вернется ошибка, в редис ничего не запишется", func() {
@@ -87,15 +87,15 @@ func (suite *testSuite) Test_JWTIssuanceRegistry() {
 		})
 
 	})
-	suite.Run("GetIssueTime", func() {
-		// GetIssueTime(sessionID uuid.UUID) (*time.Time, error)
+	suite.Run("IssueTime", func() {
+		// IssueTime(sessionID uuid.UUID) (*time.Time, error)
 		suite.Run("если sessionID пустой то вернется ошибка", func() {
-			issueTime, err := suite.RedisCli.GetIssueTime(uuid.UUID{})
+			issueTime, err := suite.RedisCli.IssueTime(uuid.UUID{})
 			suite.Require().ErrorIs(err, redisCache.ErrEmptySessionID)
 			suite.Assert().Zero(issueTime)
 		})
 		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {
-			issueTime, err := suite.RedisCli.GetIssueTime(uuid.New())
+			issueTime, err := suite.RedisCli.IssueTime(uuid.New())
 			suite.Require().NoError(err)
 			suite.Assert().Zero(issueTime)
 		})
@@ -104,7 +104,7 @@ func (suite *testSuite) Test_JWTIssuanceRegistry() {
 			issueTime := time.Now()
 			suite.setIssueTime(sessionId, issueTime, time.Minute)
 
-			issueTimeRepo, err := suite.RedisCli.GetIssueTime(sessionId)
+			issueTimeRepo, err := suite.RedisCli.IssueTime(sessionId)
 			suite.Require().NoError(err)
 			suite.Assert().True(issueTime.Equal(issueTimeRepo))
 		})

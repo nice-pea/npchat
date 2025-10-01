@@ -9,8 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type JWTIssuanceRegistry struct {
-	*redis.Client
+type Registry struct {
+	Cli *redis.Client
 	Ttl time.Duration
 }
 
@@ -19,30 +19,29 @@ var (
 	ErrEmptyIssueTime = errors.New("empty issue time")
 )
 
-func (ir *JWTIssuanceRegistry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
-	if sessionID == (uuid.UUID{}) {
+func (ir *Registry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
+	if sessionID == uuid.Nil {
 		return ErrEmptySessionID
 	}
-	if issueTime == (time.Time{}) {
+	if issueTime.IsZero() {
 		return ErrEmptyIssueTime
 	}
 
-	status := ir.Client.Set(context.TODO(), sessionID.String(), issueTime, ir.Ttl)
-	_, err := status.Result()
-	if err != nil {
+	status := ir.Cli.Set(context.TODO(), sessionID.String(), issueTime, ir.Ttl)
+	if _, err := status.Result(); err != nil {
 		return err
 	}
 
 	return nil
 }
-func (ir *JWTIssuanceRegistry) GetIssueTime(sessionID uuid.UUID) (time.Time, error) {
+func (ir *Registry) IssueTime(sessionID uuid.UUID) (time.Time, error) {
 	if sessionID == (uuid.UUID{}) {
 		return time.Time{}, ErrEmptySessionID
 	}
 
 	var issueTime time.Time
 
-	err := ir.Client.Get(context.TODO(), sessionID.String()).Scan(&issueTime)
+	err := ir.Cli.Get(context.TODO(), sessionID.String()).Scan(&issueTime)
 	if errors.Is(err, redis.Nil) {
 		return time.Time{}, nil
 

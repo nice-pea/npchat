@@ -14,9 +14,10 @@ import (
 
 type testSuite struct {
 	suite.Suite
-	cleanUp func()
-	cfg     jwt.Config
-	Parser  Parser
+	CleanUp   func()
+	Terminate func()
+	cfg       jwt.Config
+	Parser    Parser
 }
 
 func (suite *testSuite) newRedisContainer() {
@@ -26,7 +27,7 @@ func (suite *testSuite) newRedisContainer() {
 	dsn, err := container.ConnectionString(ctx)
 	suite.Require().NoError(err)
 
-	suite.cleanUp = func() {
+	suite.Terminate = func() {
 		suite.Require().NotNil(container)
 		container.Terminate(ctx)
 	}
@@ -36,6 +37,21 @@ func (suite *testSuite) newRedisContainer() {
 		VerifyTokenWithAdvancedChecks: true,
 		RedisDSN:                      dsn,
 	}
+	suite.CleanUp = func() {
+		if suite.Parser.Registry.Cli != nil {
+			suite.Parser.Registry.Cli.FlushDB(context.Background())
+		}
+		cli, err := redisCache.Init(redisCache.Config{
+			DSN: suite.cfg.RedisDSN,
+		})
+		suite.Require().NoError(err)
+		suite.Parser = Parser{
+			Config:                        suite.cfg,
+			VerifyTokenWithAdvancedChecks: true,
+			Registry:                      redisCache.Registry{Cli: cli},
+		}
+	}
+
 	cli, err := redisCache.Init(redisCache.Config{
 		DSN: dsn,
 	})
@@ -44,7 +60,7 @@ func (suite *testSuite) newRedisContainer() {
 	suite.Parser = Parser{
 		Config:                        suite.cfg,
 		VerifyTokenWithAdvancedChecks: true,
-		cache:                         redisCache.JWTIssuanceRegistry{Client: cli},
+		Registry:                      redisCache.Registry{Cli: cli},
 	}
 }
 
@@ -59,24 +75,13 @@ func (suite *testSuite) SetupSuite() {
 
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
-	if suite.Parser.cache.Client != nil {
-		suite.Parser.cache.FlushDB(context.Background())
-	}
-	cli, err := redisCache.Init(redisCache.Config{
-		DSN: suite.cfg.RedisDSN,
-	})
-	suite.Require().NoError(err)
-	suite.Parser = Parser{
-		Config:                        suite.cfg,
-		VerifyTokenWithAdvancedChecks: true,
-		cache:                         redisCache.JWTIssuanceRegistry{Client: cli},
-	}
+	suite.CleanUp()
 
 }
 
 // TearDownSuite выполняется после всех тестов
 func (suite *testSuite) TearDownSuite() {
-	suite.cleanUp()
+	suite.Terminate()
 }
 
 func (suite *testSuite) mustParseUuid(s string) uuid.UUID {

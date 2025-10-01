@@ -15,9 +15,10 @@ import (
 
 type testSuite struct {
 	suite.Suite
-	cleanUp  func()
-	DSN      string
-	RedisCli redisCache.JWTIssuanceRegistry
+	Terminate func()
+	CleanUp   func()
+	DSN       string
+	RedisCli  redisCache.Registry
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -31,11 +32,14 @@ func (suite *testSuite) newRedisContainer() {
 	dsn, err := container.ConnectionString(ctx)
 	suite.Require().NoError(err)
 
-	suite.cleanUp = func() {
+	suite.Terminate = func() {
 		suite.Require().NotNil(container)
 		container.Terminate(ctx)
 	}
-
+	suite.CleanUp = func() {
+		suite.RedisCli.Cli.FlushDB(context.Background())
+		suite.RedisCli.Ttl = 2 * time.Minute
+	}
 	suite.DSN = dsn
 
 	redisCli, err := redisCache.Init(redisCache.Config{
@@ -43,7 +47,7 @@ func (suite *testSuite) newRedisContainer() {
 	})
 
 	suite.Require().NoError(err)
-	suite.RedisCli = redisCache.JWTIssuanceRegistry{redisCli, 2 * time.Minute}
+	suite.RedisCli = redisCache.Registry{redisCli, 2 * time.Minute}
 
 }
 
@@ -52,25 +56,14 @@ func (suite *testSuite) SetupSuite() {
 	suite.newRedisContainer()
 }
 
-// SetupTest выполняется перед каждым тестом
-func (suite *testSuite) SetupTest() {
-
-}
-
-// TearDownTest выполняется после каждого теста
-func (suite *testSuite) TearDownTest() {
-	// println("TearDownTest executed")
-}
-
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
-	suite.RedisCli.FlushDB(context.Background())
-	suite.RedisCli.Ttl = 2 * time.Minute
+	suite.CleanUp()
 }
 
 // TearDownSuite выполняется после всех тестов
 func (suite *testSuite) TearDownSuite() {
-	suite.cleanUp()
+	suite.Terminate()
 }
 
 func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
@@ -78,7 +71,7 @@ func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 	ctx := context.Background()
 	var issueTime time.Time
 
-	err := suite.RedisCli.Get(ctx, sessionID.String()).Scan(&issueTime)
+	err := suite.RedisCli.Cli.Get(ctx, sessionID.String()).Scan(&issueTime)
 	if !errors.Is(err, redis.Nil) {
 		suite.Require().NoError(err)
 	}
@@ -87,20 +80,20 @@ func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 
 func (suite *testSuite) setIssueTime(sessionID uuid.UUID, issueTime time.Time, ttl time.Duration) {
 	ctx := context.Background()
-	err := suite.RedisCli.Set(ctx, sessionID.String(), issueTime, ttl).Err()
+	err := suite.RedisCli.Cli.Set(ctx, sessionID.String(), issueTime, ttl).Err()
 	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) redisEmpty() {
 	ctx := context.Background()
-	keys, err := suite.RedisCli.Keys(ctx, "*").Result()
+	keys, err := suite.RedisCli.Cli.Keys(ctx, "*").Result()
 	suite.Require().NoError(err)
 	suite.Require().Empty(keys, "Redis должен быть пустым")
 }
 
 func (suite *testSuite) redisKeys() []string {
 	ctx := context.Background()
-	keys, err := suite.RedisCli.Keys(ctx, "*").Result()
+	keys, err := suite.RedisCli.Cli.Keys(ctx, "*").Result()
 	suite.Require().NoError(err)
 	return keys
 }

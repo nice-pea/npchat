@@ -23,12 +23,14 @@ type customClaims struct {
 // Issue создает jwt на основе некоторых данных из session
 func (c *Issuer) Issue(session sessionn.Session) (string, error) {
 	// создаем claims
+
+	nowTime := time.Now()
 	claims := customClaims{
 		UserID:    session.UserID,
 		SessionID: session.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(2 * time.Minute)},
-			IssuedAt:  &jwt.NumericDate{Time: time.Now()},
+			ExpiresAt: &jwt.NumericDate{Time: nowTime.Add(2 * time.Minute)},
+			IssuedAt:  &jwt.NumericDate{Time: nowTime},
 		},
 	}
 

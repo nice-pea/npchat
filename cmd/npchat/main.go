@@ -118,9 +118,9 @@ func initCliCommand() *cli.Command {
 				Usage:       "Секрет jwt подписи",
 			},
 			&cli.BoolFlag{
-				Name:        "jwt-VerifyTokenWithAdvancedChecks",
+				Name:        "jwt-verify-token-with-advanced-checks",
 				Destination: &cfg.Jwt.VerifyTokenWithAdvancedChecks,
-				Usage:       "true или false для использованяи продвинутой проверки токена",
+				Usage:       "для использования продвинутой проверки токена",
 			},
 			&cli.StringFlag{
 				Name:        "jwt-redis-dsn",
