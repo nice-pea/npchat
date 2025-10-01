@@ -65,8 +65,7 @@ jobs:
             export IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
             
             # Запускаем новый
-            RESULT=$(IMAGE_TAG=$NEW_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat)
-            if [ $? -eq 0 ]; then
+            if IMAGE_TAG=$NEW_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat; then
               echo "✅ Успешно развернут $CONTAINER_NAME:$NEW_IMAGE ."
               exit 0
             fi
