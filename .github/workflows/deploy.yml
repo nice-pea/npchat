@@ -22,9 +22,12 @@ jobs:
         run: |
           TAG=${{ inputs.tag }}
           IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
-          
+
           echo "Проверяю существование образа $IMAGE_NAME:$TAG..."
-          
+
+          # Авторизоваться в registry
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
           # Попробуем получить информацию о манифесте образа
           if ! docker manifest inspect "$IMAGE_NAME:$TAG" > /dev/null 2>&1; then
             echo "❌ Образ $IMAGE_NAME:$TAG не существует в registry."
