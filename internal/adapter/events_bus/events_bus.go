@@ -66,13 +66,15 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 		u.listenersMutex.Unlock()
 
 		// Отправить ошибку старому слушателю в отдельной горутине
-		go func() {
-			defer func() {
-				// Восстановиться от любой паники
-				recover()
+		if existingListener.f != nil {
+			go func() {
+				defer func() {
+					// Восстановиться от любой паники
+					recover()
+				}()
+				existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
 			}()
-			existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
-		}()
+		}
 
 		// Захватить мьютекс снова для добавления нового слушателя
 		u.listenersMutex.Lock()
@@ -98,6 +100,11 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 
 // healthcheck проверяет, жив ли слушатель, отправляя ему тестовое событие с таймаутом
 func (u *EventsBus) healthcheck(l *listener) bool {
+	// Если callback nil, считаем слушателя живым (но не обрабатывающим события)
+	if l.f == nil {
+		return true
+	}
+
 	// Создать контекст с таймаутом для healthcheck
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -178,7 +185,9 @@ func (u *EventsBus) Consume(ee []events.Event) {
 	for _, packet := range le {
 		go func() {
 			defer wg.Done()
-			packet.listener.f(packet.event, nil)
+			if packet.listener.f != nil {
+				packet.listener.f(packet.event, nil)
+			}
 		}()
 	}
 
@@ -204,7 +213,9 @@ func (u *EventsBus) Close() {
 	for _, listener := range snapshot {
 		go func() {
 			defer wg.Done()
-			listener.f(events.Event{}, ErrBusClosed)
+			if listener.f != nil {
+				listener.f(events.Event{}, ErrBusClosed)
+			}
 		}()
 	}
 
@@ -244,7 +255,9 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	u.listenersMutex.Unlock()
 
 	// Отправить ошибку
-	target.f(events.Event{}, ErrListenerForciblyCanceled)
+	if target.f != nil {
+		target.f(events.Event{}, ErrListenerForciblyCanceled)
+	}
 }
 
 // activeListeners возвращает активных слушателей
