@@ -30,6 +30,7 @@ jobs:
             NEW_VERSION=${{ github.ref_name }}
             APP_NAME=npchat
             PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
+            IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
             
             echo "Развертывание npchat:$NEW_VERSION..."
             
