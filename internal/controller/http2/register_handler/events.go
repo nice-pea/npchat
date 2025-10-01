@@ -25,28 +25,35 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
-			// Канал для обработки событий в отдельной горутине
-			eventsChan := make(chan any)
-			// Канал для обработки ошибок в отдельной горутине
-			errorsChan := make(chan error)
+			// Канал для обработки событий в отдельной горутине (буферизованный для предотвращения блокировки)
+			eventsChan := make(chan any, 16)
+			// Канал для обработки ошибок в отдельной горутине (буферизованный для предотвращения блокировки)
+			errorsChan := make(chan error, 16)
+
+			// Канал для отслеживания завершения запроса (используется в callback)
+			reqCtxDone := ctx.Context().Done()
 
 			removeListener, err := eventListener.AddListener(UserID(ctx), SessionID(ctx), func(event events.Event, err error) {
+				// Безопасная отправка с учетом закрытия контекста
 				if err != nil {
-					errorsChan <- err
+					select {
+					case errorsChan <- err:
+					case <-reqCtxDone:
+						return
+					}
 				}
 				// Отправлять только не-healthcheck события
 				if event.Type != "" && event.Type != "healthcheck" {
-					eventsChan <- event
+					select {
+					case eventsChan <- event:
+					case <-reqCtxDone:
+						return
+					}
 				}
 			})
 			if err != nil {
-				close(eventsChan)
-				close(errorsChan)
 				return err
 			}
-
-			// Канал для отслеживания завершения запроса
-			reqCtxDone := ctx.Context().Done()
 
 			// Регистрация обработчика для отправки потока сообщений
 			ctx.Set("Content-Type", "text/event-stream")
@@ -56,12 +63,10 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 				// Таймер для отправки keepalive
 				keepAliveTickler := time.NewTicker(time.Second * 5)
 
-				// Действия при звершении прослушивания событий
+				// Действия при завершении прослушивания событий
 				defer func() {
 					removeListener()
 					keepAliveTickler.Stop()
-					close(errorsChan)
-					close(eventsChan)
 				}()
 
 				for {
