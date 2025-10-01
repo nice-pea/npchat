@@ -30,7 +30,6 @@ jobs:
             NEW_VERSION=${{ github.ref_name }}
             APP_NAME=npchat
             PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
-            IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
             
             echo "Развертывание npchat:$NEW_VERSION..."
             
@@ -42,6 +41,9 @@ jobs:
             set -o allexport
             source /opt/npchat/.env.production
             set +o allexport
+            
+            # Название образа
+            export IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
             
             # Запускаем новый
             RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat)
