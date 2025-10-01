@@ -28,6 +28,7 @@ type Parser struct {
 }
 
 var (
+	ErrIatEmpty     = errors.New("время создания токена отстутсвует")
 	ErrTimeOut      = errors.New("время жизни токена истекло")
 	ErrTokenRevoked = errors.New("токен аннулирован")
 )
@@ -98,11 +99,14 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 		return middleware.OutJwt{}, err
 	}
 
-	issuedAt := claims.IssuedAt
-
 	timefromCache, err := p.cache.GetIssueTime(sessionId)
 	if err != nil {
 		return middleware.OutJwt{}, err
+	}
+
+	issuedAt := claims.IssuedAt
+	if issuedAt == nil {
+		return middleware.OutJwt{}, ErrIatEmpty
 	}
 
 	if timefromCache.After(issuedAt.Time) {
