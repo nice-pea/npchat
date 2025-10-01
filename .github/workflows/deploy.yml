@@ -27,11 +27,11 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_VERSION=${{ github.ref_name }}
+            NEW_IMAGE=${{ github.ref_name }}
             CONTAINER_NAME=npc.npchat
-            PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
+            PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
             
-            echo "Развертывание npchat:$NEW_VERSION..."
+            echo "Развертывание $CONTAINER_NAME:$NEW_IMAGE..."
             
             # Останавливаем текущий контейнер
             docker stop $CONTAINER_NAME || true
@@ -46,16 +46,16 @@ jobs:
             export IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
             
             # Запускаем новый
-            RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat)
+            RESULT=$(IMAGE_TAG=$NEW_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat)
             if [ $? -eq 0 ]; then
-              echo "✅ Успешно развернут npchat:$NEW_VERSION ."
+              echo "✅ Успешно развернут $CONTAINER_NAME:$NEW_IMAGE ."
               exit 0
             fi
             
-            echo "❌ Deployment of $NEW_VERSION failed."
+            echo "❌ Развернуть $CONTAINER_NAME:$NEW_IMAGE не удалось."
             
             # Пытаемся восстановить предыдущий контейнер
-            if [ -n "$PREV_VERSION" ]; then
-              echo "🔄 Откат к npchat:$PREV_VERSION..."
-              IMAGE_TAG=$PREV_VERSION docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat
+            if [ -n "$PREV_IMAGE" ]; then
+              echo "🔄 Откат к npchat:$PREV_IMAGE..."
+              IMAGE_TAG=$PREV_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat
             fi
