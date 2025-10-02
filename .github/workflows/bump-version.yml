@@ -41,3 +41,4 @@ jobs:
           MINOR_STRING_TOKEN: _
           PATCH_STRING_TOKEN: _
           NONE_STRING_TOKEN: _
+          FORCE_WITHOUT_CHANGES: true
