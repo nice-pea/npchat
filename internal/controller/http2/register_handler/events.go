@@ -26,10 +26,9 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
-			// Канал для обработки событий в отдельной горутине (буферизованный для предотвращения блокировки)
-			eventsChan := make(chan any, 16)
-			// Канал для обработки ошибок в отдельной горутине (буферизованный для предотвращения блокировки)
-			errorsChan := make(chan error, 16)
+			eventsChan := make(chan any)
+			errorsChan := make(chan error)
+			healthcheckChan := make(chan chan error)
 
 			// Канал для отслеживания завершения запроса (используется в callback)
 			reqCtxDone := ctx.Context().Done()
@@ -52,16 +51,18 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 					}
 				}
 			}, func(ctx context.Context) error {
-				// Healthcheck: попытаться отправить keepalive клиенту
+				respChan := make(chan error, 1)
 				select {
-				case eventsChan <- "keepalive":
-					// Успешно отправили, клиент слушает
-					return nil
+				case healthcheckChan <- respChan:
+					select {
+					case err := <-respChan:
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				case <-ctx.Done():
-					// Таймаут или отмена, клиент не отвечает
 					return ctx.Err()
 				case <-reqCtxDone:
-					// Запрос завершён, клиент отключился
 					return context.Canceled
 				}
 			})
@@ -87,23 +88,25 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 					var errFprint error
 					select {
 					case event := <-eventsChan:
-						// Проверить тип события
 						switch v := event.(type) {
 						case events.Event:
-							// Отправлять события как json
 							b, _ := json.Marshal(v)
 							_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
-						case string:
-							// Отправлять keepalive (из healthcheck)
-							if v == "keepalive" {
-								_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
-							}
 						}
 					case err := <-errorsChan:
-						// Отправлять ошибки
 						_, errFprint = fmt.Fprint(w, formatSSEMessage("error", err.Error()))
+					case respChan := <-healthcheckChan:
+						_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
+						if errFprint == nil {
+							errFprint = w.Flush()
+						}
+						respChan <- errFprint
+						if errFprint != nil {
+							slog.Warn("Events: healthcheck failed: " + errFprint.Error())
+							return
+						}
+						continue
 					case <-keepAliveTickler.C:
-						// Отправлять keepalive
 						_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
 					case <-reqCtxDone:
 						return
