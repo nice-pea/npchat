@@ -24,10 +24,10 @@ jobs:
   bump_version:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if current ref is a tag
+      - name: Check if current ref is a tag or master branch
         run: |
-          if [[ "${{ github.ref }}" != refs/tags/* ]]; then
-            echo "❌ Workflow может быть запущен только из тега."
+          if [[ "${{ github.ref }}" != refs/tags/* && "${{ github.ref }}" != "refs/heads/master" ]]; then
+            echo "❌ Workflow может быть запущен только из тега или ветки master."
             exit 1
           fi
 
@@ -40,7 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           TAG_PREFIX: v
-          TAG_CONTEXT: branch
+          TAG_CONTEXT: ${{ github.ref == 'refs/heads/master' && 'repo' || 'branch' }}
           PRERELEASE: ${{ inputs.label != '' }}
           PRERELEASE_SUFFIX: ${{ inputs.label }}
           DEFAULT_BUMP: ${{ inputs.level }}
