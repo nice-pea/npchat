@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/nice-pea/npchat/internal/app"
+	"github.com/nice-pea/npchat/internal/common"
 )
 
 var (
@@ -58,7 +59,12 @@ func initCliCommand() *cli.Command {
 	return &cli.Command{
 		Name: "npchat",
 		Action: func(ctx context.Context, command *cli.Command) error {
-			return app.Run(ctx, cfg)
+			buildInfo := common.BuildInfo{
+				Version:   version,
+				BuildDate: buildDate,
+				Commit:    commit,
+			}
+			return app.Run(ctx, cfg, buildInfo)
 		},
 		Version: fmt.Sprintf("%s (built %s, commit %s)", version, buildDate, commit),
 		Flags: []cli.Flag{
