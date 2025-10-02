@@ -1,12 +1,10 @@
 package eventsBus
 
 import (
-	"context"
 	"errors"
 	"slices"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -32,11 +30,11 @@ type listener struct {
 	userID          uuid.UUID                           // ID пользователя
 	sessionID       uuid.UUID                           // ID сессии
 	f               func(event events.Event, err error) // Обработчик событий
-	healthcheck     func(ctx context.Context) error     // Проверка активности подписчика
 }
 
 // AddListener регистрирует обработчик событий
-func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error), healthcheck func(ctx context.Context) error) (removeListener func(), err error) {
+// При конфликте (дублирующая сессия) применяется принцип LIFO: первый подписчик принудительно отписывается
+func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed.Load() {
 		return nil, ErrBusClosed
@@ -51,31 +49,12 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 			!l.listeningIsOver
 	})
 
+	// Если найден существующий слушатель, применяем принцип LIFO
 	if existingListenerIndex != -1 {
 		existingListener := u.listeners[existingListenerIndex]
-		u.listenersMutex.Unlock()
 
-		// Выполнить healthcheck существующего слушателя, если он задан
-		if existingListener.healthcheck != nil {
-			// Создать контекст с таймаутом для healthcheck
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			defer cancel()
-
-			// Проверить активность слушателя
-			err := existingListener.healthcheck(ctx)
-			if err == nil {
-				// Слушатель всё ещё активен, нельзя добавить дубликат
-				return nil, ErrDuplicateSession
-			}
-		} else {
-			// Если healthcheck не задан, считаем слушателя активным
-			return nil, ErrDuplicateSession
-		}
-
-		// Слушатель мёртв, удалить его
-		u.listenersMutex.Lock()
+		// Пометить старого слушателя как завершённого
 		existingListener.listeningIsOver = true
-		u.listenersMutex.Unlock()
 
 		// Отправить ошибку старому слушателю в отдельной горутине
 		if existingListener.f != nil {
@@ -87,16 +66,12 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 				existingListener.f(events.Event{}, ErrListenerForciblyCanceled)
 			}()
 		}
-
-		// Захватить мьютекс снова для добавления нового слушателя
-		u.listenersMutex.Lock()
 	}
 
 	listener := &listener{
-		userID:      userID,
-		sessionID:   sessionID,
-		f:           f,
-		healthcheck: healthcheck,
+		userID:    userID,
+		sessionID: sessionID,
+		f:         f,
 	}
 	// Добавить слушателя
 	u.listeners = append(u.listeners, listener)

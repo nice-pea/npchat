@@ -17,17 +17,32 @@ import (
 
 func Test_EventsBus(t *testing.T) {
 	// id сессии + id пользователя уникальный ключ для
-	t.Run("сессия не может начать второе прослушивание, если уже есть активное", func(t *testing.T) {
+	t.Run("при конфликте первый подписчик принудительно отписывается (LIFO)", func(t *testing.T) {
 		b := new(EventsBus)
 
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		_, err := b.AddListener(userID, sessionID, nil, nil)
+		// Первый подписчик
+		firstCanceled := make(chan bool, 1)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			if err != nil && errors.Is(err, ErrListenerForciblyCanceled) {
+				firstCanceled <- true
+			}
+		})
 		require.NoError(t, err)
 
-		_, err = b.AddListener(userID, sessionID, nil, nil)
-		require.ErrorIs(t, err, ErrDuplicateSession)
+		// Второй подписчик - должен вытеснить первого
+		_, err = b.AddListener(userID, sessionID, nil)
+		require.NoError(t, err)
+
+		// Проверить, что первый подписчик получил ошибку о принудительной отмене
+		select {
+		case <-firstCanceled:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("первый подписчик не был принудительно отменён")
+		}
 	})
 
 	t.Run("после отмены прослушивания, можно подписаться заново", func(t *testing.T) {
@@ -37,7 +52,7 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		removeListener, err := b.AddListener(userID, sessionID, nil, nil)
+		removeListener, err := b.AddListener(userID, sessionID, nil)
 		require.NoError(t, err)
 
 		// Отменить прослушивание со стороны подписчикаы
@@ -48,80 +63,61 @@ func Test_EventsBus(t *testing.T) {
 			// Ошибка об отмене прослушивания сервером
 			require.ErrorIs(t, err, ErrListenerForciblyCanceled)
 			require.Zero(t, event)
-		}, nil)
+		})
 		require.NoError(t, err)
 
 		// Отменить прослушивание со стороны сервера
 		b.Cancel(sessionID)
 
 		// Запустить прослушивание
-		_, err = b.AddListener(userID, sessionID, nil, nil)
+		_, err = b.AddListener(userID, sessionID, nil)
 		require.NoError(t, err)
 	})
 
-	t.Run("healthcheck позволяет вытеснить неактивного слушателя", func(t *testing.T) {
+	t.Run("новый подписчик вытесняет старого и получает события", func(t *testing.T) {
 		b := new(EventsBus)
 
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		// Создать слушателя с заблокированным healthcheck
+		// Первый подписчик
+		firstCanceled := make(chan bool, 1)
 		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
-			// Обработчик событий
-		}, func(ctx context.Context) error {
-			// Healthcheck заблокирован навсегда (имитация отключенного клиента)
-			<-ctx.Done()
-			return ctx.Err()
+			if err != nil && errors.Is(err, ErrListenerForciblyCanceled) {
+				firstCanceled <- true
+			}
 		})
 		require.NoError(t, err)
 
-		// Попытаться добавить нового слушателя для той же сессии
-		// Healthcheck должен обнаружить, что старый слушатель не отвечает
+		// Второй подписчик - должен вытеснить первого
 		eventReceived := make(chan bool, 1)
 		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {
 			if event.Type == "test" {
 				eventReceived <- true
 			}
-		}, func(ctx context.Context) error {
-			// Новый healthcheck работает нормально
-			return nil
 		})
 		require.NoError(t, err)
+
+		// Проверить, что первый подписчик был отменён
+		select {
+		case <-firstCanceled:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("первый подписчик не был отменён")
+		}
 
 		// Отправить тестовое событие
 		b.Consume([]events.Event{{Type: "test", Recipients: []uuid.UUID{userID}}})
 
-		// Убедиться, что новый слушатель получил событие
+		// Убедиться, что второй (новый) подписчик получил событие
 		select {
 		case <-eventReceived:
 			// Успех
 		case <-time.After(time.Second):
-			t.Fatal("новый слушатель не получил событие")
+			t.Fatal("второй подписчик не получил событие")
 		}
 	})
 
-	t.Run("healthcheck не вытесняет активного слушателя", func(t *testing.T) {
-		b := new(EventsBus)
-
-		sessionID := uuid.New()
-		userID := uuid.New()
-
-		// Создать активный слушатель с рабочим healthcheck
-		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
-			// Обработчик событий
-		}, func(ctx context.Context) error {
-			// Healthcheck работает нормально (клиент активен)
-			return nil
-		})
-		require.NoError(t, err)
-
-		// Попытаться добавить нового слушателя для той же сессии
-		// Healthcheck должен определить, что старый слушатель активен
-		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {}, func(ctx context.Context) error {
-			return nil
-		})
-		require.ErrorIs(t, err, ErrDuplicateSession)
-	})
 
 	t.Run("в сессии будут приходить только события направляемые пользователям", func(t *testing.T) {
 		b := new(EventsBus)
@@ -147,7 +143,7 @@ func Test_EventsBus(t *testing.T) {
 				mu.Lock()
 				eventsCountByUserID[userID]++
 				mu.Unlock()
-			}, nil)
+			})
 			require.NoError(t, err)
 		}
 
@@ -167,7 +163,7 @@ func Test_EventsBus(t *testing.T) {
 		userID := uuid.New()
 
 		// Запустить прослушивание
-		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {}, nil)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {})
 		require.NoError(t, err)
 		time.Sleep(time.Millisecond)
 
@@ -182,7 +178,7 @@ func Test_EventsBus(t *testing.T) {
 
 		// Запустить много слушаетелй
 		for range 100 {
-			_, err := b.AddListener(uuid.New(), uuid.New(), func(event events.Event, err error) {}, nil)
+			_, err := b.AddListener(uuid.New(), uuid.New(), func(event events.Event, err error) {})
 			require.NoError(t, err)
 		}
 
@@ -209,7 +205,7 @@ func Test_EventsBus(t *testing.T) {
 		for _, id := range listenerIDs {
 			rl, err := b.AddListener(id, id, func(event events.Event, err error) {
 				receivedEvents.Add(1)
-			}, nil)
+			})
 			require.NoError(t, err)
 			removeListeners = append(removeListeners, rl)
 		}

@@ -84,7 +84,7 @@ func TestEvents(t *testing.T) {
 
 type mockEventListener struct{}
 
-func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error), healthcheck func(ctx context.Context) error) (removeListener func(), err error) {
+func (m mockEventListener) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	go func() {
 		for {
 			f(rndDirtyEvent(), nil)
