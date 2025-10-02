@@ -7,7 +7,6 @@ on:
       tag:
         type: string
         description: 'тег docker-образа для развертывания'
-        default: ${{ github.ref_name }}
 
 permissions:
   contents: read
@@ -18,7 +17,8 @@ jobs:
     steps:
       - name: Check if tag is a tag
         run: |
-          if [[ "${{ inputs.tag }}" != refs/tags/* ]]; then
+          tag=${{ inputs.tag || github.ref_name }}
+          if [[ "$tag" != refs/tags/* ]]; then
             echo "❌ Workflow может быть запущен только из тега или с указанием тега в inputs"
             exit 1
           fi
@@ -27,7 +27,7 @@ jobs:
         # Written with gigacode
         id: check-image
         run: |
-          TAG=${{ inputs.tag }}
+          TAG=${{ inputs.tag || github.ref_name }}
           IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
 
           echo "Проверяю существование образа $IMAGE_NAME:$TAG..."
@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_IMAGE=${{ inputs.tag }}
+            NEW_IMAGE=${{ inputs.tag || github.ref_name }}
             CONTAINER_NAME=npc.npchat
             PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
             
