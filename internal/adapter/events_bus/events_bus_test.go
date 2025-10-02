@@ -1,7 +1,7 @@
 package eventsBus
 
 import (
-	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -185,7 +185,7 @@ func Test_EventsBus(t *testing.T) {
 		// Закрыть сервер
 		b.Close()
 		// Попытаться запустить нового слушателя
-		_, err := b.AddListener(uuid.New(), uuid.New(), nil, nil)
+		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
 		require.ErrorIs(t, err, ErrBusClosed)
 		// Убедиться что список слушателей пуст
 		assert.Empty(t, b.activeListeners())
