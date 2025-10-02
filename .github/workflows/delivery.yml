@@ -7,10 +7,6 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_run:
-    workflows: [ "CI/Tag bumping", "Bump version" ]
-    types:
-      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
