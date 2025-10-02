@@ -65,13 +65,13 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 		}
 	}
 
-	listener := &listener{
+	newListener := &listener{
 		userID:    userID,
 		sessionID: sessionID,
 		f:         f,
 	}
 	// Добавить слушателя
-	u.listeners = append(u.listeners, listener)
+	u.listeners = append(u.listeners, newListener)
 
 	u.listenersMutex.Unlock()
 
@@ -80,7 +80,7 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 		defer u.listenersMutex.Unlock()
 		// Удалить слушателя из списка
 		u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
-			return l == listener
+			return l == newListener
 		})
 	}, nil
 }
