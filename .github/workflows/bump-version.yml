@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.ref }}
 
       - name: Bump version and push tag
         uses: anothrNick/github-tag-action@v1
