@@ -1,10 +1,11 @@
 # Собрать образ и отправить в docker-репозиторий
 name: CI/Delivery
 
+# Запускать workflow при создании тега или ветки
 on:
+  create:
   push:
     tags:
-      # Запускать workflow при создании тега начиная с 'v'
       - 'v*'
 
 concurrency:
@@ -15,7 +16,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build_and_push_image:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
