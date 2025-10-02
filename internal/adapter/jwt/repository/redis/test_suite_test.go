@@ -34,7 +34,7 @@ func (suite *testSuite) newRedisContainer() {
 
 	suite.Terminate = func() {
 		suite.Require().NotNil(container)
-		container.Terminate(ctx)
+		_ = container.Terminate(ctx)
 	}
 	suite.CleanUp = func() {
 		suite.RedisCli.Cli.FlushDB(context.Background())
