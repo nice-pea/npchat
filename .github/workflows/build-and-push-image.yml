@@ -6,6 +6,7 @@ on:
   create:
     tag:
       - "v*"
+
   push:
     tags:
       - 'v*'
