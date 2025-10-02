@@ -34,8 +34,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CONTENT_WRITE_TOKEN }}
           TAG_PREFIX: v
           TAG_CONTEXT: branch
-          PRELEASE: ${{ inputs.label != '' }}
-          PRELEASE_LABEL: ${{ inputs.label }}
+          PRERELEASE: ${{ inputs.label != '' }}
+          PRERELEASE_SUFFIX: ${{ inputs.label }}
           DEFAULT_BUMP: ${{ inputs.level }}
           MAJOR_STRING_TOKEN: _
           MINOR_STRING_TOKEN: _
