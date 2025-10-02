@@ -15,14 +15,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if tag is a tag
-        run: |
-          tag=${{ inputs.tag || github.ref_name }}
-          if [[ "$tag" != refs/tags/* ]]; then
-            echo "❌ Workflow может быть запущен только из тега или с указанием тега в inputs"
-            exit 1
-          fi
-
       - name: Проверить существование docker-образа
         # Written with gigacode
         id: check-image
