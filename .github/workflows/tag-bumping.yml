@@ -4,7 +4,6 @@ name: CI/Tag bumping
 on:
   pull_request:
     paths-ignore:
-      - ".containerignore"
       - ".gitignore"
       - ".mockery.yaml"
       - "Containerfile"
