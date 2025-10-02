@@ -79,7 +79,7 @@ func TestNewChat(t *testing.T) {
 	})
 
 	t.Run("активность в чате равна дате создания", func(t *testing.T) {
-		now1 := time.Now()
+		now1 := time.Now().UTC().Truncate(time.Microsecond)
 		chat, err := NewChat("name", uuid.New(), nil)
 		now2 := time.Now()
 		require.NotZero(t, chat)
