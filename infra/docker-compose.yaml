@@ -8,42 +8,6 @@ networks:
 #    external: true
 
 services:
-  npc.npchat:
-    container_name: npc.npchat
-    image: npchat:${IMAGE_TAG}
-    restart: on-failure:3
-    networks:
-      npc.network:
-      proxy:
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.0:8080/ping"]
-      interval: 3s
-      timeout: 1s
-      retries: 5
-    ports:
-      - "8465:8080"
-    command:
-      - "--http-addr"
-      - ":8080"
-      - "--log-level"
-      - "warn"
-      - "--pgsql-dsn"
-      - "${PGSQL_DSN}"
-      - "--oauth-google-key"
-      - "${OAUTH_GOOGLE_KEY}"
-      - "--oauth-google-secret"
-      - "${OAUTH_GOOGLE_SECRET}"
-      - "--oauth-google-callback"
-      - "${OAUTH_GOOGLE_CALLBACK}"
-      - "--oauth-github-key"
-      - "${OAUTH_GITHUB_KEY}"
-      - "--oauth-github-secret"
-      - "${OAUTH_GITHUB_SECRET}"
-      - "--oauth-github-callback"
-      - "${OAUTH_GITHUB_CALLBACK}"
-      - "--jwt-secret"
-      - "${AUTH_JWT_SECRET}"
-
   test.npchat:
     container_name: npc.test.npchat
     build:

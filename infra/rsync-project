@@ -1,7 +1,0 @@
-#!/bin/sh
-
-rsync --delete -avzrP \
-    --include='bin/***' \
-    --include='infra/***' \
-    --exclude='*' \
-    . "$SSH_HOST:$DIR"
