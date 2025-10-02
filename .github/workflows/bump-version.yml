@@ -1,0 +1,45 @@
+# Создать легковесный тег на основе выбранного тега
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        required: true
+        type: string
+        description: 'тег docker-образа для развертывания'
+        options:
+          - patch
+          - minor
+          - major
+      label:
+        required: false
+        type: string
+        description: 'метка для тега (прим.: alpha в v0.0.1-alpha)'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true
+    #if: ${{ github.event.pull_request.merged == true  && !contains(join(github.event.commits.*.message), '#skip') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@v1
+        env:
+          TAG_PREFIX: v
+          PRELEASE: ${{ inputs.label != '' }}
+          PRELEASE_LABEL: ${{ inputs.label }}
+          DEFAULT_BUMP: ${{ inputs.level }}
+          MAJOR_STRING_TOKEN: _
+          MINOR_STRING_TOKEN: _
+          PATCH_STRING_TOKEN: _
+          NONE_STRING_TOKEN: _
