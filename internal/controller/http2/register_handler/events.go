@@ -25,27 +25,33 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 		recover2.New(),
 		middleware.RequireAuthorizedSession(uc, jwtParser),
 		func(ctx *fiber.Ctx) error {
-			// Канал для обработки событий в отдельной горутине
-			eventsChan := make(chan any)
-			// Канал для обработки ошибок в отдельной горутине
-			errorsChan := make(chan error)
+			eventsChan := make(chan any, 16)
+			errorsChan := make(chan error, 16)
+
+			// Канал для отслеживания завершения запроса (используется в callback)
+			reqCtxDone := ctx.Context().Done()
 
 			removeListener, err := eventListener.AddListener(UserID(ctx), SessionID(ctx), func(event events.Event, err error) {
+				// Безопасная отправка с учетом закрытия контекста
 				if err != nil {
-					errorsChan <- err
+					select {
+					case errorsChan <- err:
+					case <-reqCtxDone:
+						return
+					}
 				}
+				// Отправлять события клиенту
 				if event.Type != "" {
-					eventsChan <- event
+					select {
+					case eventsChan <- event:
+					case <-reqCtxDone:
+						return
+					}
 				}
 			})
 			if err != nil {
-				close(eventsChan)
-				close(errorsChan)
 				return err
 			}
-
-			// Канал для отслеживания завершения запроса
-			reqCtxDone := ctx.Context().Done()
 
 			// Регистрация обработчика для отправки потока сообщений
 			ctx.Set("Content-Type", "text/event-stream")
@@ -55,26 +61,24 @@ func Events(router *fiber.App, uc UsecasesForEvents, eventListener EventListener
 				// Таймер для отправки keepalive
 				keepAliveTickler := time.NewTicker(time.Second * 5)
 
-				// Действия при звершении прослушивания событий
+				// Действия при завершении прослушивания событий
 				defer func() {
 					removeListener()
 					keepAliveTickler.Stop()
-					close(errorsChan)
-					close(eventsChan)
 				}()
 
 				for {
 					var errFprint error
 					select {
 					case event := <-eventsChan:
-						// Отправлять события как json
-						b, _ := json.Marshal(event)
-						_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
+						switch v := event.(type) {
+						case events.Event:
+							b, _ := json.Marshal(v)
+							_, errFprint = fmt.Fprint(w, formatSSEMessage("event", string(b)))
+						}
 					case err := <-errorsChan:
-						// Отправлять ошибки
 						_, errFprint = fmt.Fprint(w, formatSSEMessage("error", err.Error()))
 					case <-keepAliveTickler.C:
-						// Отправлять keepalive
 						_, errFprint = fmt.Fprint(w, formatSSEMessage("keepalive", ""))
 					case <-reqCtxDone:
 						return

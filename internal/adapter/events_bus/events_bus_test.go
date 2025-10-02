@@ -1,6 +1,7 @@
 package eventsBus
 
 import (
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -16,17 +17,32 @@ import (
 
 func Test_EventsBus(t *testing.T) {
 	// id сессии + id пользователя уникальный ключ для
-	t.Run("сессия не может начать второе прослушивание, если уже есть активное", func(t *testing.T) {
+	t.Run("при конфликте первый подписчик принудительно отписывается (FIFO)", func(t *testing.T) {
 		b := new(EventsBus)
 
 		sessionID := uuid.New()
 		userID := uuid.New()
 
-		_, err := b.AddListener(userID, sessionID, nil)
+		// Первый подписчик
+		firstCanceled := make(chan bool, 1)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			if err != nil && errors.Is(err, ErrListenerForciblyCanceled) {
+				firstCanceled <- true
+			}
+		})
 		require.NoError(t, err)
 
+		// Второй подписчик - должен вытеснить первого
 		_, err = b.AddListener(userID, sessionID, nil)
-		require.ErrorIs(t, err, ErrDuplicateSession)
+		require.NoError(t, err)
+
+		// Проверить, что первый подписчик получил ошибку о принудительной отмене
+		select {
+		case <-firstCanceled:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("первый подписчик не был принудительно отменён")
+		}
 	})
 
 	t.Run("после отмены прослушивания, можно подписаться заново", func(t *testing.T) {
@@ -57,6 +73,51 @@ func Test_EventsBus(t *testing.T) {
 		_, err = b.AddListener(userID, sessionID, nil)
 		require.NoError(t, err)
 	})
+
+	t.Run("новый подписчик вытесняет старого и получает события", func(t *testing.T) {
+		b := new(EventsBus)
+
+		sessionID := uuid.New()
+		userID := uuid.New()
+
+		// Первый подписчик
+		firstCanceled := make(chan bool, 1)
+		_, err := b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			if err != nil && errors.Is(err, ErrListenerForciblyCanceled) {
+				firstCanceled <- true
+			}
+		})
+		require.NoError(t, err)
+
+		// Второй подписчик - должен вытеснить первого
+		eventReceived := make(chan bool, 1)
+		_, err = b.AddListener(userID, sessionID, func(event events.Event, err error) {
+			if event.Type == "test" {
+				eventReceived <- true
+			}
+		})
+		require.NoError(t, err)
+
+		// Проверить, что первый подписчик был отменён
+		select {
+		case <-firstCanceled:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("первый подписчик не был отменён")
+		}
+
+		// Отправить тестовое событие
+		b.Consume([]events.Event{{Type: "test", Recipients: []uuid.UUID{userID}}})
+
+		// Убедиться, что второй (новый) подписчик получил событие
+		select {
+		case <-eventReceived:
+			// Успех
+		case <-time.After(time.Second):
+			t.Fatal("второй подписчик не получил событие")
+		}
+	})
+
 
 	t.Run("в сессии будут приходить только события направляемые пользователям", func(t *testing.T) {
 		b := new(EventsBus)
@@ -109,7 +170,9 @@ func Test_EventsBus(t *testing.T) {
 		// Отменить сессию
 		b.Cancel(sessionID)
 		// Проверить список просшушиваний
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()
+		assert.Empty(t, b.listeners)
+		b.listenersMutex.Unlock()
 	})
 
 	t.Run("закрытие сервера удалит всех слушателей и не будет принимать новых", func(t *testing.T) {
@@ -127,7 +190,9 @@ func Test_EventsBus(t *testing.T) {
 		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
 		require.ErrorIs(t, err, ErrBusClosed)
 		// Убедиться что список слушателей пуст
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()
+		assert.Empty(t, b.listeners)
+		b.listenersMutex.Unlock()
 	})
 
 	t.Run("слушатель может отменить прослушивание", func(t *testing.T) {
@@ -160,7 +225,9 @@ func Test_EventsBus(t *testing.T) {
 		}
 
 		// Проверить что список слsушателей пуст
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()
+		assert.Empty(t, b.listeners)
+		b.listenersMutex.Unlock()
 
 		// Отправить событие
 		b.Consume([]events.Event{events.Event{Recipients: listenerIDs}})
