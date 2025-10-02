@@ -26,14 +26,13 @@ type EventsBus struct {
 
 // listener представляет собой слушателя (подписчика) событий
 type listener struct {
-	listeningIsOver bool                                // Признак отмены подписки, со стороны слушателя
-	userID          uuid.UUID                           // ID пользователя
-	sessionID       uuid.UUID                           // ID сессии
-	f               func(event events.Event, err error) // Обработчик событий
+	userID    uuid.UUID                           // ID пользователя
+	sessionID uuid.UUID                           // ID сессии
+	f         func(event events.Event, err error) // Обработчик событий
 }
 
 // AddListener регистрирует обработчик событий
-// При конфликте (дублирующая сессия) применяется принцип LIFO: первый подписчик принудительно отписывается
+// При конфликте (дублирующая сессия) применяется принцип FIFO: первый подписчик принудительно отписывается
 func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events.Event, err error)) (removeListener func(), err error) {
 	// Проверить, что сервер не закрыт
 	if u.closed.Load() {
@@ -44,17 +43,15 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 
 	// Найти существующего слушателя для этой сессии
 	existingListenerIndex := slices.IndexFunc(u.listeners, func(l *listener) bool {
-		return l.userID == userID &&
-			l.sessionID == sessionID &&
-			!l.listeningIsOver
+		return l.userID == userID && l.sessionID == sessionID
 	})
 
-	// Если найден существующий слушатель, применяем принцип LIFO
+	// Если найден существующий слушатель, применяем принцип FIFO
 	if existingListenerIndex != -1 {
 		existingListener := u.listeners[existingListenerIndex]
 
-		// Пометить старого слушателя как завершённого
-		existingListener.listeningIsOver = true
+		// Удалить старого слушателя из списка
+		u.listeners = slices.Delete(u.listeners, existingListenerIndex, existingListenerIndex+1)
 
 		// Отправить ошибку старому слушателю в отдельной горутине
 		if existingListener.f != nil {
@@ -80,9 +77,11 @@ func (u *EventsBus) AddListener(userID, sessionID uuid.UUID, f func(event events
 
 	return func() {
 		u.listenersMutex.Lock()
-		// Пометить слушателя как окончившего слушать события
-		listener.listeningIsOver = true
-		u.listenersMutex.Unlock()
+		defer u.listenersMutex.Unlock()
+		// Удалить слушателя из списка
+		u.listeners = slices.DeleteFunc(u.listeners, func(l *listener) bool {
+			return l == listener
+		})
 	}, nil
 }
 
@@ -94,10 +93,13 @@ func (u *EventsBus) Consume(ee []events.Event) {
 		return
 	}
 
-	// Снимок активных слушателей
-	snapshot := u.activeListeners()
+	// Снимок слушателей
+	u.listenersMutex.Lock()
+	snapshot := make([]*listener, len(u.listeners))
+	copy(snapshot, u.listeners)
+	u.listenersMutex.Unlock()
 
-	// Выйти, если нет активных слушателей
+	// Выйти, если нет слушателей
 	if len(snapshot) == 0 {
 		return
 	}
@@ -150,8 +152,11 @@ func (u *EventsBus) Close() {
 		return
 	}
 
-	// Снимок активных слушателей
-	snapshot := u.activeListeners()
+	// Снимок слушателей
+	u.listenersMutex.Lock()
+	snapshot := make([]*listener, len(u.listeners))
+	copy(snapshot, u.listeners)
+	u.listenersMutex.Unlock()
 
 	// Инициализация waitgroup для асинхронной отмены
 	var wg sync.WaitGroup
@@ -187,7 +192,7 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 
 	// Найти слушателя по сессии
 	i := slices.IndexFunc(u.listeners, func(l *listener) bool {
-		return l.sessionID == sessionID && !l.listeningIsOver
+		return l.sessionID == sessionID
 	})
 	if i == -1 {
 		u.listenersMutex.Unlock()
@@ -208,11 +213,3 @@ func (u *EventsBus) Cancel(sessionID uuid.UUID) {
 	}
 }
 
-// activeListeners возвращает активных слушателей
-func (u *EventsBus) activeListeners() []*listener {
-	u.listenersMutex.Lock()
-	defer u.listenersMutex.Unlock()
-	return lo.Filter(u.listeners, func(l *listener, _ int) bool {
-		return !l.listeningIsOver
-	})
-}

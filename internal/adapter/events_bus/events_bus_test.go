@@ -17,7 +17,7 @@ import (
 
 func Test_EventsBus(t *testing.T) {
 	// id сессии + id пользователя уникальный ключ для
-	t.Run("при конфликте первый подписчик принудительно отписывается (LIFO)", func(t *testing.T) {
+	t.Run("при конфликте первый подписчик принудительно отписывается (FIFO)", func(t *testing.T) {
 		b := new(EventsBus)
 
 		sessionID := uuid.New()
@@ -170,7 +170,7 @@ func Test_EventsBus(t *testing.T) {
 		// Отменить сессию
 		b.Cancel(sessionID)
 		// Проверить список просшушиваний
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()\n\t\tassert.Empty(t, b.listeners)\n\t\tb.listenersMutex.Unlock()
 	})
 
 	t.Run("закрытие сервера удалит всех слушателей и не будет принимать новых", func(t *testing.T) {
@@ -188,7 +188,7 @@ func Test_EventsBus(t *testing.T) {
 		_, err := b.AddListener(uuid.New(), uuid.New(), nil)
 		require.ErrorIs(t, err, ErrBusClosed)
 		// Убедиться что список слушателей пуст
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()\n\t\tassert.Empty(t, b.listeners)\n\t\tb.listenersMutex.Unlock()
 	})
 
 	t.Run("слушатель может отменить прослушивание", func(t *testing.T) {
@@ -221,7 +221,7 @@ func Test_EventsBus(t *testing.T) {
 		}
 
 		// Проверить что список слsушателей пуст
-		assert.Empty(t, b.activeListeners())
+		b.listenersMutex.Lock()\n\t\tassert.Empty(t, b.listeners)\n\t\tb.listenersMutex.Unlock()
 
 		// Отправить событие
 		b.Consume([]events.Event{events.Event{Recipients: listenerIDs}})
