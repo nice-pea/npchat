@@ -1,4 +1,4 @@
-# Создать легковесный тег на основе выбранного тега
+# Вручную создать легковесный тег на основе выбранного тега
 name: Bump version
 
 on:
@@ -20,11 +20,17 @@ on:
 permissions:
   contents: write
 
-
 jobs:
   bump_version:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if current ref is a tag
+        run: |
+          if [[ "${{ github.ref }}" != refs/tags/* ]]; then
+            echo "❌ Workflow может быть запущен только из тега."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
