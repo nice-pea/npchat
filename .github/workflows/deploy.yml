@@ -5,7 +5,6 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        required: true
         type: string
         description: 'тег docker-образа для развертывания'
 
@@ -20,7 +19,7 @@ jobs:
         # Written with gigacode
         id: check-image
         run: |
-          TAG=${{ inputs.tag }}
+          TAG=${{ inputs.tag || github.ref_name }}
           IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
 
           echo "Проверяю существование образа $IMAGE_NAME:$TAG..."
@@ -46,7 +45,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_IMAGE=${{ inputs.tag }}
+            NEW_IMAGE=${{ inputs.tag || github.ref_name }}
             CONTAINER_NAME=npc.npchat
             PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
             
