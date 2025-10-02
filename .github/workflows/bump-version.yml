@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
 
+
 jobs:
   bump_version:
     runs-on: ubuntu-latest
