@@ -6,7 +6,7 @@ on:
     inputs:
       level:
         required: true
-        type: string
+        type: choice
         description: 'тег docker-образа для развертывания'
         options:
           - patch
