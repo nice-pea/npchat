@@ -1,0 +1,91 @@
+name: CI Delivery
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  # Тестирование
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Установка Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24
+
+      - name: Запуск тестов
+        run: go test -v -short -vet=all ./...
+
+  # Линтинг
+  golangci-lint:
+    runs-on: ubuntu-latest
+    needs: go-test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Запуск линтера
+        uses: golangci/golangci-lint-action@v7
+        with:
+          args: --timeout 10m
+
+  # Создание тега версии
+  bump_version:
+    runs-on: ubuntu-latest
+    needs: golangci-lint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Bump version and push tag
+        id: bump_ver
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
+        env:
+          GITHUB_TOKEN: ${{ github.token }} }}
+          TAG_PREFIX: v
+          DEFAULT_BUMP: patch
+
+    outputs:
+        version: ${{ steps.bump_ver.outputs.tag }}
+
+  # Сборка и публикация образа
+  build_and_push_image:
+    runs-on: ubuntu-latest
+    needs: bump_version
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Сохранение даты сборки в переменную
+        id: date
+        run: echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Build & push Docker image
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: ${{ vars.DOCKER_IMAGE_NAME }}
+          tags: ${{ needs.bump_version.outputs.version }}
+          registry: docker.io
+          dockerfile: Containerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          buildArgs: |
+            VERSION=${{ github.ref_name }},
+            COMMIT=${{ github.sha }},
+            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
