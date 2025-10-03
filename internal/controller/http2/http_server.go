@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 	registerHandler "github.com/nice-pea/npchat/internal/controller/http2/register_handler"
 )
@@ -27,11 +28,12 @@ func RunHttpServer(
 	jwtIssuer registerHandler.JwtIssuer,
 	jwtParser middleware.JwtParser,
 	cfg Config,
+	buildInfo common.BuildInfo,
 ) error {
 	fiberApp := fiber.New(fiber.Config{
 		ErrorHandler: fiberErrorHandler,
 	})
-	registerHandlers(fiberApp, uc, jwtIssuer, jwtParser, eventListener)
+	registerHandlers(fiberApp, uc, jwtIssuer, jwtParser, eventListener, buildInfo)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -60,6 +62,7 @@ func registerHandlers(
 	jwtIssuer registerHandler.JwtIssuer,
 	jwtParser middleware.JwtParser,
 	eventListener registerHandler.EventListener,
+	buildInfo common.BuildInfo,
 ) {
 	// Подключение middleware для логирования
 	r.Use(logger.New(logger.Config{
@@ -68,6 +71,7 @@ func registerHandlers(
 
 	// Служебные
 	registerHandler.Ping(r)
+	registerHandler.Info(r, buildInfo)
 
 	registerHandler.Events(r, uc, eventListener, jwtParser)
 

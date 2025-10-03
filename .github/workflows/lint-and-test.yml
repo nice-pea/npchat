@@ -1,4 +1,4 @@
-name: Golang линтеры и тесты
+name: Golang lint and test
 
 # Указываем триггеры для запуска workflow
 on:

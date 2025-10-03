@@ -1,0 +1,51 @@
+# Вручную создать легковесный тег на основе выбранного тега
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        required: true
+        type: choice
+        description: 'тег docker-образа для развертывания'
+        options:
+          - patch
+          - minor
+          - major
+      label:
+        required: false
+        type: string
+        description: 'метка для тега (прим.: alpha в v0.0.1-alpha)'
+
+permissions:
+  contents: write
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if current ref is a tag or master branch
+        run: |
+          if [[ "${{ github.ref }}" != refs/tags/* && "${{ github.ref }}" != "refs/heads/master" ]]; then
+            echo "❌ Workflow может быть запущен только из тега или ветки master."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          TAG_PREFIX: v
+          TAG_CONTEXT: ${{ github.ref == 'refs/heads/master' && 'repo' || 'branch' }}
+          PRERELEASE: ${{ inputs.label != '' }}
+          PRERELEASE_SUFFIX: ${{ inputs.label }}
+          DEFAULT_BUMP: ${{ inputs.level }}
+          MAJOR_STRING_TOKEN: _
+          MINOR_STRING_TOKEN: _
+          PATCH_STRING_TOKEN: _
+          NONE_STRING_TOKEN: _
+          FORCE_WITHOUT_CHANGES: true

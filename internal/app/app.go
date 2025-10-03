@@ -7,10 +7,11 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/controller/http2"
 )
 
-func Run(ctx context.Context, cfg Config) error {
+func Run(ctx context.Context, cfg Config, buildInfo common.BuildInfo) error {
 	g, ctx := errgroup.WithContext(ctx)
 
 	slog.SetLogLoggerLevel(slogLevel(cfg.LogLevel))
@@ -34,7 +35,7 @@ func Run(ctx context.Context, cfg Config) error {
 
 	// Инициализация и Запуск http контроллера
 	g.Go(func() error {
-		return http2.RunHttpServer(ctx, uc, aa.eventBus, aa.jwtIssuer, aa.jwtParser, cfg.Http2)
+		return http2.RunHttpServer(ctx, uc, aa.eventBus, aa.jwtIssuer, aa.jwtParser, cfg.Http2, buildInfo)
 	})
 
 	return g.Wait()

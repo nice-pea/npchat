@@ -1,7 +1,12 @@
-name: Запустить docker-контейнер в рабочей среде
+# Стянуть образ и запустить docker-контейнер в рабочей среде
+name: CD/Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: 'тег docker-образа для развертывания'
 
 permissions:
   contents: read
@@ -10,19 +15,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract version
-        id: version
+      - name: Проверить существование docker-образа
+        # Written with gigacode
+        id: check-image
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          TAG=${{ inputs.tag || github.ref_name }}
+          IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
 
-      - name: Validate tag
-        run: |
-          if [ -z "${{ steps.version.outputs.VERSION }}" ]; then
-            echo "❌ No tag found. This workflow should be triggered by a git tag."
+          echo "Проверяю существование образа $IMAGE_NAME:$TAG..."
+
+          # Авторизоваться в registry
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+
+          # Попробуем получить информацию о манифесте образа
+          if ! docker manifest inspect "$IMAGE_NAME:$TAG" > /dev/null 2>&1; then
+            echo "❌ Образ $IMAGE_NAME:$TAG не существует в registry."
             exit 1
+          else
+            echo "✅ Образ $IMAGE_NAME:$TAG существует."
           fi
 
-      - name: Deploy with rollback
+      - name: Развернуть новый образ
         uses: appleboy/ssh-action@v1.2.2
         # continue-on-error: true
         with:
@@ -32,34 +45,37 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-            NEW_VERSION=${{ steps.version.outputs.VERSION }}
-            APP_NAME=npchat
-            PREV_VERSION=$(docker inspect --format='{{.Config.Image}}' $APP_NAME 2>/dev/null | sed 's/^.*://')
-
-            echo "Deploying version $NEW_VERSION..."
-
+            NEW_IMAGE=${{ inputs.tag || github.ref_name }}
+            CONTAINER_NAME=npc.npchat
+            PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' $CONTAINER_NAME 2>/dev/null | sed 's/^.*://')
+            
+            echo "Развертывание $CONTAINER_NAME:$NEW_IMAGE..."
+            
             # Останавливаем текущий контейнер
-            docker stop $APP_NAME || true
-            docker rm $APP_NAME || true
-
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            
             # Загрузить переменные окружения, чтобы были доступны в docker-compose
             set -o allexport
             source /opt/npchat/.env.production
             set +o allexport
-
+            
+            # Название образа
+            export IMAGE_NAME=${{ vars.DOCKER_IMAGE_NAME }}
+            
             # Запускаем новый
-            RESULT=$(IMAGE_TAG=$NEW_VERSION docker compose -f /opt/npchat/releases/"$NEW_VERSION"/infra/docker-compose.yaml up --wait npc.npchat)
-            if [ $? -eq 0 ]; then
-              echo "✅ Deployment of $NEW_VERSION successful."
+            if IMAGE_TAG=$NEW_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat; then
+              echo "✅ Успешно развернут $CONTAINER_NAME:$NEW_IMAGE"
               exit 0
             fi
-
-            echo "❌ Deployment of $NEW_VERSION failed."
-
+            
+            echo "❌ Развернуть $CONTAINER_NAME:$NEW_IMAGE не удалось"
+            
             # Пытаемся восстановить предыдущий контейнер
-            if [ -n "$PREV_VERSION" ]; then
-              echo "🔄 Rolling back to previous version $PREV_VERSION..."
-              IMAGE_TAG=$PREV_VERSION docker compose -f /opt/npchat/releases/"$PREV_VERSION"/infra/docker-compose.yaml up --wait npc.npchat
+            if [ -n "$PREV_IMAGE" ]; then
+              echo "🔄 Откат к $CONTAINER_NAME:$PREV_IMAGE..."
+              IMAGE_TAG=$PREV_IMAGE docker compose -f /opt/npchat/infra/npchat/docker-compose.yaml up --wait npc.npchat
+              echo "🆗 Успешно развернута прошлая версия $CONTAINER_NAME:$NEW_IMAGE"
             fi
-        
-    
+            
+            exit 2
