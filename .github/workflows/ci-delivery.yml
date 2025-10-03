@@ -24,8 +24,13 @@ jobs:
   define_commit:
     runs-on: ubuntu-latest
     outputs:
-      commit_sha: ${{ github.inputs.commit_sha || github.sha }}
-
+      commit_sha: ${{ inputs.commit_sha || github.sha }}
+    steps:
+      - name: Debug commit SHA
+        run: |
+          echo "Input commit_sha: ${{ inputs.commit_sha }}"
+          echo "GitHub SHA: ${{ github.sha }}"
+          echo "Final SHA: ${{ inputs.commit_sha || github.sha }}"
   # Тестирование
   go_test:
     runs-on: ubuntu-latest
