@@ -10,7 +10,7 @@ import (
 
 	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
 
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )

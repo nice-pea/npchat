@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 )
 
 // newTestParser - вспомогательная функция для создания тестового парсера JWT

@@ -3,7 +3,7 @@ package redisRegistry_test
 import (
 	"time"
 
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 
 	"github.com/google/uuid"
 )

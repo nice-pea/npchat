@@ -6,7 +6,7 @@ import (
 
 	jwt2 "github.com/cristalhq/jwt/v5"
 	"github.com/nice-pea/npchat/internal/adapter/jwt"
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 	"github.com/stretchr/testify/suite"
 	redisContainer "github.com/testcontainers/testcontainers-go/modules/redis"
 )

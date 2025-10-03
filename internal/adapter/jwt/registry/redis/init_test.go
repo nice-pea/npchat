@@ -1,7 +1,7 @@
 package redisRegistry_test
 
 import (
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 )
 
 // Test_Init - тестовый сценарий для проверки функции инициализации Redis-клиента
