@@ -16,5 +16,7 @@ on:
 
 jobs:
   delivery:
-    if: github.event.pull_request.merged == true
-    uses: .github/workflows/ci-delivery.yml
+    runs-on: ubuntu-latest
+    steps:
+      - if: github.event.pull_request.merged == true
+        uses: .github/workflows/ci-delivery.yml
