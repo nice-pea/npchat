@@ -9,11 +9,11 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # Тестирование
-  go-test:
+  go_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +29,9 @@ jobs:
         run: go test -v -short -vet=all ./...
 
   # Линтинг
-  golangci-lint:
+  go_lint:
     runs-on: ubuntu-latest
-    needs: go-test
+    needs: go_test
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +45,9 @@ jobs:
   # Создание тега версии
   bump_version:
     runs-on: ubuntu-latest
-    needs: golangci-lint
+    needs: go_lint
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,7 +58,7 @@ jobs:
         id: bump_ver
         uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
         env:
-          GITHUB_TOKEN: ${{ github.token }} }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_PREFIX: v
           DEFAULT_BUMP: patch
 
