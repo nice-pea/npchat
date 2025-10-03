@@ -24,7 +24,10 @@ func Run(ctx context.Context, cfg Config) error {
 	defer closeRepos()
 
 	// Инициализация адаптеров
-	aa := initAdapters(cfg)
+	aa, err := initAdapters(cfg)
+	if err != nil {
+		return err
+	}
 
 	// Инициализация сервисов
 	uc := initUsecases(rr, aa)
