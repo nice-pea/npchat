@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.define_commit.outputs.commit_sha }} }}
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
           fetch-depth: 0
 
       - name: Bump version and push tag
@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.define_commit.outputs.commit_sha }} }}
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
 
       - name: Сохранение даты сборки в переменную
         id: date
