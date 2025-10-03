@@ -1,4 +1,4 @@
-name: on-pr-merged.yml
+name: CI PR on merged
 
 on:
   pull_request:
