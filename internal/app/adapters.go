@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log/slog"
 
 	eventsBus "github.com/nice-pea/npchat/internal/adapter/events_bus"
@@ -24,25 +25,23 @@ func (a *adapters) OauthProviders() oauth.Providers {
 	return a.oauthProviders
 }
 
-func initAdapters(cfg Config) *adapters {
+func initAdapters(cfg Config) (*adapters, error) {
 	oauthProviders := oauth.Providers{}
 	if cfg.OauthGoogle != (oauthProvider.GoogleConfig{}) {
 		provider, err := oauthProvider.NewGoogle(cfg.OauthGoogle)
 		if err != nil {
-			slog.Error("Ошибка инициализации Oauth провайдера Google", "error", err)
-		} else {
-			oauthProviders.Add(provider)
-			slog.Info("Подключен Oauth провайдер Google")
+			return nil, fmt.Errorf("oauthProvider.NewGoogle: %w", err)
 		}
+		oauthProviders.Add(provider)
+		slog.Info("Подключен Oauth провайдер Google")
 	}
 	if cfg.OauthGithub != (oauthProvider.GithubConfig{}) {
 		provider, err := oauthProvider.NewGithub(cfg.OauthGithub)
 		if err != nil {
-			slog.Error("Ошибка инициализации Oauth провайдера Github", "error", err)
-		} else {
-			oauthProviders.Add(provider)
-			slog.Info("Подключен Oauth провайдер Github")
+			return nil, fmt.Errorf("oauthProvider.NewGithub: %w", err)
 		}
+		oauthProviders.Add(provider)
+		slog.Info("Подключен Oauth провайдер Github")
 	}
 
 	// Включить jwt аутентификацию, если конфиг jwt задан
@@ -59,5 +58,5 @@ func initAdapters(cfg Config) *adapters {
 		eventBus:       new(eventsBus.EventsBus),
 		jwtParser:      jwtParser2,
 		jwtIssuer:      jwtIssuer2,
-	}
+	}, nil
 }
