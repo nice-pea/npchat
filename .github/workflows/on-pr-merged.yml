@@ -1,0 +1,23 @@
+name: Delivery on PR merged
+
+on:
+  pull_request:
+    paths-ignore:
+      - ".gitignore"
+      - ".mockery.yaml"
+      - "Containerfile"
+      - "LICENSE"
+      - "Makefile"
+      - "README.md"
+    types:
+      - closed
+    branches:
+      - master
+
+jobs:
+  delivery:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/delivery.yml
+    secrets: inherit
+    with:
+      commit_sha: ${{ github.event.pull_request.merge_commit_sha }}

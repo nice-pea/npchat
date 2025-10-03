@@ -1,12 +1,17 @@
-# Собрать образ и отправить в docker-репозиторий
-name: CI/Delivery
+name: Delivery
 
-# Запускать workflow при создании тега или ветки
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
+  workflow_call:
+    inputs:
+      commit_sha:
+        required: true
+        type: string
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,24 +21,93 @@ permissions:
   contents: read
 
 jobs:
+  define_commit:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ inputs.commit_sha || github.sha }}
+    steps:
+      - name: Debug commit SHA
+        run: |
+          echo "Input commit_sha: ${{ inputs.commit_sha }}"
+          echo "GitHub SHA: ${{ github.sha }}"
+          echo "Final SHA: ${{ inputs.commit_sha || github.sha }}"
+  # Тестирование
+  go_test:
+    runs-on: ubuntu-latest
+    needs: define_commit
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
+
+      - name: Установка Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.24
+
+      - name: Запуск тестов
+        run: go test -v -short -vet=all ./...
+
+  # Линтинг
+  go_lint:
+    runs-on: ubuntu-latest
+    needs: [ go_test, define_commit ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
+
+      - name: Запуск линтера
+        uses: golangci/golangci-lint-action@v7
+        with:
+          args: --timeout 10m
+
+  # Создание тега версии
+  bump_version:
+    runs-on: ubuntu-latest
+    needs: [ go_lint, define_commit ]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
+          fetch-depth: 0
+
+      - name: Bump version and push tag
+        id: bump_ver
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_PREFIX: v
+          DEFAULT_BUMP: patch
+
+    outputs:
+      version: ${{ steps.bump_ver.outputs.tag }}
+
+  # Сборка и публикация образа
   build_and_push_image:
     runs-on: ubuntu-latest
+    needs: [ bump_version, define_commit ]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ needs.define_commit.outputs.commit_sha }}
 
-      - name: Собрать docker-образ
-        run: |
-          docker build -t "${{ vars.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}"\
-            -f Containerfile\
-            --build-arg VERSION="${{ github.ref_name }}"\
-            --build-arg COMMIT="${{ github.sha }}"\
-            --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") .
+      - name: Сохранение даты сборки в переменную
+        id: date
+        run: echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
-      - name: Войти в DockerHub
-        run: docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
-
-      - name: Отправить образ в DockerHub
-        run: docker push "${{ vars.DOCKER_IMAGE_NAME }}:${{ github.ref_name }}"
+      - name: Собрать и опубликовать docker-образ
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: ${{ vars.DOCKER_IMAGE_NAME }}
+          tags: ${{ needs.bump_version.outputs.version }}, latest
+          registry: docker.io
+          dockerfile: Containerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          buildArgs: |
+            VERSION=${{ needs.bump_version.outputs.version }},
+            COMMIT=${{ github.sha }},
+            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}

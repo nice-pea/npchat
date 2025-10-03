@@ -44,8 +44,8 @@ jobs:
           PRERELEASE: ${{ inputs.label != '' }}
           PRERELEASE_SUFFIX: ${{ inputs.label }}
           DEFAULT_BUMP: ${{ inputs.level }}
-          MAJOR_STRING_TOKEN: _
-          MINOR_STRING_TOKEN: _
-          PATCH_STRING_TOKEN: _
-          NONE_STRING_TOKEN: _
+          MAJOR_STRING_TOKEN: ""
+          MINOR_STRING_TOKEN: ""
+          PATCH_STRING_TOKEN: ""
+          NONE_STRING_TOKEN: ""
           FORCE_WITHOUT_CHANGES: true
