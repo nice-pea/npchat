@@ -24,19 +24,34 @@ type GoogleConfig struct {
 	RedirectURL  string // URL для перенаправления после аутентификации
 }
 
-func NewGoogle(cfg GoogleConfig) *Google {
-	return &Google{
-		config: &oauth2.Config{
-			ClientID:     cfg.ClientID,     // Идентификатор клиента
-			ClientSecret: cfg.ClientSecret, // Секрет клиента
-			Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth
-			RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
-			Scopes: []string{
-				"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
-				"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
-			},
+func NewGoogle(cfg GoogleConfig) (*Google, error) {
+	if cfg.ClientID == "" {
+		return nil, fmt.Errorf("google oauth: ClientID не может быть пустым")
+	}
+	if cfg.ClientSecret == "" {
+		return nil, fmt.Errorf("google oauth: ClientSecret не может быть пустым")
+	}
+	if cfg.RedirectURL == "" {
+		return nil, fmt.Errorf("google oauth: RedirectURL не может быть пустым")
+	}
+
+	config := &oauth2.Config{
+		ClientID:     cfg.ClientID,     // Идентификатор клиента
+		ClientSecret: cfg.ClientSecret, // Секрет клиента
+		Endpoint:     google.Endpoint,  // Использует конечную точку Google для Oauth
+		RedirectURL:  cfg.RedirectURL,  // URL для перенаправления
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",   // Запрашивает доступ к электронной почте пользователя
+			"https://www.googleapis.com/auth/userinfo.profile", // Запрашивает доступ к профилю пользователя
 		},
 	}
+
+	authURL := config.AuthCodeURL("test-state")
+	if authURL == "" {
+		return nil, fmt.Errorf("google oauth: не удалось сгенерировать URL авторизации")
+	}
+
+	return &Google{config: config}, nil
 }
 
 // Name возвращает имя провайдера Oauth.
@@ -111,3 +126,4 @@ func (o *Google) AuthorizationURL(state string) string {
 	// Сгенерировать URL
 	return o.config.AuthCodeURL(state)
 }
+

@@ -25,16 +25,31 @@ type GithubConfig struct {
 	RedirectURL  string // URL для перенаправления после аутентификации
 }
 
-func NewGithub(cfg GithubConfig) *Github {
-	return &Github{
-		config: &oauth2.Config{
-			ClientID:     cfg.ClientID,
-			ClientSecret: cfg.ClientSecret,
-			Endpoint:     github.Endpoint, // Использует конечную точку Github для Oauth
-			RedirectURL:  cfg.RedirectURL,
-			Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
-		},
+func NewGithub(cfg GithubConfig) (*Github, error) {
+	if cfg.ClientID == "" {
+		return nil, fmt.Errorf("github oauth: ClientID не может быть пустым")
 	}
+	if cfg.ClientSecret == "" {
+		return nil, fmt.Errorf("github oauth: ClientSecret не может быть пустым")
+	}
+	if cfg.RedirectURL == "" {
+		return nil, fmt.Errorf("github oauth: RedirectURL не может быть пустым")
+	}
+
+	config := &oauth2.Config{
+		ClientID:     cfg.ClientID,
+		ClientSecret: cfg.ClientSecret,
+		Endpoint:     github.Endpoint, // Использует конечную точку Github для Oauth
+		RedirectURL:  cfg.RedirectURL,
+		Scopes:       []string{"user:email"}, // Запрашиваем доступ к электронной почте пользователя
+	}
+
+	authURL := config.AuthCodeURL("test-state")
+	if authURL == "" {
+		return nil, fmt.Errorf("github oauth: не удалось сгенерировать URL авторизации")
+	}
+
+	return &Github{config: config}, nil
 }
 
 // Name возвращает имя провайдера Oauth.
@@ -108,3 +123,4 @@ func (o *Github) User(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
 func (o *Github) AuthorizationURL(state string) string {
 	return o.config.AuthCodeURL(state)
 }
+
