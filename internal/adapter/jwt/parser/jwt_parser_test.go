@@ -135,7 +135,7 @@ func createJWT(secret string, claims map[string]any) (string, error) {
 
 // Test_parseAndValidateJWTWithInvalidation - тесты для проверки расширенной валидации токенов с Redis
 func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
-	suite.Run("если VerifyTokenWithAdvancedChecks = false, то будет вызываться обычная проверка jwt", func() {
+	suite.Run("если VerifyTokenWithInvalidation = false, то будет вызываться обычная проверка jwt", func() {
 		suite.Parser.Config.VerifyTokenWithInvalidation = false
 		var (
 			uid = uuid.New()
@@ -153,7 +153,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 		suite.Equal(uid.String(), claims.UserID)
 		suite.Equal(sid.String(), claims.SessionID)
 	})
-	suite.Run("если VerifyTokenWithAdvancedChecks = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
+	suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
 		suite.Parser.Config.VerifyTokenWithInvalidation = true
 		suite.Parser.Registry = redisRegistry.Registry{}
 		var (
@@ -171,7 +171,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 		suite.Equal(uid.String(), claims.UserID)
 		suite.Equal(sid.String(), claims.SessionID)
 	})
-	suite.Run("если VerifyTokenWithAdvancedChecks = true и клиентРедис создан, то будет вызываться валидация поля Iat", func() {
+	suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис создан, то будет вызываться валидация поля Iat", func() {
 		var (
 			uid = uuid.New()
 			sid = uuid.New()
