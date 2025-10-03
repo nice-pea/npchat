@@ -18,3 +18,4 @@ jobs:
   delivery:
     if: github.event.pull_request.merged == true
     uses: ./.github/workflows/ci-delivery.yml
+    secrets: inherit
