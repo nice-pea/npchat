@@ -1,4 +1,4 @@
-package redisCache_test
+package redisRegistry_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 	redisContainer "github.com/testcontainers/testcontainers-go/modules/redis"
@@ -18,7 +18,7 @@ type testSuite struct {
 	Terminate func()
 	CleanUp   func()
 	DSN       string
-	RedisCli  redisCache.Registry
+	RedisCli  redisRegistry.Registry
 }
 
 // Test_TestSuite - запускает тестовый сценарий
@@ -45,12 +45,12 @@ func (suite *testSuite) newRedisContainer() {
 	}
 	suite.DSN = dsn
 
-	redisCli, err := redisCache.Init(redisCache.Config{
+	redisCli, err := redisRegistry.Init(redisRegistry.Config{
 		DSN: dsn,
 	})
 
 	suite.Require().NoError(err)
-	suite.RedisCli = redisCache.Registry{redisCli, 2 * time.Minute}
+	suite.RedisCli = redisRegistry.Registry{redisCli, 2 * time.Minute}
 
 }
 

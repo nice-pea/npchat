@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
-	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 )
 
 // newTestParser - вспомогательная функция для создания тестового парсера JWT
@@ -155,7 +155,7 @@ func (suite *testSuite) Test_parseAndValidateJWTWithInvalidation() {
 	})
 	suite.Run("если VerifyTokenWithAdvancedChecks = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
 		suite.Parser.Config.VerifyTokenWithInvalidation = true
-		suite.Parser.Registry = redisCache.Registry{}
+		suite.Parser.Registry = redisRegistry.Registry{}
 		var (
 			uid = uuid.New()
 			sid = uuid.New()

@@ -1,9 +1,9 @@
-package redisCache_test
+package redisRegistry_test
 
 import (
 	"time"
 
-	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 
 	"github.com/google/uuid"
 )
@@ -14,12 +14,12 @@ func (suite *testSuite) Test_Registry() {
 		// RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
 		suite.Run("если sessionID пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.UUID{}, time.Now())
-			suite.Assert().ErrorIs(err, redisCache.ErrEmptySessionID)
+			suite.Assert().ErrorIs(err, redisRegistry.ErrEmptySessionID)
 			suite.requireIsRedisEmpty()
 		})
 		suite.Run("если issueTime пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Time{})
-			suite.Assert().ErrorIs(err, redisCache.ErrEmptyIssueTime)
+			suite.Assert().ErrorIs(err, redisRegistry.ErrEmptyIssueTime)
 			suite.requireIsRedisEmpty()
 		})
 
@@ -92,7 +92,7 @@ func (suite *testSuite) Test_Registry() {
 		// IssueTime(sessionID uuid.UUID) (*time.Time, error)
 		suite.Run("если sessionID пустой то вернется ошибка", func() {
 			issueTime, err := suite.RedisCli.IssueTime(uuid.UUID{})
-			suite.Require().ErrorIs(err, redisCache.ErrEmptySessionID)
+			suite.Require().ErrorIs(err, redisRegistry.ErrEmptySessionID)
 			suite.Assert().Zero(issueTime)
 		})
 		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {

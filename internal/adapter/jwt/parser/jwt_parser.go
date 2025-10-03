@@ -10,7 +10,7 @@ import (
 
 	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
 
-	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
@@ -24,7 +24,7 @@ type OutJWT struct {
 // Parser - основной парсер JWT
 type Parser struct {
 	Config   jwt2.Config
-	Registry redisCache.Registry
+	Registry redisRegistry.Registry
 }
 
 // Ошибки модуля

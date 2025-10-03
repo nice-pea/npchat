@@ -6,7 +6,7 @@ import (
 
 	jwt2 "github.com/cristalhq/jwt/v5"
 	"github.com/nice-pea/npchat/internal/adapter/jwt"
-	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
+	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 	"github.com/stretchr/testify/suite"
 	redisContainer "github.com/testcontainers/testcontainers-go/modules/redis"
 )
@@ -33,9 +33,9 @@ func (suite *testSuite) newRedisContainer() {
 	}
 
 	suite.cfg = jwt.Config{
-		SecretKey:                     "secret",
+		SecretKey:                   "secret",
 		VerifyTokenWithInvalidation: true,
-		RedisDSN:                      dsn,
+		RedisDSN:                    dsn,
 	}
 	suite.CleanUp = func() {
 		if suite.Parser.Registry.Cli != nil {
@@ -44,14 +44,14 @@ func (suite *testSuite) newRedisContainer() {
 		}
 	}
 
-	cli, err := redisCache.Init(redisCache.Config{
+	cli, err := redisRegistry.Init(redisRegistry.Config{
 		DSN: dsn,
 	})
 	suite.Require().NoError(err)
 
 	suite.Parser = Parser{
 		Config:   suite.cfg,
-		Registry: redisCache.Registry{Cli: cli},
+		Registry: redisRegistry.Registry{Cli: cli},
 	}
 }
 
@@ -70,14 +70,14 @@ func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
 	suite.CleanUp()
 	// Пересоздаем Parser
-	cli, err := redisCache.Init(redisCache.Config{
+	cli, err := redisRegistry.Init(redisRegistry.Config{
 		DSN: suite.cfg.RedisDSN,
 	})
 	suite.Require().NoError(err)
 	suite.cfg.VerifyTokenWithInvalidation = true
 	suite.Parser = Parser{
 		Config:   suite.cfg,
-		Registry: redisCache.Registry{Cli: cli},
+		Registry: redisRegistry.Registry{Cli: cli},
 	}
 }
 
