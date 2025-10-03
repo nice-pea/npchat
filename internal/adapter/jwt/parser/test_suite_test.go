@@ -100,3 +100,8 @@ func (suite *testSuite) createJWT(secret string, claims map[string]any) string {
 
 	return token.String()
 }
+
+// parserWithOutRegistry - создает парсер без Registry
+func (suite *testSuite) parserWithOutRegistry(secret string) Parser {
+	return Parser{Config: jwt.Config{SecretKey: secret}}
+}
