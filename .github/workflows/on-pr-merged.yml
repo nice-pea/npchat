@@ -13,7 +13,10 @@ on:
       - closed
     branches:
       - master
-
+      
+permissions:
+  contents: write
+  
 jobs:
   delivery:
     if: github.event.pull_request.merged == true
