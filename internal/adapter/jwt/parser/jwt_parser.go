@@ -15,30 +15,33 @@ import (
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
 
+// OutJWT - структура данных пользователя из JWT
 type OutJWT struct {
 	UserID    string
 	SessionID string
 }
 
+// Parser - основной парсер JWT
 type Parser struct {
-	Config jwt2.Config
-
-	VerifyTokenWithAdvancedChecks bool
-	Registry                      redisCache.Registry
+	Config   jwt2.Config
+	Registry redisCache.Registry
 }
 
+// Ошибки модуля
 var (
-	ErrIatEmpty     = errors.New("время создания токена отстутсвует")
-	ErrTimeOut      = errors.New("время жизни токена истекло")
+	ErrIatEmpty     = errors.New("время создания токена отсутствует")
+	ErrTokenExpired = errors.New("время жизни токена истекло")
 	ErrTokenRevoked = errors.New("токен аннулирован")
 )
 
+// CustomClaims - структура для хранения данных из claims
 type CustomClaims struct {
 	UserID    string
 	SessionID string
 	jwt.RegisteredClaims
 }
 
+// customClaimsToOutJWT - преобразование claims в middleware формат
 func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	return middleware.OutJwt{
 		UserID:    cc.UserID,
@@ -46,38 +49,40 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	}
 }
 
-// Parse разбирает токен и возвращает данные из него
+// getClaims - основная логика парсинга и валидации токена
 func (p *Parser) getClaims(token string) (CustomClaims, error) {
-	// Создать валидатор
+	// Создание верификатора с секретным ключом
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
 
 	if err != nil {
 		return CustomClaims{}, err
 	}
 
-	// Разобрать токен и проверить его
+	// Парсинг токена
 	newToken, err := jwt.Parse([]byte(token), verifier)
 	if err != nil {
 		return CustomClaims{}, err
 	}
+	// Подпись токена
 	if err = verifier.Verify(newToken); err != nil {
 		return CustomClaims{}, err
 	}
 
-	// Получить данные из токена
+	// Распаковка claims
 	var newClaims CustomClaims
 	errClaims := json.Unmarshal(newToken.Claims(), &newClaims)
 	if errClaims != nil {
-		return CustomClaims{}, err
+		return CustomClaims{}, errClaims
 	}
 
-	// Валидация времени жизни токена
+	// Проверка временных ограничений
 	if !newClaims.IsValidAt(time.Now()) {
-		return CustomClaims{}, ErrTimeOut
+		return CustomClaims{}, ErrTokenExpired
 	}
 	return newClaims, nil
 }
 
+// parse - базовый парсер без дополнительных проверок
 func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 
@@ -88,6 +93,7 @@ func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	return customClaimsToOutJWT(claims), nil
 }
 
+// parseAndValidateJWTWithInvalidation - парсит токен и проверяет его на аннулирование
 func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 	if err != nil {
@@ -99,6 +105,7 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 		return middleware.OutJwt{}, err
 	}
 
+	// Получение времени последнего выпуска токена из Redis
 	timefromCache, err := p.Registry.IssueTime(sessionId)
 	if err != nil {
 		return middleware.OutJwt{}, err
@@ -109,6 +116,7 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 		return middleware.OutJwt{}, ErrIatEmpty
 	}
 
+	// Если время в кэше больше, чем в токене - токен считается аннулированным
 	if timefromCache.After(issuedAt.Time) {
 		return middleware.OutJwt{}, ErrTokenRevoked
 	}
@@ -117,8 +125,10 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 
 }
 
+// Parse - основной метод парсинга токена
+// Выбирает режим проверки в зависимости от конфигурации
 func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
-	if p.VerifyTokenWithAdvancedChecks && p.Registry.Cli != nil {
+	if p.Config.VerifyTokenWithInvalidation && p.Registry.Cli != nil {
 		return p.parseAndValidateJWTWithInvalidation(token)
 	}
 

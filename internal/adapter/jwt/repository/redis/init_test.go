@@ -4,8 +4,9 @@ import (
 	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 )
 
+// Test_Init - тестовый сценарий для проверки функции инициализации Redis-клиента
 func (suite *testSuite) Test_Init() {
-	suite.Run("подключение к redis с неверной конфигурацией", func() {
+	suite.Run("подключение к redis с валидной конфигурацией", func() {
 		cfg := redisCache.Config{
 			DSN: suite.DSN,
 		}
@@ -13,7 +14,7 @@ func (suite *testSuite) Test_Init() {
 
 		suite.Require().NoError(err)
 		suite.Assert().NotNil(cli)
-
+		defer func() { _ = cli.Close() }()
 	})
 	suite.Run("подключение к redis с пустой конфигурацией", func() {
 		cfg := redisCache.Config{}
@@ -21,7 +22,6 @@ func (suite *testSuite) Test_Init() {
 
 		suite.Require().Error(err)
 		suite.Assert().Nil(cli)
-
 	})
 	suite.Run("подключение к redis с невалидной конфигурацией", func() {
 		cfg := redisCache.Config{
@@ -31,6 +31,5 @@ func (suite *testSuite) Test_Init() {
 
 		suite.Require().Error(err)
 		suite.Assert().Nil(cli)
-
 	})
 }

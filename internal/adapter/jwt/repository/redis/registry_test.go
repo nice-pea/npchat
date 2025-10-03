@@ -8,18 +8,19 @@ import (
 	"github.com/google/uuid"
 )
 
+// Test_Registry - тестирование методов Registry для работы с Redis
 func (suite *testSuite) Test_Registry() {
 	suite.Run("RegisterIssueTime", func() {
 		// RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
 		suite.Run("если sessionID пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.UUID{}, time.Now())
 			suite.Assert().ErrorIs(err, redisCache.ErrEmptySessionID)
-			suite.redisEmpty()
+			suite.requireIsRedisEmpty()
 		})
 		suite.Run("если issueTime пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Time{})
 			suite.Assert().ErrorIs(err, redisCache.ErrEmptyIssueTime)
-			suite.redisEmpty()
+			suite.requireIsRedisEmpty()
 		})
 
 		suite.Run("новое значение сменит старое, в редис будет только одна запись", func() {
@@ -66,7 +67,7 @@ func (suite *testSuite) Test_Registry() {
 			issueTime := suite.getIssueTime(id)
 			suite.Require().Zero(issueTime)
 
-			suite.redisEmpty()
+			suite.requireIsRedisEmpty()
 		})
 		suite.Run("все записи которые Ttl прошел будут удалены из кэша", func() {
 			suite.RedisCli.Ttl = time.Millisecond

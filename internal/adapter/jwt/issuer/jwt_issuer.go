@@ -10,21 +10,24 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
+// Issuer - генератор JWT-токенов
 type Issuer struct {
 	Config jwt2.Config
 }
 
+// customClaims - расширенные claims для JWT
 type customClaims struct {
 	UserID    uuid.UUID
 	SessionID uuid.UUID
 	jwt.RegisteredClaims
 }
 
-// Issue создает jwt на основе некоторых данных из session
+// Issue - создает JWT-токен на основе данных сессии
 func (c *Issuer) Issue(session sessionn.Session) (string, error) {
-	// создаем claims
-
+	// Получение текущего времени
 	nowTime := time.Now()
+	
+	// Формирование claims токена
 	claims := customClaims{
 		UserID:    session.UserID,
 		SessionID: session.ID,

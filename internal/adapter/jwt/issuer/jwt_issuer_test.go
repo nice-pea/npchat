@@ -15,6 +15,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
+// Test_Issuer_Issue - набор тестов для проверки функции Issue генератора JWT-токенов
 func Test_Issuer_Issue(t *testing.T) {
 	t.Run("session может быть zero value", func(t *testing.T) {
 		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
@@ -170,13 +171,16 @@ func Test_Issuer_Issue(t *testing.T) {
 	})
 }
 
+// claims - структура для хранения декодированных данных из JWT токена
 type claims struct {
 	UserID    uuid.UUID
 	SessionID uuid.UUID
 	jwt.RegisteredClaims
 }
 
+// parse - вспомогательная функция для декодирования и проверки JWT токена
 func parse(t *testing.T, token string, secret []byte) claims {
+	t.Helper()
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, secret)
 	require.NoError(t, err)
 

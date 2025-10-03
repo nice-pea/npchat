@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	jwt2 "github.com/cristalhq/jwt/v5"
-	"github.com/google/uuid"
 	"github.com/nice-pea/npchat/internal/adapter/jwt"
 	redisCache "github.com/nice-pea/npchat/internal/adapter/jwt/repository/redis"
 	"github.com/stretchr/testify/suite"
@@ -20,6 +19,7 @@ type testSuite struct {
 	Parser    Parser
 }
 
+// newRedisContainer - настраивает Redis контейнер для тестов
 func (suite *testSuite) newRedisContainer() {
 	ctx := context.Background()
 	container, err := redisContainer.Run(ctx, "redis:8.2.1")
@@ -34,21 +34,13 @@ func (suite *testSuite) newRedisContainer() {
 
 	suite.cfg = jwt.Config{
 		SecretKey:                     "secret",
-		VerifyTokenWithAdvancedChecks: true,
+		VerifyTokenWithInvalidation: true,
 		RedisDSN:                      dsn,
 	}
 	suite.CleanUp = func() {
 		if suite.Parser.Registry.Cli != nil {
-			suite.Parser.Registry.Cli.FlushDB(context.Background())
-		}
-		cli, err := redisCache.Init(redisCache.Config{
-			DSN: suite.cfg.RedisDSN,
-		})
-		suite.Require().NoError(err)
-		suite.Parser = Parser{
-			Config:                        suite.cfg,
-			VerifyTokenWithAdvancedChecks: true,
-			Registry:                      redisCache.Registry{Cli: cli},
+			status := suite.Parser.Registry.Cli.FlushDB(context.Background())
+			suite.Require().NoError(status.Err())
 		}
 	}
 
@@ -58,38 +50,43 @@ func (suite *testSuite) newRedisContainer() {
 	suite.Require().NoError(err)
 
 	suite.Parser = Parser{
-		Config:                        suite.cfg,
-		VerifyTokenWithAdvancedChecks: true,
-		Registry:                      redisCache.Registry{Cli: cli},
+		Config:   suite.cfg,
+		Registry: redisCache.Registry{Cli: cli},
 	}
 }
 
+// Test_TestSuite - запускает набор тестов
 func Test_TestSuite(t *testing.T) {
 	suite.Run(t, new(testSuite))
 }
 
-// SetupSuite выполняется один раз перед всеми тестами
+// SetupSuite - выполняется один раз перед всеми тестами
 func (suite *testSuite) SetupSuite() {
 	suite.newRedisContainer()
 }
 
+// SetupSubTest - выполняется перед каждым подтестом
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
 	suite.CleanUp()
-
+	// Пересоздаем Parser
+	cli, err := redisCache.Init(redisCache.Config{
+		DSN: suite.cfg.RedisDSN,
+	})
+	suite.Require().NoError(err)
+	suite.cfg.VerifyTokenWithInvalidation = true
+	suite.Parser = Parser{
+		Config:   suite.cfg,
+		Registry: redisCache.Registry{Cli: cli},
+	}
 }
 
-// TearDownSuite выполняется после всех тестов
+// TearDownSuite - выполняется после всех тестов
 func (suite *testSuite) TearDownSuite() {
 	suite.Terminate()
 }
 
-func (suite *testSuite) mustParseUuid(s string) uuid.UUID {
-	uid, err := uuid.Parse(s)
-	suite.Require().NoError(err)
-	return uid
-}
-
+// createJWT - создает JWT токен для тестов
 func (suite *testSuite) createJWT(secret string, claims map[string]any) string {
 	// создаем Signer
 	signer, err := jwt2.NewSignerHS(jwt2.HS256, []byte(secret))

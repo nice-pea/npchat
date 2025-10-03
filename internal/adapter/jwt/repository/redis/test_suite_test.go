@@ -21,10 +21,12 @@ type testSuite struct {
 	RedisCli  redisCache.Registry
 }
 
+// Test_TestSuite - запускает тестовый сценарий
 func Test_TestSuite(t *testing.T) {
 	suite.Run(t, new(testSuite))
 }
 
+// newRedisContainer - инициализирует Redis-контейнер для тестов
 func (suite *testSuite) newRedisContainer() {
 	ctx := context.Background()
 	container, err := redisContainer.Run(ctx, "redis:8.2.1")
@@ -37,7 +39,8 @@ func (suite *testSuite) newRedisContainer() {
 		_ = container.Terminate(ctx)
 	}
 	suite.CleanUp = func() {
-		suite.RedisCli.Cli.FlushDB(context.Background())
+		status := suite.RedisCli.Cli.FlushDB(context.Background())
+		suite.Require().NoError(status.Err())
 		suite.RedisCli.Ttl = 2 * time.Minute
 	}
 	suite.DSN = dsn
@@ -66,8 +69,8 @@ func (suite *testSuite) TearDownSuite() {
 	suite.Terminate()
 }
 
+// getIssueTime - получает время анулирования токена из Redis по sessionID
 func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
-
 	ctx := context.Background()
 	var issueTime time.Time
 
@@ -78,19 +81,22 @@ func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 	return issueTime
 }
 
+// setIssueTime - записывает время анулирования токена в Redis с указанным TTL
 func (suite *testSuite) setIssueTime(sessionID uuid.UUID, issueTime time.Time, ttl time.Duration) {
 	ctx := context.Background()
 	err := suite.RedisCli.Cli.Set(ctx, sessionID.String(), issueTime, ttl).Err()
 	suite.Require().NoError(err)
 }
 
-func (suite *testSuite) redisEmpty() {
+// requireIsRedisEmpty - проверяет, что Redis пуст
+func (suite *testSuite) requireIsRedisEmpty() {
 	ctx := context.Background()
 	keys, err := suite.RedisCli.Cli.Keys(ctx, "*").Result()
 	suite.Require().NoError(err)
 	suite.Require().Empty(keys, "Redis должен быть пустым")
 }
 
+// redisKeys - возвращает список всех ключей в Redis
 func (suite *testSuite) redisKeys() []string {
 	ctx := context.Background()
 	keys, err := suite.RedisCli.Cli.Keys(ctx, "*").Result()
