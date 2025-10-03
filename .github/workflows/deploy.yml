@@ -1,5 +1,5 @@
 # Стянуть образ и запустить docker-контейнер в рабочей среде
-name: CD Deploy
+name: Deploy
 
 on:
   workflow_dispatch:

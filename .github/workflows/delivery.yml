@@ -1,4 +1,4 @@
-name: CI Delivery
+name: Delivery
 
 on:
   workflow_dispatch:
