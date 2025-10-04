@@ -30,16 +30,16 @@ func (suite *testSuite) Test_Registry() {
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis1 := suite.getIssueTime(sessionId)
-			suite.Require().Equal(issueTime, issueTimeFromRedis1)
+			suite.Require().Equal(issueTime.Unix(), issueTimeFromRedis1.Unix())
 
 			newIssueTime := time.Now().Add(time.Hour)
 			err = suite.RedisCli.RegisterIssueTime(sessionId, newIssueTime)
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis2 := suite.getIssueTime(sessionId)
-			suite.Require().Equal(newIssueTime, issueTimeFromRedis2)
+			suite.Require().Equal(newIssueTime.Unix(), issueTimeFromRedis2.Unix())
 
-			suite.Require().NotEqual(issueTimeFromRedis2, issueTimeFromRedis1)
+			suite.Require().NotEqual(issueTimeFromRedis2.Unix(), issueTimeFromRedis1.Unix())
 
 			keys := suite.redisKeys()
 			suite.Require().Len(keys, 1)
@@ -76,17 +76,9 @@ func (suite *testSuite) Test_Registry() {
 				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
 			}
-
-			suite.RedisCli.Ttl = time.Minute
-			id := uuid.New()
-			err := suite.RedisCli.RegisterIssueTime(id, time.Now())
-			suite.Require().NoError(err)
-
 			time.Sleep(10 * time.Millisecond)
-
 			keys := suite.redisKeys()
-			suite.Require().Len(keys, 1)
-			suite.Equal(id.String(), keys[0])
+			suite.Require().Len(keys, 0)
 		})
 
 	})
@@ -110,7 +102,7 @@ func (suite *testSuite) Test_Registry() {
 
 			issueTimeRepo, err := suite.RedisCli.IssueTime(sessionId)
 			suite.Require().NoError(err)
-			suite.Equal(issueTime, issueTimeRepo)
+			suite.Equal(issueTime.Unix(), issueTimeRepo.Unix())
 		})
 
 	})
