@@ -61,6 +61,7 @@ func (suite *testSuite) SetupSuite() {
 	suite.Registry = registry
 }
 
+// SetupSubTest выполняется перед каждым подтестом
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
 	suite.cleanUp()
@@ -68,6 +69,7 @@ func (suite *testSuite) SetupSubTest() {
 
 // TearDownSuite выполняется после всех тестов
 func (suite *testSuite) TearDownSuite() {
+	// Завершаем контейнер Redis
 	suite.terminate()
 }
 
