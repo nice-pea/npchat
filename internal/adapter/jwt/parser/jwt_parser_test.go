@@ -1,117 +1,267 @@
 package jwtParser
 
 import (
-	"testing"
 	"time"
 
-	"github.com/cristalhq/jwt/v5"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
+	"github.com/google/uuid"
 )
 
-func Test_JWTParser_Parse(t *testing.T) {
-	t.Run("валидный jwt можно разобрать и получить данные", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+// Test_JWTParser_Parse набор тестов для проверки функции Parse парсера JWT-токенов
+func (suite *testSuite) Test_JWTParser_Parse() {
+	suite.Run("Парсер без Registry", func() {
+		suite.Run("валидный jwt можно разобрать и получить данные", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
 
-		var (
-			uid = "123"
-			sid = "456"
-		)
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
 
-		token, err := createJWT(secret, map[string]any{
-			"UserID":    uid,
-			"SessionID": sid,
+			token := suite.createJWT(secret, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+			})
+
+			claims, err := parser.Parse(token)
+			suite.Require().NoError(err)
+
+			suite.Equal(uid.String(), claims.UserID)
+			suite.Equal(sid.String(), claims.SessionID)
 		})
-		require.NoError(t, err)
 
-		claims, err := parser.Parse(token)
-		require.NoError(t, err)
+		suite.Run("jwt существующий больше exp - невалиден", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
 
-		assert.Equal(t, uid, claims.UserID)
-		assert.Equal(t, sid, claims.SessionID)
-	})
-	t.Run("jwt существующий больше exp - невалиден", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+			token := suite.createJWT(secret, map[string]any{
+				"UserID":    uuid.New(),
+				"SessionID": uuid.New(),
+				"exp":       time.Now().Add(time.Millisecond).Unix(),
+			})
+			time.Sleep(2 * time.Millisecond)
 
-		token, err := createJWT(secret, map[string]any{
-			"UserID":    "123",
-			"SessionID": "456",
-			"exp":       time.Now().Add(time.Millisecond).Unix(),
+			claims, err := parser.Parse(token)
+			suite.ErrorIs(err, ErrTokenExpired)
+			suite.Zero(claims)
 		})
-		require.NoError(t, err)
-		time.Sleep(2 * time.Millisecond)
 
-		claims, err := parser.Parse(token)
-		assert.ErrorIs(t, err, ErrTimeOut)
-		assert.Zero(t, claims)
-	})
-	t.Run("jwt существующий меньше exp - валиден", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+		suite.Run("jwt существующий меньше exp - валиден", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
 
-		token, err := createJWT(secret, map[string]any{
-			"UserID":    "123",
-			"SessionID": "456",
-			"exp":       time.Now().Add(1000 * time.Millisecond).Unix(),
+			token := suite.createJWT(secret, map[string]any{
+				"UserID":    uuid.New(),
+				"SessionID": uuid.New(),
+				"exp":       time.Now().Add(1000 * time.Second).Unix(),
+			})
+
+			claims, err := parser.Parse(token)
+			suite.Require().NoError(err)
+			suite.NotZero(claims)
 		})
-		require.NoError(t, err)
-		time.Sleep(100 * time.Millisecond)
 
-		claims, err := parser.Parse(token)
-		require.NoError(t, err)
-		assert.NotZero(t, claims)
+		suite.Run("jwt существующий больше 2 минут - невалиден", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
+
+			//token - истекший jwt токен
+			// содержит данные:
+			/* {
+			  "SessionID": "456",
+			  "UserID": "123",
+			  "exp": 1759395766
+			} */
+			token := `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJTZXNzaW9uSUQiOiI0NTYiLCJVc2VySUQiOiIxMjMiLCJleHAiOjE3NTkzOTU3NjZ9.SYQurl5gsOt42K2d0Vyp-RuZluANRNuGMyUNd6RfWtk`
+
+			claims, err := parser.Parse(token)
+			suite.ErrorIs(err, ErrTokenExpired)
+			suite.Zero(claims)
+		})
+
+		suite.Run("невалидный jwt", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
+
+			token := `adsafs.afsfsa.gsdsddsggd`
+			claims, err := parser.Parse(token)
+			suite.Error(err)
+			suite.Zero(claims)
+		})
+
+		suite.Run("пустой jwt", func() {
+			secret := "secret"
+			parser := suite.parserWithOutRegistry(secret)
+
+			claims, err := parser.Parse("")
+			suite.Error(err)
+			suite.Zero(claims)
+		})
 	})
-	t.Run("jwt существующий больше 2 минут - невалиден", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
+	suite.Run("Парсер c Registry", func() {
+		suite.Run("если VerifyTokenWithInvalidation = false, то будет вызываться обычная проверка jwt", func() {
+			suite.Parser.Config.VerifyTokenWithInvalidation = false
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
 
-		//token - истекший jwt токен
-		token := `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiIxMjMiLCJTZXNzaW9uSUQiOiI0NTYiLCJpc3MiOiJucGNoYXQiLCJzdWIiOiJhdXRoZW50aWNhdGlvbiIsImV4cCI6MTc1NzcwMDM2NCwiaWF0IjoxNzU3NzAwMjQ0LCJuYmYiOjE3NTc3MDAyNDR9.kpKiS63GV1XQYapTC9jxAlACoKToOIWISgzvJIVeZ2I`
+			token := suite.createJWT(suite.Parser.Config.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+			})
 
-		claims, err := parser.Parse(token)
-		assert.ErrorIs(t, err, ErrTimeOut)
-		assert.Zero(t, claims)
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().NoError(err)
+
+			suite.Equal(uid.String(), claims.UserID)
+			suite.Equal(sid.String(), claims.SessionID)
+		})
+
+		suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
+			suite.Parser.Config.VerifyTokenWithInvalidation = true
+			suite.Parser.Registry = nil
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+			})
+
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().NoError(err)
+
+			suite.Equal(uid.String(), claims.UserID)
+			suite.Equal(sid.String(), claims.SessionID)
+		})
+
+		suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис создан, то будет вызываться валидация поля Iat", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Time{}, nil)
+
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().NoError(err)
+
+			suite.Equal(uid.String(), claims.UserID)
+			suite.Equal(sid.String(), claims.SessionID)
+		})
+
+		suite.Run("в кэше есть запись, анулирующее все токены данной сессии", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now(), nil)
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().ErrorIs(err, ErrTokenRevoked)
+			suite.Zero(claims)
+		})
+
+		suite.Run("можно заранее анулировать будущие токены", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now().Add(time.Hour), nil)
+
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().ErrorIs(err, ErrTokenRevoked)
+			suite.Zero(claims)
+		})
+
+		suite.Run("если токен создан после даты анулирования, то токен действителен", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now().Add(-time.Hour), nil)
+
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().NoError(err)
+
+			suite.Equal(uid.String(), claims.UserID)
+			suite.Equal(sid.String(), claims.SessionID)
+		})
+
+		suite.Run("если iat пустой то вернется ошибка ErrIatEmpty", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+
+			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+			})
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now(), nil)
+
+			claims, err := suite.Parser.Parse(token)
+			suite.Require().ErrorIs(err, ErrIatEmpty)
+			suite.Zero(claims)
+		})
+
+		suite.Run("анулируются только те токены, у которых iat меньше даты в кэше", func() {
+			var (
+				uid = uuid.New()
+				sid = uuid.New()
+			)
+			secret := suite.cfg.SecretKey
+			token1 := suite.createJWT(secret, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			timeNow := time.Now()
+
+			time.Sleep(time.Second)
+			token2 := suite.createJWT(secret, map[string]any{
+				"UserID":    uid,
+				"SessionID": sid,
+				"iat":       time.Now().Unix(),
+			})
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(timeNow, nil)
+			claims, err := suite.Parser.Parse(token1)
+			suite.Require().ErrorIs(err, ErrTokenRevoked)
+			suite.Zero(claims)
+
+			claims, err = suite.Parser.Parse(token2)
+			suite.Require().NoError(err)
+			suite.Equal(sid.String(), claims.SessionID)
+			suite.Equal(uid.String(), claims.UserID)
+		})
 	})
-
-	t.Run("невалидный jwt", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
-
-		token := `adsafs.afsfsa.gsdsddsggd`
-
-		claims, err := parser.Parse(token)
-		assert.Error(t, err)
-		assert.Zero(t, claims)
-	})
-	t.Run("пустой jwt", func(t *testing.T) {
-		secret := "secret"
-		parser := Parser{jwt2.Config{SecretKey: secret}}
-
-		claims, err := parser.Parse("")
-		assert.Error(t, err)
-		assert.Zero(t, claims)
-	})
-}
-
-func createJWT(secret string, claims map[string]any) (string, error) {
-	// создаем Signer
-	signer, err := jwt.NewSignerHS(jwt.HS256, []byte(secret))
-	if err != nil {
-		return "", err
-	}
-
-	// создаем Builder
-	builder := jwt.NewBuilder(signer)
-
-	// создаем токен
-	token, err := builder.Build(claims)
-	if err != nil {
-		return "", err
-	}
-
-	return token.String(), nil
 }
