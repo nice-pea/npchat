@@ -88,7 +88,7 @@ func (suite *testSuite) Test_Registry() {
 			suite.Require().Len(keys, 10)
 		})
 
-		suite.Run("созданная запись живет столкьоже сколько передали в поле Ttl", func() {
+		suite.Run("созданная запись живет столько же сколько передали в поле Ttl", func() {
 			id := uuid.New()
 			// ставим Ttl в 1 миллисекунду
 			suite.Registry.Ttl = time.Millisecond
