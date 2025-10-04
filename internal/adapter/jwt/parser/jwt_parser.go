@@ -89,7 +89,6 @@ func (p *Parser) getClaims(token string) (CustomClaims, error) {
 // parse парсит токен без проверки анулирования
 func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
-
 	if err != nil {
 		return middleware.OutJwt{}, err
 	}
@@ -126,7 +125,6 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 	}
 
 	return customClaimsToOutJWT(claims), nil
-
 }
 
 // Parse парсит токен

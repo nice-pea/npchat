@@ -19,11 +19,8 @@ func Test_JWTParser_Parse(t *testing.T) {
 		t.Run("валидный jwt можно разобрать и получить данные", func(t *testing.T) {
 			secret := "secret"
 			parser := parserWithoutRegistry(t, secret)
-
-			var (
-				uid = uuid.New()
-				sid = uuid.New()
-			)
+			uid := uuid.New()
+			sid := uuid.New()
 
 			token := createJWT(t, secret, map[string]any{
 				"UserID":    uid,
