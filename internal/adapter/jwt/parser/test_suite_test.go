@@ -30,12 +30,6 @@ func (suite *testSuite) newRedisContainer() *redisContainer.RedisContainer {
 		_ = container.Terminate(ctx)
 	}
 
-	suite.CleanUp = func() {
-		if suite.Parser.Registry.Client != nil {
-			status := suite.Parser.Registry.Client.FlushDB(context.Background())
-			suite.Require().NoError(status.Err())
-		}
-	}
 	return container
 }
 
@@ -62,7 +56,9 @@ func (suite *testSuite) SetupSuite() {
 // SetupSubTest выполняется перед каждым подтестом
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
-	suite.CleanUp()
+	if suite.CleanUp != nil {
+		suite.CleanUp()
+	}
 
 	// Пересоздаем Parser
 	cli, err := redisRegistry.Init(redisRegistry.Config{
@@ -70,9 +66,16 @@ func (suite *testSuite) SetupSubTest() {
 	})
 	suite.Require().NoError(err)
 	suite.cfg.VerifyTokenWithInvalidation = true
+	registry := &redisRegistry.Registry{Client: cli}
 	suite.Parser = Parser{
 		Config:   suite.cfg,
-		Registry: redisRegistry.Registry{Client: cli},
+		Registry: registry,
+	}
+	suite.CleanUp = func() {
+		if suite.Parser.Registry != nil {
+			status := registry.Client.FlushDB(context.Background())
+			suite.Require().NoError(status.Err())
+		}
 	}
 }
 

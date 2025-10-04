@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 )
 
 // Test_JWTParser_Parse набор тестов для проверки функции Parse парсера JWT-токенов
@@ -122,7 +120,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 
 		suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
 			suite.Parser.Config.VerifyTokenWithInvalidation = true
-			suite.Parser.Registry = redisRegistry.Registry{}
+			suite.Parser.Registry = nil
 			var (
 				uid = uuid.New()
 				sid = uuid.New()

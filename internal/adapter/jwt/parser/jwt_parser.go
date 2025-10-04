@@ -10,10 +10,14 @@ import (
 
 	jwt2 "github.com/nice-pea/npchat/internal/adapter/jwt"
 
-	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
-
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
+
+// Register интерфейс для репозитория хранения и полчения дат анулирования
+type Registry interface {
+	RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error
+	IssueTime(sessionID uuid.UUID) (time.Time, error)
+}
 
 // OutJWT структура данных JWT
 type OutJWT struct {
@@ -24,7 +28,7 @@ type OutJWT struct {
 // Parser парсер JWT
 type Parser struct {
 	Config   jwt2.Config
-	Registry redisRegistry.Registry
+	Registry Registry
 }
 
 // Ошибки модуля
@@ -128,7 +132,7 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 // Parse парсит токен
 // Выбирает режим проверки в зависимости от конфигурации
 func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
-	if p.Config.VerifyTokenWithInvalidation && p.Registry.Client != nil {
+	if p.Config.VerifyTokenWithInvalidation && p.Registry != nil {
 		return p.parseAndValidateJWTWithInvalidation(token)
 	}
 
