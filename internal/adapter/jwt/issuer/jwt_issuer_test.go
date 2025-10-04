@@ -2,7 +2,6 @@ package jwtIssuer
 
 import (
 	"encoding/json"
-	"log"
 	"testing"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 )
 
-// Test_Issuer_Issue - набор тестов для проверки функции Issue генератора JWT-токенов
+// Test_Issuer_Issue набор тестов для проверки функции Issue генератора JWT-токенов
 func Test_Issuer_Issue(t *testing.T) {
 	t.Run("session может быть zero value", func(t *testing.T) {
 		issuer := Issuer{jwt2.Config{SecretKey: "secret"}}
@@ -39,6 +38,7 @@ func Test_Issuer_Issue(t *testing.T) {
 
 		assert.NotEqual(t, t1, t2)
 	})
+
 	t.Run("jwt токены созданные с zero secret - невалидны", func(t *testing.T) {
 		var session = sessionn.Session{}
 
@@ -132,6 +132,7 @@ func Test_Issuer_Issue(t *testing.T) {
 
 		assert.NotEqual(t, t1, t2)
 	})
+
 	t.Run("Если secret пустой - Issue будет возвращать ошибку", func(t *testing.T) {
 
 		var session = sessionn.Session{
@@ -145,6 +146,7 @@ func Test_Issuer_Issue(t *testing.T) {
 
 		assert.Zero(t, token)
 	})
+
 	t.Run("в jwt запсывается дата создания токена IssuedAt", func(t *testing.T) {
 		secret := "qwerty"
 		var session = sessionn.Session{
@@ -163,22 +165,19 @@ func Test_Issuer_Issue(t *testing.T) {
 		require.Equal(t, session.ID, claims.SessionID)
 		require.Equal(t, session.UserID, claims.UserID)
 
-		log.Println(issuedAtStart)
-		log.Println(issuedAt)
-		log.Println(issuedAtEnd)
-		require.True(t, issuedAt.Unix() >= issuedAtStart.Unix())
-		require.True(t, issuedAt.Unix() <= issuedAtEnd.Unix())
+		require.GreaterOrEqual(t, issuedAt.Unix(), issuedAtStart.Unix())
+		require.LessOrEqual(t, issuedAt.Unix(), issuedAtEnd.Unix())
 	})
 }
 
-// claims - структура для хранения декодированных данных из JWT токена
+// claims структура для хранения декодированных данных из JWT токена
 type claims struct {
 	UserID    uuid.UUID
 	SessionID uuid.UUID
 	jwt.RegisteredClaims
 }
 
-// parse - вспомогательная функция для декодирования и проверки JWT токена
+// parse вспомогательная функция для декодирования и проверки JWT токена
 func parse(t *testing.T, token string, secret []byte) claims {
 	t.Helper()
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, secret)

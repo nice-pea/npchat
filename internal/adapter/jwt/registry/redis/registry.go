@@ -9,10 +9,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Registry - репозиторий для хранения и получения временных меток выпуска токенов
+// Registry репозиторий для хранения и получения временных меток выпуска токенов
 type Registry struct {
-	Cli *redis.Client // Клиент Redis
-	Ttl time.Duration // Время жизни записей в кэше
+	Client *redis.Client // Клиент Redis
+	Ttl    time.Duration // Время жизни записей в кэше
 }
 
 // Ошибки модуля
@@ -21,7 +21,7 @@ var (
 	ErrEmptyIssueTime = errors.New("время создания отсутствует") // Нулевая временная метка
 )
 
-// RegisterIssueTime - регистрирует время анулирования токена в Redis
+// RegisterIssueTime регистрирует время анулирования токена в Redis
 func (ir *Registry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
 	// Проверка валидности входных данных
 	if sessionID == uuid.Nil {
@@ -32,7 +32,7 @@ func (ir *Registry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) 
 	}
 
 	// Установка значения в Redis с TTL
-	status := ir.Cli.Set(context.Background(), sessionID.String(), issueTime, ir.Ttl)
+	status := ir.Client.Set(context.Background(), sessionID.String(), issueTime, ir.Ttl)
 	if _, err := status.Result(); err != nil {
 		return err // Возвращает ошибку Redis при сбое
 	}
@@ -40,7 +40,7 @@ func (ir *Registry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) 
 	return nil // Успешное выполнение
 }
 
-// IssueTime - получает время последнего анулирования токена из Redis
+// IssueTime возвращает время последнего анулирования токена из Redis
 func (ir *Registry) IssueTime(sessionID uuid.UUID) (time.Time, error) {
 	// Проверка валидности идентификатора
 	if sessionID == uuid.Nil {
@@ -50,11 +50,10 @@ func (ir *Registry) IssueTime(sessionID uuid.UUID) (time.Time, error) {
 	var issueTime time.Time
 
 	// Получение значения из Redis
-	err := ir.Cli.Get(context.Background(), sessionID.String()).Scan(&issueTime)
+	err := ir.Client.Get(context.Background(), sessionID.String()).Scan(&issueTime)
 
 	// Обработка случаев отсутствия ключа
 	if errors.Is(err, redis.Nil) {
-		// TODO: Тут, может быть нужно будет переделать
 		return time.Time{}, nil // Ключ не найден, но это не ошибка
 	}
 

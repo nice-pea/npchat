@@ -4,7 +4,7 @@ import (
 	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 )
 
-// Test_Init - тестовый сценарий для проверки функции инициализации Redis-клиента
+// Test_Init тестовый сценарий для проверки функции инициализации Redis-клиента
 func (suite *testSuite) Test_Init() {
 	suite.Run("подключение к redis с валидной конфигурацией", func() {
 		cfg := redisRegistry.Config{
@@ -13,16 +13,19 @@ func (suite *testSuite) Test_Init() {
 		cli, err := redisRegistry.Init(cfg)
 
 		suite.Require().NoError(err)
-		suite.Assert().NotNil(cli)
-		defer func() { _ = cli.Close() }()
+		suite.NotNil(cli)
+		err = cli.Close()
+		suite.NoError(err)
 	})
+
 	suite.Run("подключение к redis с пустой конфигурацией", func() {
 		cfg := redisRegistry.Config{}
 		cli, err := redisRegistry.Init(cfg)
 
 		suite.Require().Error(err)
-		suite.Assert().Nil(cli)
+		suite.Nil(cli)
 	})
+
 	suite.Run("подключение к redis с невалидной конфигурацией", func() {
 		cfg := redisRegistry.Config{
 			DSN: "241421.46334.14241.61253:253532325",
@@ -30,6 +33,6 @@ func (suite *testSuite) Test_Init() {
 		cli, err := redisRegistry.Init(cfg)
 
 		suite.Require().Error(err)
-		suite.Assert().Nil(cli)
+		suite.Nil(cli)
 	})
 }

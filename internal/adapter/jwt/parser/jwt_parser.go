@@ -15,13 +15,13 @@ import (
 	"github.com/nice-pea/npchat/internal/controller/http2/middleware"
 )
 
-// OutJWT - структура данных пользователя из JWT
+// OutJWT структура данных JWT
 type OutJWT struct {
 	UserID    string
 	SessionID string
 }
 
-// Parser - основной парсер JWT
+// Parser парсер JWT
 type Parser struct {
 	Config   jwt2.Config
 	Registry redisRegistry.Registry
@@ -34,14 +34,14 @@ var (
 	ErrTokenRevoked = errors.New("токен аннулирован")
 )
 
-// CustomClaims - структура для хранения данных из claims
+// CustomClaims структура для хранения данных из claims
 type CustomClaims struct {
 	UserID    string
 	SessionID string
 	jwt.RegisteredClaims
 }
 
-// customClaimsToOutJWT - преобразование claims в middleware формат
+// customClaimsToOutJWT преобразовывает CustomClaims в middleware.OutJwt
 func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	return middleware.OutJwt{
 		UserID:    cc.UserID,
@@ -49,7 +49,7 @@ func customClaimsToOutJWT(cc CustomClaims) middleware.OutJwt {
 	}
 }
 
-// getClaims - основная логика парсинга и валидации токена
+// getClaims парсит токен в CustomClaims
 func (p *Parser) getClaims(token string) (CustomClaims, error) {
 	// Создание верификатора с секретным ключом
 	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(p.Config.SecretKey))
@@ -82,7 +82,7 @@ func (p *Parser) getClaims(token string) (CustomClaims, error) {
 	return newClaims, nil
 }
 
-// parse - базовый парсер без дополнительных проверок
+// parse парсит токен без проверки анулирования
 func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 
@@ -93,7 +93,7 @@ func (p *Parser) parse(token string) (middleware.OutJwt, error) {
 	return customClaimsToOutJWT(claims), nil
 }
 
-// parseAndValidateJWTWithInvalidation - парсит токен и проверяет его на аннулирование
+// parseAndValidateJWTWithInvalidation парсит токен и проверяет его на аннулирование
 func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.OutJwt, error) {
 	claims, err := p.getClaims(token)
 	if err != nil {
@@ -125,10 +125,10 @@ func (p *Parser) parseAndValidateJWTWithInvalidation(token string) (middleware.O
 
 }
 
-// Parse - основной метод парсинга токена
+// Parse парсит токен
 // Выбирает режим проверки в зависимости от конфигурации
 func (p *Parser) Parse(token string) (middleware.OutJwt, error) {
-	if p.Config.VerifyTokenWithInvalidation && p.Registry.Cli != nil {
+	if p.Config.VerifyTokenWithInvalidation && p.Registry.Client != nil {
 		return p.parseAndValidateJWTWithInvalidation(token)
 	}
 

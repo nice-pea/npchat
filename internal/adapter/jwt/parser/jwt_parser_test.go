@@ -8,7 +8,7 @@ import (
 	redisRegistry "github.com/nice-pea/npchat/internal/adapter/jwt/registry/redis"
 )
 
-// Test_JWTParser_Parse - набор тестов для проверки функции Parse парсера JWT-токенов
+// Test_JWTParser_Parse набор тестов для проверки функции Parse парсера JWT-токенов
 func (suite *testSuite) Test_JWTParser_Parse() {
 	suite.Run("Парсер без Registry", func() {
 		suite.Run("валидный jwt можно разобрать и получить данные", func() {
@@ -31,6 +31,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Equal(uid.String(), claims.UserID)
 			suite.Equal(sid.String(), claims.SessionID)
 		})
+
 		suite.Run("jwt существующий больше exp - невалиден", func() {
 			secret := "secret"
 			parser := suite.parserWithOutRegistry(secret)
@@ -43,9 +44,10 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			time.Sleep(2 * time.Millisecond)
 
 			claims, err := parser.Parse(token)
-			suite.Assert().ErrorIs(err, ErrTokenExpired)
-			suite.Assert().Zero(claims)
+			suite.ErrorIs(err, ErrTokenExpired)
+			suite.Zero(claims)
 		})
+
 		suite.Run("jwt существующий меньше exp - валиден", func() {
 			secret := "secret"
 			parser := suite.parserWithOutRegistry(secret)
@@ -58,8 +60,9 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 
 			claims, err := parser.Parse(token)
 			suite.Require().NoError(err)
-			suite.Assert().NotZero(claims)
+			suite.NotZero(claims)
 		})
+
 		suite.Run("jwt существующий больше 2 минут - невалиден", func() {
 			secret := "secret"
 			parser := suite.parserWithOutRegistry(secret)
@@ -74,8 +77,8 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			token := `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJTZXNzaW9uSUQiOiI0NTYiLCJVc2VySUQiOiIxMjMiLCJleHAiOjE3NTkzOTU3NjZ9.SYQurl5gsOt42K2d0Vyp-RuZluANRNuGMyUNd6RfWtk`
 
 			claims, err := parser.Parse(token)
-			suite.Assert().ErrorIs(err, ErrTokenExpired)
-			suite.Assert().Zero(claims)
+			suite.ErrorIs(err, ErrTokenExpired)
+			suite.Zero(claims)
 		})
 
 		suite.Run("невалидный jwt", func() {
@@ -83,18 +86,18 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			parser := suite.parserWithOutRegistry(secret)
 
 			token := `adsafs.afsfsa.gsdsddsggd`
-
 			claims, err := parser.Parse(token)
-			suite.Assert().Error(err)
-			suite.Assert().Zero(claims)
+			suite.Error(err)
+			suite.Zero(claims)
 		})
+
 		suite.Run("пустой jwt", func() {
 			secret := "secret"
 			parser := suite.parserWithOutRegistry(secret)
 
 			claims, err := parser.Parse("")
-			suite.Assert().Error(err)
-			suite.Assert().Zero(claims)
+			suite.Error(err)
+			suite.Zero(claims)
 		})
 	})
 	suite.Run("Парсер c Registry", func() {
@@ -116,6 +119,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Equal(uid.String(), claims.UserID)
 			suite.Equal(sid.String(), claims.SessionID)
 		})
+
 		suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис не создан, то будет вызываться обычная проверка jwt", func() {
 			suite.Parser.Config.VerifyTokenWithInvalidation = true
 			suite.Parser.Registry = redisRegistry.Registry{}
@@ -134,6 +138,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Equal(uid.String(), claims.UserID)
 			suite.Equal(sid.String(), claims.SessionID)
 		})
+
 		suite.Run("если VerifyTokenWithInvalidation = true и клиентРедис создан, то будет вызываться валидация поля Iat", func() {
 			var (
 				uid = uuid.New()
@@ -152,6 +157,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Equal(uid.String(), claims.UserID)
 			suite.Equal(sid.String(), claims.SessionID)
 		})
+
 		suite.Run("в кэше есть запись, анулирующее все токены данной сессии", func() {
 			var (
 				uid = uuid.New()
@@ -168,8 +174,9 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 
 			claims, err := suite.Parser.Parse(token)
 			suite.Require().ErrorIs(err, ErrTokenRevoked)
-			suite.Assert().Zero(claims)
+			suite.Zero(claims)
 		})
+
 		suite.Run("можно заранее анулировать будущие токены", func() {
 			var (
 				uid = uuid.New()
@@ -186,8 +193,9 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 
 			claims, err := suite.Parser.Parse(token)
 			suite.Require().ErrorIs(err, ErrTokenRevoked)
-			suite.Assert().Zero(claims)
+			suite.Zero(claims)
 		})
+
 		suite.Run("если токен создан после даты анулирования, то токен действителен", func() {
 			var (
 				uid = uuid.New()
@@ -209,6 +217,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Equal(uid.String(), claims.UserID)
 			suite.Equal(sid.String(), claims.SessionID)
 		})
+
 		suite.Run("если iat пустой то вернется ошибка ErrIatEmpty", func() {
 			var (
 				uid = uuid.New()
@@ -224,6 +233,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 			suite.Require().ErrorIs(err, ErrIatEmpty)
 			suite.Zero(claims)
 		})
+
 		suite.Run("анулируются только те токены, у которых iat меньше даты в кэше", func() {
 			var (
 				uid = uuid.New()
@@ -248,7 +258,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 
 			claims, err := suite.Parser.Parse(token1)
 			suite.Require().ErrorIs(err, ErrTokenRevoked)
-			suite.Assert().Zero(claims)
+			suite.Zero(claims)
 
 			claims, err = suite.Parser.Parse(token2)
 			suite.Require().NoError(err)

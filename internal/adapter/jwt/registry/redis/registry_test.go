@@ -8,18 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
-// Test_Registry - тестирование методов Registry для работы с Redis
+// Test_Registry тестирование методов Registry для работы с Redis
 func (suite *testSuite) Test_Registry() {
 	suite.Run("RegisterIssueTime", func() {
-		// RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) error {
 		suite.Run("если sessionID пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.UUID{}, time.Now())
-			suite.Assert().ErrorIs(err, redisRegistry.ErrEmptySessionID)
+			suite.ErrorIs(err, redisRegistry.ErrEmptySessionID)
 			suite.requireIsRedisEmpty()
 		})
+
 		suite.Run("если issueTime пустой то вернется ошибка, в редис ничего не запишется", func() {
 			err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Time{})
-			suite.Assert().ErrorIs(err, redisRegistry.ErrEmptyIssueTime)
+			suite.ErrorIs(err, redisRegistry.ErrEmptyIssueTime)
 			suite.requireIsRedisEmpty()
 		})
 
@@ -30,23 +30,23 @@ func (suite *testSuite) Test_Registry() {
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis1 := suite.getIssueTime(sessionId)
-			suite.Require().True(issueTime.Equal(issueTimeFromRedis1))
+			suite.Require().Equal(issueTime, issueTimeFromRedis1)
 
 			newIssueTime := time.Now().Add(time.Hour)
 			err = suite.RedisCli.RegisterIssueTime(sessionId, newIssueTime)
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis2 := suite.getIssueTime(sessionId)
-			suite.Require().True(newIssueTime.Equal(issueTimeFromRedis2))
+			suite.Require().Equal(newIssueTime, issueTimeFromRedis2)
 
 			suite.Require().NotEqual(issueTimeFromRedis2, issueTimeFromRedis1)
 
 			keys := suite.redisKeys()
 			suite.Require().Len(keys, 1)
-			suite.Assert().Equal(sessionId.String(), keys[0])
-
+			suite.Equal(sessionId.String(), keys[0])
 		})
-		suite.Run("можно записать более одного записей", func() {
+
+		suite.Run("можно записать более одной записи", func() {
 			for range 10 {
 				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
@@ -54,8 +54,8 @@ func (suite *testSuite) Test_Registry() {
 
 			keys := suite.redisKeys()
 			suite.Require().Len(keys, 10)
-
 		})
+
 		suite.Run("созданная запись живет столкьоже сколько передали в поле Ttl", func() {
 			id := uuid.New()
 			// ставим Ttl в 1 миллисекунду
@@ -69,12 +69,14 @@ func (suite *testSuite) Test_Registry() {
 
 			suite.requireIsRedisEmpty()
 		})
+
 		suite.Run("все записи которые Ttl прошел будут удалены из кэша", func() {
 			suite.RedisCli.Ttl = time.Millisecond
 			for range 10 {
 				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
 			}
+
 			suite.RedisCli.Ttl = time.Minute
 			id := uuid.New()
 			err := suite.RedisCli.RegisterIssueTime(id, time.Now())
@@ -84,22 +86,23 @@ func (suite *testSuite) Test_Registry() {
 
 			keys := suite.redisKeys()
 			suite.Require().Len(keys, 1)
-			suite.Assert().Equal(id.String(), keys[0])
+			suite.Equal(id.String(), keys[0])
 		})
 
 	})
 	suite.Run("IssueTime", func() {
-		// IssueTime(sessionID uuid.UUID) (*time.Time, error)
 		suite.Run("если sessionID пустой то вернется ошибка", func() {
 			issueTime, err := suite.RedisCli.IssueTime(uuid.UUID{})
 			suite.Require().ErrorIs(err, redisRegistry.ErrEmptySessionID)
-			suite.Assert().Zero(issueTime)
+			suite.Zero(issueTime)
 		})
+
 		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {
 			issueTime, err := suite.RedisCli.IssueTime(uuid.New())
 			suite.Require().NoError(err)
-			suite.Assert().Zero(issueTime)
+			suite.Zero(issueTime)
 		})
+
 		suite.Run("если существует в кэше такой sessionId то вернется его значение", func() {
 			sessionId := uuid.New()
 			issueTime := time.Now()
@@ -107,7 +110,7 @@ func (suite *testSuite) Test_Registry() {
 
 			issueTimeRepo, err := suite.RedisCli.IssueTime(sessionId)
 			suite.Require().NoError(err)
-			suite.Assert().True(issueTime.Equal(issueTimeRepo))
+			suite.Equal(issueTime, issueTimeRepo)
 		})
 
 	})

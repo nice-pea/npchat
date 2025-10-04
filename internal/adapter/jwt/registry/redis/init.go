@@ -7,12 +7,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Config - конфигурация для подключения к Redis
+// Config конфигурация для подключения к Redis
 type Config struct {
 	DSN string
 }
 
-// Init - инициализирует и возвращает клиент Redis на основе указанной конфигурации
+// Init инициализирует и возвращает клиент Redis на основе указанной конфигурации
 func Init(cfg Config) (*redis.Client, error) {
 	// Парсинг строки подключения
 	opt, err := redis.ParseURL(cfg.DSN)
