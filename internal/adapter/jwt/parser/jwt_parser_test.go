@@ -149,6 +149,8 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				"iat":       time.Now().Unix(),
 			})
 
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Time{}, nil)
+
 			claims, err := suite.Parser.Parse(token)
 			suite.Require().NoError(err)
 
@@ -167,9 +169,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				"iat":       time.Now().Unix(),
 			})
 
-			err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now())
-			suite.Require().NoError(err)
-
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now(), nil)
 			claims, err := suite.Parser.Parse(token)
 			suite.Require().ErrorIs(err, ErrTokenRevoked)
 			suite.Zero(claims)
@@ -180,8 +180,8 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				uid = uuid.New()
 				sid = uuid.New()
 			)
-			err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now().Add(time.Hour))
-			suite.Require().NoError(err)
+
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now().Add(time.Hour), nil)
 
 			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
 				"UserID":    uid,
@@ -200,8 +200,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				sid = uuid.New()
 			)
 
-			err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now().Add(-time.Hour))
-			suite.Require().NoError(err)
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now().Add(-time.Hour), nil)
 
 			token := suite.createJWT(suite.cfg.SecretKey, map[string]any{
 				"UserID":    uid,
@@ -226,6 +225,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				"UserID":    uid,
 				"SessionID": sid,
 			})
+			suite.registryMock.EXPECT().IssueTime(sid).Return(time.Now(), nil)
 
 			claims, err := suite.Parser.Parse(token)
 			suite.Require().ErrorIs(err, ErrIatEmpty)
@@ -244,8 +244,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				"iat":       time.Now().Unix(),
 			})
 
-			err := suite.Parser.Registry.RegisterIssueTime(sid, time.Now())
-			suite.Require().NoError(err)
+			timeNow := time.Now()
 
 			time.Sleep(time.Second)
 			token2 := suite.createJWT(secret, map[string]any{
@@ -254,6 +253,7 @@ func (suite *testSuite) Test_JWTParser_Parse() {
 				"iat":       time.Now().Unix(),
 			})
 
+			suite.registryMock.EXPECT().IssueTime(sid).Return(timeNow, nil)
 			claims, err := suite.Parser.Parse(token1)
 			suite.Require().ErrorIs(err, ErrTokenRevoked)
 			suite.Zero(claims)
