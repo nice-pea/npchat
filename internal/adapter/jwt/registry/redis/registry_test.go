@@ -13,7 +13,7 @@ func (suite *testSuite) Test_Init() {
 	suite.Run("создание Registry с валидной конфигурацией", func() {
 		cfg := redisRegistry.Config{
 			DSN: suite.DSN,
-			Ttl: 2 * time.Minute,
+			TTL: 2 * time.Minute,
 		}
 		cli, err := redisRegistry.Init(cfg)
 
@@ -85,13 +85,13 @@ func (suite *testSuite) Test_Registry() {
 			}
 
 			keys := suite.redisKeys()
-			suite.Require().Len(keys, 10)
+			suite.Len(keys, 10)
 		})
 
-		suite.Run("созданная запись живет столько же сколько передали в поле Ttl", func() {
+		suite.Run("созданная запись живет столько же сколько передали в поле TTL", func() {
 			id := uuid.New()
-			// ставим Ttl в 1 миллисекунду
-			suite.Registry.Ttl = time.Millisecond
+			// ставим TTL в 1 миллисекунду
+			suite.Registry.TTL = time.Millisecond
 			err := suite.Registry.RegisterIssueTime(id, time.Now())
 			suite.Require().NoError(err)
 
@@ -102,15 +102,15 @@ func (suite *testSuite) Test_Registry() {
 			suite.requireIsRedisEmpty()
 		})
 
-		suite.Run("все записи которые Ttl прошел будут удалены из кэша", func() {
-			suite.Registry.Ttl = time.Millisecond
+		suite.Run("все записи которые TTL прошел будут удалены из кэша", func() {
+			suite.Registry.TTL = time.Millisecond
 			for range 10 {
 				err := suite.Registry.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
 			}
 			time.Sleep(10 * time.Millisecond)
 			keys := suite.redisKeys()
-			suite.Require().Len(keys, 0)
+			suite.Len(keys, 0)
 		})
 
 	})
@@ -136,6 +136,5 @@ func (suite *testSuite) Test_Registry() {
 			suite.Require().NoError(err)
 			suite.Equal(issueTime.Unix(), issueTimeRepo.Unix())
 		})
-
 	})
 }

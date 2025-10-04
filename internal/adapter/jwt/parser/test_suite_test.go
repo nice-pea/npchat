@@ -24,12 +24,10 @@ func Test_TestSuite(t *testing.T) {
 
 // SetupSuite выполняется один раз перед всеми тестами
 func (suite *testSuite) SetupSuite() {
-
 	suite.cfg = jwt.Config{
 		SecretKey:                   "secret",
 		VerifyTokenWithInvalidation: true,
 	}
-
 }
 
 // SetupSubTest выполняется перед каждым подтестом
@@ -61,7 +59,7 @@ func (suite *testSuite) createJWT(secret string, claims map[string]any) string {
 	return token.String()
 }
 
-// parserWithOutRegistry создает парсер без Registry
-func (suite *testSuite) parserWithOutRegistry(secret string) Parser {
+// parserWithoutRegistry создает парсер без Registry
+func (suite *testSuite) parserWithoutRegistry(secret string) Parser {
 	return Parser{Config: jwt.Config{SecretKey: secret}}
 }

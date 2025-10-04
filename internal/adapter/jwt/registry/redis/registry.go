@@ -13,13 +13,13 @@ import (
 // Registry репозиторий для хранения и получения временных меток выпуска токенов
 type Registry struct {
 	Client *redis.Client // Клиент Redis
-	Ttl    time.Duration // Время жизни записей в кэше
+	TTL    time.Duration // Время жизни записей в редисе
 }
 
 // Config конфигурация для создания Registry
 type Config struct {
 	DSN string        // redis DSN
-	Ttl time.Duration // Время жизни записей в кэше
+	TTL time.Duration // Время жизни записей в редисе
 }
 
 // Init инициализирует и возвращает Registry на основе указанной конфигурации
@@ -29,7 +29,7 @@ func Init(cfg Config) (*Registry, error) {
 		return nil, err
 	}
 
-	return &Registry{Client: client, Ttl: cfg.Ttl}, nil
+	return &Registry{Client: client, TTL: cfg.TTL}, nil
 }
 
 // initClient инициализирует и возвращает клиент Redis на основе указанной конфигурации
@@ -69,7 +69,7 @@ func (ir *Registry) RegisterIssueTime(sessionID uuid.UUID, issueTime time.Time) 
 	}
 
 	// Установка значения в Redis с TTL
-	status := ir.Client.Set(context.Background(), sessionID.String(), issueTime, ir.Ttl)
+	status := ir.Client.Set(context.Background(), sessionID.String(), issueTime, ir.TTL)
 	if _, err := status.Result(); err != nil {
 		return err // Возвращает ошибку Redis при сбое
 	}

@@ -15,8 +15,8 @@ import (
 
 type testSuite struct {
 	suite.Suite
-	Terminate func()
-	CleanUp   func()
+	terminate func()
+	cleanUp   func()
 	DSN       string
 	Registry  *redisRegistry.Registry
 }
@@ -34,14 +34,14 @@ func (suite *testSuite) newRedisContainer() {
 	// dsn, err := container.ConnectionString(ctx)
 	// suite.Require().NoError(err)
 
-	suite.Terminate = func() {
+	suite.terminate = func() {
 		suite.Require().NotNil(container)
 		_ = container.Terminate(ctx)
 	}
-	suite.CleanUp = func() {
+	suite.cleanUp = func() {
 		status := suite.Registry.Client.FlushDB(context.Background())
 		suite.Require().NoError(status.Err())
-		suite.Registry.Ttl = 2 * time.Minute
+		suite.Registry.TTL = 2 * time.Minute
 	}
 	suite.DSN, err = container.ConnectionString(context.Background())
 	suite.Require().NoError(err)
@@ -55,7 +55,7 @@ func (suite *testSuite) SetupSuite() {
 	// Создать Registry
 	registry, err := redisRegistry.Init(redisRegistry.Config{
 		DSN: suite.DSN,
-		Ttl: 2 * time.Minute,
+		TTL: 2 * time.Minute,
 	})
 	suite.Require().NoError(err)
 	suite.Registry = registry
@@ -63,12 +63,12 @@ func (suite *testSuite) SetupSuite() {
 
 func (suite *testSuite) SetupSubTest() {
 	// Очищаем Redis перед каждым подтестом
-	suite.CleanUp()
+	suite.cleanUp()
 }
 
 // TearDownSuite выполняется после всех тестов
 func (suite *testSuite) TearDownSuite() {
-	suite.Terminate()
+	suite.terminate()
 }
 
 // getIssueTime возвращает время анулирования токена из Redis по sessionID

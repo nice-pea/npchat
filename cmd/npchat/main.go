@@ -120,7 +120,7 @@ func initCliCommand() *cli.Command {
 			&cli.BoolFlag{
 				Name:        "jwt-verify-token-with-invalidation",
 				Destination: &cfg.Jwt.VerifyTokenWithInvalidation,
-				Usage:       "для использования проверки анулирования токена",
+				Usage:       "Включить проверку аннулирования токена",
 			},
 			&cli.StringFlag{
 				Name:        "jwt-redis-dsn",
