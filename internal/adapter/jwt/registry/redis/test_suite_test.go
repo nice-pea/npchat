@@ -18,7 +18,7 @@ type testSuite struct {
 	Terminate func()
 	CleanUp   func()
 	DSN       string
-	RedisCli  redisRegistry.Registry
+	Registry  *redisRegistry.Registry
 }
 
 // Test_TestSuite запускает тестовый сценарий
@@ -39,19 +39,18 @@ func (suite *testSuite) newRedisContainer() {
 		_ = container.Terminate(ctx)
 	}
 	suite.CleanUp = func() {
-		status := suite.RedisCli.Client.FlushDB(context.Background())
+		status := suite.Registry.Client.FlushDB(context.Background())
 		suite.Require().NoError(status.Err())
-		suite.RedisCli.Ttl = 2 * time.Minute
+		suite.Registry.Ttl = 2 * time.Minute
 	}
 	suite.DSN = dsn
 
-	redisCli, err := redisRegistry.Init(redisRegistry.Config{
+	registry, err := redisRegistry.Init(redisRegistry.Config{
 		DSN: dsn,
+		Ttl: 2 * time.Minute,
 	})
-
 	suite.Require().NoError(err)
-	suite.RedisCli = redisRegistry.Registry{redisCli, 2 * time.Minute}
-
+	suite.Registry = registry
 }
 
 // SetupSuite выполняется один раз перед всеми тестами
@@ -72,7 +71,7 @@ func (suite *testSuite) TearDownSuite() {
 // getIssueTime возвращает время анулирования токена из Redis по sessionID
 func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 	var issueTime time.Time
-	err := suite.RedisCli.Client.Get(context.Background(), sessionID.String()).Scan(&issueTime)
+	err := suite.Registry.Client.Get(context.Background(), sessionID.String()).Scan(&issueTime)
 	if !errors.Is(err, redis.Nil) {
 		suite.Require().NoError(err)
 	}
@@ -81,14 +80,14 @@ func (suite *testSuite) getIssueTime(sessionID uuid.UUID) time.Time {
 
 // setIssueTime записывает время анулирования токена в Redis с указанным TTL
 func (suite *testSuite) setIssueTime(sessionID uuid.UUID, issueTime time.Time, ttl time.Duration) {
-	err := suite.RedisCli.Client.Set(context.Background(), sessionID.String(), issueTime, ttl).Err()
+	err := suite.Registry.Client.Set(context.Background(), sessionID.String(), issueTime, ttl).Err()
 	suite.Require().NoError(err)
 }
 
 // requireIsRedisEmpty проверяет, что Redis пуст
 func (suite *testSuite) requireIsRedisEmpty() {
 	ctx := context.Background()
-	keys, err := suite.RedisCli.Client.Keys(ctx, "*").Result()
+	keys, err := suite.Registry.Client.Keys(ctx, "*").Result()
 	suite.Require().NoError(err)
 	suite.Require().Empty(keys, "Redis должен быть пустым")
 }
@@ -96,7 +95,7 @@ func (suite *testSuite) requireIsRedisEmpty() {
 // redisKeys возвращает список всех ключей в Redis
 func (suite *testSuite) redisKeys() []string {
 	ctx := context.Background()
-	keys, err := suite.RedisCli.Client.Keys(ctx, "*").Result()
+	keys, err := suite.Registry.Client.Keys(ctx, "*").Result()
 	suite.Require().NoError(err)
 	return keys
 }

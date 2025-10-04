@@ -3,6 +3,7 @@ package redisRegistry
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,42 @@ import (
 type Registry struct {
 	Client *redis.Client // Клиент Redis
 	Ttl    time.Duration // Время жизни записей в кэше
+}
+
+// Config конфигурация для создания Registry
+type Config struct {
+	DSN string        // redis DSN
+	Ttl time.Duration // Время жизни записей в кэше
+}
+
+// Init инициализирует и возвращает Registry на основе указанной конфигурации
+func Init(cfg Config) (*Registry, error) {
+	client, err := initClient(cfg.DSN)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Registry{Client: client, Ttl: cfg.Ttl}, nil
+}
+
+// initClient инициализирует и возвращает клиент Redis на основе указанной конфигурации
+func initClient(dsn string) (*redis.Client, error) {
+	// Парсинг строки подключения
+	opt, err := redis.ParseURL(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("redis.ParseURL: %w", err)
+	}
+
+	// Создание клиента Redis
+	client := redis.NewClient(opt)
+
+	// Проверка соединения с Redis
+	_, err = client.Ping(context.Background()).Result()
+	if err != nil {
+		return nil, fmt.Errorf("redis.Ping: %w", err)
+	}
+
+	return client, nil
 }
 
 // Ошибки модуля

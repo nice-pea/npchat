@@ -8,17 +8,49 @@ import (
 	"github.com/google/uuid"
 )
 
+// Test_Init тестовый сценарий для проверки функции инициализации Registry
+func (suite *testSuite) Test_Init() {
+	suite.Run("создание Registry с валидной конфигурацией", func() {
+		cfg := redisRegistry.Config{
+			DSN: suite.DSN,
+			Ttl: 2 * time.Minute,
+		}
+		cli, err := redisRegistry.Init(cfg)
+
+		suite.Require().NoError(err)
+		suite.NotNil(cli)
+	})
+
+	suite.Run("создание Registry с пустой конфигурацией", func() {
+		cfg := redisRegistry.Config{}
+		cli, err := redisRegistry.Init(cfg)
+
+		suite.Require().Error(err)
+		suite.Zero(cli)
+	})
+
+	suite.Run("создание Registry с невалидной конфигурацией", func() {
+		cfg := redisRegistry.Config{
+			DSN: "241421.46334.14241.61253:253532325",
+		}
+		cli, err := redisRegistry.Init(cfg)
+
+		suite.Require().Error(err)
+		suite.Zero(cli)
+	})
+}
+
 // Test_Registry тестирование методов Registry для работы с Redis
 func (suite *testSuite) Test_Registry() {
 	suite.Run("RegisterIssueTime", func() {
 		suite.Run("если sessionID пустой то вернется ошибка, в редис ничего не запишется", func() {
-			err := suite.RedisCli.RegisterIssueTime(uuid.UUID{}, time.Now())
+			err := suite.Registry.RegisterIssueTime(uuid.UUID{}, time.Now())
 			suite.ErrorIs(err, redisRegistry.ErrEmptySessionID)
 			suite.requireIsRedisEmpty()
 		})
 
 		suite.Run("если issueTime пустой то вернется ошибка, в редис ничего не запишется", func() {
-			err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Time{})
+			err := suite.Registry.RegisterIssueTime(uuid.New(), time.Time{})
 			suite.ErrorIs(err, redisRegistry.ErrEmptyIssueTime)
 			suite.requireIsRedisEmpty()
 		})
@@ -26,14 +58,14 @@ func (suite *testSuite) Test_Registry() {
 		suite.Run("новое значение сменит старое, в редис будет только одна запись", func() {
 			sessionId := uuid.New()
 			issueTime := time.Now()
-			err := suite.RedisCli.RegisterIssueTime(sessionId, issueTime)
+			err := suite.Registry.RegisterIssueTime(sessionId, issueTime)
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis1 := suite.getIssueTime(sessionId)
 			suite.Require().Equal(issueTime.Unix(), issueTimeFromRedis1.Unix())
 
 			newIssueTime := time.Now().Add(time.Hour)
-			err = suite.RedisCli.RegisterIssueTime(sessionId, newIssueTime)
+			err = suite.Registry.RegisterIssueTime(sessionId, newIssueTime)
 			suite.Require().NoError(err)
 
 			issueTimeFromRedis2 := suite.getIssueTime(sessionId)
@@ -48,7 +80,7 @@ func (suite *testSuite) Test_Registry() {
 
 		suite.Run("можно записать более одной записи", func() {
 			for range 10 {
-				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
+				err := suite.Registry.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
 			}
 
@@ -59,8 +91,8 @@ func (suite *testSuite) Test_Registry() {
 		suite.Run("созданная запись живет столкьоже сколько передали в поле Ttl", func() {
 			id := uuid.New()
 			// ставим Ttl в 1 миллисекунду
-			suite.RedisCli.Ttl = time.Millisecond
-			err := suite.RedisCli.RegisterIssueTime(id, time.Now())
+			suite.Registry.Ttl = time.Millisecond
+			err := suite.Registry.RegisterIssueTime(id, time.Now())
 			suite.Require().NoError(err)
 
 			time.Sleep(10 * time.Millisecond)
@@ -71,9 +103,9 @@ func (suite *testSuite) Test_Registry() {
 		})
 
 		suite.Run("все записи которые Ttl прошел будут удалены из кэша", func() {
-			suite.RedisCli.Ttl = time.Millisecond
+			suite.Registry.Ttl = time.Millisecond
 			for range 10 {
-				err := suite.RedisCli.RegisterIssueTime(uuid.New(), time.Now())
+				err := suite.Registry.RegisterIssueTime(uuid.New(), time.Now())
 				suite.Require().NoError(err)
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -84,13 +116,13 @@ func (suite *testSuite) Test_Registry() {
 	})
 	suite.Run("IssueTime", func() {
 		suite.Run("если sessionID пустой то вернется ошибка", func() {
-			issueTime, err := suite.RedisCli.IssueTime(uuid.UUID{})
+			issueTime, err := suite.Registry.IssueTime(uuid.UUID{})
 			suite.Require().ErrorIs(err, redisRegistry.ErrEmptySessionID)
 			suite.Zero(issueTime)
 		})
 
 		suite.Run("если с таким sessionID нету значения в кэше то вернется ZeroValue, nil", func() {
-			issueTime, err := suite.RedisCli.IssueTime(uuid.New())
+			issueTime, err := suite.Registry.IssueTime(uuid.New())
 			suite.Require().NoError(err)
 			suite.Zero(issueTime)
 		})
@@ -100,7 +132,7 @@ func (suite *testSuite) Test_Registry() {
 			issueTime := time.Now()
 			suite.setIssueTime(sessionId, issueTime, time.Minute)
 
-			issueTimeRepo, err := suite.RedisCli.IssueTime(sessionId)
+			issueTimeRepo, err := suite.Registry.IssueTime(sessionId)
 			suite.Require().NoError(err)
 			suite.Equal(issueTime.Unix(), issueTimeRepo.Unix())
 		})
