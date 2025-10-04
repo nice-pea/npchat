@@ -166,7 +166,7 @@ func Test_Issuer_Issue(t *testing.T) {
 		require.Equal(t, session.UserID, claims.UserID)
 
 		require.GreaterOrEqual(t, issuedAt.Unix(), issuedAtStart.Unix())
-		require.LessOrEqual(t, issuedAt.Unix(), issuedAtEnd.Unix())
+		assert.LessOrEqual(t, issuedAt.Unix(), issuedAtEnd.Unix())
 	})
 }
 
