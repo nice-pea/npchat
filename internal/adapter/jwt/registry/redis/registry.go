@@ -32,6 +32,11 @@ func Init(cfg Config) (*Registry, error) {
 	return &Registry{Client: client, TTL: cfg.TTL}, nil
 }
 
+// Close закрывает клиент Redis
+func (r *Registry) Close() error {
+	return r.Client.Close()
+}
+
 // initClient инициализирует и возвращает клиент Redis на основе указанной конфигурации
 func initClient(dsn string) (*redis.Client, error) {
 	// Парсинг строки подключения
