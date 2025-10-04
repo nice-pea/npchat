@@ -31,8 +31,8 @@ func (suite *testSuite) newRedisContainer() {
 	ctx := context.Background()
 	container, err := redisContainer.Run(ctx, "redis:8.2.1")
 	suite.Require().NoError(err)
-	dsn, err := container.ConnectionString(ctx)
-	suite.Require().NoError(err)
+	// dsn, err := container.ConnectionString(ctx)
+	// suite.Require().NoError(err)
 
 	suite.Terminate = func() {
 		suite.Require().NotNil(container)
@@ -43,19 +43,22 @@ func (suite *testSuite) newRedisContainer() {
 		suite.Require().NoError(status.Err())
 		suite.Registry.Ttl = 2 * time.Minute
 	}
-	suite.DSN = dsn
-
-	registry, err := redisRegistry.Init(redisRegistry.Config{
-		DSN: dsn,
-		Ttl: 2 * time.Minute,
-	})
+	suite.DSN, err = container.ConnectionString(context.Background())
 	suite.Require().NoError(err)
-	suite.Registry = registry
 }
 
 // SetupSuite выполняется один раз перед всеми тестами
 func (suite *testSuite) SetupSuite() {
+	// Создать контейнер Redis
 	suite.newRedisContainer()
+
+	// Создать Registry
+	registry, err := redisRegistry.Init(redisRegistry.Config{
+		DSN: suite.DSN,
+		Ttl: 2 * time.Minute,
+	})
+	suite.Require().NoError(err)
+	suite.Registry = registry
 }
 
 func (suite *testSuite) SetupSubTest() {
