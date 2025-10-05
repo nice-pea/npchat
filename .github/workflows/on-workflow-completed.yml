@@ -1,0 +1,24 @@
+name: On workflow completed
+
+on:
+  workflow_run:
+    workflows: [ Delivery, Deploy ]
+    types:
+      - completed
+
+jobs:
+  on-delivery-completed:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success'  && github.event.workflow_run.name == 'Delivery' }}
+    steps:
+      - uses: fjogeleit/http-request-action@v1
+        with:
+          url: 'https://infrabot.npchat.dsaime.ru/workflows/completed'
+          method: 'POST'
+          customHeaders: '{"Authorization": "Bearer ${{ secrets.INFRABOT_TOKEN }}"}'
+          data: |
+            {
+              "workflow": "${{ github.event.name }}",
+            }
+
+
