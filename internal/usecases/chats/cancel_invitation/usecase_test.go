@@ -8,13 +8,14 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -23,22 +24,19 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Invitations_CancelInvitation тестирует отмену приглашения
 func (suite *testSuite) Test_Invitations_CancelInvitation() {
-	usecase := &CancelInvitationUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: mockEvents.NewConsumer(suite.T()),
-	}
-	// Настройка мока
-	usecase.EventConsumer.(*mockEvents.Consumer).
-		On("Consume", mock.Anything).
-		Return().
-		Maybe()
-
 	suite.Run("приглашение должно существовать", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Отменить приглашение
 		input := In{
 			SubjectID:    uuid.New(),
 			InvitationID: uuid.New(),
 		}
+		// Настройка мока
+		mockRepo.EXPECT().
+			List(mock.Anything).
+			Return([]chatt.Chat{}, chatt.ErrChatNotExists)
 		out, err := usecase.CancelInvitation(input)
 		// Вернется ошибка, потому что приглашения не существует
 		suite.ErrorIs(err, ErrInvitationNotExists)
@@ -46,6 +44,10 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	})
 
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -62,6 +64,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		}
 		// Каждый попытается отменить приглашение
 		for _, subjectUserID := range cancelInvitationSubjectIDs {
+			mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 			chat, err := chatt.Find(suite.RR.Chats, chatt.Filter{})
 			suite.Require().NoError(err)
 			// Создать приглашение
@@ -74,6 +77,10 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 				SubjectID:    subjectUserID,
 				InvitationID: invitation.ID,
 			}
+			mockRepo.EXPECT().
+				List(mock.Anything).
+				Return([]chatt.Chat{chat}, nil).Once()
+			mockRepo.EXPECT().Upsert(chat).Return(nil).Once()
 			out, err := usecase.CancelInvitation(input)
 			suite.NoError(err)
 			suite.Zero(out)
@@ -81,6 +88,9 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	})
 
 	suite.Run("другие участники не могут отменять приглашать ", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -97,6 +107,10 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 			SubjectID:    participantOther.UserID,
 			InvitationID: invitation.ID,
 		}
+		mockRepo.EXPECT().
+			List(mock.Anything).
+			Return([]chatt.Chat{chat}, nil).Once()
+		mockRepo.EXPECT().Upsert(chat).Return(nil).Once()
 		out, err := usecase.CancelInvitation(input)
 		// Вернется ошибка, потому что случайный участник не может отменять приглашение
 		suite.ErrorIs(err, ErrSubjectUserNotAllowed)
@@ -104,6 +118,9 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	})
 
 	suite.Run("после отмены, приглашение удаляется", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -118,10 +135,21 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 			SubjectID:    invitation.SubjectID,
 			InvitationID: invitation.ID,
 		}
+		mockRepo.EXPECT().
+			List(mock.Anything).
+			Return([]chatt.Chat{chat}, nil).Once()
+		chat.Invitations = []chatt.Invitation{}
+		mockRepo.EXPECT().Upsert(chat).RunAndReturn(func(chat chatt.Chat) error {
+			suite.Empty(chat.Invitations)
+			return nil
+		}).Once()
 		out, err := usecase.CancelInvitation(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
 		// Получить список приглашений
+		mockRepo.EXPECT().
+			List(mock.Anything).
+			Return([]chatt.Chat{chat}, nil).Once()
 		chats, err := suite.RR.Chats.List(chatt.Filter{})
 		suite.NoError(err)
 		suite.Require().Len(chats, 1)
@@ -129,19 +157,13 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
-		// Новый экземпляр usecase
-		usecase := &CancelInvitationUsecase{
-			Repo:          suite.RR.Chats,
-			EventConsumer: mockEvents.NewConsumer(suite.T()),
-		}
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		usecase.EventConsumer.(*mockEvents.Consumer).
-			On("Consume", mock.Anything).
-			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
-			}).
-			Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
+			consumedEvents = append(consumedEvents, events...)
+		}).Return()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -157,6 +179,10 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 			SubjectID:    invitation.SubjectID,
 			InvitationID: invitation.ID,
 		}
+		mockRepo.EXPECT().
+			List(mock.Anything).
+			Return([]chatt.Chat{chat}, nil).Once()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CancelInvitation(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
@@ -164,4 +190,14 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		// Проверить список опубликованных событий
 		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemoved)
 	})
+}
+
+func newUsecase(suite *testSuite) (*CancelInvitationUsecase, *mockChatt.Repository, *mockEvents.Consumer) {
+	uc := &CancelInvitationUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }
