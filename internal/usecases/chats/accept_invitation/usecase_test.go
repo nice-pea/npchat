@@ -27,9 +27,9 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приглашение должно существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEvent := newUsecase(suite)
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEvent.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -56,9 +56,9 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEvent := newUsecase(suite)
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEvent.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -97,10 +97,10 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEvent := newUsecase(suite)
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		mockEvent.EXPECT().Consume(mock.Anything).Run(
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(
 			func(args []events.Event) {
 				consumedEvents = append(consumedEvents, args...)
 			}).Return()
@@ -137,6 +137,6 @@ func newUsecase(suite *testSuite) (*AcceptInvitationUsecase, *mockChatt.Reposito
 		EventConsumer: mockEvents.NewConsumer(suite.T()),
 	}
 	mockRepo := uc.Repo.(*mockChatt.Repository)
-	mockEvent := uc.EventConsumer.(*mockEvents.Consumer)
-	return uc, mockRepo, mockEvent
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }

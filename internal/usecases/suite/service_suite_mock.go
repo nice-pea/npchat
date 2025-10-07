@@ -46,31 +46,26 @@ func (suite *SuiteWithMocks) SetupTest() {
 
 	// Инициализация адаптеров
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
-	suite.Adapters.Oauth.
-		On("Name", mock.Anything).Maybe().
-		Return("mock").
-		On("Exchange", mock.Anything).Maybe().
-		Return(func(code string) (userr.OpenAuthToken, error) {
-			token, ok := suite.MockOauthTokens[code]
-			if !ok {
-				return userr.OpenAuthToken{}, errors.New("token not found")
-			}
-			return token, nil
-		}).
-		On("User", mock.Anything).Maybe().
-		Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-			user, ok := suite.MockOauthUsers[token]
-			if !ok {
-				return userr.OpenAuthUser{}, errors.New("user not found")
-			}
-			return user, nil
-		}).
-		On("AuthorizationURL", mock.Anything).Maybe().
-		Return(func(state string) string {
-			return "https://provider.com/o/oauth2/auth?" +
-				"code=someCode" +
-				"&state=" + state
-		})
+	suite.Adapters.Oauth.EXPECT().Name().Maybe().Return("mock")
+	suite.Adapters.Oauth.EXPECT().Exchange(mock.Anything).Maybe().Return(func(code string) (userr.OpenAuthToken, error) {
+		token, ok := suite.MockOauthTokens[code]
+		if !ok {
+			return userr.OpenAuthToken{}, errors.New("token not found")
+		}
+		return token, nil
+	})
+	suite.Adapters.Oauth.EXPECT().User(mock.Anything).Maybe().Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
+		user, ok := suite.MockOauthUsers[token]
+		if !ok {
+			return userr.OpenAuthUser{}, errors.New("user not found")
+		}
+		return user, nil
+	})
+	suite.Adapters.Oauth.EXPECT().AuthorizationURL(mock.Anything).Maybe().Return(func(state string) string {
+		return "https://provider.com/o/oauth2/auth?" +
+			"code=someCode" +
+			"&state=" + state
+	})
 
 	// Тестовые пользователи и токены
 	suite.MockOauthUsers = suite.GenerateMockUsers()
