@@ -12,6 +12,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	createChat "github.com/nice-pea/npchat/internal/usecases/chats/create_chat"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
@@ -19,7 +20,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -35,28 +36,19 @@ func (suite *testSuite) newCreateInputRandom() createChat.In {
 
 // Test_Chats_UpdateName тестирует обновления названия чата
 func (suite *testSuite) Test_Chats_UpdateName() {
-	// Настройка мока
-	eventConsumer := mockEvents.NewConsumer(suite.T())
-	eventConsumer.
-		On("Consume", mock.Anything).
-		Return().
-		Maybe()
-	usecase := &UpdateNameUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: eventConsumer,
-	}
-	createChatUsecase := createChat.CreateChatUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: eventConsumer,
-	}
 
 	suite.Run("только существующий чат можно обновить", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+
 		input := In{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 			NewName:   "newName",
 		}
 		// Обновить название чата
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil)
 		chat, err := usecase.UpdateName(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -64,17 +56,18 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 	})
 
 	suite.Run("только главный администратор может изменять название", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
-		inputChatCreate := suite.newCreateInputRandom()
-		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
-		suite.Require().NoError(err)
-		suite.Require().NotZero(createdOut)
+		chat := suite.RndChat()
 		// Попытаться изменить название от имени случайного пользователя
 		input := In{
 			SubjectID: uuid.New(),
-			ChatID:    createdOut.Chat.ID,
+			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
 		updatedChat, err := usecase.UpdateName(input)
 		// Вернется ошибка, потому что пользователь не главный администратор чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
@@ -82,59 +75,47 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 	})
 
 	suite.Run("новое название чата сохранится и его можно прочитать", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
-		inputChatCreate := suite.newCreateInputRandom()
-		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
-		suite.Require().NoError(err)
-		suite.Require().NotZero(createdOut)
+		chat := suite.RndChat()
 		// Изменить название от имени администратора
 		input := In{
-			SubjectID: createdOut.Chat.ChiefID,
-			ChatID:    createdOut.Chat.ID,
+			SubjectID: chat.ChiefID,
+			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(chat chatt.Chat) {
+			suite.Equal(input.NewName, chat.Name)
+		}).Return(nil)
 		out, err := usecase.UpdateName(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 		// Результат совпадает с входящими значениями
 		suite.Require().Equal(input.ChatID, out.Chat.ID)
 		suite.Require().Equal(input.NewName, out.Chat.Name)
-		// Получить список чатов
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.Require().NoError(err)
-		// В списке этот чат будет единственным
-		if suite.Len(chats, 1) {
-			suite.Equal(input.ChatID, chats[0].ID)
-			suite.Equal(input.NewName, chats[0].Name)
-		}
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
-		// Новый экземпляр usecase
-		usecase := &UpdateNameUsecase{
-			Repo:          suite.RR.Chats,
-			EventConsumer: mockEvents.NewConsumer(suite.T()),
-		}
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		usecase.EventConsumer.(*mockEvents.Consumer).
-			On("Consume", mock.Anything).
-			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
-			}).
-			Return()
-
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
+			consumedEvents = append(consumedEvents, events...)
+		}).Return()
 		// Создать чат
-		inputChatCreate := suite.newCreateInputRandom()
-		createdOut, err := createChatUsecase.CreateChat(inputChatCreate)
-		suite.Require().NoError(err)
-		suite.Require().NotZero(createdOut)
+		chat := suite.RndChat()
 		// Изменить название от имени администратора
 		input := In{
-			SubjectID: createdOut.Chat.ChiefID,
-			ChatID:    createdOut.Chat.ID,
+			SubjectID: chat.ChiefID,
+			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
 		out, err := usecase.UpdateName(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
@@ -228,4 +209,14 @@ func Test_UpdateNameInput_Validate(t *testing.T) {
 			})
 		}
 	})
+}
+
+func newUsecase(suite *testSuite) (*UpdateNameUsecase, *mockChatt.Repository, *mockEvents.Consumer) {
+	uc := &UpdateNameUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }
