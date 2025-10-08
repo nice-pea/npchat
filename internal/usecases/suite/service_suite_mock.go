@@ -93,6 +93,7 @@ func (suite *SuiteWithMocks) TearDownSubTest() {
 	suite.RR.Chats = mockChatt.NewRepository(suite.T())
 	suite.RR.Users = mockUserr.NewRepository(suite.T())
 	suite.RR.Sessions = mockSessionn.NewRepository(suite.T())
+	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 }
 
 // TearDownTest выполняется после каждого подтеста, связанного с suite

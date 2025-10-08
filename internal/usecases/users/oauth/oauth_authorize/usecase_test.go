@@ -4,14 +4,16 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
+	mockOauth "github.com/nice-pea/npchat/internal/usecases/users/oauth/mocks"
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -19,12 +21,8 @@ func Test_TestSuite(t *testing.T) {
 }
 
 func (suite *testSuite) Test_OauthAuthorize() {
-	usecase := &OauthAuthorizeUsecase{
-		Providers: oauth.Providers{},
-	}
-	usecase.Providers.Add(suite.Adapters.Oauth)
-
 	suite.Run("Provider обязательные поля, должен быть известен в сервисе", func() {
+		usecase, _ := newUsecase(suite)
 		out, err := usecase.OauthAuthorize(In{
 			Provider: "",
 		})
@@ -39,9 +37,16 @@ func (suite *testSuite) Test_OauthAuthorize() {
 	})
 
 	suite.Run("инициализация вернет валидный url", func() {
+		usecase, mockOauth := newUsecase(suite)
+		mockOauth.EXPECT().Name().Return("google.com").Once()
+		usecase.Providers.Add(suite.Adapters.Oauth)
 		// Инициализация регистрации
+		mockOauth.EXPECT().Name().Return("google.com").Once()
+		mockOauth.EXPECT().AuthorizationURL(mock.Anything).
+			Return("https://accounts.google.com/o/oauth2/auth?state=STATE123&code=CODE456").
+			Once()
 		out, err := usecase.OauthAuthorize(In{
-			Provider: suite.Adapters.Oauth.Name(),
+			Provider: mockOauth.Name(),
 		})
 		suite.NoError(err)
 		suite.Require().NotZero(out)
@@ -59,7 +64,14 @@ func (suite *testSuite) Test_OauthAuthorize() {
 	})
 
 	suite.Run("инициализация вернет случайную строку в state", func() {
+		usecase, mockOauth := newUsecase(suite)
+		mockOauth.EXPECT().Name().Return("google.com").Once()
+		usecase.Providers.Add(suite.Adapters.Oauth)
 		// Инициализация регистрации
+		mockOauth.EXPECT().Name().Return("google.com").Once()
+		mockOauth.EXPECT().AuthorizationURL(mock.Anything).
+			Return("https://accounts.google.com/o/oauth2/auth?state=STATE123&code=CODE456").
+			Once()
 		out, err := usecase.OauthAuthorize(In{
 			Provider: suite.Adapters.Oauth.Name(),
 		})
@@ -68,6 +80,10 @@ func (suite *testSuite) Test_OauthAuthorize() {
 		suite.NotEmpty(out.State)
 
 		// Повторная инициализация даёт новый state
+		mockOauth.EXPECT().Name().Return("google.com").Once()
+		mockOauth.EXPECT().AuthorizationURL(mock.Anything).
+			Return("https://accounts.google.com/o/oauth2/auth?state=STATE234&code=CODE567").
+			Once()
 		out2, err := usecase.OauthAuthorize(In{
 			Provider: suite.Adapters.Oauth.Name(),
 		})
@@ -77,4 +93,12 @@ func (suite *testSuite) Test_OauthAuthorize() {
 
 		suite.NotEqual(out.State, out2.State)
 	})
+}
+
+func newUsecase(suite *testSuite) (*OauthAuthorizeUsecase, *mockOauth.Provider) {
+	usecase := &OauthAuthorizeUsecase{
+		Providers: oauth.Providers{},
+	}
+	mockOauth := suite.Adapters.Oauth
+	return usecase, mockOauth
 }
