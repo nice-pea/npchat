@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/userr"
@@ -11,7 +12,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -22,6 +23,7 @@ func (suite *testSuite) Test_UserProfile() {
 	usecase := &UserProfileUsecase{
 		Repo: suite.RR.Users,
 	}
+	mockRepoUsers := suite.RR.Users
 	suite.Run("есть валидация параметров", func() {
 		// Некорректное значение subjectID
 		_, err := usecase.UserProfile(In{UserID: uuid.New()})
@@ -32,6 +34,7 @@ func (suite *testSuite) Test_UserProfile() {
 	})
 
 	suite.Run("если пользователя с UserID не существует, вернется ошибка", func() {
+		mockRepoUsers.EXPECT().List(mock.Anything).Return(nil, nil).Once()
 		_, err := usecase.UserProfile(In{
 			SubjectID: uuid.New(),
 			UserID:    uuid.New(),
@@ -45,9 +48,8 @@ func (suite *testSuite) Test_UserProfile() {
 		user.OpenAuthUsers = []userr.OpenAuthUser{
 			{ID: uuid.NewString()},
 		}
-		err := suite.RR.Users.Upsert(user)
-		suite.Require().NoError(err)
 		// Получаем профиль
+		mockRepoUsers.EXPECT().List(mock.Anything).Return([]userr.User{user}, nil).Once()
 		out, err := usecase.UserProfile(In{
 			SubjectID: user.ID,
 			UserID:    user.ID,
@@ -63,9 +65,8 @@ func (suite *testSuite) Test_UserProfile() {
 		user.OpenAuthUsers = []userr.OpenAuthUser{
 			{ID: uuid.NewString()},
 		}
-		err := suite.RR.Users.Upsert(user)
-		suite.Require().NoError(err)
 		// Получаем профиль
+		mockRepoUsers.EXPECT().List(mock.Anything).Return([]userr.User{user}, nil).Once()
 		out, err := usecase.UserProfile(In{
 			SubjectID: uuid.New(),
 			UserID:    user.ID,
