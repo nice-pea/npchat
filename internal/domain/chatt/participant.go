@@ -59,6 +59,9 @@ func (c *Chat) RemoveParticipant(userID uuid.UUID, eventsBuf *events.Buffer) err
 	// Удалить участника
 	c.Participants = slices.Delete(c.Participants, i, i+1)
 
+	// Удалить все приглашения, отправленные пользователем
+	c.removeSubjectInvitations(userID, eventsBuf)
+
 	// Добавить событие
 	eventsBuf.AddSafety(c.NewEventParticipantRemoved(removedParticipant))
 

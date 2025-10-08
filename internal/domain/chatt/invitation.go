@@ -84,6 +84,24 @@ func (c *Chat) RemoveInvitation(id uuid.UUID, eventsBuf *events.Buffer) error {
 	return nil
 }
 
+// RemoveSubjectInvitations удаляет все приглашения, отправленные указанным пользователем
+func (c *Chat) removeSubjectInvitations(subjectID uuid.UUID, eventsBuf *events.Buffer) {
+	if len(c.Invitations) == 0 {
+		return
+	}
+
+	kept := c.Invitations[:0]
+	for _, invitation := range c.Invitations {
+		if invitation.SubjectID == subjectID {
+			eventsBuf.AddSafety(c.NewEventInvitationRemoved(invitation))
+			continue
+		}
+		kept = append(kept, invitation)
+	}
+
+	c.Invitations = kept
+}
+
 // Invitation возвращает приглашение по его ID
 func (c *Chat) Invitation(id uuid.UUID) (Invitation, error) {
 	for _, i := range c.Invitations {
