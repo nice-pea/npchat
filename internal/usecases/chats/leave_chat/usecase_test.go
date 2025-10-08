@@ -8,13 +8,14 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -23,22 +24,16 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Members_LeaveChat тестирует выход участника из чата
 func (suite *testSuite) Test_Members_LeaveChat() {
-	usecase := &LeaveChatUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: mockEvents.NewConsumer(suite.T()),
-	}
-	// Настройка мока
-	usecase.EventConsumer.(*mockEvents.Consumer).
-		On("Consume", mock.Anything).
-		Return().
-		Maybe()
-
 	suite.Run("чат должен существовать", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Покинуть чат
 		input := In{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return(nil, nil)
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -46,6 +41,9 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	})
 
 	suite.Run("пользователь должен быть участником чата", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.UpsertChat(suite.RndChat())
 		// Покинуть чат
@@ -53,6 +51,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: uuid.New(),
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, chatt.ErrParticipantNotExists)
@@ -60,6 +59,9 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	})
 
 	suite.Run("пользователь не должен быть главным администратором чата", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.UpsertChat(suite.RndChat())
 		// Покинуть чат
@@ -67,6 +69,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь главный администратор чата
 		suite.ErrorIs(err, chatt.ErrCannotRemoveChief)
@@ -74,6 +77,9 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	})
 
 	suite.Run("после выхода пользователь перестает быть участником", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника в этом чате
@@ -85,31 +91,22 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		chat.Participants = chat.Participants[:1]
+		mockRepo.EXPECT().Upsert(chat).Return(nil)
 		out, err := usecase.LeaveChat(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
-		// Получить список участников чата
-		filter := chatt.Filter{ParticipantID: participant.UserID}
-		chats, err := suite.RR.Chats.List(filter)
-		suite.Require().NoError(err)
-		suite.Zero(chats)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Новый экземпляр usecase
-		usecase := &LeaveChatUsecase{
-			Repo:          suite.RR.Chats,
-			EventConsumer: mockEvents.NewConsumer(suite.T()),
-		}
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		usecase.EventConsumer.(*mockEvents.Consumer).
-			On("Consume", mock.Anything).
-			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
-			}).
-			Return()
-
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
+			consumedEvents = append(consumedEvents, events...)
+		}).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника в этом чате
@@ -121,6 +118,9 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		chat.Participants = chat.Participants[:1]
+		mockRepo.EXPECT().Upsert(chat).Return(nil)
 		out, err := usecase.LeaveChat(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
@@ -130,6 +130,47 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	})
 
 	suite.Run("отправленные приглашения участника, отменятся вместе с его выходом", func() {
-		// TODO
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+
+		var consumedEvents []events.Event
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(e []events.Event) {
+			consumedEvents = append(consumedEvents, e...)
+		}).Return()
+
+		chat := suite.RndChat()
+		participant := suite.AddRndParticipant(&chat)
+
+		invitation := suite.NewInvitation(participant.UserID, uuid.New())
+		suite.AddInvitation(&chat, invitation)
+
+		input := In{
+			SubjectID: participant.UserID,
+			ChatID:    chat.ID,
+		}
+
+		chatBeforeLeave := chat
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chatBeforeLeave}, nil)
+
+		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(updated chatt.Chat) {
+			suite.False(updated.HasParticipant(participant.UserID))
+			suite.Empty(updated.Invitations)
+		}).Return(nil)
+
+		out, err := usecase.LeaveChat(input)
+		suite.Require().NoError(err)
+		suite.Zero(out)
+
+		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantRemoved)
+		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemoved)
 	})
+}
+
+func newUsecase(suite *testSuite) (*LeaveChatUsecase, *mockChatt.Repository, *mockEvents.Consumer) {
+	uc := &LeaveChatUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }
