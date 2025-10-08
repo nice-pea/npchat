@@ -58,14 +58,6 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 		out, err := usecase.CreateChat(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
-		// Получить список чатов
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{out.Chat}, nil)
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.Require().NoError(err)
-		// В списке этот чат будет единственным
-		suite.Require().Len(chats, 1)
-		suite.Equal(out.Chat.Name, chats[0].Name)
-		suite.Equal(out.Chat.ChiefID, chats[0].ChiefID)
 	})
 
 	suite.Run("создается участник для главного администратора", func() {
@@ -102,12 +94,6 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 			suite.Require().NotZero(out)
 			chats[i] = out.Chat
 		}
-		// Получить список чатов
-		mockRepo.EXPECT().List(mock.Anything).Return(chats, nil)
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// Количество чатов равно количеству созданных
-		suite.Len(chats, chatsAllCount)
 	})
 
 	suite.Run("количество созданных чатов на одного пользователя не ограничено", func() {
@@ -118,8 +104,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 		userID := uuid.New()
 		// Создать много чатов от лица пользователя
 		const chatsAllCount = 900
-		chats := make([]chatt.Chat, chatsAllCount)
-		for i := range chatsAllCount {
+		for range chatsAllCount {
 			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 			out, err := usecase.CreateChat(In{
 				ChiefUserID: userID,
@@ -127,14 +112,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 			})
 			suite.Require().NoError(err)
 			suite.Require().NotZero(out)
-			chats[i] = out.Chat
 		}
-		// Получить список чатов
-		mockRepo.EXPECT().List(mock.Anything).Return(chats, nil)
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// Количество чатов равно количеству созданных
-		suite.Len(chats, chatsAllCount)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {

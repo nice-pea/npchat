@@ -146,14 +146,6 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		out, err := usecase.CancelInvitation(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
-		// Получить список приглашений
-		mockRepo.EXPECT().
-			List(mock.Anything).
-			Return([]chatt.Chat{chat}, nil).Once()
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		suite.Require().Len(chats, 1)
-		suite.Empty(chats[0].Invitations)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {

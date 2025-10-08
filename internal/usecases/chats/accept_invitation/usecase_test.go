@@ -80,19 +80,6 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		out, err := usecase.AcceptInvitation(input)
 		suite.Zero(out)
 		suite.Require().NoError(err)
-		// Получить список участников
-		mockRepo.EXPECT().List(chatt.Filter{}).RunAndReturn(func(filter chatt.Filter) ([]chatt.Chat, error) {
-			chat.Participants = append(chat.Participants, chatt.Participant{
-				UserID: input.InvitationID,
-			})
-			return []chatt.Chat{chat}, nil
-		}).Once()
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// В списке будет 3 участника: адм., приглашаемый, приглашающий
-		suite.Require().Len(chats, 1)
-		suite.Require().Len(chats[0].Participants, 3)
-		suite.Contains(chats[0].Participants, p)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
