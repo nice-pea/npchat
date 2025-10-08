@@ -112,16 +112,6 @@ func (suite *SuiteWithMocks) EqualSessions(s1, s2 sessionn.Session) {
 	suite.True(s1.RefreshToken.Expiry.Equal(s2.RefreshToken.Expiry))
 }
 
-// UpsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
-func (suite *SuiteWithMocks) UpsertChat(chat chatt.Chat) chatt.Chat {
-	// настройка мока
-	suite.RR.Chats.EXPECT().Upsert(chat).Return(nil).Maybe()
-	err := suite.RR.Chats.Upsert(chat)
-	suite.Require().NoError(err)
-
-	return chat
-}
-
 // RndChat создает случайный чат
 func (suite *SuiteWithMocks) RndChat() chatt.Chat {
 	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)

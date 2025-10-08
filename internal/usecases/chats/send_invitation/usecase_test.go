@@ -48,8 +48,6 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Отправить приглашение
 		input := In{
 			SubjectID: uuid.New(),
@@ -71,8 +69,6 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		chat := suite.RndChat()
 		// Создать участника
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Отправить приглашение
 		input := In{
 			ChatID:    chat.ID,
@@ -100,8 +96,6 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		participant := suite.AddRndParticipant(&chat)
 		// Создать участника для приглашаемого пользователя
 		participantInvitating := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Отправить приглашение
 		input := In{
 			ChatID:    chat.ID,
@@ -125,8 +119,6 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		participant := suite.AddRndParticipant(&chat)
 		// Создать приглашаемого пользователя
 		targetUserID := uuid.New()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Отправить приглашение
 		input := In{
 			ChatID:    chat.ID,
@@ -155,14 +147,10 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
 		chat := suite.RndChat()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Создать много приглашений от разных участников
 		for range 5 {
 			// Создать участника
 			participant := suite.AddRndParticipant(&chat)
-			// Сохранить чат
-			suite.UpsertChat(chat)
 			for range 5 {
 				// Отправить приглашение
 				input := In{
@@ -190,12 +178,8 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 
 		// Создать чат
 		chat := suite.RndChat()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Создать участника
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Отправить приглашение
 		input := In{
 			ChatID:    chat.ID,

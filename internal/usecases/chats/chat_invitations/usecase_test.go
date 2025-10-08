@@ -41,7 +41,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 		// Создать usecase и моки
 		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Получить список приглашений
 		input := In{
 			ChatID:    chat.ID,
@@ -59,8 +59,6 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			SubjectID: chat.ChiefID,
@@ -90,8 +88,6 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			i := suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, i)
 		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			ChatID:    chat.ID,
@@ -119,8 +115,6 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			invitationsSent[i] = suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, invitationsSent[i])
 		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			SubjectID: chat.ChiefID,

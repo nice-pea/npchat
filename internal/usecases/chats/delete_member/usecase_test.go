@@ -77,7 +77,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Создать участника
 		participant := suite.AddRndParticipant(&chat)
 		// Удалить участника
@@ -98,7 +98,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat :=suite.RndChat()
 		// Удалить участника
 		input := In{
 			SubjectID: chat.ChiefID,
@@ -120,8 +120,6 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		chat := suite.RndChat()
 		// Создать участника для удаления
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Удалить участника
 		input := In{
 			SubjectID: chat.ChiefID,
@@ -150,8 +148,6 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 		chat := suite.RndChat()
 		// Создать участника для удаления
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Удалить участника
 		input := In{
 			SubjectID: chat.ChiefID,

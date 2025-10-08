@@ -39,7 +39,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 		// Создать usecase и моки
 		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Запросить список участников чата
 		input := In{
 			ChatID:    chat.ID,
@@ -64,8 +64,6 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 			// Создать участника в чате
 			participants[i] = suite.AddRndParticipant(&chat)
 		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Запрашивать список будет первый участник
 		participant := participants[0]
 		// Получить список участников в чате

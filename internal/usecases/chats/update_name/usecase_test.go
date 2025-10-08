@@ -1,8 +1,6 @@
 package updateName
 
 import (
-	"fmt"
-	"math/rand/v2"
 	"strings"
 	"testing"
 
@@ -13,7 +11,6 @@ import (
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
 	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
-	createChat "github.com/nice-pea/npchat/internal/usecases/chats/create_chat"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
@@ -25,13 +22,6 @@ type testSuite struct {
 
 func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
-}
-
-func (suite *testSuite) newCreateInputRandom() createChat.In {
-	return createChat.In{
-		ChiefUserID: uuid.New(),
-		Name:        fmt.Sprintf("name%d", rand.Int()),
-	}
 }
 
 // Test_Chats_UpdateName тестирует обновления названия чата

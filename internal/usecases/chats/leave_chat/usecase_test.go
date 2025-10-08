@@ -45,7 +45,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Покинуть чат
 		input := In{
 			SubjectID: uuid.New(),
@@ -62,8 +62,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
-		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Покинуть чат
 		input := In{
 			SubjectID: chat.ChiefID,
@@ -84,8 +83,6 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		chat := suite.RndChat()
 		// Создать участника в этом чате
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Покинуть чат
 		input := In{
 			SubjectID: participant.UserID,
@@ -111,8 +108,6 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		chat := suite.RndChat()
 		// Создать участника в этом чате
 		participant := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Покинуть чат
 		input := In{
 			SubjectID: participant.UserID,

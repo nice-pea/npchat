@@ -35,10 +35,6 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		chat := suite.RndChat()
 		// Создать участника
 		p := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		// настроить мок
-		mockRepo.EXPECT().Upsert(chat).Return(nil)
-		suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    p.UserID,
@@ -56,7 +52,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		usecase, _, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
 		// Создать чат
@@ -66,10 +62,6 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать приглашение
 		invitation := suite.NewInvitation(p.UserID, uuid.New())
 		suite.AddInvitation(&chat, invitation)
-		// Сохранить чат
-		// настроить мок
-		mockRepo.EXPECT().Upsert(chat).Return(nil)
-		suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    invitation.RecipientID,
@@ -84,7 +76,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		usecase, _, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(
@@ -98,9 +90,9 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать приглашение
 		invitation := suite.NewInvitation(p.UserID, uuid.New())
 		suite.AddInvitation(&chat, invitation)
-		// Сохранить чат
-		mockRepo.EXPECT().Upsert(chat).Return(nil)
-		suite.UpsertChat(chat)
+		// // Сохранить чат
+		// mockRepo.EXPECT().Upsert(chat).Return(nil)
+		// suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    invitation.RecipientID,

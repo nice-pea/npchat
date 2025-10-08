@@ -48,8 +48,6 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 			p := suite.AddRndParticipant(&chat)
 			invitationsOfUser[i] = suite.NewInvitation(p.UserID, userID)
 			suite.AddInvitation(&chat, invitationsOfUser[i])
-			// Сохранить чат
-			suite.UpsertChat(chat)
 			chats = append(chats, chat)
 		}
 		// Создать несколько приглашений, направленных каким-то другим пользователям
@@ -59,8 +57,6 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 			p := suite.AddRndParticipant(&chat)
 			i := suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, i)
-			// Сохранить чат
-			suite.UpsertChat(chat)
 		}
 		// Получить список приглашений
 		input := In{
