@@ -3,6 +3,7 @@ package basicAuthRegistration
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/common"
@@ -12,7 +13,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.Suite
+	serviceSuite.SuiteWithMocks
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -24,7 +25,8 @@ func (suite *testSuite) Test_BasicAuthRegistration() {
 		Repo:         suite.RR.Users,
 		SessionsRepo: suite.RR.Sessions,
 	}
-
+	mockRepoUsers := suite.RR.Users
+	mockRepoSessions := suite.RR.Sessions
 	suite.Run("BasicAuthLogin должен быть валидным", func() {
 		// Регистрация по логину паролю
 		input := In{
@@ -66,25 +68,18 @@ func (suite *testSuite) Test_BasicAuthRegistration() {
 	})
 
 	suite.Run("нельзя создать пользователя с существующим логином", func() {
-		// Регистрация по логину паролю
+		user := suite.NewRndUserWithBasicAuth()
 		input := In{
-			Login:    "login",
-			Password: common.RndPassword(),
-			Name:     "name",
-			Nick:     "nick",
-		}
-		out, err := usecase.BasicAuthRegistration(input)
-		suite.Require().NoError(err)
-		suite.Require().NotZero(out)
-
-		// Регистрация второй раз с существующим логином
-		input = In{
-			Login:    "login",
+			Login:    user.BasicAuth.Login,
 			Password: common.RndPassword(),
 			Name:     "name2",
 			Nick:     "nick2",
 		}
-		out, err = usecase.BasicAuthRegistration(input)
+		mockRepoUsers.EXPECT().InTransaction(mock.Anything).RunAndReturn(func(fn func(userr.Repository) error) error {
+			return fn(mockRepoUsers)
+		}).Once()
+		mockRepoUsers.EXPECT().List(mock.Anything).Return([]userr.User{user}, nil).Once()
+		out, err := usecase.BasicAuthRegistration(input)
 		suite.ErrorIs(err, ErrLoginIsAlreadyInUse)
 		suite.Zero(out)
 	})
@@ -97,17 +92,18 @@ func (suite *testSuite) Test_BasicAuthRegistration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
+		// Настройка моков
+		mockRepoUsers.EXPECT().InTransaction(mock.Anything).RunAndReturn(func(fn func(userr.Repository) error) error {
+			return fn(mockRepoUsers)
+		}).Once()
+		mockRepoUsers.EXPECT().List(mock.Anything).Return(nil, nil).Once()
+		mockRepoUsers.EXPECT().Upsert(mock.Anything).Return(nil).Once()
+		mockRepoSessions.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 		suite.Equal(input.Name, out.User.Name)
 		suite.Equal(input.Nick, out.User.Nick)
-
-		// Прочитать пользователя из репозитория
-		users, err := suite.RR.Users.List(userr.Filter{})
-		suite.Require().NoError(err)
-		suite.Require().Len(users, 1)
-		suite.Equal(out.User, users[0])
 	})
 
 	suite.Run("после регистрации будет создана сессия", func() {
@@ -118,16 +114,24 @@ func (suite *testSuite) Test_BasicAuthRegistration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
+		var session sessionn.Session
+		// Настройка моков
+		mockRepoUsers.EXPECT().InTransaction(mock.Anything).RunAndReturn(func(fn func(userr.Repository) error) error {
+			return fn(mockRepoUsers)
+		}).Once()
+		mockRepoUsers.EXPECT().List(mock.Anything).Return(nil, nil).Once()
+		mockRepoUsers.EXPECT().Upsert(mock.Anything).Return(nil).Once()
+		mockRepoSessions.EXPECT().Upsert(mock.Anything).Run(func(sessionRepo sessionn.Session) {
+			// получаем сессию которая записывается в бд
+			session = sessionRepo
+		}).Return(nil).Once()
 		out, err := usecase.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 
 		// Проверить сессию
-		sessions, err := suite.RR.Sessions.List(sessionn.Filter{})
-		suite.NoError(err)
-		suite.Require().Len(sessions, 1)
-		suite.EqualSessions(out.Session, sessions[0])
-		suite.Equal(sessionn.StatusVerified, sessions[0].Status)
+		suite.EqualSessions(out.Session, session)
+		suite.Equal(sessionn.StatusVerified, session.Status)
 	})
 
 	suite.Run("после регистрации будет создан метод входа", func() {
@@ -138,18 +142,22 @@ func (suite *testSuite) Test_BasicAuthRegistration() {
 			Name:     "name",
 			Nick:     "nick",
 		}
+		// Настройка моков
+		mockRepoUsers.EXPECT().InTransaction(mock.Anything).RunAndReturn(func(fn func(userr.Repository) error) error {
+			return fn(mockRepoUsers)
+		}).Once()
+		mockRepoUsers.EXPECT().List(mock.Anything).Return(nil, nil).Once()
+		var user userr.User
+		mockRepoUsers.EXPECT().Upsert(mock.Anything).Run(func(userRepo userr.User) {
+			user = userRepo
+		}).Return(nil).Once()
+		mockRepoSessions.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.BasicAuthRegistration(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
 
-		// Прочитать метод входа из репозитория
-		users, err := suite.RR.Users.List(userr.Filter{
-			BasicAuthLogin: input.Login,
-		})
-		suite.Require().NoError(err)
-		suite.Require().Len(users, 1)
-		suite.Equal(out.User.ID, users[0].ID)
-		suite.Equal(input.Login, users[0].BasicAuth.Login)
-		suite.Equal(input.Password, users[0].BasicAuth.Password)
+		suite.Equal(out.User.ID, user.ID)
+		suite.Equal(input.Login, user.BasicAuth.Login)
+		suite.Equal(input.Password, user.BasicAuth.Password)
 	})
 }
