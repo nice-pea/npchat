@@ -26,8 +26,7 @@ func Test_TestSuite(t *testing.T) {
 func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("чат должен существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Покинуть чат
 		input := In{
 			SubjectID: uuid.New(),
@@ -42,8 +41,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь должен быть участником чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Покинуть чат
@@ -60,8 +58,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 
 	suite.Run("пользователь не должен быть главным администратором чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		chat := suite.RndChat()
 		// Покинуть чат
 		input := In{
@@ -78,7 +75,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("после выхода пользователь перестает быть участником", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника в этом чате

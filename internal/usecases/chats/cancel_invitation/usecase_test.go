@@ -26,8 +26,7 @@ func Test_TestSuite(t *testing.T) {
 func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение должно существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Отменить приглашение
 		input := In{
 			SubjectID:    uuid.New(),
@@ -46,8 +45,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
-
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -82,8 +80,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 
 	suite.Run("другие участники не могут отменять приглашать ", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -111,7 +108,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("после отмены, приглашение удаляется", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника

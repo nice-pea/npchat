@@ -29,9 +29,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 
 	suite.Run("только существующий чат можно обновить", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
-		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
-
+		usecase, mockRepo, _ := newUsecase(suite)
 		input := In{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
@@ -47,8 +45,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 
 	suite.Run("только главный администратор может изменять название", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
-		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Попытаться изменить название от имени случайного пользователя
@@ -67,7 +64,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 	suite.Run("новое название чата сохранится и его можно прочитать", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
-		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Изменить название от имени администратора

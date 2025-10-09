@@ -26,8 +26,7 @@ func Test_TestSuite(t *testing.T) {
 func (suite *testSuite) Test_Members_DeleteMember() {
 	suite.Run("нельзя удалить самого себя", func() {
 		// Создать usecase и моки
-		usecase, _, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, _, _ := newUsecase(suite)
 		// Удалить участника
 		userID := uuid.New()
 		input := In{
@@ -43,8 +42,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("чат должен существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Удалить участника
 		input := In{
 			SubjectID: uuid.New(),
@@ -74,8 +72,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("subject должен быть главным администратором чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -95,10 +92,9 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 
 	suite.Run("user должен быть участником чата", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
-		chat :=suite.RndChat()
+		chat := suite.RndChat()
 		// Удалить участника
 		input := In{
 			SubjectID: chat.ChiefID,
@@ -115,7 +111,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 	suite.Run("после удаления участник перестает быть участником", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника для удаления

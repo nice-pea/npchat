@@ -90,9 +90,6 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать приглашение
 		invitation := suite.NewInvitation(p.UserID, uuid.New())
 		suite.AddInvitation(&chat, invitation)
-		// // Сохранить чат
-		// mockRepo.EXPECT().Upsert(chat).Return(nil)
-		// suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    invitation.RecipientID,

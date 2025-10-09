@@ -35,9 +35,7 @@ func (suite *testSuite) newCreateInputRandom() In {
 func (suite *testSuite) Test_Chats_CreateChat() {
 
 	suite.Run("выходящие совпадают с заданными", func() {
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		input := suite.newCreateInputRandom()
 		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
@@ -51,7 +49,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("можно затем прочитать из репозитория", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		input := suite.newCreateInputRandom()
 		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
@@ -63,7 +61,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("создается участник для главного администратора", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		input := suite.newCreateInputRandom()
 		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
@@ -82,7 +80,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("можно создать чаты с одинаковым именем", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		input := suite.newCreateInputRandom()
 		// Создать несколько чатов с одинаковым именем
 		const chatsAllCount = 2
@@ -99,7 +97,7 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("количество созданных чатов на одного пользователя не ограничено", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Пользователь
 		userID := uuid.New()
 		// Создать много чатов от лица пользователя

@@ -27,8 +27,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("чат должен существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Отправить приглашение
 		input := In{
 			SubjectID: uuid.New(),
@@ -44,8 +43,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("субъект должен быть участником", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Отправить приглашение
@@ -64,7 +62,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("приглашаемый пользователь может не существовать", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -88,8 +86,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 
 	suite.Run("приглашаемый пользователь не должен состоять в этом чате", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -112,7 +109,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("одновременно не может существовать несколько приглашений одного пользователя в этот чат", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -144,7 +141,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 	suite.Run("любой участник может приглашать много пользователей", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Times(25)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать много приглашений от разных участников
