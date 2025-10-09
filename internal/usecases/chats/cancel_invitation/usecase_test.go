@@ -98,7 +98,6 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		mockRepo.EXPECT().
 			List(mock.Anything).
 			Return([]chatt.Chat{chat}, nil).Once()
-		mockRepo.EXPECT().Upsert(chat).Return(nil).Once()
 		out, err := usecase.CancelInvitation(input)
 		// Вернется ошибка, потому что случайный участник не может отменять приглашение
 		suite.ErrorIs(err, ErrSubjectUserNotAllowed)

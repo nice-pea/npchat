@@ -30,9 +30,9 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 			SubjectID: uuid.New(),
 		}
 		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil).Once()
-		invitations, err := usecase.ReceivedInvitations(input)
+		out, err := usecase.ReceivedInvitations(input)
 		suite.NoError(err)
-		suite.Empty(invitations)
+		suite.Empty(out.ChatsInvitations)
 	})
 
 	suite.Run("из многих приглашений несколько направлено пользователю и потому вернутся только они", func() {

@@ -86,11 +86,13 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			ChatID:    chat.ID,
 		}
 		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
-		chat.Participants = chat.Participants[:1]
-		mockRepo.EXPECT().Upsert(chat).Return(nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(chatRepo chatt.Chat) {
+			chat = chatRepo
+		}).Return(nil)
 		out, err := usecase.LeaveChat(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
+		suite.Len(chat.Participants, 1)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
