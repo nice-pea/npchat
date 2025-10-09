@@ -13,7 +13,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.SuiteWithMocks
+	serviceSuite.Suite
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -96,7 +96,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
-		suite.True(out.NextKeyset.ActiveBefore.IsZero())
+		suite.Zero(out.NextKeyset)
 	})
 
 	suite.Run("учитывает фильтрацию по активности", func() {
@@ -126,7 +126,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
 		suite.Equal(expectedChats, out.Chats)
-		suite.True(out.NextKeyset.ActiveBefore.IsZero())
+		suite.Zero(out.NextKeyset)
 	})
 }
 

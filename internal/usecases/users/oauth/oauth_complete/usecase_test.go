@@ -18,14 +18,14 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.SuiteWithMocks
+	serviceSuite.Suite
 }
 
 func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-func (suite *testSuite) Test_OauthComplete2() {
+func (suite *testSuite) Test_OauthComplete() {
 	const providerName = "mock"
 	// usecase.Providers.Add(suite.Adapters.Oauth)
 

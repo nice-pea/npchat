@@ -17,7 +17,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.SuiteWithMocks
+	serviceSuite.Suite
 }
 
 func Test_TestSuite(t *testing.T) {
@@ -55,10 +55,10 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			NewName:   "newName",
 		}
 		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
-		updatedChat, err := usecase.UpdateName(input)
+		out, err := usecase.UpdateName(input)
 		// Вернется ошибка, потому что пользователь не главный администратор чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
-		suite.Zero(updatedChat)
+		suite.Zero(out)
 	})
 
 	suite.Run("новое название чата сохранится и его можно прочитать", func() {

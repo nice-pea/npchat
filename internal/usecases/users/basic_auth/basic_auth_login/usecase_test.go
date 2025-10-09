@@ -12,7 +12,7 @@ import (
 )
 
 type testSuite struct {
-	serviceSuite.SuiteWithMocks
+	serviceSuite.Suite
 }
 
 func Test_TestSuite(t *testing.T) {

@@ -23,7 +23,7 @@ import (
 	mockOauth "github.com/nice-pea/npchat/internal/usecases/users/oauth/mocks"
 )
 
-type SuiteWithMocks struct {
+type Suite struct {
 	testifySuite.Suite
 	RR struct {
 		Chats    *mockChatt.Repository
@@ -38,12 +38,12 @@ type SuiteWithMocks struct {
 }
 
 // SetupTest выполняется перед каждым тестом, связанным с suite
-func (suite *SuiteWithMocks) SetupTest() {
+func (suite *Suite) SetupTest() {
 	suite.TearDownSubTest()
 }
 
 // SetupAcceptInvitationMocks настраивает моки для успешного принятия приглашения
-func (suite *SuiteWithMocks) SetupAcceptInvitationMocks(invitationID uuid.UUID, chat chatt.Chat) {
+func (suite *Suite) SetupAcceptInvitationMocks(invitationID uuid.UUID, chat chatt.Chat) {
 	suite.RR.Chats.EXPECT().List(chatt.Filter{
 		InvitationID: invitationID,
 	}).Return([]chatt.Chat{chat}, nil).Once()
@@ -55,7 +55,7 @@ func (suite *SuiteWithMocks) SetupAcceptInvitationMocks(invitationID uuid.UUID, 
 }
 
 // TearDownSubTest выполняется после каждого подтеста, связанного с suite
-func (suite *SuiteWithMocks) TearDownSubTest() {
+func (suite *Suite) TearDownSubTest() {
 	// пересоздаем моки репозиториев
 	suite.RR.Chats = mockChatt.NewRepository(suite.T())
 	suite.RR.Users = mockUserr.NewRepository(suite.T())
@@ -66,7 +66,7 @@ func (suite *SuiteWithMocks) TearDownSubTest() {
 }
 
 // initAdapters настраивает моки адаптеров
-func (suite *SuiteWithMocks) initAdapters() {
+func (suite *Suite) initAdapters() {
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 	suite.Adapters.Oauth.EXPECT().Name().Maybe().Return("mock")
 	suite.Adapters.Oauth.EXPECT().Exchange(mock.Anything).Maybe().Return(func(code string) (userr.OpenAuthToken, error) {
@@ -98,7 +98,7 @@ func (suite *SuiteWithMocks) initAdapters() {
 }
 
 // EqualSessions сравнивает две сессии
-func (suite *SuiteWithMocks) EqualSessions(s1, s2 sessionn.Session) {
+func (suite *Suite) EqualSessions(s1, s2 sessionn.Session) {
 	suite.Equal(s1.ID, s2.ID)
 	suite.Equal(s1.UserID, s2.UserID)
 	suite.Equal(s1.Name, s2.Name)
@@ -110,7 +110,7 @@ func (suite *SuiteWithMocks) EqualSessions(s1, s2 sessionn.Session) {
 }
 
 // RndChat создает случайный чат
-func (suite *SuiteWithMocks) RndChat() chatt.Chat {
+func (suite *Suite) RndChat() chatt.Chat {
 	chat, err := chatt.NewChat(gofakeit.Noun(), uuid.New(), nil)
 	suite.Require().NoError(err)
 
@@ -118,14 +118,14 @@ func (suite *SuiteWithMocks) RndChat() chatt.Chat {
 }
 
 // NewParticipant создает случайного участника
-func (suite *SuiteWithMocks) NewParticipant(userID uuid.UUID) chatt.Participant {
+func (suite *Suite) NewParticipant(userID uuid.UUID) chatt.Participant {
 	p, err := chatt.NewParticipant(userID)
 	suite.Require().NoError(err)
 	return p
 }
 
 // AddRndParticipant добавляет случайного участника в чат
-func (suite *SuiteWithMocks) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
+func (suite *Suite) AddRndParticipant(chat *chatt.Chat) chatt.Participant {
 	p, err := chatt.NewParticipant(uuid.New())
 	suite.Require().NoError(err)
 	suite.Require().NoError(chat.AddParticipant(p, nil))
@@ -134,19 +134,19 @@ func (suite *SuiteWithMocks) AddRndParticipant(chat *chatt.Chat) chatt.Participa
 }
 
 // AddParticipant добавляет участника в чат
-func (suite *SuiteWithMocks) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
+func (suite *Suite) AddParticipant(chat *chatt.Chat, p chatt.Participant) {
 	suite.Require().NoError(chat.AddParticipant(p, nil))
 }
 
 // NewInvitation создает новое приглашение
-func (suite *SuiteWithMocks) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
+func (suite *Suite) NewInvitation(subjectID, recipientID uuid.UUID) chatt.Invitation {
 	i, err := chatt.NewInvitation(subjectID, recipientID)
 	suite.Require().NoError(err)
 	return i
 }
 
 // AddInvitation добавляет приглашение в чат
-func (suite *SuiteWithMocks) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
+func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
 	suite.Require().NoError(chat.AddInvitation(i, nil))
 }
 
@@ -161,7 +161,7 @@ func RandomString2(n int) string {
 }
 
 // RandomOauthToken генерирует случайный OauthToken
-func (suite *SuiteWithMocks) RandomOauthToken() userr.OpenAuthToken {
+func (suite *Suite) RandomOauthToken() userr.OpenAuthToken {
 	t, err := userr.NewOpenAuthToken(
 		RandomString(32), // AccessToken
 		"Bearer",         // TokenType
@@ -175,7 +175,7 @@ func (suite *SuiteWithMocks) RandomOauthToken() userr.OpenAuthToken {
 }
 
 // Генерация случайного OauthUser
-func (suite *SuiteWithMocks) RandomOauthUser() userr.OpenAuthUser {
+func (suite *Suite) RandomOauthUser() userr.OpenAuthUser {
 	u, err := userr.NewOpenAuthUser(
 		RandomString(21),                                      // ID
 		suite.Adapters.Oauth.Name(),                           // Provider
@@ -190,7 +190,7 @@ func (suite *SuiteWithMocks) RandomOauthUser() userr.OpenAuthUser {
 }
 
 // GenerateMockUsers генерирует случайных oauth-пользователей
-func (suite *SuiteWithMocks) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
+func (suite *Suite) GenerateMockUsers() map[userr.OpenAuthToken]userr.OpenAuthUser {
 	tokenToUser := make(map[userr.OpenAuthToken]userr.OpenAuthUser)
 
 	for i := 0; i < 10; i++ {
@@ -203,7 +203,7 @@ func (suite *SuiteWithMocks) GenerateMockUsers() map[userr.OpenAuthToken]userr.O
 }
 
 // NewRndUserWithBasicAuth создает случайного пользователя с базовой аутентификацией
-func (suite *SuiteWithMocks) NewRndUserWithBasicAuth() userr.User {
+func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
 	user, err := userr.NewUser(gofakeit.Name(), gofakeit.Username())
 	suite.Require().NoError(err)
 	ba, err := userr.NewBasicAuth(gofakeit.Username()+"four", common.RndPassword())
@@ -223,7 +223,7 @@ func HasElementOfType2[T any](e []any) bool {
 	return false
 }
 
-func (suite *SuiteWithMocks) AssertHasEventType(ee []events.Event, eventType string) {
+func (suite *Suite) AssertHasEventType(ee []events.Event, eventType string) {
 	suite.T().Helper()
 	suite.True(slices.ContainsFunc(ee, func(e events.Event) bool {
 		return e.Type == eventType
