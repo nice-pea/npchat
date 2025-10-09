@@ -35,7 +35,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		// Настройка мока
 		mockRepo.EXPECT().
 			List(mock.Anything).
-			Return([]chatt.Chat{}, chatt.ErrChatNotExists)
+			Return([]chatt.Chat{}, chatt.ErrChatNotExists).Once()
 		out, err := usecase.CancelInvitation(input)
 		// Вернется ошибка, потому что приглашения не существует
 		suite.ErrorIs(err, ErrInvitationNotExists)
@@ -45,7 +45,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 	suite.Run("приглашение могут отменить только пригласивший и приглашаемый пользователи, и администратор чата", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Times(3)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -71,7 +71,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 			mockRepo.EXPECT().
 				List(mock.Anything).
 				Return([]chatt.Chat{chat}, nil).Once()
-			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Maybe()
+			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 			out, err := usecase.CancelInvitation(input)
 			suite.NoError(err)
 			suite.Zero(out)
@@ -141,7 +141,7 @@ func (suite *testSuite) Test_Invitations_CancelInvitation() {
 		var consumedEvents []events.Event
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
 			consumedEvents = append(consumedEvents, events...)
-		}).Return()
+		}).Return().Once()
 
 		// Создать чат
 		chat := suite.RndChat()

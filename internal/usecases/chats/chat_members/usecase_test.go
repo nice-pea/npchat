@@ -29,7 +29,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 			ChatID:    uuid.New(),
 			SubjectID: uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil).Once()
 		out, err := usecase.ChatMembers(input)
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
 		suite.Empty(out)
@@ -45,7 +45,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 			ChatID:    chat.ID,
 			SubjectID: uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatMembers(input)
 		// Вернется ошибка, потому пользователь не является участником чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
@@ -71,7 +71,7 @@ func (suite *testSuite) Test_Members_ChatMembers() {
 			ChatID:    chat.ID,
 			SubjectID: participant.UserID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 
 		out, err := usecase.ChatMembers(input)
 		suite.NoError(err)

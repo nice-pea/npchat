@@ -32,7 +32,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return(nil, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return(nil, nil).Once()
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -49,7 +49,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: uuid.New(),
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, chatt.ErrParticipantNotExists)
@@ -65,7 +65,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.LeaveChat(input)
 		// Вернется ошибка, потому что пользователь главный администратор чата
 		suite.ErrorIs(err, chatt.ErrCannotRemoveChief)
@@ -75,7 +75,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 	suite.Run("после выхода пользователь перестает быть участником", func() {
 		// Создать usecase и моки
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника в этом чате
@@ -85,7 +85,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		chat.Participants = chat.Participants[:1]
 		mockRepo.EXPECT().Upsert(chat).Return(nil)
 		out, err := usecase.LeaveChat(input)
@@ -100,7 +100,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		var consumedEvents []events.Event
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
 			consumedEvents = append(consumedEvents, events...)
-		}).Return()
+		}).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника в этом чате
@@ -110,9 +110,9 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 			SubjectID: participant.UserID,
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		chat.Participants = chat.Participants[:1]
-		mockRepo.EXPECT().Upsert(chat).Return(nil)
+		mockRepo.EXPECT().Upsert(chat).Return(nil).Once()
 		out, err := usecase.LeaveChat(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
@@ -127,7 +127,7 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		var consumedEvents []events.Event
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(e []events.Event) {
 			consumedEvents = append(consumedEvents, e...)
-		}).Return()
+		}).Return().Once()
 
 		chat := suite.RndChat()
 		participant := suite.AddRndParticipant(&chat)
@@ -141,12 +141,11 @@ func (suite *testSuite) Test_Members_LeaveChat() {
 		}
 
 		chatBeforeLeave := chat
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chatBeforeLeave}, nil)
-
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chatBeforeLeave}, nil).Once()
 		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(updated chatt.Chat) {
 			suite.False(updated.HasParticipant(participant.UserID))
 			suite.Empty(updated.Invitations)
-		}).Return(nil)
+		}).Return(nil).Once()
 
 		out, err := usecase.LeaveChat(input)
 		suite.Require().NoError(err)

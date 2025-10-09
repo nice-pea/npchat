@@ -29,7 +29,7 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 		input := In{
 			SubjectID: uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil).Once()
 		invitations, err := usecase.ReceivedInvitations(input)
 		suite.NoError(err)
 		suite.Empty(invitations)
@@ -64,7 +64,7 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 		}
 		mockRepo.EXPECT().List(chatt.Filter{
 			InvitationRecipientID: input.SubjectID,
-		}).Return(chats, nil)
+		}).Return(chats, nil).Once()
 		out, err := usecase.ReceivedInvitations(input)
 		suite.NoError(err)
 		// В списке будут только приглашения, направленные пользователю

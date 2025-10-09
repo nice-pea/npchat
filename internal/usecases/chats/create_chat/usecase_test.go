@@ -35,10 +35,11 @@ func (suite *testSuite) newCreateInputRandom() In {
 func (suite *testSuite) Test_Chats_CreateChat() {
 
 	suite.Run("выходящие совпадают с заданными", func() {
-		usecase, mockRepo, _ := newUsecase(suite)
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.NoError(err)
 		// Сравнить результат с входящими значениями
@@ -49,10 +50,10 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("можно затем прочитать из репозитория", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
@@ -61,16 +62,13 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	suite.Run("создается участник для главного администратора", func() {
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
-		// Получить список участников
-		//members, err := usecase.MembersRepo.List(domain.MembersFilter{})
-		//suite.NoError(err)
 		// В списке этот участник будет единственным
 		suite.Require().Len(out.Chat.Participants, 1)
 		// Участником является главный администратор созданного чата
@@ -95,13 +93,13 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	})
 
 	suite.Run("количество созданных чатов на одного пользователя не ограничено", func() {
+		const chatsAllCount = 900
 		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Times(chatsAllCount)
 		// Пользователь
 		userID := uuid.New()
 		// Создать много чатов от лица пользователя
-		const chatsAllCount = 900
 		for range chatsAllCount {
 			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 			out, err := usecase.CreateChat(In{
@@ -122,9 +120,9 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 			Run(func(events []events.Event) {
 				consumedEvents = append(consumedEvents, events...)
 			}).
-			Return()
+			Return().Once()
 
-			// Создать чат
+		// Создать чат
 		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(In{
 			ChiefUserID: uuid.New(),

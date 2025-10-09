@@ -27,10 +27,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 
 	suite.Run("приглашение должно существовать", func() {
 		// Создать usecase и моки
-		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
-		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
-
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -43,7 +40,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// настроить мок
 		mockRepo.EXPECT().List(chatt.Filter{
 			InvitationID: input.InvitationID,
-		}).Return(nil, chatt.ErrChatNotExists)
+		}).Return(nil, chatt.ErrChatNotExists).Once()
 		// suite.SetupAcceptInvitationMocks(input.InvitationID, chat)
 		out, err := usecase.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
@@ -54,7 +51,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать usecase и моки
 		usecase, _, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
-		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Maybe()
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -82,7 +79,7 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(
 			func(args []events.Event) {
 				consumedEvents = append(consumedEvents, args...)
-			}).Return()
+			}).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника

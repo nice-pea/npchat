@@ -30,7 +30,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 		}
-		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{}, nil)
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -47,7 +47,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			ChatID:    chat.ID,
 			SubjectID: uuid.New(),
 		}
-		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
@@ -64,7 +64,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.NoError(err)
 		suite.Empty(out.Invitations)
@@ -93,7 +93,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			ChatID:    chat.ID,
 			SubjectID: participant.UserID,
 		}
-		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения, отправленные участником
@@ -120,7 +120,7 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
-		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения все приглашения

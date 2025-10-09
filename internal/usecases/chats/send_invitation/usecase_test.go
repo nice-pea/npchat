@@ -52,7 +52,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 			ChatID:    chat.ID,
 			UserID:    uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		invitation, err := usecase.SendInvitation(input)
 		// Вернется ошибка, потому что субъект не является участником чата
 		suite.ErrorIs(err, chatt.ErrSubjectIsNotMember)
@@ -73,12 +73,12 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 			SubjectID: participant.UserID,
 			UserID:    uuid.New(),
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		invitaion := suite.NewInvitation(input.SubjectID, input.UserID)
 		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(chat chatt.Chat) {
 			suite.Equal(invitaion.RecipientID, input.UserID)
 			suite.Equal(invitaion.SubjectID, input.SubjectID)
-		}).Return(nil)
+		}).Return(nil).Once()
 		out, err := usecase.SendInvitation(input)
 		suite.NoError(err)
 		suite.NotZero(out)
@@ -99,7 +99,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 			SubjectID: participant.UserID,
 			UserID:    participantInvitating.UserID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		invitation, err := usecase.SendInvitation(input)
 		// Вернется ошибка, потому что приглашаемый пользователь уже является участником этого чата
 		suite.ErrorIs(err, chatt.ErrParticipantExists)
@@ -171,7 +171,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		var consumedEvents []events.Event
 		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
 			consumedEvents = append(consumedEvents, events...)
-		}).Return()
+		}).Return().Once()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -187,7 +187,7 @@ func (suite *testSuite) Test_Invitations_SendChatInvitation() {
 		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(chat chatt.Chat) {
 			suite.Equal(input.UserID, chat.Invitations[0].RecipientID)
 			suite.Equal(input.SubjectID, chat.Invitations[0].SubjectID)
-		}).Return(nil)
+		}).Return(nil).Once()
 		out, err := usecase.SendInvitation(input)
 		suite.NoError(err)
 		suite.Require().NotZero(out)

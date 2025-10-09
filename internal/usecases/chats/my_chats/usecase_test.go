@@ -42,7 +42,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 			ParticipantID: input.UserID,
 			ActiveBefore:  input.Keyset.ActiveBefore,
 			Limit:         defaultPageSize,
-		}).Return([]chatt.Chat{}, nil)
+		}).Return([]chatt.Chat{}, nil).Once()
 
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
@@ -69,7 +69,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 			ParticipantID: userID,
 			ActiveBefore:  input.Keyset.ActiveBefore,
 			Limit:         defaultPageSize,
-		}).Return(expectedChats, nil)
+		}).Return(expectedChats, nil).Once()
 
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
@@ -92,7 +92,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 			ParticipantID: userID,
 			ActiveBefore:  input.Keyset.ActiveBefore,
 			Limit:         defaultPageSize,
-		}).Return(chats, nil)
+		}).Return(chats, nil).Once()
 
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
@@ -121,7 +121,7 @@ func (suite *testSuite) Test_Chats_MyChats() {
 			ParticipantID: userID,
 			ActiveBefore:  activeBefore,
 			Limit:         defaultPageSize,
-		}).Return(expectedChats, nil)
+		}).Return(expectedChats, nil).Once()
 
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)

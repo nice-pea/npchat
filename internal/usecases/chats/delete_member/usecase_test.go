@@ -122,8 +122,8 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 			ChatID:    chat.ID,
 			UserID:    participant.UserID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.DeleteMember(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)
@@ -138,7 +138,7 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 			Run(func(events []events.Event) {
 				consumedEvents = append(consumedEvents, events...)
 			}).
-			Return()
+			Return().Once()
 
 		// Создать чат
 		chat := suite.RndChat()
@@ -150,8 +150,8 @@ func (suite *testSuite) Test_Members_DeleteMember() {
 			ChatID:    chat.ID,
 			UserID:    participant.UserID,
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.DeleteMember(input)
 		suite.Require().NoError(err)
 		suite.Zero(out)

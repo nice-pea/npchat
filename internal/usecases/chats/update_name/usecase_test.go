@@ -36,7 +36,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			NewName:   "newName",
 		}
 		// Обновить название чата
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil).Once()
 		chat, err := usecase.UpdateName(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -54,7 +54,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		updatedChat, err := usecase.UpdateName(input)
 		// Вернется ошибка, потому что пользователь не главный администратор чата
 		suite.ErrorIs(err, ErrSubjectUserIsNotChief)
@@ -73,10 +73,10 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
 		mockRepo.EXPECT().Upsert(mock.Anything).Run(func(chat chatt.Chat) {
 			suite.Equal(input.NewName, chat.Name)
-		}).Return(nil)
+		}).Return(nil).Once()
 		out, err := usecase.UpdateName(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
@@ -92,7 +92,7 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 		var consumedEvents []events.Event
 		mockEventConsumer.EXPECT().Consume(mock.Anything).Run(func(events []events.Event) {
 			consumedEvents = append(consumedEvents, events...)
-		}).Return()
+		}).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Изменить название от имени администратора
@@ -101,8 +101,8 @@ func (suite *testSuite) Test_Chats_UpdateName() {
 			ChatID:    chat.ID,
 			NewName:   "newName",
 		}
-		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil)
-		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{chat}, nil).Once()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.UpdateName(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
