@@ -8,6 +8,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -19,107 +20,113 @@ func Test_TestSuite(t *testing.T) {
 	testifySuite.Run(t, new(testSuite))
 }
 
-// Test_Chats_MyChats тестирует запрос список чатов в которых участвует пользователь
 func (suite *testSuite) Test_Chats_MyChats() {
-	usecase := &MyChatsUsecase{
-		Repo: suite.RR.Chats,
-	}
+	suite.Run("запрещает просмотр чужих чатов", func() {
+		usecase, _ := newUsecase(suite)
 
-	suite.Run("пользователь может запрашивать только свой чат", func() {
 		input := In{
 			SubjectID: uuid.New(),
 			UserID:    uuid.New(),
 		}
+
 		out, err := usecase.MyChats(input)
 		suite.ErrorIs(err, ErrUnauthorizedChatsView)
 		suite.Empty(out.Chats)
 	})
 
-	suite.Run("пустой список из пустого репозитория", func() {
+	suite.Run("возвращает пустой список когда чатов нет", func() {
+		usecase, mockRepo := newUsecase(suite)
+
 		input := suite.newUserChatsInput(uuid.New())
+		mockRepo.EXPECT().List(chatt.Filter{
+			ParticipantID: input.UserID,
+			ActiveBefore:  input.Keyset.ActiveBefore,
+			Limit:         defaultPageSize,
+		}).Return([]chatt.Chat{}, nil).Once()
+
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
 		suite.Empty(out.Chats)
+		suite.True(out.NextKeyset.ActiveBefore.IsZero())
 	})
 
-	suite.Run("пустой список если у пользователя нет чатов", func() {
-		const chatsAllCount = 11
-		for range chatsAllCount {
-			chat := suite.UpsertChat(suite.RndChat())
-			suite.AddRndParticipant(&chat)
+	suite.Run("возвращает чаты пользователя", func() {
+		usecase, mockRepo := newUsecase(suite)
+
+		userID := uuid.New()
+		now := time.Now().UTC().Truncate(time.Millisecond)
+		const countChats = 3
+		expectedChats := make([]chatt.Chat, 0, countChats)
+		for i := range countChats {
+			chat := suite.RndChat()
+			chat.LastActiveAt = now.Add(-time.Duration(i) * time.Minute)
+			chat.Participants = append(chat.Participants, suite.NewParticipant(userID))
+			expectedChats = append(expectedChats, chat)
 		}
-		input := suite.newUserChatsInput(uuid.New())
+
+		input := suite.newUserChatsInput(userID)
+		mockRepo.EXPECT().List(chatt.Filter{
+			ParticipantID: userID,
+			ActiveBefore:  input.Keyset.ActiveBefore,
+			Limit:         defaultPageSize,
+		}).Return(expectedChats, nil).Once()
+
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
-		suite.Empty(out.Chats)
+		suite.Equal(expectedChats, out.Chats)
 	})
 
-	suite.Run("у пользователя может быть несколько чатов", func() {
-		userID := uuid.New()
-		const chatsAllCount = 11
-		for range chatsAllCount {
-			chat := suite.RndChat()
-			p := suite.NewParticipant(userID)
-			suite.AddParticipant(&chat, p)
-			suite.UpsertChat(chat)
-		}
-		input := suite.newUserChatsInput(userID)
-		out, err := usecase.MyChats(input)
-		suite.NoError(err)
-		suite.Len(out.Chats, chatsAllCount)
-	})
+	suite.Run("не возвращает keyset если элементов меньше лимита", func() {
+		usecase, mockRepo := newUsecase(suite)
 
-	suite.Run("возвращает NextKeyset пустым если осталось чатов меньше чем page", func() {
 		userID := uuid.New()
-		const chatsAllCount = 11
-		for range chatsAllCount {
-			chat := suite.RndChat()
-			p := suite.NewParticipant(userID)
-			suite.AddParticipant(&chat, p)
-			suite.UpsertChat(chat)
+		now := time.Now().UTC().Truncate(time.Millisecond)
+		chats := make([]chatt.Chat, defaultPageSize-1)
+		for i := range chats {
+			chats[i] = suite.RndChat()
+			chats[i].LastActiveAt = now.Add(-time.Duration(i) * time.Minute)
 		}
+
 		input := suite.newUserChatsInput(userID)
+		mockRepo.EXPECT().List(chatt.Filter{
+			ParticipantID: userID,
+			ActiveBefore:  input.Keyset.ActiveBefore,
+			Limit:         defaultPageSize,
+		}).Return(chats, nil).Once()
+
 		out, err := usecase.MyChats(input)
 		suite.NoError(err)
 		suite.Zero(out.NextKeyset)
 	})
 
-	suite.Run("с установленным Keyset вернется только часть чатов", func() {
+	suite.Run("учитывает фильтрацию по активности", func() {
+		usecase, mockRepo := newUsecase(suite)
+
 		userID := uuid.New()
-		//const chatsAllCount = 11
-		now := time.Now()
-		activeBefore := now.Add(-time.Hour)
-		// Список чатов, которые должны вернуться в результате
-		expectedChats := make([]chatt.Chat, 10)
+		activeBefore := time.Now().Add(-time.Minute).UTC().Truncate(time.Millisecond)
+		expectedChats := make([]chatt.Chat, 5)
 		for i := range expectedChats {
-			chat := suite.RndChat()
-			chat.LastActiveAt = activeBefore.
-				Add(-time.Duration(i+1) * time.Minute).
-				UTC().
-				Truncate(time.Millisecond)
-			suite.AddParticipant(&chat, suite.NewParticipant(userID))
-			expectedChats[i] = suite.UpsertChat(chat)
+			expectedChats[i] = suite.RndChat()
+			expectedChats[i].LastActiveAt = activeBefore.Add(-time.Duration(i+1) * time.Minute)
 		}
-		// Чаты, которые не должны вернуться
-		for range 11 {
-			chat := suite.RndChat()
-			suite.AddParticipant(&chat, suite.NewParticipant(userID))
-			suite.UpsertChat(chat)
-		}
-		// Получить список чатов
-		out, err := usecase.MyChats(In{
+
+		input := In{
 			SubjectID: userID,
 			UserID:    userID,
 			Keyset: Keyset{
 				ActiveBefore: activeBefore,
 			},
-		})
-		suite.NoError(err)
-		suite.Zero(out.NextKeyset)
-		suite.Require().Len(out.Chats, len(expectedChats))
-		for i, chat := range out.Chats {
-			suite.Equal(expectedChats[i], chat)
 		}
+		mockRepo.EXPECT().List(chatt.Filter{
+			ParticipantID: userID,
+			ActiveBefore:  activeBefore,
+			Limit:         defaultPageSize,
+		}).Return(expectedChats, nil).Once()
+
+		out, err := usecase.MyChats(input)
+		suite.NoError(err)
+		suite.Equal(expectedChats, out.Chats)
+		suite.Zero(out.NextKeyset)
 	})
 }
 
@@ -128,4 +135,12 @@ func (suite *testSuite) newUserChatsInput(userID uuid.UUID) In {
 		SubjectID: userID,
 		UserID:    userID,
 	}
+}
+
+func newUsecase(suite *testSuite) (*MyChatsUsecase, *mockChatt.Repository) {
+	uc := &MyChatsUsecase{
+		Repo: suite.RR.Chats,
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	return uc, mockRepo
 }

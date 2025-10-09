@@ -5,6 +5,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
@@ -19,12 +20,8 @@ func (suite *testSuite) newRndUserWithSession(sessionStatus string) (out struct 
 	var err error
 	out.User, err = userr.NewUser(gofakeit.Name(), "")
 	suite.Require().NoError(err)
-	err = suite.RR.Users.Upsert(out.User)
-	suite.Require().NoError(err)
 
 	out.Session, err = sessionn.NewSession(out.User.ID, gofakeit.ChromeUserAgent(), sessionStatus)
-	suite.Require().NoError(err)
-	err = suite.RR.Sessions.Upsert(out.Session)
 	suite.Require().NoError(err)
 
 	return
@@ -42,6 +39,7 @@ func (suite *testSuite) Test_FindSessions() {
 	usecase := &FindSessionsUsecase{
 		Repo: suite.RR.Sessions,
 	}
+	mockRepo := suite.RR.Sessions
 
 	suite.Run("токен должен быть передан", func() {
 		for range 10 {
@@ -63,6 +61,7 @@ func (suite *testSuite) Test_FindSessions() {
 		input := In{
 			Token: uuid.NewString(),
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return(nil, nil).Once()
 		out, err := usecase.FindSessions(input)
 		suite.NoError(err)
 		suite.Empty(out.Sessions)
@@ -73,6 +72,7 @@ func (suite *testSuite) Test_FindSessions() {
 		input := In{
 			Token: uws.Session.AccessToken.Token,
 		}
+		mockRepo.EXPECT().List(mock.Anything).Return([]sessionn.Session{uws.Session}, nil).Once()
 		out, err := usecase.FindSessions(input)
 		suite.NoError(err)
 		suite.Require().Len(out.Sessions, 1)

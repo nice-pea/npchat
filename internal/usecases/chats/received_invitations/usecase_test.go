@@ -4,9 +4,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -20,33 +22,33 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Invitations_ReceivedInvitations тестирует получение списка приглашений направленных пользователю
 func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
-	usecase := &ReceivedInvitationsUsecase{
-		Repo: suite.RR.Chats,
-	}
 
 	suite.Run("пользователя не приглашали и потому вернется пустой список", func() {
+		usecase, mockRepo := newUsecase(suite)
 		// Получить список приглашений
 		input := In{
 			SubjectID: uuid.New(),
 		}
-		invitations, err := usecase.ReceivedInvitations(input)
+		mockRepo.EXPECT().List(mock.Anything).Return([]chatt.Chat{}, nil).Once()
+		out, err := usecase.ReceivedInvitations(input)
 		suite.NoError(err)
-		suite.Empty(invitations)
+		suite.Empty(out.ChatsInvitations)
 	})
 
 	suite.Run("из многих приглашений несколько направлено пользователю и потому вернутся только они", func() {
+		usecase, mockRepo := newUsecase(suite)
 		// ID пользователя
 		userID := uuid.New()
 		// Создать несколько приглашений, направленных пользователю
 		invitationsOfUser := make([]chatt.Invitation, 5)
+		chats := make([]chatt.Chat, 0, len(invitationsOfUser))
 		for i := range invitationsOfUser {
 			// Создать чат
 			chat := suite.RndChat()
 			p := suite.AddRndParticipant(&chat)
 			invitationsOfUser[i] = suite.NewInvitation(p.UserID, userID)
 			suite.AddInvitation(&chat, invitationsOfUser[i])
-			// Сохранить чат
-			suite.UpsertChat(chat)
+			chats = append(chats, chat)
 		}
 		// Создать несколько приглашений, направленных каким-то другим пользователям
 		for range 10 {
@@ -55,13 +57,14 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 			p := suite.AddRndParticipant(&chat)
 			i := suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, i)
-			// Сохранить чат
-			suite.UpsertChat(chat)
 		}
 		// Получить список приглашений
 		input := In{
 			SubjectID: userID,
 		}
+		mockRepo.EXPECT().List(chatt.Filter{
+			InvitationRecipientID: input.SubjectID,
+		}).Return(chats, nil).Once()
 		out, err := usecase.ReceivedInvitations(input)
 		suite.NoError(err)
 		// В списке будут только приглашения, направленные пользователю
@@ -70,4 +73,13 @@ func (suite *testSuite) Test_Invitations_ReceivedInvitations() {
 			suite.Contains(invitationsOfUser, invitation)
 		}
 	})
+
+}
+
+func newUsecase(suite *testSuite) (*ReceivedInvitationsUsecase, *mockChatt.Repository) {
+	uc := &ReceivedInvitationsUsecase{
+		Repo: suite.RR.Chats,
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	return uc, mockRepo
 }

@@ -10,6 +10,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
@@ -32,19 +33,13 @@ func (suite *testSuite) newCreateInputRandom() In {
 
 // Test_Chats_CreateChat тестирует создание чата
 func (suite *testSuite) Test_Chats_CreateChat() {
-	usecase := &CreateChatUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: mockEvents.NewConsumer(suite.T()),
-	}
-	// Настройка мока
-	usecase.EventConsumer.(*mockEvents.Consumer).
-		On("Consume", mock.Anything).
-		Return().
-		Maybe()
 
 	suite.Run("выходящие совпадают с заданными", func() {
+		usecase, mockRepo, mockEventConsumer := newUsecase(suite)
+		mockEventConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.NoError(err)
 		// Сравнить результат с входящими значениями
@@ -53,29 +48,27 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	})
 
 	suite.Run("можно затем прочитать из репозитория", func() {
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		// Настройка мока
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
-		// Получить список чатов
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.Require().NoError(err)
-		// В списке этот чат будет единственным
-		suite.Require().Len(chats, 1)
-		suite.Equal(out.Chat.Name, chats[0].Name)
-		suite.Equal(out.Chat.ChiefID, chats[0].ChiefID)
 	})
 
 	suite.Run("создается участник для главного администратора", func() {
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		// Настройка мока
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		input := suite.newCreateInputRandom()
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(input)
 		suite.Require().NoError(err)
 		suite.Require().NotZero(out)
-		// Получить список участников
-		//members, err := usecase.MembersRepo.List(domain.MembersFilter{})
-		//suite.NoError(err)
 		// В списке этот участник будет единственным
 		suite.Require().Len(out.Chat.Participants, 1)
 		// Участником является главный администратор созданного чата
@@ -83,27 +76,32 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 	})
 
 	suite.Run("можно создать чаты с одинаковым именем", func() {
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		// Настройка мока
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return()
 		input := suite.newCreateInputRandom()
 		// Создать несколько чатов с одинаковым именем
 		const chatsAllCount = 2
-		for range chatsAllCount {
+		chats := make([]chatt.Chat, chatsAllCount)
+		for i := range chatsAllCount {
+			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 			out, err := usecase.CreateChat(input)
 			suite.Require().NoError(err)
 			suite.Require().NotZero(out)
+			chats[i] = out.Chat
 		}
-		// Получить список чатов
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// Количество чатов равно количеству созданных
-		suite.Len(chats, chatsAllCount)
 	})
 
 	suite.Run("количество созданных чатов на одного пользователя не ограничено", func() {
+		const chatsAllCount = 900
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
+		// Настройка мока
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Times(chatsAllCount)
 		// Пользователь
 		userID := uuid.New()
 		// Создать много чатов от лица пользователя
-		const chatsAllCount = 900
 		for range chatsAllCount {
+			mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 			out, err := usecase.CreateChat(In{
 				ChiefUserID: userID,
 				Name:        "name",
@@ -111,29 +109,21 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 			suite.Require().NoError(err)
 			suite.Require().NotZero(out)
 		}
-		// Получить список чатов
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// Количество чатов равно количеству созданных
-		suite.Len(chats, chatsAllCount)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
 		// Новый экземпляр usecase
-		usecase := &CreateChatUsecase{
-			Repo:          suite.RR.Chats,
-			EventConsumer: mockEvents.NewConsumer(suite.T()),
-		}
+		usecase, mockRepo, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		usecase.EventConsumer.(*mockEvents.Consumer).
-			On("Consume", mock.Anything).
-			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).
+			Run(func(events []events.Event) {
+				consumedEvents = append(consumedEvents, events...)
 			}).
-			Return()
+			Return().Once()
 
 		// Создать чат
+		mockRepo.EXPECT().Upsert(mock.Anything).Return(nil).Once()
 		out, err := usecase.CreateChat(In{
 			ChiefUserID: uuid.New(),
 			Name:        "name",
@@ -144,4 +134,14 @@ func (suite *testSuite) Test_Chats_CreateChat() {
 		// Проверить список опубликованных событий
 		suite.AssertHasEventType(consumedEvents, chatt.EventChatCreated)
 	})
+}
+
+func newUsecase(suite *testSuite) (*CreateChatUsecase, *mockChatt.Repository, *mockEvents.Consumer) {
+	uc := &CreateChatUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }

@@ -7,6 +7,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
 )
 
@@ -20,16 +21,16 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Invitations_ChatInvitations тестирует получение списка приглашений
 func (suite *testSuite) Test_Invitations_ChatInvitations() {
-	usecase := &ChatInvitationsUsecase{
-		Repo: suite.RR.Chats,
-	}
 
 	suite.Run("чат должен существовать", func() {
+		// Создать usecase и моки
+		usecase, mockRepo := newUsecase(suite)
 		// Получить список приглашений
 		input := In{
 			SubjectID: uuid.New(),
 			ChatID:    uuid.New(),
 		}
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		// Вернется ошибка, потому что чата не существует
 		suite.ErrorIs(err, chatt.ErrChatNotExists)
@@ -37,13 +38,16 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 	})
 
 	suite.Run("субъект должен быть участником чата", func() {
+		// Создать usecase и моки
+		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
-		chat := suite.UpsertChat(suite.RndChat())
+		chat := suite.RndChat()
 		// Получить список приглашений
 		input := In{
 			ChatID:    chat.ID,
 			SubjectID: uuid.New(),
 		}
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		// Вернется ошибка, потому что пользователь не участник чата
 		suite.ErrorIs(err, ErrSubjectIsNotMember)
@@ -51,21 +55,24 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 	})
 
 	suite.Run("пустой список из чата без приглашений", func() {
+		// Создать usecase и моки
+		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.NoError(err)
 		suite.Empty(out.Invitations)
 	})
 
 	suite.Run("субъект не администратор чата и видит только отправленные им приглашения", func() {
+		// Создать usecase и моки
+		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		participant := suite.AddRndParticipant(&chat)
@@ -81,13 +88,12 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			i := suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, i)
 		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			ChatID:    chat.ID,
 			SubjectID: participant.UserID,
 		}
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения, отправленные участником
@@ -98,6 +104,8 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 	})
 
 	suite.Run("субъект является администратором чата и видит все отправленные приглашения в чат", func() {
+		// Создать usecase и моки
+		usecase, mockRepo := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать приглашения, отправленные какими-то пользователями
@@ -107,13 +115,12 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			invitationsSent[i] = suite.NewInvitation(p.UserID, uuid.New())
 			suite.AddInvitation(&chat, invitationsSent[i])
 		}
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Получить список приглашений
 		input := In{
 			SubjectID: chat.ChiefID,
 			ChatID:    chat.ID,
 		}
+		mockRepo.EXPECT().List(chatt.Filter{ID: input.ChatID}).Return([]chatt.Chat{chat}, nil).Once()
 		out, err := usecase.ChatInvitations(input)
 		suite.Require().NoError(err)
 		// В списке будут приглашения все приглашения
@@ -122,4 +129,12 @@ func (suite *testSuite) Test_Invitations_ChatInvitations() {
 			suite.Contains(out.Invitations, saved)
 		}
 	})
+}
+
+func newUsecase(suite *testSuite) (*ChatInvitationsUsecase, *mockChatt.Repository) {
+	uc := &ChatInvitationsUsecase{
+		Repo: suite.RR.Chats,
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	return uc, mockRepo
 }

@@ -1,12 +1,8 @@
 package serviceSuite
 
 import (
-	"context"
 	"errors"
 	"math/rand"
-	"os"
-	"path/filepath"
-	"runtime"
 	"slices"
 	"time"
 
@@ -14,124 +10,84 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	testifySuite "github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/nice-pea/npchat/internal/common"
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
+	mockSessionn "github.com/nice-pea/npchat/internal/domain/sessionn/mocks"
+	mockUserr "github.com/nice-pea/npchat/internal/domain/userr/mocks"
+
 	"github.com/nice-pea/npchat/internal/domain/sessionn"
 	"github.com/nice-pea/npchat/internal/domain/userr"
-	pgsqlRepository "github.com/nice-pea/npchat/internal/repository/pgsql_repository"
 	"github.com/nice-pea/npchat/internal/usecases/events"
-	"github.com/nice-pea/npchat/internal/usecases/users/oauth"
 	mockOauth "github.com/nice-pea/npchat/internal/usecases/users/oauth/mocks"
 )
 
 type Suite struct {
 	testifySuite.Suite
-	factory       *pgsqlRepository.Factory
-	factoryCloser func()
-	RR            struct {
-		Chats    chatt.Repository
-		Sessions sessionn.Repository
-		Users    userr.Repository
+	RR struct {
+		Chats    *mockChatt.Repository
+		Sessions *mockSessionn.Repository
+		Users    *mockUserr.Repository
 	}
 	Adapters struct {
-		Oauth oauth.Provider
+		Oauth *mockOauth.Provider
 	}
 	MockOauthTokens map[string]userr.OpenAuthToken
 	MockOauthUsers  map[userr.OpenAuthToken]userr.OpenAuthUser
 }
 
-var (
-	pgsqlDSN = os.Getenv("TEST_PGSQL_DSN")
-)
-
-// newPgsqlExternalFactory создает фабрику репозиториев для тестирования, реализованных с помощью подключения к postgres по DSN
-func (suite *Suite) newPgsqlExternalFactory(dsn string) (*pgsqlRepository.Factory, func()) {
-	factory, err := pgsqlRepository.InitFactory(pgsqlRepository.Config{
-		DSN: dsn,
-	})
-	suite.Require().NoError(err)
-
-	return factory, func() { _ = factory.Close() }
-}
-
-// newPgsqlContainerFactory создает фабрику репозиториев для тестирования, реализованных с помощью postgres контейнеров
-func (suite *Suite) newPgsqlContainerFactory() (f *pgsqlRepository.Factory, closer func()) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Поиск скриптов с миграциями
-	_, b, _, _ := runtime.Caller(0)
-	migrationsDir := filepath.Join(filepath.Dir(b), "../../../infra/pgsql/init/*.up.sql")
-	migrations, err := filepath.Glob(migrationsDir)
-	suite.Require().NoError(err)
-	suite.Require().NotZero(migrations)
-
-	postgresContainer, err := postgres.Run(ctx,
-		"postgres:17",
-		postgres.WithInitScripts(migrations...),
-		postgres.WithDatabase("test_npc_db"),
-		postgres.WithUsername("test_npc_user"),
-		postgres.WithPassword("test_npc_password"),
-		postgres.BasicWaitStrategies(),
-	)
-	suite.Require().NoError(err)
-	dsn, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
-	suite.Require().NoError(err)
-
-	f, err = pgsqlRepository.InitFactory(pgsqlRepository.Config{
-		DSN: dsn,
-	})
-	suite.Require().NoError(err)
-
-	return f, func() {
-		_ = f.Close()
-		_ = postgresContainer.Terminate(context.Background())
-	}
-}
-
 // SetupTest выполняется перед каждым тестом, связанным с suite
 func (suite *Suite) SetupTest() {
-	// Инициализация фабрики репозиториев
-	if pgsqlDSN != "" {
-		suite.factory, suite.factoryCloser = suite.newPgsqlExternalFactory(pgsqlDSN)
-	} else {
-		suite.factory, suite.factoryCloser = suite.newPgsqlContainerFactory()
-	}
+	suite.TearDownSubTest()
+}
 
-	// Инициализация репозиториев
-	suite.RR.Chats = suite.factory.NewChattRepository()
-	suite.RR.Users = suite.factory.NewUserrRepository()
-	suite.RR.Sessions = suite.factory.NewSessionnRepository()
+// SetupAcceptInvitationMocks настраивает моки для успешного принятия приглашения
+func (suite *Suite) SetupAcceptInvitationMocks(invitationID uuid.UUID, chat chatt.Chat) {
+	suite.RR.Chats.EXPECT().List(chatt.Filter{
+		InvitationID: invitationID,
+	}).Return([]chatt.Chat{chat}, nil).Once()
 
-	// Инициализация адаптеров
+	suite.RR.Chats.EXPECT().Upsert(mock.Anything).RunAndReturn(func(updatedChat chatt.Chat) error {
+		suite.Equal(chat.ID, updatedChat.ID)
+		return nil
+	}).Once()
+}
+
+// TearDownSubTest выполняется после каждого подтеста, связанного с suite
+func (suite *Suite) TearDownSubTest() {
+	// пересоздаем моки репозиториев
+	suite.RR.Chats = mockChatt.NewRepository(suite.T())
+	suite.RR.Users = mockUserr.NewRepository(suite.T())
+	suite.RR.Sessions = mockSessionn.NewRepository(suite.T())
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
-	suite.Adapters.Oauth.(*mockOauth.Provider).
-		On("Name", mock.Anything).Maybe().
-		Return("mock").
-		On("Exchange", mock.Anything).Maybe().
-		Return(func(code string) (userr.OpenAuthToken, error) {
-			token, ok := suite.MockOauthTokens[code]
-			if !ok {
-				return userr.OpenAuthToken{}, errors.New("token not found")
-			}
-			return token, nil
-		}).
-		On("User", mock.Anything).Maybe().
-		Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
-			user, ok := suite.MockOauthUsers[token]
-			if !ok {
-				return userr.OpenAuthUser{}, errors.New("user not found")
-			}
-			return user, nil
-		}).
-		On("AuthorizationURL", mock.Anything).Maybe().
-		Return(func(state string) string {
-			return "https://provider.com/o/oauth2/auth?" +
-				"code=someCode" +
-				"&state=" + state
-		})
+	// Инициализация адаптеров
+	suite.initAdapters()
+}
+
+// initAdapters настраивает моки адаптеров
+func (suite *Suite) initAdapters() {
+	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
+	suite.Adapters.Oauth.EXPECT().Name().Maybe().Return("mock")
+	suite.Adapters.Oauth.EXPECT().Exchange(mock.Anything).Maybe().Return(func(code string) (userr.OpenAuthToken, error) {
+		token, ok := suite.MockOauthTokens[code]
+		if !ok {
+			return userr.OpenAuthToken{}, errors.New("token not found")
+		}
+		return token, nil
+	})
+	suite.Adapters.Oauth.EXPECT().User(mock.Anything).Maybe().Return(func(token userr.OpenAuthToken) (userr.OpenAuthUser, error) {
+		user, ok := suite.MockOauthUsers[token]
+		if !ok {
+			return userr.OpenAuthUser{}, errors.New("user not found")
+		}
+		return user, nil
+	})
+	suite.Adapters.Oauth.EXPECT().AuthorizationURL(mock.Anything).Maybe().Return(func(state string) string {
+		return "https://provider.com/o/oauth2/auth?" +
+			"code=someCode" +
+			"&state=" + state
+	})
 
 	// Тестовые пользователи и токены
 	suite.MockOauthUsers = suite.GenerateMockUsers()
@@ -139,17 +95,6 @@ func (suite *Suite) SetupTest() {
 	for token := range suite.MockOauthUsers {
 		suite.MockOauthTokens[RandomString(13)] = token
 	}
-}
-
-// TearDownSubTest выполняется после каждого подтеста, связанного с suite
-func (suite *Suite) TearDownSubTest() {
-	err := suite.factory.Cleanup()
-	suite.Require().NoError(err)
-}
-
-// TearDownTest выполняется после каждого подтеста, связанного с suite
-func (suite *Suite) TearDownTest() {
-	suite.factoryCloser()
 }
 
 // EqualSessions сравнивает две сессии
@@ -162,14 +107,6 @@ func (suite *Suite) EqualSessions(s1, s2 sessionn.Session) {
 	suite.True(s1.AccessToken.Expiry.Equal(s2.AccessToken.Expiry))
 	suite.Equal(s1.RefreshToken.Token, s2.RefreshToken.Token)
 	suite.True(s1.RefreshToken.Expiry.Equal(s2.RefreshToken.Expiry))
-}
-
-// UpsertChat сохраняет чат в репозиторий, в случае ошибки завершит тест
-func (suite *Suite) UpsertChat(chat chatt.Chat) chatt.Chat {
-	err := suite.RR.Chats.Upsert(chat)
-	suite.Require().NoError(err)
-
-	return chat
 }
 
 // RndChat создает случайный чат
@@ -214,7 +151,7 @@ func (suite *Suite) AddInvitation(chat *chatt.Chat, i chatt.Invitation) {
 }
 
 // RandomString генерирует случайную строку
-func RandomString(n int) string {
+func RandomString2(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, n)
 	for i := range b {
@@ -277,7 +214,7 @@ func (suite *Suite) NewRndUserWithBasicAuth() userr.User {
 }
 
 // HasElementOfType возвращает true, если в срезе есть элемент заданного типа
-func HasElementOfType[T any](e []any) bool {
+func HasElementOfType2[T any](e []any) bool {
 	for _, e := range e {
 		if _, ok := e.(T); ok {
 			return true
@@ -291,4 +228,14 @@ func (suite *Suite) AssertHasEventType(ee []events.Event, eventType string) {
 	suite.True(slices.ContainsFunc(ee, func(e events.Event) bool {
 		return e.Type == eventType
 	}))
+}
+
+// RandomString генерирует случайную строку
+func RandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

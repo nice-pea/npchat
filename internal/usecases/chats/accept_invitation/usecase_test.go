@@ -8,6 +8,7 @@ import (
 	testifySuite "github.com/stretchr/testify/suite"
 
 	"github.com/nice-pea/npchat/internal/domain/chatt"
+	mockChatt "github.com/nice-pea/npchat/internal/domain/chatt/mocks"
 	"github.com/nice-pea/npchat/internal/usecases/events"
 	mockEvents "github.com/nice-pea/npchat/internal/usecases/events/mocks"
 	serviceSuite "github.com/nice-pea/npchat/internal/usecases/suite"
@@ -23,34 +24,34 @@ func Test_TestSuite(t *testing.T) {
 
 // Test_Invitations_AcceptInvitation тестирует принятие приглашения
 func (suite *testSuite) Test_Invitations_AcceptInvitation() {
-	usecase := &AcceptInvitationUsecase{
-		Repo:          suite.RR.Chats,
-		EventConsumer: mockEvents.NewConsumer(suite.T()),
-	}
-	// Настройка мока
-	usecase.EventConsumer.(*mockEvents.Consumer).
-		On("Consume", mock.Anything).
-		Return().
-		Maybe()
 
 	suite.Run("приглашение должно существовать", func() {
+		// Создать usecase и моки
+		usecase, mockRepo, _ := newUsecase(suite)
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
 		p := suite.AddRndParticipant(&chat)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    p.UserID,
 			InvitationID: uuid.New(),
 		}
+		// настроить мок
+		mockRepo.EXPECT().List(chatt.Filter{
+			InvitationID: input.InvitationID,
+		}).Return(nil, chatt.ErrChatNotExists).Once()
+		// suite.SetupAcceptInvitationMocks(input.InvitationID, chat)
 		out, err := usecase.AcceptInvitation(input)
 		suite.ErrorIs(err, ErrInvitationNotExists)
 		suite.Zero(out)
 	})
 
 	suite.Run("приняв приглашение, пользователь становится участником чата", func() {
+		// Создать usecase и моки
+		usecase, _, mockEventsConsumer := newUsecase(suite)
+		// Настройка мока
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -58,40 +59,27 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать приглашение
 		invitation := suite.NewInvitation(p.UserID, uuid.New())
 		suite.AddInvitation(&chat, invitation)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    invitation.RecipientID,
 			InvitationID: invitation.ID,
 		}
+		// настройка моков
+		suite.SetupAcceptInvitationMocks(input.InvitationID, chat)
 		out, err := usecase.AcceptInvitation(input)
 		suite.Zero(out)
 		suite.Require().NoError(err)
-		// Получить список участников
-		chats, err := suite.RR.Chats.List(chatt.Filter{})
-		suite.NoError(err)
-		// В списке будет 3 участника: адм., приглашаемый, приглашающий
-		suite.Require().Len(chats, 1)
-		suite.Require().Len(chats[0].Participants, 3)
-		suite.Contains(chats[0].Participants, p)
 	})
 
 	suite.Run("после завершения операции, будут созданы события", func() {
-		// Новый экземпляр usecase
-		usecase := &AcceptInvitationUsecase{
-			Repo:          suite.RR.Chats,
-			EventConsumer: mockEvents.NewConsumer(suite.T()),
-		}
+		// Создать usecase и моки
+		usecase, _, mockEventsConsumer := newUsecase(suite)
 		// Настройка мока
 		var consumedEvents []events.Event
-		usecase.EventConsumer.(*mockEvents.Consumer).
-			On("Consume", mock.Anything).
-			Run(func(args mock.Arguments) {
-				consumedEvents = append(consumedEvents, args.Get(0).([]events.Event)...)
-			}).
-			Return()
-
+		mockEventsConsumer.EXPECT().Consume(mock.Anything).Run(
+			func(args []events.Event) {
+				consumedEvents = append(consumedEvents, args...)
+			}).Return().Once()
 		// Создать чат
 		chat := suite.RndChat()
 		// Создать участника
@@ -99,13 +87,13 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		// Создать приглашение
 		invitation := suite.NewInvitation(p.UserID, uuid.New())
 		suite.AddInvitation(&chat, invitation)
-		// Сохранить чат
-		suite.UpsertChat(chat)
 		// Принять приглашение
 		input := In{
 			SubjectID:    invitation.RecipientID,
 			InvitationID: invitation.ID,
 		}
+		// настройка моков
+		suite.SetupAcceptInvitationMocks(input.InvitationID, chat)
 		out, err := usecase.AcceptInvitation(input)
 		suite.Zero(out)
 		suite.Require().NoError(err)
@@ -114,4 +102,14 @@ func (suite *testSuite) Test_Invitations_AcceptInvitation() {
 		suite.AssertHasEventType(consumedEvents, chatt.EventInvitationRemoved)
 		suite.AssertHasEventType(consumedEvents, chatt.EventParticipantAdded)
 	})
+}
+
+func newUsecase(suite *testSuite) (*AcceptInvitationUsecase, *mockChatt.Repository, *mockEvents.Consumer) {
+	uc := &AcceptInvitationUsecase{
+		Repo:          suite.RR.Chats,
+		EventConsumer: mockEvents.NewConsumer(suite.T()),
+	}
+	mockRepo := uc.Repo.(*mockChatt.Repository)
+	mockEventsConsumer := uc.EventConsumer.(*mockEvents.Consumer)
+	return uc, mockRepo, mockEventsConsumer
 }

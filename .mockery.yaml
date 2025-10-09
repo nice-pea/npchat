@@ -11,3 +11,6 @@ packages:
   github.com/nice-pea/npchat/internal/usecases/events:
   github.com/nice-pea/npchat/internal/usecases/users/oauth:
   github.com/nice-pea/npchat/internal/adapter/jwt/parser:
+  github.com/nice-pea/npchat/internal/domain/chatt:
+  github.com/nice-pea/npchat/internal/domain/sessionn:
+  github.com/nice-pea/npchat/internal/domain/userr:
