@@ -39,12 +39,34 @@ type SuiteWithMocks struct {
 
 // SetupTest выполняется перед каждым тестом, связанным с suite
 func (suite *SuiteWithMocks) SetupTest() {
-	// Инициализация репозиториев
+	suite.TearDownSubTest()
+}
+
+// SetupAcceptInvitationMocks настраивает моки для успешного принятия приглашения
+func (suite *SuiteWithMocks) SetupAcceptInvitationMocks(invitationID uuid.UUID, chat chatt.Chat) {
+	suite.RR.Chats.EXPECT().List(chatt.Filter{
+		InvitationID: invitationID,
+	}).Return([]chatt.Chat{chat}, nil).Once()
+
+	suite.RR.Chats.EXPECT().Upsert(mock.Anything).RunAndReturn(func(updatedChat chatt.Chat) error {
+		suite.Equal(chat.ID, updatedChat.ID)
+		return nil
+	}).Once()
+}
+
+// TearDownSubTest выполняется после каждого подтеста, связанного с suite
+func (suite *SuiteWithMocks) TearDownSubTest() {
+	// пересоздаем моки репозиториев
 	suite.RR.Chats = mockChatt.NewRepository(suite.T())
 	suite.RR.Users = mockUserr.NewRepository(suite.T())
 	suite.RR.Sessions = mockSessionn.NewRepository(suite.T())
-
+	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 	// Инициализация адаптеров
+	suite.initAdapters()
+}
+
+// initAdapters настраивает моки адаптеров
+func (suite *SuiteWithMocks) initAdapters() {
 	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
 	suite.Adapters.Oauth.EXPECT().Name().Maybe().Return("mock")
 	suite.Adapters.Oauth.EXPECT().Exchange(mock.Anything).Maybe().Return(func(code string) (userr.OpenAuthToken, error) {
@@ -73,32 +95,6 @@ func (suite *SuiteWithMocks) SetupTest() {
 	for token := range suite.MockOauthUsers {
 		suite.MockOauthTokens[RandomString(13)] = token
 	}
-}
-
-// SetupAcceptInvitationMocks настраивает моки для успешного принятия приглашения
-func (suite *SuiteWithMocks) SetupAcceptInvitationMocks(invitationID uuid.UUID, chat chatt.Chat) {
-	suite.RR.Chats.EXPECT().List(chatt.Filter{
-		InvitationID: invitationID,
-	}).Return([]chatt.Chat{chat}, nil).Once()
-
-	suite.RR.Chats.EXPECT().Upsert(mock.Anything).RunAndReturn(func(updatedChat chatt.Chat) error {
-		suite.Equal(chat.ID, updatedChat.ID)
-		return nil
-	}).Once()
-}
-
-// TearDownSubTest выполняется после каждого подтеста, связанного с suite
-func (suite *SuiteWithMocks) TearDownSubTest() {
-	// пересоздаем моки репозиториев
-	suite.RR.Chats = mockChatt.NewRepository(suite.T())
-	suite.RR.Users = mockUserr.NewRepository(suite.T())
-	suite.RR.Sessions = mockSessionn.NewRepository(suite.T())
-	suite.Adapters.Oauth = mockOauth.NewProvider(suite.T())
-}
-
-// TearDownTest выполняется после каждого подтеста, связанного с suite
-func (suite *SuiteWithMocks) TearDownTest() {
-
 }
 
 // EqualSessions сравнивает две сессии
